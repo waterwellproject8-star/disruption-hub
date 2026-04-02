@@ -316,17 +316,18 @@ export default function DashboardPage() {
   const [approvingId, setApprovingId] = useState(null)
   const responseRef = useRef(null)
 
-  if (!unlocked) return <PinGate onUnlock={() => setUnlocked(true)} />
-
   useEffect(() => {
     if (responseRef.current) responseRef.current.scrollTop = responseRef.current.scrollHeight
   }, [response])
 
   useEffect(() => {
+    if (!unlocked) return
     loadApprovals()
     const i = setInterval(loadApprovals, 30000)
     return () => clearInterval(i)
-  }, [])
+  }, [unlocked])
+
+  if (!unlocked) return <PinGate onUnlock={() => setUnlocked(true)} />
 
   async function loadApprovals() {
     try {
