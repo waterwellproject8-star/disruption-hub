@@ -1,159 +1,270 @@
 import { runModule } from '../../../lib/anthropic.js'
 import { logModuleRun, queueAction, getClientConfig } from '../../../lib/supabase.js'
 
-// Demo data injected when no real client data is connected
-const DEMO_DATA = {
+// ── DEMO RESULTS ──────────────────────────────────────────────────────────────
+// Returned instantly when no real client data is connected.
+// Real AI calls happen once client data is flowing via webhooks/Supabase.
+const DEMO_RESULTS = {
   disruption: {
-    active_shipments: [
-      { ref: 'REF-8832', route: 'Glasgow → London', carrier: 'FastFreight UK', status: 'disrupted', alert: 'M74 closure — driver stationary 40 mins', eta: 'unknown', cargo: 'mixed freight', value: 8500 },
-      { ref: 'REF-9103', route: 'Birmingham → Edinburgh', carrier: 'Yodel', status: 'delayed', alert: 'Weather delay — 45min behind schedule', eta: '17:45', cargo: 'electronics', value: 12000 }
-    ],
-    weather_alerts: ['Yellow weather warning — strong winds M74 corridor until 18:00'],
-    timestamp: new Date().toISOString()
+    severity: 'HIGH',
+    financial_impact: 8500,
+    time_to_resolution: '2-3 hours',
+    affected_shipments: 2,
+    sections: {
+      assessment: 'REF-8832 (Glasgow → London) is stopped due to M74 closure. FastFreight UK driver stationary for 40 minutes. REF-9103 running 45 minutes behind schedule on Birmingham → Edinburgh route due to weather.',
+      immediate_actions: [
+        'Call FastFreight UK 24hr line NOW — confirm M74 clearance time and request reroute via A74(M). Owner: Ops Manager. Deadline: within 10 minutes.',
+        'Notify London consignee for REF-8832 — revised ETA 3 hours later than booked. Draft proactive message now. Owner: Account Manager.',
+        'REF-9103 driver to confirm current position and updated ETA. If gap exceeds 90 minutes, call Edinburgh DC to hold bay. Owner: Dispatcher.'
+      ],
+      who_to_contact: 'FastFreight UK 24hr: 0800 XXX XXXX — "REF-8832 stationary M74, requesting authorised reroute via A74(M) southbound, confirm clearance ETA." London consignee: notify delay, provide revised ETA.',
+      downstream_risks: 'If M74 remains closed beyond 2 hours, Edinburgh delivery REF-9103 will breach SLA window. FastFreight UK has 3 active loads affected by this closure — cascade risk to tomorrow\'s collections.',
+      prevention: '1. Pre-route all Glasgow-London runs via M74/A74(M) with automatic weather monitoring trigger. 2. FastFreight UK contract to include 30-minute notification SLA on all incidents causing >15 minute delays.'
+    },
+    actions: []
   },
 
   invoice: {
-    invoices: [
-      { ref: 'INV-2024-8821', carrier: 'FastFreight UK', amount: 1847.50, route: 'Manchester-London', distance_miles: 212, date: '2026-03-28', fuel_surcharge_pct: 18.5, agreed_rate_per_mile: 3.20 },
-      { ref: 'INV-2024-8756', carrier: 'XPO Logistics', amount: 890.00, route: 'Leeds-Cardiff', distance_miles: 189, date: '2026-03-22', fuel_surcharge_pct: 22.0, agreed_rate_per_mile: 3.50 }
+    total_overcharge: 847.89,
+    discrepancies: [
+      {
+        invoice_ref: 'INV-2024-8821',
+        carrier: 'FastFreight UK',
+        issue_type: 'fuel_surcharge',
+        charged: 1847.50,
+        expected: 1629.41,
+        delta: 218.09,
+        evidence: 'Fuel surcharge charged at 18.5% — contracted maximum is 15.0%. Overcharge on this invoice: £218.09.'
+      },
+      {
+        invoice_ref: 'INV-2024-8756',
+        carrier: 'XPO Logistics',
+        issue_type: 'fuel_surcharge',
+        charged: 890.00,
+        expected: 731.70,
+        delta: 158.30,
+        evidence: 'Fuel surcharge charged at 22.0% — contracted maximum is 15.0%. Overcharge on this invoice: £158.30.'
+      },
+      {
+        invoice_ref: 'INV-2024-8742',
+        carrier: 'FastFreight UK',
+        issue_type: 'duplicate',
+        charged: 1650.00,
+        expected: 0,
+        delta: 471.50,
+        evidence: 'This invoice appears to duplicate INV-2024-8698 for the same Bristol-Edinburgh run on the same date. Full amount disputed.'
+      }
     ],
-    rate_cards: {
-      'FastFreight UK': { max_fuel_surcharge_pct: 15.0 },
-      'XPO Logistics': { max_fuel_surcharge_pct: 15.0 }
-    },
-    period: 'March 2026'
+    annual_projection: 10174,
+    actions: []
   },
 
   sla_prediction: {
-    active_deliveries: [
-      { ref: 'REF-4421', client: 'Tesco DC Bradford', driver: 'Carl Hughes', vehicle_reg: 'BK21 XYZ', route: 'Manchester → Bradford', sla_window_closes: '14:30', current_position: 'M62 J26', distance_remaining_miles: 18, current_eta: '14:38', traffic_alert: 'M62 J25-J26 slow — 12 min delay reported', penalty_if_breached: 340 },
-      { ref: 'REF-5517', client: 'NHS Sheffield', driver: 'Mark Davies', vehicle_reg: 'LN70 ABC', route: 'Leeds → Sheffield', sla_window_closes: '16:00', current_position: 'A61 Wakefield', distance_remaining_miles: 22, current_eta: '15:55', traffic_alert: 'A61 roadworks — 8 min delay', penalty_if_breached: 500 },
-      { ref: 'REF-9103', client: 'Sainsburys RDC Edinburgh', driver: 'James Reid', vehicle_reg: 'SF68 PQR', route: 'Birmingham → Edinburgh', sla_window_closes: '17:30', current_position: 'M6 J38', distance_remaining_miles: 142, current_eta: '18:10', traffic_alert: 'Significant delay — already 40min behind', penalty_if_breached: 750 }
+    total_penalty_risk: 1590,
+    total_penalty_avoidable: 840,
+    at_risk_deliveries: [
+      {
+        ref: 'REF-4421',
+        client: 'Tesco DC Bradford',
+        driver: 'Carl Hughes',
+        sla_window_closes: '14:30',
+        current_eta: '14:38',
+        breach_probability: 85,
+        breach_margin_minutes: -8,
+        reroute_available: true,
+        reroute_via: 'Exit M62 at J26, take A638 direct to Bradford',
+        reroute_eta: '14:27',
+        reroute_saves_sla: true,
+        penalty_if_breached: 340,
+        reroute_instruction: 'Carl — exit M62 now at J26, take A638 northbound into Bradford. Saves 11 mins. ETA 14:27.'
+      },
+      {
+        ref: 'REF-9103',
+        client: 'Sainsburys RDC Edinburgh',
+        driver: 'James Reid',
+        sla_window_closes: '17:30',
+        current_eta: '18:10',
+        breach_probability: 100,
+        breach_margin_minutes: -40,
+        reroute_available: false,
+        reroute_saves_sla: false,
+        penalty_if_breached: 750,
+        reroute_instruction: 'No reroute will recover this slot. Call Sainsburys Edinburgh now to negotiate late acceptance or reschedule.'
+      }
     ],
-    timestamp: new Date().toISOString()
+    actions: []
   },
 
   fuel: {
-    current_diesel_price_ppl: 141.2,
-    price_30_days_ago_ppl: 148.6,
-    price_trend: 'falling',
-    forecourt_prices: [
-      { name: 'Moto Trowell M1 J25', ppl: 138.9, distance_from_depot_miles: 8 },
-      { name: 'BP Motorway A1 Wetherby', ppl: 139.4, distance_from_depot_miles: 14 },
-      { name: 'Esso Bradford', ppl: 141.8, distance_from_depot_miles: 3 }
+    current_price_ppl: 141.2,
+    average_30day_ppl: 148.6,
+    delta_ppl: -7.4,
+    recommendation: 'fill_now',
+    reasoning: 'Diesel is 7.4ppl below 30-day average. Price trend is falling — now is optimal fill window. Carl Hughes and James Reid are both below 30% and have long runs today.',
+    vehicles_to_fill: [
+      { reg: 'BK21 XYZ', driver: 'Carl Hughes', nearest_fuel_stop: 'Moto Trowell M1 J25 — 138.9ppl', current_level_pct: 28, fill_capacity_litres: 288, saving: 26.42 },
+      { reg: 'SF68 PQR', driver: 'James Reid', nearest_fuel_stop: 'BP Motorway A1 Wetherby — 139.4ppl', current_level_pct: 19, fill_capacity_litres: 340, saving: 31.28 }
     ],
-    vehicles: [
-      { reg: 'BK21 XYZ', driver: 'Carl Hughes', fuel_level_pct: 28, tank_capacity_litres: 400, next_route: 'Manchester → Bristol', route_distance_miles: 180 },
-      { reg: 'LN70 ABC', driver: 'Mark Davies', fuel_level_pct: 62, tank_capacity_litres: 380, next_route: 'Leeds → Cardiff', route_distance_miles: 210 },
-      { reg: 'SF68 PQR', driver: 'James Reid', fuel_level_pct: 19, tank_capacity_litres: 420, next_route: 'Birmingham → Edinburgh', route_distance_miles: 295 },
-      { reg: 'YX70 MNO', driver: 'Paul Wright', fuel_level_pct: 45, tank_capacity_litres: 360, next_route: 'Leeds → London', route_distance_miles: 195 }
-    ],
-    fleet_monthly_fuel_spend: 14800
+    total_saving: 57.70,
+    annual_projection: 2100,
+    actions: []
   },
 
   driver_hours: {
-    drivers: [
-      { name: 'Carl Hughes', vehicle: 'BK21 XYZ', hours_this_week: 52, hours_today: 9.5, wtd_limit: 60, remaining_deliveries: ['Bradford Tesco 14:30', 'Halifax RDC 16:00', 'Return to depot'] },
-      { name: 'Mark Davies', vehicle: 'LN70 ABC', hours_this_week: 44, hours_today: 7.0, wtd_limit: 60, remaining_deliveries: ['NHS Sheffield 16:00', 'Return to depot'] },
-      { name: 'James Reid', vehicle: 'SF68 PQR', hours_this_week: 57, hours_today: 10.2, wtd_limit: 60, remaining_deliveries: ['Edinburgh RDC 18:00'] },
-      { name: 'Paul Wright', vehicle: 'YX70 MNO', hours_this_week: 39, hours_today: 6.5, wtd_limit: 60, remaining_deliveries: ['London DC 19:00', 'Return to depot'] }
-    ]
+    licence_risk: true,
+    dvsa_penalty_risk: 1500,
+    drivers_at_risk: [
+      {
+        name: 'James Reid',
+        vehicle_reg: 'SF68 PQR',
+        hours_worked: 57,
+        wtd_limit: 60,
+        remaining_hours: 3,
+        remaining_deliveries_hrs: 4.5,
+        breach_risk: true,
+        breach_margin_hrs: -1.5,
+        recommended_action: 'reassign_stops',
+        specific_instruction: 'James cannot legally complete Edinburgh RDC run. Relief driver required from depot — 45 min lead time. Reassign Edinburgh stop to relief or reschedule with customer.'
+      },
+      {
+        name: 'Carl Hughes',
+        vehicle_reg: 'BK21 XYZ',
+        hours_worked: 52,
+        wtd_limit: 60,
+        remaining_hours: 8,
+        remaining_deliveries_hrs: 5.5,
+        breach_risk: false,
+        breach_margin_hrs: 2.5,
+        recommended_action: 'continue',
+        specific_instruction: 'Carl within limits — monitor. 2.5 hour buffer remaining after planned runs.'
+      }
+    ],
+    actions: []
   },
 
   carrier: {
-    performance_data: [
-      { carrier: 'FastFreight UK', deliveries_last_90_days: 142, on_time: 118, damaged: 4, invoice_disputes: 8, contract_otr_threshold: 90, agreed_rate_per_mile: 3.20 },
-      { carrier: 'DHL Express', deliveries_last_90_days: 89, on_time: 85, damaged: 1, invoice_disputes: 1, contract_otr_threshold: 95, agreed_rate_per_mile: 4.10 },
-      { carrier: 'Yodel', deliveries_last_90_days: 203, on_time: 171, damaged: 9, invoice_disputes: 12, contract_otr_threshold: 92, agreed_rate_per_mile: 2.80 },
-      { carrier: 'XPO Logistics', deliveries_last_90_days: 67, on_time: 64, damaged: 0, invoice_disputes: 2, contract_otr_threshold: 93, agreed_rate_per_mile: 3.50 }
-    ]
+    total_breach_cost: 4200,
+    renegotiation_saving: 8500,
+    carriers: [
+      { name: 'FastFreight UK', on_time_rate: 83, damage_rate: 2.8, invoice_accuracy: 94, contract_threshold_otr: 90, below_threshold: true, sla_breaches_caused: 8, sla_breach_cost: 2720, recommendation: 'renegotiate', evidence_summary: 'OTR 83% vs 90% contracted threshold. 8 SLA breaches caused in 90 days at £340 average penalty. Invoice fuel surcharge consistently above contracted cap.' },
+      { name: 'Yodel', on_time_rate: 84, damage_rate: 4.4, invoice_accuracy: 94, contract_threshold_otr: 92, below_threshold: true, sla_breaches_caused: 9, sla_breach_cost: 1480, recommendation: 'warn', evidence_summary: 'Damage rate 4.4% is highest in fleet — 9 incidents in 90 days. Below OTR threshold. Issue formal warning — if not improved in 30 days, consider termination.' },
+      { name: 'DHL Express', on_time_rate: 96, damage_rate: 1.1, invoice_accuracy: 99, contract_threshold_otr: 95, below_threshold: false, sla_breaches_caused: 0, sla_breach_cost: 0, recommendation: 'continue', evidence_summary: 'Best performer in fleet. 96% OTR, near-zero damage and invoice disputes. Preferred carrier for high-value loads.' },
+      { name: 'XPO Logistics', on_time_rate: 96, damage_rate: 0, invoice_accuracy: 97, contract_threshold_otr: 93, below_threshold: false, sla_breaches_caused: 1, sla_breach_cost: 0, recommendation: 'continue', evidence_summary: 'Strong performer. Fuel surcharge invoicing above contract cap needs addressing — raise at next review.' }
+    ],
+    actions: []
   },
 
   vehicle_health: {
-    vehicles: [
-      { reg: 'BK21 XYZ', mileage: 187420, last_service_miles: 175000, service_interval_miles: 15000, fault_codes: ['P0420 catalytic efficiency', 'brake pad wear 2mm left front'], tyre_tread_mm: [4.2, 4.8, 3.1, 3.4], next_mot: '2026-07-15' },
-      { reg: 'LN70 ABC', mileage: 94300, last_service_miles: 90000, service_interval_miles: 15000, fault_codes: [], tyre_tread_mm: [6.1, 6.0, 5.9, 6.2], next_mot: '2026-09-22' },
-      { reg: 'SF68 PQR', mileage: 231800, last_service_miles: 220000, service_interval_miles: 15000, fault_codes: ['engine oil pressure low intermittent', 'coolant temp sensor fault'], tyre_tread_mm: [2.8, 3.0, 7.1, 7.0], next_mot: '2026-05-08' },
-      { reg: 'YX70 MNO', mileage: 156700, last_service_miles: 150000, service_interval_miles: 15000, fault_codes: ['P0171 system lean bank 1'], tyre_tread_mm: [5.5, 5.4, 5.6, 5.3], next_mot: '2026-11-30' }
-    ]
-  },
-
-  carbon: {
-    fleet: [
-      { reg: 'BK21 XYZ', type: 'HGV artic 44t', fuel: 'diesel', monthly_miles: 8400, mpg: 8.2, payload_utilisation_pct: 78 },
-      { reg: 'LN70 ABC', type: 'HGV rigid 18t', fuel: 'diesel', monthly_miles: 6200, mpg: 11.4, payload_utilisation_pct: 65 },
-      { reg: 'SF68 PQR', type: 'HGV artic 44t', fuel: 'diesel', monthly_miles: 9100, mpg: 7.9, payload_utilisation_pct: 82 },
-      { reg: 'YX70 MNO', type: 'HGV rigid 18t', fuel: 'diesel', monthly_miles: 5800, mpg: 10.8, payload_utilisation_pct: 71 }
+    total_breakdown_risk: 28500,
+    total_preventive_cost: 1840,
+    vehicles_at_risk: [
+      { reg: 'SF68 PQR', fault_codes: ['engine oil pressure low intermittent', 'coolant temp sensor fault'], trend_analysis: 'Two concurrent faults on a 231,800 mile vehicle. Oil pressure fluctuation combined with coolant sensor failure indicates potential head gasket risk.', failure_probability: 78, failure_timeframe: '2-4 weeks without intervention', preventive_fix: 'Full engine diagnostic, oil system pressure test, coolant system check. Replace coolant temp sensor.', preventive_cost: 850, breakdown_cost: 14000, optimal_service_slot: 'This weekend — do not dispatch on long-haul runs until assessed.' },
+      { reg: 'BK21 XYZ', fault_codes: ['P0420 catalytic efficiency', 'brake pad wear 2mm left front'], trend_analysis: 'Brake pad at 2mm is below DVSA minimum safe threshold of 3mm. Immediate roadworthiness risk.', failure_probability: 95, failure_timeframe: 'Immediate — brake failure risk', preventive_fix: 'Replace front brake pads before next dispatch. Cat efficiency code — monitor, book at next service.', preventive_cost: 320, breakdown_cost: 8500, optimal_service_slot: 'Before tomorrow morning — do not dispatch until brakes replaced.' }
     ],
-    reporting_period: 'Q1 2026',
-    customers_requiring_report: ['Tesco', 'NHS Sheffield', 'B&Q']
-  },
-
-  hazmat: {
-    jobs_today: [
-      { ref: 'JOB-4421', cargo: 'mixed freight — electronics', driver: 'Carl Hughes', cert_expiry: '2027-03-01', vehicle_has_adr: false },
-      { ref: 'JOB-7732', cargo: 'paint and solvents — Class 3 flammable liquid', driver: 'Paul Wright', cert_expiry: '2025-11-30', vehicle_has_adr: true, un_number: 'UN1263', adr_class: '3' },
-      { ref: 'JOB-7844', cargo: 'industrial batteries — Class 9', driver: 'Mark Davies', cert_expiry: '2026-08-15', vehicle_has_adr: true, un_number: 'UN3480', adr_class: '9' }
-    ]
+    actions: []
   },
 
   driver_retention: {
-    drivers: [
-      { name: 'Carl Hughes', tenure_years: 7, hours_last_4_weeks: [58, 60, 57, 59], weekend_work_last_month: 4, pay_vs_market_pct: -8, complaints_last_90_days: 0, recent_absence_days: 0 },
-      { name: 'James Reid', tenure_years: 2, hours_last_4_weeks: [62, 61, 60, 63], weekend_work_last_month: 5, pay_vs_market_pct: -12, complaints_last_90_days: 1, recent_absence_days: 3 },
-      { name: 'Mark Davies', tenure_years: 11, hours_last_4_weeks: [48, 52, 49, 51], weekend_work_last_month: 2, pay_vs_market_pct: -3, complaints_last_90_days: 0, recent_absence_days: 0 },
-      { name: 'Paul Wright', tenure_years: 1, hours_last_4_weeks: [55, 54, 58, 60], weekend_work_last_month: 3, pay_vs_market_pct: -15, complaints_last_90_days: 2, recent_absence_days: 5 }
+    total_replacement_cost_at_risk: 67000,
+    at_risk_drivers: [
+      { name: 'Paul Wright', risk_score: 82, risk_level: 'HIGH', signals: ['15% below market rate', '2 complaints in 90 days', '5 absence days', 'consistently at weekly hours limit'], recommended_interventions: ['Immediate pay review — bring to market rate £38,500', 'Schedule 1-2-1 within 7 days', 'Reduce weekend work allocation for next month'], replacement_cost: 18000 },
+      { name: 'James Reid', risk_score: 71, risk_level: 'HIGH', signals: ['12% below market rate', 'consistently breaching hours limits', '5 weekend shifts last month', '3 absence days'], recommended_interventions: ['Pay review to market rate', 'Reduce scheduled hours to sustainable level', 'Review route allocation to reduce overnight stays'], replacement_cost: 18000 }
     ],
-    local_market_rate_hgv: 38500
+    actions: []
+  },
+
+  carbon: {
+    scope_1_tonnes_co2e: 142.8,
+    scope_3_tonnes_co2e: 28.6,
+    per_delivery_kg_co2e: 18.4,
+    industry_benchmark_kg: 22.1,
+    vs_benchmark_pct: -16.7,
+    annual_report: {
+      methodology: 'DESNZ GHG Conversion Factors 2025 (June 2025 edition)',
+      period: 'Q1 2026',
+      fleet_summary: '4 HGV fleet. 29,500 miles operated in Q1 2026.',
+      emissions_breakdown: 'Scope 1 (direct diesel combustion): 142.8 tCO2e. Scope 3 (well-to-tank): 28.6 tCO2e. Total: 171.4 tCO2e.',
+      reduction_target: '15% reduction by Q1 2027 — achievable via load consolidation and route optimisation.',
+      narrative: 'Fleet is performing 16.7% better than industry benchmark on emissions per delivery. Tesco and NHS reporting requirements met with 2025 DEFRA methodology.'
+    },
+    optimisation_opportunities: [
+      { description: 'Load consolidation on Leeds-Manchester corridor — 2 runs combinable 3x per week', emission_reduction_pct: 8, cost_saving: 4200 }
+    ],
+    actions: []
   },
 
   tender: {
-    company_capabilities: ['temperature controlled', 'hazardous goods ADR', 'NHS framework', 'retail RDC', 'last mile', 'pallet network', 'UK nationwide'],
-    fleet_size: 28,
-    regions: ['Yorkshire', 'East Midlands', 'North West', 'Scotland'],
-    accreditations: ['FORS Bronze', 'ISO 9001', 'NHS Approved Supplier'],
-    search_date: new Date().toISOString()
+    total_pipeline_value: 2840000,
+    matching_tenders: [
+      { title: 'NHS Yorkshire — Medical Consumables Distribution Framework 2026-2029', reference: 'NHS-YH-2026-0441', buyer: 'NHS Yorkshire and Humber ICB', value: 1200000, deadline_days: 18, capability_match_pct: 91, recommended: true, key_requirements: ['NHS Approved Supplier status', 'Temperature controlled capacity', 'Same-day emergency capability'], win_probability: 68, briefing: 'Strong match. You hold NHS Approved Supplier status and operate temperature-controlled vehicles in Yorkshire. Framework contract — 3 years, £400K/year.' },
+      { title: 'West Yorkshire Combined Authority — Freight Consolidation Service', reference: 'WYCA-2026-FRT-12', buyer: 'West Yorkshire Combined Authority', value: 480000, deadline_days: 31, capability_match_pct: 84, recommended: true, key_requirements: ['FORS Bronze minimum', 'Yorkshire base of operations', 'Carbon reporting capability'], win_probability: 55, briefing: 'Good match. FORS Bronze held. Your Q1 2026 carbon report satisfies their ESG submission requirement.' }
+    ],
+    actions: []
   },
 
   regulation: {
-    check_date: new Date().toISOString(),
-    fleet_type: 'mixed HGV and van',
-    international_ops: false,
-    london_ops: false
+    total_compliance_cost: 2400,
+    total_penalty_risk: 45000,
+    relevant_changes: [
+      { title: 'DVSA HGV Inspection Manual Update — April 2026', source: 'DVSA', effective_date: '2026-04-01', days_to_comply: 0, impact_description: 'Updated brake testing requirements. Laden roller brake test now mandatory — EBPMS is only accepted alternative. Affects all HGV annual tests from April 1st.', affected_vehicles: ['All 4 HGVs'], compliance_action: 'Review next MOT bookings. Confirm test centre has laden brake test capability. BK21 XYZ has brake pad issue — do not present for MOT until fixed.', compliance_cost: 0, penalty_if_ignored: 2500, urgency: 'IMMEDIATE' },
+      { title: 'Smart Tachograph 2 — LCV Retrofit Deadline', source: 'DfT', effective_date: '2026-07-01', days_to_comply: 89, impact_description: 'Light commercial vehicles 2.5-3.5t operating international/cabotage routes must have ST2 fitted by July 1 2026.', affected_vehicles: ['Any LCVs on international runs'], compliance_action: 'Confirm if any vans operate EU routes. If yes, book ST2 retrofit now — lead time 6-8 weeks.', compliance_cost: 2400, penalty_if_ignored: 5000, urgency: 'WITHIN_90_DAYS' }
+    ],
+    actions: []
+  },
+
+  hazmat: {
+    all_clear: false,
+    jobs_checked: 3,
+    penalty_risk: 5000,
+    compliance_failures: [
+      { job_ref: 'JOB-7732', cargo_description: 'Paint and solvents — Class 3 flammable liquid', un_number: 'UN1263', adr_class: '3', failure_reason: 'expired_cert', assigned_driver: 'Paul Wright', driver_cert_expiry: '2025-11-30', block_dispatch: true, resolution: 'Paul Wright ADR certificate expired November 2025. Do not dispatch JOB-7732 until reassigned to ADR-certified driver or Paul renews certificate (minimum 2 day course).' }
+    ],
+    actions: []
   },
 
   consolidation: {
-    todays_jobs: [
-      { ref: 'JOB-A', origin: 'Leeds depot', destination: 'Manchester', weight_kg: 800, volume_m3: 4.2, deadline: '14:00', vehicle_assigned: 'LN70 ABC' },
-      { ref: 'JOB-B', origin: 'Leeds depot', destination: 'Manchester area — Salford', weight_kg: 600, volume_m3: 3.1, deadline: '15:30', vehicle_assigned: 'YX70 MNO' },
-      { ref: 'JOB-C', origin: 'Leeds depot', destination: 'Sheffield', weight_kg: 1200, volume_m3: 6.0, deadline: '13:00', vehicle_assigned: 'BK21 XYZ' },
-      { ref: 'JOB-D', origin: 'Leeds depot', destination: 'Sheffield — Meadowhall', weight_kg: 900, volume_m3: 5.5, deadline: '14:30', vehicle_assigned: 'SF68 PQR' }
+    total_daily_saving: 620,
+    annual_projection: 14880,
+    opportunities: [
+      { route_a: 'JOB-A: Leeds → Manchester (800kg)', route_b: 'JOB-B: Leeds → Salford (600kg)', combined_utilisation_pct: 68, vehicles_saved: 1, fuel_saving: 180, driver_saving: 280, total_saving: 460, feasibility: 'YES', condition: 'JOB-B deadline is 15:30 — sufficient buffer after JOB-A 14:00 delivery. Same vehicle, same driver, back-to-back.', new_schedule: 'LN70 ABC: depart Leeds 11:00 → Manchester (JOB-A, deliver 14:00) → Salford (JOB-B, deliver 15:15). YX70 MNO freed up for other work.' },
+      { route_a: 'JOB-C: Leeds → Sheffield (1200kg)', route_b: 'JOB-D: Leeds → Sheffield Meadowhall (900kg)', combined_utilisation_pct: 74, vehicles_saved: 1, fuel_saving: 95, driver_saving: 65, total_saving: 160, feasibility: 'CONDITIONAL', condition: 'Combined weight 2100kg — within vehicle capacity. JOB-C deadline 13:00, JOB-D deadline 14:30. Feasible if JOB-C delivered first.', new_schedule: 'BK21 XYZ: Leeds → Sheffield city (JOB-C, 12:45) → Meadowhall (JOB-D, 14:15). SF68 PQR freed up.' }
     ],
-    vehicle_capacities: { max_weight_kg: 3500, max_volume_m3: 18 }
+    actions: []
   },
 
   forecast: {
-    historical_volumes: { jan: 420, feb: 398, mar: 445, apr_last_year: 510, may_last_year: 488, jun_last_year: 467 },
-    current_month_to_date: 380,
-    known_upcoming: ['B&Q spring range launch early May', 'NHS quarter-end April 30', 'School Easter holidays week commencing April 7'],
-    current_fleet_capacity_jobs_per_week: 95
+    total_planning_saving: 8400,
+    forecast_periods: [
+      { week: 'Week of April 7 (Easter)', demand_multiplier: 0.6, volume_forecast: 57, current_capacity: 95, capacity_gap: -38, weeks_to_prepare: 1, preparation_actions: ['Reduce agency driver bookings this week', 'Defer non-urgent maintenance to this window', 'Pre-position vehicles for post-Easter peak'], cost_if_prepared_now: 0, cost_if_last_minute: 0, saving_by_planning: 1200 },
+      { week: 'Week of April 28 (NHS Quarter End)', demand_multiplier: 1.45, volume_forecast: 138, current_capacity: 95, capacity_gap: 43, weeks_to_prepare: 3, preparation_actions: ['Book 2 additional agency drivers for Apr 28-30', 'Pre-book emergency refrigerated hire unit', 'Notify NHS Sheffield of capacity plan'], cost_if_prepared_now: 1800, cost_if_last_minute: 4600, saving_by_planning: 2800 }
+    ],
+    actions: []
   },
 
   benchmarking: {
-    active_lanes: [
-      { lane: 'Leeds → London', weekly_runs: 8, current_rate_per_mile: 3.10, contracted_carrier: 'FastFreight UK', contract_renewal: '2026-06-01' },
-      { lane: 'Manchester → Bristol', weekly_runs: 5, current_rate_per_mile: 2.95, contracted_carrier: 'XPO Logistics', contract_renewal: '2026-09-01' },
-      { lane: 'Glasgow → Birmingham', weekly_runs: 3, current_rate_per_mile: 3.40, contracted_carrier: 'DHL Express', contract_renewal: '2027-01-01' },
-      { lane: 'Leeds → Edinburgh', weekly_runs: 4, current_rate_per_mile: 3.20, contracted_carrier: 'Yodel', contract_renewal: '2026-04-30' }
+    total_annual_opportunity: 31200,
+    net_recommendation: 'Increase rates on Leeds-London and Leeds-Edinburgh lanes at next renewal. Both underpriced vs April 2026 market by 12-18%.',
+    lane_analysis: [
+      { lane: 'Leeds → London', current_rate_per_mile: 3.10, market_rate_per_mile: 3.65, delta_pct: -15.1, status: 'underpriced', annual_runs: 416, annual_revenue_gap: 22880, recommended_rate: 3.60, action: 'increase', timing: 'next_renewal' },
+      { lane: 'Leeds → Edinburgh', current_rate_per_mile: 3.20, market_rate_per_mile: 3.72, delta_pct: -14.0, status: 'underpriced', annual_runs: 208, annual_revenue_gap: 10816, recommended_rate: 3.68, action: 'increase', timing: 'next_renewal' },
+      { lane: 'Manchester → Bristol', current_rate_per_mile: 2.95, market_rate_per_mile: 3.10, delta_pct: -4.8, status: 'underpriced', annual_runs: 260, annual_revenue_gap: 3900, recommended_rate: 3.08, action: 'increase', timing: 'next_renewal' },
+      { lane: 'Glasgow → Birmingham', current_rate_per_mile: 3.40, market_rate_per_mile: 3.38, delta_pct: 0.6, status: 'competitive', annual_runs: 156, annual_revenue_gap: 0, recommended_rate: 3.40, action: 'hold', timing: 'monitor' }
     ],
-    market_date: 'April 2026'
+    actions: []
   },
 
   insurance: {
-    open_claims: [
-      { ref: 'CLM-2026-041', date: '2026-03-15', type: 'cargo_damage', claimed_value: 4200, carrier: 'Yodel', description: 'Customer claims 6 pallets of electronics damaged in transit. Carrier denies responsibility.', driver: 'Paul Wright', vehicle: 'YX70 MNO', delivery_ref: 'REF-7201' },
-      { ref: 'CLM-2026-028', date: '2026-02-28', type: 'late_delivery_penalty', claimed_value: 1800, carrier: 'FastFreight UK', description: 'NHS penalty invoice for 3 late deliveries in February', driver: 'Carl Hughes', vehicle: 'BK21 XYZ', delivery_refs: ['REF-6801', 'REF-6823', 'REF-6857'] }
-    ]
+    claim_ref: 'CLM-2026-041',
+    claim_value: 4200,
+    liability_assessment: 'NO_LIABILITY',
+    verdict: 'Evidence strongly supports no liability. GPS data confirms vehicle was stationary at delivery point for 23 minutes before departure — inconsistent with claimant\'s account of damage during transit. Recommend full defence.',
+    response_letter: 'We dispute liability for claim CLM-2026-041. GPS records confirm delivery vehicle YX70 MNO was stationary at the delivery address for 23 minutes. Temperature logs show cargo maintained at correct temperature throughout. Signed POD confirms goods received in satisfactory condition. We request the claimant provide evidence that damage occurred during our custody.',
+    pattern_flags: ['Yodel — 4 damage claims in 90 days on same route. Pattern suggests mishandling at Yodel depot, not in-transit damage.'],
+    evidence: [
+      { type: 'gps_data', description: 'Vehicle stationary at delivery point 14:22-14:45. Departed 14:45 with empty trailer.', exonerates_driver: true, timestamp: '2026-03-15T14:22:00' },
+      { type: 'pod_signature', description: 'Signed POD with no damage noted at time of delivery.', exonerates_driver: true, timestamp: '2026-03-15T14:43:00' }
+    ],
+    actions: []
   }
 }
 
@@ -167,56 +278,59 @@ export async function POST(request) {
       return Response.json({ error: 'module is required' }, { status: 400 })
     }
 
-    // Get client config if provided
-    let clientSystemPrompt = ''
-    if (client_id) {
-      try {
-        const clientConfig = await getClientConfig(client_id)
-        clientSystemPrompt = clientConfig?.system_prompt || ''
-      } catch {}
+    // Check if real client data is connected
+    const isEmptyTrigger = !data || Object.keys(data).filter(k => k !== 'trigger' && k !== 'timestamp').length === 0
+    const hasRealClientData = client_id && !isEmptyTrigger
+
+    let result
+
+    if (hasRealClientData) {
+      // Real client mode — call AI with actual data
+      let clientSystemPrompt = ''
+      if (client_id) {
+        try {
+          const clientConfig = await getClientConfig(client_id)
+          clientSystemPrompt = clientConfig?.system_prompt || ''
+        } catch {}
+      }
+      result = await runModule(module, data, clientSystemPrompt)
+    } else {
+      // Demo mode — return pre-built results instantly
+      result = DEMO_RESULTS[module]
+      if (!result) {
+        result = { severity: 'LOW', financial_impact: 0, sections: { assessment: `${module} module — connect client data to activate.`, immediate_actions: [] }, actions: [] }
+      }
     }
 
-    // Use demo data if no real data provided or data is just a trigger ping
-    const isEmptyTrigger = !data || Object.keys(data).filter(k => k !== 'trigger' && k !== 'timestamp').length === 0
-    const moduleData = isEmptyTrigger ? (DEMO_DATA[module] || data) : data
-
-    // Run the module
-    const result = await runModule(module, moduleData, clientSystemPrompt)
-
-    // Log the run (silently fail if no Supabase)
+    // Log to Supabase silently if available
     let moduleRun = null
     if (client_id) {
-      try {
-        moduleRun = await logModuleRun(client_id, module, moduleData, result)
-      } catch {}
+      try { moduleRun = await logModuleRun(client_id, module, data, result) } catch {}
     }
 
-    // Queue any actions (silently fail if no Supabase)
+    // Queue actions silently if available
     const queuedActions = []
-    if (result.actions && Array.isArray(result.actions) && client_id && moduleRun) {
+    if (result.actions?.length && client_id && moduleRun) {
       for (const action of result.actions) {
         try {
           const approval = await queueAction({
-            client_id,
-            module_run_id: moduleRun.id,
-            action_type: action.type,
-            action_label: action.label,
-            action_details: { recipient: action.recipient, content: action.content, subject: action.subject, to: action.recipient },
+            client_id, module_run_id: moduleRun.id,
+            action_type: action.type, action_label: action.label,
+            action_details: { recipient: action.recipient, content: action.content, subject: action.subject },
             financial_value: action.financial_value || 0,
             auto_approve: action.auto_approve || false
           })
-          queuedActions.push({ ...action, approval_id: approval.id, approval_status: approval.status })
+          queuedActions.push({ ...action, approval_id: approval?.id })
         } catch {}
       }
     }
 
     return Response.json({
-      success: true,
-      module,
-      result,
+      success: true, module, result,
       module_run_id: moduleRun?.id,
       actions_queued: queuedActions.length,
-      actions: queuedActions
+      actions: queuedActions,
+      demo_mode: !hasRealClientData
     })
 
   } catch (error) {
@@ -225,10 +339,6 @@ export async function POST(request) {
   }
 }
 
-// GET /api/modules
-export async function GET(request) {
-  return Response.json({
-    available_modules: Object.keys(DEMO_DATA),
-    status: 'operational'
-  })
+export async function GET() {
+  return Response.json({ available_modules: Object.keys(DEMO_RESULTS), status: 'operational' })
 }
