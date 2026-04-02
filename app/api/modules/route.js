@@ -14,15 +14,12 @@ const DEMO_DATA = {
 
   invoice: {
     invoices: [
-      { ref: 'INV-2024-8821', carrier: 'FastFreight UK', amount: 1847.50, route: 'Manchester-London', weight_kg: 4200, distance_miles: 212, date: '2026-03-28', fuel_surcharge_pct: 18.5, agreed_rate_per_mile: 3.20 },
-      { ref: 'INV-2024-8799', carrier: 'DHL Express', amount: 2340.00, route: 'Glasgow-Birmingham', weight_kg: 6800, distance_miles: 298, date: '2026-03-25', fuel_surcharge_pct: 17.2, agreed_rate_per_mile: 4.10 },
-      { ref: 'INV-2024-8756', carrier: 'XPO Logistics', amount: 890.00, route: 'Leeds-Cardiff', weight_kg: 1800, distance_miles: 189, date: '2026-03-22', fuel_surcharge_pct: 22.0, agreed_rate_per_mile: 3.50 },
-      { ref: 'INV-2024-8742', carrier: 'FastFreight UK', amount: 1650.00, route: 'Bristol-Edinburgh', weight_kg: 3100, distance_miles: 390, date: '2026-03-20', fuel_surcharge_pct: 18.5, agreed_rate_per_mile: 3.20, note: 'duplicate of INV-2024-8698' }
+      { ref: 'INV-2024-8821', carrier: 'FastFreight UK', amount: 1847.50, route: 'Manchester-London', distance_miles: 212, date: '2026-03-28', fuel_surcharge_pct: 18.5, agreed_rate_per_mile: 3.20 },
+      { ref: 'INV-2024-8756', carrier: 'XPO Logistics', amount: 890.00, route: 'Leeds-Cardiff', distance_miles: 189, date: '2026-03-22', fuel_surcharge_pct: 22.0, agreed_rate_per_mile: 3.50 }
     ],
     rate_cards: {
-      'FastFreight UK': { rate_per_mile: 3.20, max_fuel_surcharge_pct: 15.0, agreed_in_contract: true },
-      'DHL Express': { rate_per_mile: 4.10, max_fuel_surcharge_pct: 16.0, agreed_in_contract: true },
-      'XPO Logistics': { rate_per_mile: 3.50, max_fuel_surcharge_pct: 15.0, agreed_in_contract: true }
+      'FastFreight UK': { max_fuel_surcharge_pct: 15.0 },
+      'XPO Logistics': { max_fuel_surcharge_pct: 15.0 }
     },
     period: 'March 2026'
   },
