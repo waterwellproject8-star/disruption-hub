@@ -1,24 +1,12 @@
-{
-  "crons": [
-    {
-      "path": "/api/scheduled/run",
-      "schedule": "0 6 * * *",
-      "comment": "Daily — runs intelligence modules for all active clients"
-    },
-    {
-      "path": "/api/actions/auto-execute",
-      "schedule": "*/5 * * * *",
-      "comment": "Every 5 min — executes auto-approved actions"
-    },
-    {
-      "path": "/api/telematics/poll",
-      "schedule": "*/2 * * * *",
-      "comment": "Every 2 min — polls telematics providers for GPS positions"
-    },
-    {
-      "path": "/api/platform/health",
-      "schedule": "0 8 1-7 * 1",
-      "comment": "First Monday of each month 08:00 — platform health check"
-    }
-  ]
-}
+{}
+```
+
+Just those two curly brackets. Nothing else.
+
+Press **Cmd+S** to save. Close TextEdit.
+
+Then in Terminal:
+```
+git add .
+git commit -m "Fix vercel config"
+git push
