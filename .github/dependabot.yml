@@ -1,0 +1,40 @@
+# ── DisruptionHub — Dependabot Configuration ─────────────────────────────────
+# Place this file at: .github/dependabot.yml in your GitHub repository
+# Dependabot will automatically open PRs when dependencies have updates.
+# Review and merge — takes 2 minutes per week.
+
+version: 2
+updates:
+
+  # npm packages — weekly check every Monday
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Europe/London"
+    # Only auto-open PRs for patch and minor updates
+    # Major version updates (e.g. Next.js 14 → 15) need manual review
+    versioning-strategy: "increase"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+      - "automated"
+    commit-message:
+      prefix: "deps"
+    # Group minor and patch updates together into one PR per week
+    groups:
+      minor-and-patch:
+        update-types:
+          - "minor"
+          - "patch"
+      anthropic-sdk:
+        patterns:
+          - "@anthropic-ai/*"
+      supabase:
+        patterns:
+          - "@supabase/*"
+      major-updates:
+        update-types:
+          - "major"
