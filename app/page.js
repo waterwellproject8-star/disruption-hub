@@ -376,7 +376,7 @@ export default function HomePage() {
         <p style={{ color: 'var(--text2)', marginBottom: 36, fontSize: 14 }}>One missed SLA typically costs more than a year of DisruptionHub.</p>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(240px,1fr))', gap: 16 }}>
           {[
-            { name: 'Starter', price: '£399', period: '/month', target: '1–5 vehicles', features: ['Live disruption dashboard', 'Manual incident input', 'Weather & traffic alerts', '5 agent analyses/day', 'Email incident reports'], cta: 'Get started' },
+            { name: 'Starter', price: '£299', period: '/month', target: '1–5 vehicles', features: ['Live disruption dashboard', 'Manual incident input', 'Weather & traffic alerts', '5 agent analyses/day', 'Email incident reports'], cta: 'Get started' },
             { name: 'Professional', price: '£799', period: '/month', target: '5–50 vehicles', featured: true, features: ['Everything in Starter', 'TMS webhook integration', 'Auto-triggered analysis', 'Slack & Teams alerts', 'Unlimited analyses', 'Incident history & trends', 'WMS stock monitoring'], cta: 'Start free pilot' },
             { name: 'Enterprise', price: '£1499', period: '/month', target: '50+ vehicles', features: ['Everything in Professional', 'White-label dashboard', 'Custom agent training', 'Multi-depot management', 'API access', 'Dedicated onboarding', 'SLA guarantee'], cta: 'Talk to us' },
           ].map(p => (
