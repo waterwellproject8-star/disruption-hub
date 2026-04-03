@@ -1022,12 +1022,20 @@ export default function DashboardPage() {
       financial_value: 0
     }, ...prev])
 
-    // Also try real Supabase if connected
+    // Write to Supabase approvals via dedicated endpoint
     try {
-      await fetch('/api/approvals', {
+      await fetch('/api/approvals/log', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ approval_id: actionId, action: 'approve', action_type: actionType, action_label: actionLabel, approved_by: 'ops_manager' })
+        body: JSON.stringify({
+          id: actionId,
+          client_id: 'pearson-haulage',
+          action_type: actionType,
+          action_label: actionLabel,
+          status: 'executed',
+          approved_by: 'ops_manager',
+          executed_at: new Date().toISOString()
+        })
       })
     } catch {}
   }
