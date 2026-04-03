@@ -1150,7 +1150,7 @@ export default function DashboardPage() {
           {/* Active Shipments */}
           <div style={{ padding:'14px', borderBottom:'1px solid rgba(255,255,255,0.06)' }}>
             <div style={{ fontSize:9, fontFamily:'monospace', color:'#4a5260', letterSpacing:'0.08em', marginBottom:8 }}>ACTIVE SHIPMENTS</div>
-            {ACTIVE_SHIPMENTS.map(s => (
+            {(liveShipments.length > 0 ? liveShipments : ACTIVE_SHIPMENTS).map(s => (
               <div key={s.ref} onClick={() => analyseShipment(s)} style={{ padding:'9px 10px', borderRadius:6, marginBottom:5, cursor:'pointer', border:activeShipment===s.ref?'1px solid #00e5b0':'1px solid rgba(255,255,255,0.05)', background:s.status==='disrupted'?'rgba(239,68,68,0.07)':s.status==='delayed'?'rgba(245,158,11,0.05)':'#111418', transition:'all 0.15s' }}>
                 <div style={{ display:'flex', justifyContent:'space-between', marginBottom:2 }}>
                   <span style={{ fontFamily:'monospace', fontSize:11, color:'#e8eaed', fontWeight:500 }}>{s.ref}</span>
