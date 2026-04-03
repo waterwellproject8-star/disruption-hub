@@ -834,12 +834,28 @@ export default function DashboardPage() {
       const moneyMatch = full.match(/£([\d,]+)/)
       const sev = sevMatch ? sevMatch[1] : 'MEDIUM'
       const saved = moneyMatch ? '£' + moneyMatch[1] : null
-      const ref = newMessages[0]?.content?.match(/REF-[\w]+/)?.[0] || 'MANUAL'
-      const incidentType = newMessages[0]?.content?.slice(0,40).replace(/\n.*/,'') || 'Analysis'
+      const ref = newMessages[newMessages.length-1]?.content?.match(/(?:REF|PH)-[\w]+/)?.[0] ||
+                  newMessages[0]?.content?.match(/(?:REF|PH)-[\w]+/)?.[0] || 'MANUAL'
+      const incidentType = newMessages[0]?.content?.split('\n')[0]?.slice(0,35) || 'Analysis'
       setSessionIncidents(prev => [{
-        ref, type: incidentType.substring(0,30), severity: sev,
+        ref, type: incidentType, severity: sev,
         saved, date: 'Just now'
       }, ...prev].slice(0, 8))
+      // Save to Supabase incidents table
+      try {
+        await fetch('/api/incidents', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            client_id: 'pearson-haulage',
+            user_input: newMessages[newMessages.length-1]?.content || '',
+            ai_response: full,
+            severity: sev,
+            financial_impact: moneyMatch ? parseInt(moneyMatch[1].replace(/,/g,'')) : 0,
+            ref
+          })
+        })
+      } catch {}
     } catch { setResponse('Connection error. Check your API key.') }
     finally { setLoading(false) }
   }
@@ -915,7 +931,13 @@ export default function DashboardPage() {
         }
       }
     }
-    return actions.slice(0, 4) // Max 4 action buttons
+    return actions.slice(0, 4).map(a => ({
+      ...a,
+      id: 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+        const r = Math.random() * 16 | 0
+        return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16)
+      })
+    }))
   }
 
   function extractActionsFromModuleResult(result, moduleId) {
@@ -961,7 +983,13 @@ export default function DashboardPage() {
       actions.push({ id:'tender-brief', label:`Send tender briefing — ${result.matching_tenders.length} match${result.matching_tenders.length>1?'es':''}`, type:'email', icon:'🏆' })
     }
 
-    return actions.slice(0, 4)
+    return actions.slice(0, 4).map(a => ({
+      ...a,
+      id: 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+        const r = Math.random() * 16 | 0
+        return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16)
+      })
+    }))
   }
 
   async function fireAction(actionId, actionLabel, actionType) {
