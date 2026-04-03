@@ -216,125 +216,372 @@ function AgentResponse({ text }) {
 }
 
 // ── MODULE RESULT RENDERER ─────────────────────────────────────────────────
+function MetricBadge({ label, value, color = '#00e5b0', prefix = '' }) {
+  return (
+    <div style={{ padding:'6px 14px', borderRadius:6, background:`${color}10`, border:`1px solid ${color}25` }}>
+      <div style={{ fontSize:9, color:'#4a5260', fontFamily:'monospace', marginBottom:2 }}>{label}</div>
+      <div style={{ fontSize:14, fontWeight:700, color, fontFamily:'monospace' }}>{prefix}{typeof value === 'number' ? value.toLocaleString() : value}</div>
+    </div>
+  )
+}
+
+function SectionBlock({ label, children, labelColor = '#4a5260' }) {
+  return (
+    <div style={{ padding:'12px 14px', borderBottom:'1px solid rgba(255,255,255,0.04)' }}>
+      <div style={{ fontSize:9, fontFamily:'monospace', color:labelColor, letterSpacing:'0.08em', marginBottom:8 }}>{label}</div>
+      {children}
+    </div>
+  )
+}
+
+function ActionCard({ text, index, urgent }) {
+  return (
+    <div style={{ display:'flex', gap:10, marginBottom:6, padding:'8px 10px', background:'#111418', borderRadius:5, border: urgent ? '1px solid rgba(239,68,68,0.2)' : '1px solid rgba(255,255,255,0.06)' }}>
+      <div style={{ width:18, height:18, borderRadius:'50%', background: urgent ? '#ef4444' : '#00e5b0', color:'#000', display:'flex', alignItems:'center', justifyContent:'center', fontSize:9, fontWeight:700, flexShrink:0, marginTop:1 }}>{index + 1}</div>
+      <div style={{ fontSize:11, color:'#e8eaed', lineHeight:1.6 }}>{text}</div>
+    </div>
+  )
+}
+
+function ItemCard({ children, bg = 'rgba(255,255,255,0.03)', border = 'rgba(255,255,255,0.08)' }) {
+  return (
+    <div style={{ padding:'10px 12px', background:bg, border:`1px solid ${border}`, borderRadius:6, marginBottom:6 }}>
+      {children}
+    </div>
+  )
+}
+
+function KV({ k, v, valueColor = '#e8eaed' }) {
+  if (v === null || v === undefined || v === '') return null
+  return (
+    <div style={{ display:'flex', gap:6, marginBottom:3, flexWrap:'wrap' }}>
+      <span style={{ fontSize:10, color:'#4a5260', fontFamily:'monospace', flexShrink:0 }}>{k.replace(/_/g,' ').toUpperCase()}:</span>
+      <span style={{ fontSize:11, color:valueColor }}>{String(v)}</span>
+    </div>
+  )
+}
+
 function ModuleResult({ result, moduleName }) {
   if (!result) return null
   const r = result.result || result
+  const SEV = { CRITICAL:'#ef4444', HIGH:'#f59e0b', MEDIUM:'#3b82f6', LOW:'#8a9099' }
 
-  const sevColor = SEV_COLORS[r.severity] || '#8a9099'
-  const sevBg = SEV_BG[r.severity] || 'rgba(138,144,153,0.1)'
+  // Collect all top-level numeric financial fields for the metrics bar
+  const financialKeys = ['financial_impact','total_overcharge','annual_projection','total_breach_cost',
+    'renegotiation_saving','total_daily_saving','total_planning_saving','total_annual_opportunity',
+    'total_breakdown_risk','total_preventive_cost','total_replacement_cost_at_risk',
+    'total_penalty_risk','total_compliance_cost','dvsa_penalty_risk','total_saving',
+    'saving','claim_value']
+  const financialMetrics = financialKeys.filter(k => r[k] > 0)
 
   return (
     <div style={{ marginTop:16 }}>
-      {/* Header bar */}
+      {/* Header */}
       <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'10px 14px', background:'rgba(0,229,176,0.06)', border:'1px solid rgba(0,229,176,0.15)', borderRadius:'8px 8px 0 0', fontFamily:'monospace', fontSize:11, color:'#00e5b0' }}>
         <span>MODULE RESULT — {moduleName?.toUpperCase()}</span>
-        {result.actions_queued > 0 && <span style={{ color:'#f59e0b' }}>● {result.actions_queued} action{result.actions_queued !== 1 ? 's' : ''} queued for approval</span>}
+        {result.demo_mode && <span style={{ color:'#4a5260' }}>DEMO DATA</span>}
+        {result.actions_queued > 0 && <span style={{ color:'#f59e0b' }}>● {result.actions_queued} actions queued</span>}
       </div>
 
       <div style={{ border:'1px solid rgba(0,229,176,0.15)', borderTop:'none', borderRadius:'0 0 8px 8px', overflow:'hidden' }}>
 
-        {/* Severity + financials row */}
-        {(r.severity || r.financial_impact || r.total_overcharge) && (
-          <div style={{ display:'flex', gap:10, padding:'12px 14px', background:'#0d1014', borderBottom:'1px solid rgba(255,255,255,0.06)', flexWrap:'wrap' }}>
-            {r.severity && (
-              <div style={{ padding:'6px 14px', borderRadius:6, background:sevBg, border:`1px solid ${sevColor}30` }}>
-                <div style={{ fontSize:9, color:'#4a5260', fontFamily:'monospace', marginBottom:2 }}>SEVERITY</div>
-                <div style={{ fontSize:14, fontWeight:700, color:sevColor, fontFamily:'monospace' }}>{r.severity}</div>
-              </div>
-            )}
-            {(r.financial_impact > 0 || r.total_overcharge > 0) && (
-              <div style={{ padding:'6px 14px', borderRadius:6, background:'rgba(0,229,176,0.06)', border:'1px solid rgba(0,229,176,0.15)' }}>
-                <div style={{ fontSize:9, color:'#4a5260', fontFamily:'monospace', marginBottom:2 }}>{r.total_overcharge ? 'RECOVERABLE' : 'FINANCIAL EXPOSURE'}</div>
-                <div style={{ fontSize:14, fontWeight:700, color:'#00e5b0', fontFamily:'monospace' }}>£{(r.financial_impact || r.total_overcharge || 0).toLocaleString()}</div>
-              </div>
-            )}
-            {r.affected_shipments > 0 && (
-              <div style={{ padding:'6px 14px', borderRadius:6, background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.08)' }}>
-                <div style={{ fontSize:9, color:'#4a5260', fontFamily:'monospace', marginBottom:2 }}>AFFECTED</div>
-                <div style={{ fontSize:14, fontWeight:700, color:'#e8eaed', fontFamily:'monospace' }}>{r.affected_shipments} shipment{r.affected_shipments !== 1 ? 's' : ''}</div>
-              </div>
-            )}
-            {r.time_to_resolution && r.time_to_resolution !== 'N/A – No disruption detected' && (
-              <div style={{ padding:'6px 14px', borderRadius:6, background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.08)' }}>
-                <div style={{ fontSize:9, color:'#4a5260', fontFamily:'monospace', marginBottom:2 }}>RESOLUTION</div>
-                <div style={{ fontSize:12, fontWeight:500, color:'#e8eaed', fontFamily:'monospace' }}>{r.time_to_resolution}</div>
-              </div>
-            )}
-            {r.annual_projection > 0 && (
-              <div style={{ padding:'6px 14px', borderRadius:6, background:'rgba(0,229,176,0.06)', border:'1px solid rgba(0,229,176,0.15)' }}>
-                <div style={{ fontSize:9, color:'#4a5260', fontFamily:'monospace', marginBottom:2 }}>ANNUAL PROJECTION</div>
-                <div style={{ fontSize:14, fontWeight:700, color:'#00e5b0', fontFamily:'monospace' }}>£{r.annual_projection?.toLocaleString()}</div>
-              </div>
-            )}
+        {/* Metrics bar */}
+        {(r.severity || financialMetrics.length > 0 || r.all_clear === false) && (
+          <div style={{ display:'flex', gap:8, padding:'12px 14px', background:'#0d1014', borderBottom:'1px solid rgba(255,255,255,0.06)', flexWrap:'wrap' }}>
+            {r.severity && <MetricBadge label="SEVERITY" value={r.severity} color={SEV[r.severity] || '#8a9099'} />}
+            {r.all_clear === false && <MetricBadge label="STATUS" value="ACTION REQUIRED" color="#ef4444" />}
+            {r.all_clear === true && <MetricBadge label="STATUS" value="ALL CLEAR" color="#00e5b0" />}
+            {financialMetrics.slice(0,3).map(k => (
+              <MetricBadge key={k} label={k.replace(/_/g,' ').toUpperCase()} value={r[k]} color="#00e5b0" prefix="£" />
+            ))}
+            {(r.drivers_at_risk?.length > 0) && <MetricBadge label="DRIVERS AT RISK" value={r.drivers_at_risk.length} color="#f59e0b" />}
+            {(r.vehicles_at_risk?.length > 0) && <MetricBadge label="VEHICLES AT RISK" value={r.vehicles_at_risk.length} color="#ef4444" />}
+            {(r.at_risk_deliveries?.length > 0) && <MetricBadge label="DELIVERIES AT RISK" value={r.at_risk_deliveries.length} color="#f59e0b" />}
+            {(r.at_risk_drivers?.length > 0) && <MetricBadge label="DRIVERS AT RISK" value={r.at_risk_drivers.length} color="#f59e0b" />}
+            {(r.flags_found > 0) && <MetricBadge label="FLAGS FOUND" value={r.flags_found} color="#ef4444" />}
+            {(r.compliance_failures?.length > 0) && <MetricBadge label="COMPLIANCE FAILURES" value={r.compliance_failures.length} color="#ef4444" />}
+            {(r.discrepancies?.length > 0) && <MetricBadge label="OVERCHARGES FOUND" value={r.discrepancies.length} color="#ef4444" />}
+            {(r.matching_tenders?.length > 0) && <MetricBadge label="MATCHING TENDERS" value={r.matching_tenders.length} color="#a855f7" />}
+            {(r.opportunities?.length > 0) && <MetricBadge label="OPPORTUNITIES" value={r.opportunities.length} color="#00e5b0" />}
           </div>
         )}
 
-        {/* Assessment */}
-        {r.sections?.assessment && r.sections.assessment !== 'N/A – No disruption detected' && (
-          <div style={{ padding:'12px 14px', borderBottom:'1px solid rgba(255,255,255,0.04)' }}>
-            <div style={{ fontSize:9, fontFamily:'monospace', color:'#4a5260', letterSpacing:'0.08em', marginBottom:6 }}>ASSESSMENT</div>
+        {/* ── DISRUPTION / SLA sections format ── */}
+        {r.sections?.assessment && (
+          <SectionBlock label="ASSESSMENT">
             <div style={{ fontSize:12, color:'#8a9099', lineHeight:1.7 }}>{r.sections.assessment}</div>
-          </div>
+          </SectionBlock>
         )}
-
-        {/* Immediate actions */}
         {r.sections?.immediate_actions?.length > 0 && (
-          <div style={{ padding:'12px 14px', borderBottom:'1px solid rgba(255,255,255,0.04)' }}>
-            <div style={{ fontSize:9, fontFamily:'monospace', color:'#4a5260', letterSpacing:'0.08em', marginBottom:8 }}>IMMEDIATE ACTIONS</div>
-            {r.sections.immediate_actions.map((action, i) => (
-              <div key={i} style={{ display:'flex', gap:10, marginBottom:6, padding:'8px 10px', background:'#111418', borderRadius:5, border:'1px solid rgba(255,255,255,0.06)' }}>
-                <div style={{ width:18, height:18, borderRadius:'50%', background:'#00e5b0', color:'#000', display:'flex', alignItems:'center', justifyContent:'center', fontSize:9, fontWeight:700, flexShrink:0, marginTop:1 }}>{i+1}</div>
-                <div style={{ fontSize:11, color:'#e8eaed', lineHeight:1.6 }}>{action}</div>
-              </div>
-            ))}
-          </div>
+          <SectionBlock label="IMMEDIATE ACTIONS">
+            {r.sections.immediate_actions.map((a,i) => <ActionCard key={i} text={a} index={i} urgent={a.includes('NOW')||a.includes('999')} />)}
+          </SectionBlock>
         )}
-
-        {/* Discrepancies (invoice module) */}
-        {r.discrepancies?.length > 0 && (
-          <div style={{ padding:'12px 14px', borderBottom:'1px solid rgba(255,255,255,0.04)' }}>
-            <div style={{ fontSize:9, fontFamily:'monospace', color:'#4a5260', letterSpacing:'0.08em', marginBottom:8 }}>DISCREPANCIES FOUND</div>
-            {r.discrepancies.map((d, i) => (
-              <div key={i} style={{ padding:'8px 10px', background:'rgba(239,68,68,0.06)', border:'1px solid rgba(239,68,68,0.15)', borderRadius:5, marginBottom:6 }}>
-                <div style={{ display:'flex', justifyContent:'space-between', marginBottom:3 }}>
-                  <span style={{ fontSize:11, color:'#e8eaed', fontFamily:'monospace' }}>{d.invoice_ref} — {d.carrier}</span>
-                  <span style={{ fontSize:11, color:'#00e5b0', fontFamily:'monospace', fontWeight:700 }}>+£{(d.delta || 0).toLocaleString()}</span>
-                </div>
-                <div style={{ fontSize:10, color:'#8a9099' }}>{d.issue_type?.replace(/_/g,' ').toUpperCase()} · {d.evidence}</div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Who to contact */}
         {r.sections?.who_to_contact && (
-          <div style={{ padding:'12px 14px', borderBottom:'1px solid rgba(255,255,255,0.04)' }}>
-            <div style={{ fontSize:9, fontFamily:'monospace', color:'#4a5260', letterSpacing:'0.08em', marginBottom:6 }}>WHO TO CONTACT</div>
+          <SectionBlock label="WHO TO CONTACT">
             <div style={{ fontSize:12, color:'#8a9099', lineHeight:1.7 }}>{r.sections.who_to_contact}</div>
-          </div>
+          </SectionBlock>
         )}
-
-        {/* Downstream risks */}
         {r.sections?.downstream_risks && (
-          <div style={{ padding:'12px 14px', borderBottom:'1px solid rgba(255,255,255,0.04)' }}>
-            <div style={{ fontSize:9, fontFamily:'monospace', color:'#f59e0b', letterSpacing:'0.08em', marginBottom:6 }}>DOWNSTREAM RISKS</div>
+          <SectionBlock label="DOWNSTREAM RISKS" labelColor="#f59e0b">
             <div style={{ fontSize:12, color:'#8a9099', lineHeight:1.7 }}>{r.sections.downstream_risks}</div>
-          </div>
+          </SectionBlock>
         )}
-
-        {/* Prevention */}
         {r.sections?.prevention && (
-          <div style={{ padding:'12px 14px' }}>
-            <div style={{ fontSize:9, fontFamily:'monospace', color:'#4a5260', letterSpacing:'0.08em', marginBottom:6 }}>PREVENTION</div>
+          <SectionBlock label="PREVENTION">
             <div style={{ fontSize:12, color:'#8a9099', lineHeight:1.7 }}>{r.sections.prevention}</div>
-          </div>
+          </SectionBlock>
         )}
 
-        {/* Fallback for modules with different structure */}
-        {!r.sections && !r.discrepancies && r.time_to_resolution === 'N/A – No disruption detected' && (
-          <div style={{ padding:'16px 14px', textAlign:'center' }}>
+        {/* ── INVOICE discrepancies ── */}
+        {r.discrepancies?.length > 0 && (
+          <SectionBlock label="OVERCHARGES FOUND">
+            {r.discrepancies.map((d,i) => (
+              <ItemCard key={i} bg="rgba(239,68,68,0.06)" border="rgba(239,68,68,0.15)">
+                <div style={{ display:'flex', justifyContent:'space-between', marginBottom:4 }}>
+                  <span style={{ fontSize:11, color:'#e8eaed', fontFamily:'monospace' }}>{d.invoice_ref} — {d.carrier}</span>
+                  <span style={{ fontSize:12, color:'#00e5b0', fontFamily:'monospace', fontWeight:700 }}>+£{(d.delta||0).toLocaleString()}</span>
+                </div>
+                <div style={{ fontSize:10, color:'#8a9099' }}>{d.issue_type?.replace(/_/g,' ').toUpperCase()}</div>
+                <div style={{ fontSize:11, color:'#8a9099', marginTop:3 }}>{d.evidence}</div>
+              </ItemCard>
+            ))}
+          </SectionBlock>
+        )}
+
+        {/* ── CARRIERS ── */}
+        {r.carriers?.length > 0 && (
+          <SectionBlock label="CARRIER PERFORMANCE">
+            {r.carriers.map((c,i) => (
+              <ItemCard key={i} bg={c.below_threshold ? 'rgba(239,68,68,0.05)' : 'rgba(0,229,176,0.03)'} border={c.below_threshold ? 'rgba(239,68,68,0.15)' : 'rgba(255,255,255,0.08)'}>
+                <div style={{ display:'flex', justifyContent:'space-between', marginBottom:4 }}>
+                  <span style={{ fontSize:12, color:'#e8eaed', fontWeight:500 }}>{c.name}</span>
+                  <span style={{ fontSize:11, color: c.recommendation==='terminate'?'#ef4444':c.recommendation==='renegotiate'?'#f59e0b':'#00e5b0', fontFamily:'monospace', fontWeight:700 }}>{c.recommendation?.toUpperCase()}</span>
+                </div>
+                <div style={{ display:'flex', gap:12, flexWrap:'wrap' }}>
+                  <span style={{ fontSize:10, color: c.on_time_rate < c.contract_threshold_otr ? '#ef4444' : '#8a9099' }}>OTR: {c.on_time_rate}% (min {c.contract_threshold_otr}%)</span>
+                  <span style={{ fontSize:10, color:'#8a9099' }}>Damage: {c.damage_rate}%</span>
+                  {c.sla_breach_cost > 0 && <span style={{ fontSize:10, color:'#f59e0b' }}>Breach cost: £{c.sla_breach_cost?.toLocaleString()}</span>}
+                </div>
+                <div style={{ fontSize:10, color:'#4a5260', marginTop:4 }}>{c.evidence_summary}</div>
+              </ItemCard>
+            ))}
+          </SectionBlock>
+        )}
+
+        {/* ── DRIVERS AT RISK (hours/retention) ── */}
+        {(r.drivers_at_risk?.length > 0 || r.at_risk_drivers?.length > 0) && (
+          <SectionBlock label="DRIVERS FLAGGED">
+            {[...(r.drivers_at_risk||[]), ...(r.at_risk_drivers||[])].map((d,i) => (
+              <ItemCard key={i} bg={d.breach_risk||d.risk_level==='HIGH' ? 'rgba(239,68,68,0.05)' : 'rgba(245,158,11,0.04)'} border={d.breach_risk||d.risk_level==='HIGH' ? 'rgba(239,68,68,0.15)' : 'rgba(245,158,11,0.15)'}>
+                <div style={{ display:'flex', justifyContent:'space-between', marginBottom:4 }}>
+                  <span style={{ fontSize:12, color:'#e8eaed', fontWeight:500 }}>{d.name} — {d.vehicle_reg || d.vehicle}</span>
+                  {d.risk_level && <span style={{ fontSize:10, color: d.risk_level==='HIGH'?'#ef4444':'#f59e0b', fontFamily:'monospace', fontWeight:700 }}>{d.risk_level}</span>}
+                </div>
+                <div style={{ fontSize:11, color:'#f59e0b' }}>{d.specific_instruction || d.recommended_interventions?.[0]}</div>
+                {d.signals?.map((s,si) => <div key={si} style={{ fontSize:10, color:'#4a5260', marginTop:2 }}>— {s}</div>)}
+                {d.breach_risk && <div style={{ fontSize:10, color:'#ef4444', marginTop:3 }}>Hours worked: {d.hours_worked} / {d.wtd_limit} limit · {d.remaining_hours}h remaining</div>}
+              </ItemCard>
+            ))}
+          </SectionBlock>
+        )}
+
+        {/* ── VEHICLES AT RISK ── */}
+        {r.vehicles_at_risk?.length > 0 && (
+          <SectionBlock label="VEHICLES FLAGGED">
+            {r.vehicles_at_risk.map((v,i) => (
+              <ItemCard key={i} bg="rgba(239,68,68,0.05)" border="rgba(239,68,68,0.15)">
+                <div style={{ display:'flex', justifyContent:'space-between', marginBottom:4 }}>
+                  <span style={{ fontSize:12, color:'#e8eaed', fontWeight:500 }}>{v.reg}</span>
+                  <span style={{ fontSize:11, color:'#ef4444', fontFamily:'monospace' }}>{v.failure_probability}% failure risk</span>
+                </div>
+                <div style={{ fontSize:11, color:'#f59e0b', marginBottom:3 }}>{v.preventive_fix}</div>
+                <div style={{ fontSize:10, color:'#4a5260' }}>Breakdown cost if ignored: £{v.breakdown_cost?.toLocaleString()} · Preventive fix: £{v.preventive_cost?.toLocaleString()}</div>
+                <div style={{ fontSize:10, color:'#8a9099', marginTop:2 }}>Optimal slot: {v.optimal_service_slot}</div>
+              </ItemCard>
+            ))}
+          </SectionBlock>
+        )}
+
+        {/* ── SLA at-risk deliveries ── */}
+        {r.at_risk_deliveries?.length > 0 && (
+          <SectionBlock label="DELIVERIES AT RISK">
+            {r.at_risk_deliveries.map((d,i) => (
+              <ItemCard key={i} bg={d.breach_probability > 80 ? 'rgba(239,68,68,0.05)' : 'rgba(245,158,11,0.04)'} border={d.breach_probability > 80 ? 'rgba(239,68,68,0.15)' : 'rgba(245,158,11,0.15)'}>
+                <div style={{ display:'flex', justifyContent:'space-between', marginBottom:4 }}>
+                  <span style={{ fontSize:12, color:'#e8eaed', fontWeight:500 }}>{d.ref} — {d.client}</span>
+                  <span style={{ fontSize:11, color: d.breach_probability > 80 ? '#ef4444' : '#f59e0b', fontFamily:'monospace' }}>{d.breach_probability}% breach risk</span>
+                </div>
+                <div style={{ fontSize:10, color:'#8a9099' }}>SLA closes: {d.sla_window_closes} · Current ETA: {d.current_eta} · Penalty: £{d.penalty_if_breached?.toLocaleString()}</div>
+                {d.reroute_saves_sla && <div style={{ fontSize:11, color:'#00e5b0', marginTop:4 }}>✓ REROUTE AVAILABLE: {d.reroute_instruction}</div>}
+                {!d.reroute_saves_sla && <div style={{ fontSize:11, color:'#ef4444', marginTop:4 }}>{d.reroute_instruction}</div>}
+              </ItemCard>
+            ))}
+          </SectionBlock>
+        )}
+
+        {/* ── FUEL vehicles ── */}
+        {r.vehicles_to_fill?.length > 0 && (
+          <SectionBlock label={`FILL NOW — ${r.recommendation?.toUpperCase().replace(/_/g,' ')}`} labelColor={r.recommendation==='fill_now'?'#00e5b0':'#f59e0b'}>
+            <div style={{ fontSize:12, color:'#8a9099', marginBottom:8, lineHeight:1.6 }}>{r.reasoning}</div>
+            {r.vehicles_to_fill.map((v,i) => (
+              <ItemCard key={i}>
+                <div style={{ display:'flex', justifyContent:'space-between' }}>
+                  <span style={{ fontSize:11, color:'#e8eaed' }}>{v.reg} — {v.driver}</span>
+                  <span style={{ fontSize:11, color:'#00e5b0', fontFamily:'monospace' }}>Save £{v.saving?.toFixed(2)}</span>
+                </div>
+                <div style={{ fontSize:10, color:'#8a9099', marginTop:2 }}>{v.current_level_pct}% fuel · {v.nearest_fuel_stop}</div>
+              </ItemCard>
+            ))}
+          </SectionBlock>
+        )}
+
+        {/* ── COMPLIANCE failures / flags ── */}
+        {r.compliance_failures?.length > 0 && (
+          <SectionBlock label="COMPLIANCE FAILURES — DISPATCH BLOCKED" labelColor="#ef4444">
+            {r.compliance_failures.map((f,i) => (
+              <ItemCard key={i} bg="rgba(239,68,68,0.07)" border="rgba(239,68,68,0.2)">
+                <div style={{ display:'flex', justifyContent:'space-between', marginBottom:4 }}>
+                  <span style={{ fontSize:11, color:'#e8eaed', fontFamily:'monospace' }}>{f.job_ref} — {f.assigned_driver}</span>
+                  <span style={{ fontSize:10, color:'#ef4444', fontFamily:'monospace' }}>BLOCKED</span>
+                </div>
+                <div style={{ fontSize:11, color:'#f59e0b' }}>{f.failure_reason?.replace(/_/g,' ').toUpperCase()}</div>
+                <div style={{ fontSize:11, color:'#8a9099', marginTop:3 }}>{f.resolution}</div>
+              </ItemCard>
+            ))}
+          </SectionBlock>
+        )}
+
+        {/* ── LICENCE flags ── */}
+        {r.flags?.length > 0 && (
+          <SectionBlock label="LICENCE FLAGS">
+            {r.flags.map((f,i) => (
+              <ItemCard key={i} bg="rgba(239,68,68,0.05)" border="rgba(239,68,68,0.15)">
+                <div style={{ fontSize:12, color:'#e8eaed', fontWeight:500, marginBottom:4 }}>{f.driver} — {f.vehicle}</div>
+                <div style={{ fontSize:10, color:'#ef4444', fontFamily:'monospace', marginBottom:6 }}>{f.action_required}</div>
+                {f.issues?.map((iss,ii) => (
+                  <div key={ii} style={{ fontSize:11, color: iss.severity==='CRITICAL'?'#ef4444':'#f59e0b', marginBottom:2 }}>— {iss.detail}</div>
+                ))}
+              </ItemCard>
+            ))}
+          </SectionBlock>
+        )}
+
+        {/* ── REGULATION changes ── */}
+        {r.relevant_changes?.length > 0 && (
+          <SectionBlock label="REGULATORY CHANGES AFFECTING YOUR FLEET">
+            {r.relevant_changes.map((c,i) => (
+              <ItemCard key={i} bg={c.urgency==='IMMEDIATE'?'rgba(239,68,68,0.05)':'rgba(245,158,11,0.04)'} border={c.urgency==='IMMEDIATE'?'rgba(239,68,68,0.15)':'rgba(245,158,11,0.15)'}>
+                <div style={{ display:'flex', justifyContent:'space-between', marginBottom:4 }}>
+                  <span style={{ fontSize:11, color:'#e8eaed', fontWeight:500 }}>{c.title}</span>
+                  <span style={{ fontSize:10, color: c.urgency==='IMMEDIATE'?'#ef4444':'#f59e0b', fontFamily:'monospace' }}>{c.urgency?.replace(/_/g,' ')}</span>
+                </div>
+                <div style={{ fontSize:11, color:'#8a9099', marginBottom:4 }}>{c.impact_description}</div>
+                <div style={{ fontSize:11, color:'#00e5b0' }}>Action: {c.compliance_action}</div>
+                {c.penalty_if_ignored > 0 && <div style={{ fontSize:10, color:'#ef4444', marginTop:3 }}>Penalty if ignored: £{c.penalty_if_ignored?.toLocaleString()}</div>}
+              </ItemCard>
+            ))}
+          </SectionBlock>
+        )}
+
+        {/* ── TENDERS ── */}
+        {r.matching_tenders?.length > 0 && (
+          <SectionBlock label="MATCHING TENDERS">
+            {r.matching_tenders.map((t,i) => (
+              <ItemCard key={i} bg="rgba(168,85,247,0.05)" border="rgba(168,85,247,0.15)">
+                <div style={{ display:'flex', justifyContent:'space-between', marginBottom:4 }}>
+                  <span style={{ fontSize:11, color:'#e8eaed', fontWeight:500, flex:1, marginRight:8 }}>{t.title}</span>
+                  <span style={{ fontSize:11, color:'#a855f7', fontFamily:'monospace', flexShrink:0 }}>{t.win_probability}% win</span>
+                </div>
+                <div style={{ fontSize:10, color:'#8a9099', marginBottom:3 }}>{t.buyer} · Value: £{t.value?.toLocaleString()} · Deadline: {t.deadline_days} days</div>
+                <div style={{ fontSize:11, color:'#8a9099' }}>{t.briefing}</div>
+              </ItemCard>
+            ))}
+          </SectionBlock>
+        )}
+
+        {/* ── CONSOLIDATION opportunities ── */}
+        {r.opportunities?.length > 0 && (
+          <SectionBlock label="CONSOLIDATION OPPORTUNITIES">
+            {r.opportunities.map((o,i) => (
+              <ItemCard key={i} bg={o.feasibility==='YES'?'rgba(0,229,176,0.04)':'rgba(245,158,11,0.04)'} border={o.feasibility==='YES'?'rgba(0,229,176,0.15)':'rgba(245,158,11,0.15)'}>
+                <div style={{ display:'flex', justifyContent:'space-between', marginBottom:4 }}>
+                  <span style={{ fontSize:11, color:'#e8eaed', fontWeight:500 }}>{o.route_a} + {o.route_b}</span>
+                  <span style={{ fontSize:11, color:'#00e5b0', fontFamily:'monospace' }}>Save £{o.total_saving?.toLocaleString()}</span>
+                </div>
+                <div style={{ fontSize:10, color:'#8a9099', marginBottom:3 }}>{o.feasibility} · {o.vehicles_saved} vehicle saved · {o.combined_utilisation_pct}% utilisation</div>
+                <div style={{ fontSize:11, color:'#8a9099' }}>{o.new_schedule}</div>
+              </ItemCard>
+            ))}
+          </SectionBlock>
+        )}
+
+        {/* ── LANE benchmarking ── */}
+        {r.lane_analysis?.length > 0 && (
+          <SectionBlock label="LANE RATE ANALYSIS">
+            <div style={{ fontSize:12, color:'#8a9099', marginBottom:8 }}>{r.net_recommendation}</div>
+            {r.lane_analysis.map((l,i) => (
+              <ItemCard key={i} bg={l.status==='underpriced'?'rgba(239,68,68,0.04)':'rgba(0,229,176,0.03)'}>
+                <div style={{ display:'flex', justifyContent:'space-between', marginBottom:3 }}>
+                  <span style={{ fontSize:11, color:'#e8eaed', fontWeight:500 }}>{l.lane}</span>
+                  <span style={{ fontSize:10, color: l.status==='underpriced'?'#ef4444':'#00e5b0', fontFamily:'monospace' }}>{l.status?.toUpperCase()}</span>
+                </div>
+                <div style={{ fontSize:10, color:'#8a9099' }}>Current: £{l.current_rate_per_mile}/mi · Market: £{l.market_rate_per_mile}/mi · Gap: £{l.annual_revenue_gap?.toLocaleString()}/yr</div>
+              </ItemCard>
+            ))}
+          </SectionBlock>
+        )}
+
+        {/* ── FORECAST periods ── */}
+        {r.forecast_periods?.length > 0 && (
+          <SectionBlock label="DEMAND FORECAST">
+            {r.forecast_periods.map((f,i) => (
+              <ItemCard key={i} bg={f.capacity_gap > 0 ? 'rgba(239,68,68,0.05)' : 'rgba(0,229,176,0.03)'}>
+                <div style={{ display:'flex', justifyContent:'space-between', marginBottom:4 }}>
+                  <span style={{ fontSize:11, color:'#e8eaed', fontWeight:500 }}>{f.week}</span>
+                  <span style={{ fontSize:11, color: f.capacity_gap > 0 ? '#ef4444' : '#00e5b0', fontFamily:'monospace' }}>{f.capacity_gap > 0 ? `${f.capacity_gap} jobs over capacity` : 'Within capacity'}</span>
+                </div>
+                {f.preparation_actions?.map((a,ai) => <div key={ai} style={{ fontSize:10, color:'#8a9099', marginBottom:1 }}>— {a}</div>)}
+                {f.saving_by_planning > 0 && <div style={{ fontSize:10, color:'#00e5b0', marginTop:3 }}>Plan now and save: £{f.saving_by_planning?.toLocaleString()}</div>}
+              </ItemCard>
+            ))}
+          </SectionBlock>
+        )}
+
+        {/* ── CARBON report ── */}
+        {r.annual_report?.narrative && (
+          <SectionBlock label="ESG SUMMARY">
+            <div style={{ fontSize:12, color:'#8a9099', lineHeight:1.7, marginBottom:8 }}>{r.annual_report.narrative}</div>
+            <div style={{ fontSize:10, color:'#4a5260' }}>Methodology: {r.annual_report.methodology}</div>
+          </SectionBlock>
+        )}
+        {r.optimisation_opportunities?.length > 0 && (
+          <SectionBlock label="EMISSION REDUCTION OPPORTUNITIES">
+            {r.optimisation_opportunities.map((o,i) => (
+              <ItemCard key={i}>
+                <div style={{ fontSize:11, color:'#e8eaed', marginBottom:3 }}>{o.description}</div>
+                <div style={{ fontSize:10, color:'#00e5b0' }}>-{o.emission_reduction_pct}% emissions · Save £{o.cost_saving?.toLocaleString()}/yr</div>
+              </ItemCard>
+            ))}
+          </SectionBlock>
+        )}
+
+        {/* ── INSURANCE claim ── */}
+        {r.verdict && (
+          <SectionBlock label={`VERDICT — ${r.liability_assessment?.replace(/_/g,' ')}`} labelColor={r.liability_assessment==='NO_LIABILITY'?'#00e5b0':'#ef4444'}>
+            <div style={{ fontSize:12, color:'#e8eaed', lineHeight:1.7, marginBottom:8 }}>{r.verdict}</div>
+            {r.response_letter && <div style={{ fontSize:11, color:'#8a9099', lineHeight:1.6, padding:'8px 10px', background:'#111418', borderRadius:5, border:'1px solid rgba(255,255,255,0.06)' }}>{r.response_letter}</div>}
+          </SectionBlock>
+        )}
+
+        {/* ── Generic all-clear ── */}
+        {!r.sections && !r.discrepancies && !r.carriers && !r.drivers_at_risk && !r.vehicles_at_risk
+          && !r.at_risk_deliveries && !r.vehicles_to_fill && !r.compliance_failures && !r.flags
+          && !r.relevant_changes && !r.matching_tenders && !r.opportunities && !r.lane_analysis
+          && !r.forecast_periods && !r.verdict && !r.at_risk_drivers && (
+          <div style={{ padding:'20px 14px', textAlign:'center' }}>
             <div style={{ fontFamily:'monospace', fontSize:11, color:'#00e5b0', marginBottom:6 }}>✓ ALL CLEAR</div>
-            <div style={{ fontSize:12, color:'#4a5260' }}>No issues detected at this time. Module will continue monitoring.</div>
+            <div style={{ fontSize:12, color:'#4a5260' }}>No issues detected. Module continues monitoring.</div>
           </div>
         )}
 
