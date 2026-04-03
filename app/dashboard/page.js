@@ -80,139 +80,173 @@ function PinGate({ onUnlock }) {
   )
 }
 
-// ── AGENT RESPONSE RENDERER ────────────────────────────────────────────────
-function cleanLine(line) {
-  // Strip raw HTML tags that the AI occasionally outputs
-  return line
-    .replace(/<strong[^>]*>(.*?)<\/strong>/g, '$1')
-    .replace(/<span[^>]*>(.*?)<\/span>/g, '$1')
-    .replace(/<[^>]+>/g, '')
+// ── AGENT RESPONSE RENDERER — Option B (colour-coded cards) ──────────────────
+function money(text) {
+  return text.replace(/(£[\d,]+(?:[–-]£[\d,]+)?(?:K)?)/g,
+    '<span style="color:#00e5b0;font-weight:600;font-family:monospace">$1</span>')
+}
+function bold(text) {
+  return text.replace(/\*\*(.*?)\*\*/g, '<strong style="color:#e8eaed;font-weight:500">$1</strong>')
+}
+function fmt(text) { return money(bold(text)) }
+function clean(line) {
+  return line.replace(/<strong[^>]*>(.*?)<\/strong>/g,'$1')
+             .replace(/<span[^>]*>(.*?)<\/span>/g,'$1')
+             .replace(/<[^>]+>/g,'')
 }
 
-function formatInline(text) {
-  // Handle inline formatting for dangerouslySetInnerHTML use
-  return text
-    .replace(/\*\*(.*?)\*\*/g, '<strong style="color:#e8eaed;font-weight:600">$1</strong>')
-    .replace(/(£[\d,]+(?:–£[\d,]+)?(?:K)?)/g, '<span style="color:#00e5b0;font-weight:600;font-family:monospace">$1</span>')
+const SECTION_STYLES = {
+  'DISRUPTION ASSESSMENT':   { bg:'rgba(59,130,246,0.05)',  border:'rgba(59,130,246,0.18)',  label:'#3b82f6' },
+  'ASSESSMENT':              { bg:'rgba(59,130,246,0.05)',  border:'rgba(59,130,246,0.18)',  label:'#3b82f6' },
+  'SITUATION':               { bg:'rgba(59,130,246,0.05)',  border:'rgba(59,130,246,0.18)',  label:'#3b82f6' },
+  'IMMEDIATE ACTIONS':       { bg:'rgba(239,68,68,0.05)',   border:'rgba(239,68,68,0.18)',   label:'#ef4444' },
+  'IMMEDIATE ACTIONS (DO THESE NOW)': { bg:'rgba(239,68,68,0.05)', border:'rgba(239,68,68,0.18)', label:'#ef4444' },
+  'ACTION PLAN':             { bg:'rgba(239,68,68,0.05)',   border:'rgba(239,68,68,0.18)',   label:'#ef4444' },
+  'WHO TO CONTACT':          { bg:'rgba(0,229,176,0.04)',   border:'rgba(0,229,176,0.15)',   label:'#00e5b0' },
+  'CONTACTS':                { bg:'rgba(0,229,176,0.04)',   border:'rgba(0,229,176,0.15)',   label:'#00e5b0' },
+  'REROUTING':               { bg:'rgba(168,85,247,0.05)', border:'rgba(168,85,247,0.15)', label:'#a855f7' },
+  'REROUTING / REORDER RECOMMENDATIONS': { bg:'rgba(168,85,247,0.05)', border:'rgba(168,85,247,0.15)', label:'#a855f7' },
+  'REROUTE OPTIONS':         { bg:'rgba(168,85,247,0.05)', border:'rgba(168,85,247,0.15)', label:'#a855f7' },
+  'STOCK / INVENTORY IMPACT':{ bg:'rgba(245,158,11,0.05)', border:'rgba(245,158,11,0.15)', label:'#f59e0b' },
+  'DOWNSTREAM RISKS':        { bg:'rgba(245,158,11,0.05)', border:'rgba(245,158,11,0.15)', label:'#f59e0b' },
+  'RISKS':                   { bg:'rgba(245,158,11,0.05)', border:'rgba(245,158,11,0.15)', label:'#f59e0b' },
+  'PREVENTION':              { bg:'rgba(255,255,255,0.02)', border:'rgba(255,255,255,0.08)', label:'#4a5260' },
+  'PREVENTION FOR NEXT TIME':{ bg:'rgba(255,255,255,0.02)', border:'rgba(255,255,255,0.08)', label:'#4a5260' },
+}
+
+function getSectionStyle(title) {
+  const upper = title.toUpperCase().trim()
+  return SECTION_STYLES[upper] || { bg:'rgba(255,255,255,0.02)', border:'rgba(255,255,255,0.08)', label:'#8a9099' }
 }
 
 function AgentResponse({ text }) {
   const lines = text.split('\n')
-  const rendered = []
-  let key = 0
+  const sections = []
+  let currentSection = null
+  let currentLines = []
+  let preamble = []
+  let inPreamble = true
 
-  for (let i = 0; i < lines.length; i++) {
-    const raw = lines[i]
-    const line = cleanLine(raw)
-
-    // Section headers
-    if (line.startsWith('## ') || line.startsWith('> ')) {
-      if (line.startsWith('## ')) {
-        rendered.push(
-          <div key={key++} style={{ display:'flex', alignItems:'center', gap:8, margin:'20px 0 10px', paddingTop:16, borderTop:'1px solid rgba(255,255,255,0.06)' }}>
-            <div style={{ height:1, width:12, background:'#00e5b0' }} />
-            <span style={{ fontFamily:'monospace', fontSize:10, color:'#00e5b0', letterSpacing:'0.1em', fontWeight:600 }}>{line.replace('## ', '').toUpperCase()}</span>
-          </div>
-        )
-      } else {
-        // Blockquote — important callout
-        rendered.push(
-          <div key={key++} style={{ margin:'10px 0', padding:'10px 14px', background:'rgba(239,68,68,0.06)', borderLeft:'3px solid #ef4444', borderRadius:'0 6px 6px 0' }}>
-            <span style={{ fontSize:12, color:'#e8eaed', lineHeight:1.6 }} dangerouslySetInnerHTML={{ __html: formatInline(line.replace(/^> /, '')) }} />
-          </div>
-        )
-      }
-      continue
+  // Parse into sections
+  for (const rawLine of lines) {
+    const line = clean(rawLine)
+    const isHeader = line.startsWith('## ')
+    if (isHeader) {
+      inPreamble = false
+      if (currentSection !== null) sections.push({ title: currentSection, lines: currentLines })
+      currentSection = line.replace('## ', '')
+      currentLines = []
+    } else if (inPreamble) {
+      preamble.push(line)
+    } else {
+      currentLines.push(line)
     }
+  }
+  if (currentSection !== null) sections.push({ title: currentSection, lines: currentLines })
 
-    // Severity badges
-    if (line.match(/^(CRITICAL|HIGH|MEDIUM|LOW)$/)) {
-      const colors = { CRITICAL:'#ef4444', HIGH:'#f59e0b', MEDIUM:'#3b82f6', LOW:'#8a9099' }
-      const bgs = { CRITICAL:'rgba(239,68,68,0.1)', HIGH:'rgba(245,158,11,0.1)', MEDIUM:'rgba(59,130,246,0.1)', LOW:'rgba(138,144,153,0.1)' }
-      const sev = line.trim()
-      rendered.push(
-        <div key={key++} style={{ display:'inline-flex', alignItems:'center', margin:'6px 0' }}>
-          <span style={{ background:bgs[sev], color:colors[sev], fontSize:10, fontFamily:'monospace', padding:'3px 10px', borderRadius:4, fontWeight:700, border:`1px solid ${colors[sev]}40`, letterSpacing:'0.05em' }}>{sev}</span>
-        </div>
-      )
-      continue
+  // Extract severity and financials from preamble
+  let severity = null, financialLine = null
+  for (const l of preamble) {
+    const sevMatch = l.match(/\b(CRITICAL|HIGH|MEDIUM|LOW)\b/)
+    if (sevMatch && !severity) severity = sevMatch[1]
+    if (l.match(/£[\d,]+/) && (l.toLowerCase().includes('impact') || l.toLowerCase().includes('exposure') || l.toLowerCase().includes('financial'))) {
+      financialLine = l
     }
+  }
 
-    if (line.includes('Severity:') && (line.includes('CRITICAL') || line.includes('HIGH') || line.includes('MEDIUM') || line.includes('LOW'))) {
-      const sevMatch = line.match(/CRITICAL|HIGH|MEDIUM|LOW/)
-      const sev = sevMatch ? sevMatch[0] : null
-      const colors = { CRITICAL:'#ef4444', HIGH:'#f59e0b', MEDIUM:'#3b82f6', LOW:'#8a9099' }
-      const bgs = { CRITICAL:'rgba(239,68,68,0.1)', HIGH:'rgba(245,158,11,0.1)', MEDIUM:'rgba(59,130,246,0.1)', LOW:'rgba(138,144,153,0.1)' }
-      if (sev) {
-        rendered.push(
-          <div key={key++} style={{ display:'flex', alignItems:'center', gap:8, margin:'4px 0' }}>
-            <span style={{ fontSize:11, color:'#8a9099' }}>Severity</span>
-            <span style={{ background:bgs[sev], color:colors[sev], fontSize:10, fontFamily:'monospace', padding:'2px 8px', borderRadius:4, fontWeight:700 }}>{sev}</span>
+  const SEV_COLOR = { CRITICAL:'#ef4444', HIGH:'#f59e0b', MEDIUM:'#3b82f6', LOW:'#8a9099' }
+  const SEV_BG = { CRITICAL:'rgba(239,68,68,0.1)', HIGH:'rgba(245,158,11,0.1)', MEDIUM:'rgba(59,130,246,0.1)', LOW:'rgba(138,144,153,0.1)' }
+
+  function renderLines(lines, sectionTitle) {
+    const items = []
+    let k = 0
+    for (const line of lines) {
+      if (!line.trim()) { items.push(<div key={k++} style={{height:4}}/>); continue }
+      if (line.match(/^---+$/)) { items.push(<div key={k++} style={{height:1,background:'rgba(255,255,255,0.06)',margin:'8px 0'}}/>); continue }
+
+      // Blockquote callout
+      if (line.startsWith('> ')) {
+        items.push(
+          <div key={k++} style={{margin:'8px 0',padding:'10px 14px',background:'rgba(239,68,68,0.06)',borderLeft:'3px solid #ef4444',borderRadius:'0 6px 6px 0'}}>
+            <span style={{fontSize:12,color:'#e8eaed',lineHeight:1.6}} dangerouslySetInnerHTML={{__html:fmt(line.replace(/^> /,''))}}/>
           </div>
         )
         continue
       }
-    }
 
-    // Numbered actions - make them cards
-    const actionMatch = line.match(/^(\d+)\.?\s+(.+)/)
-    if (actionMatch && !line.match(/^\d+\s*$/)) {
-      const [, num, content] = actionMatch
-      const isUrgent = content.includes('NOW') || content.includes('IMMEDIATELY') || content.includes('999')
-      rendered.push(
-        <div key={key++} style={{ display:'flex', gap:10, margin:'6px 0', padding:'10px 12px', background:'#111418', borderRadius:6, border: isUrgent ? '1px solid rgba(239,68,68,0.2)' : '1px solid rgba(255,255,255,0.06)' }}>
-          <div style={{ width:20, height:20, borderRadius:'50%', background: isUrgent ? '#ef4444' : '#00e5b0', color:'#000', display:'flex', alignItems:'center', justifyContent:'center', fontSize:10, fontWeight:700, flexShrink:0, marginTop:1 }}>{num}</div>
-          <div style={{ fontSize:12, color:'#e8eaed', lineHeight:1.6, flex:1 }}>{content}</div>
-        </div>
-      )
-      continue
-    }
+      // Numbered action
+      const numMatch = line.match(/^(\d+)\.?\s+(.+)/)
+      if (numMatch) {
+        const [,num,content] = numMatch
+        const urgent = content.includes('NOW') || content.includes('IMMEDIATELY') || content.includes('999')
+        const isActions = sectionTitle && (sectionTitle.toUpperCase().includes('ACTION') || sectionTitle.toUpperCase().includes('IMMEDIATE'))
+        const dotBg = isActions ? (urgent ? '#ef4444' : '#ef4444') : '#00e5b0'
+        items.push(
+          <div key={k++} style={{display:'flex',gap:10,margin:'5px 0',padding:'10px 12px',background:'rgba(0,0,0,0.2)',borderRadius:6,border:'1px solid rgba(255,255,255,0.06)'}}>
+            <div style={{width:22,height:22,borderRadius:'50%',background:dotBg,color:'#fff',display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,fontWeight:700,flexShrink:0,marginTop:1}}>{num}</div>
+            <div style={{fontSize:12,color:'#e8eaed',lineHeight:1.7,flex:1}} dangerouslySetInnerHTML={{__html:fmt(content)}}/>
+          </div>
+        )
+        continue
+      }
 
-    // Numbered action content (bold name)
-    if (actionMatch) {
-      const [, num, content] = actionMatch
-      const isUrgent = content.includes('NOW') || content.includes('IMMEDIATELY') || content.includes('999')
-      rendered.push(
-        <div key={key++} style={{ display:'flex', gap:10, margin:'6px 0', padding:'10px 12px', background:'#111418', borderRadius:6, border: isUrgent ? '1px solid rgba(239,68,68,0.2)' : '1px solid rgba(255,255,255,0.06)' }}>
-          <div style={{ width:20, height:20, borderRadius:'50%', background: isUrgent ? '#ef4444' : '#00e5b0', color:'#000', display:'flex', alignItems:'center', justifyContent:'center', fontSize:10, fontWeight:700, flexShrink:0, marginTop:1 }}>{num}</div>
-          <div style={{ fontSize:12, color:'#e8eaed', lineHeight:1.6, flex:1 }} dangerouslySetInnerHTML={{ __html: formatInline(content) }} />
-        </div>
-      )
-      continue
-    }
+      // Bullet
+      if (line.startsWith('- ') || line.startsWith('— ')) {
+        const content = line.replace(/^[-—]\s+/,'')
+        items.push(
+          <div key={k++} style={{display:'flex',gap:8,margin:'3px 0',paddingLeft:4}}>
+            <span style={{color:'#00e5b0',fontSize:11,marginTop:2,flexShrink:0}}>—</span>
+            <span style={{fontSize:12,color:'#8a9099',lineHeight:1.7}} dangerouslySetInnerHTML={{__html:fmt(content)}}/>
+          </div>
+        )
+        continue
+      }
 
-    // Bullet points
-    if (line.startsWith('- ') || line.startsWith('— ') || line.startsWith('—\n')) {
-      const bulletContent = line.replace(/^[-—]\s+/, '')
-      rendered.push(
-        <div key={key++} style={{ display:'flex', gap:8, margin:'3px 0', paddingLeft:4 }}>
-          <span style={{ color:'#00e5b0', fontSize:10, marginTop:3, flexShrink:0 }}>—</span>
-          <span style={{ fontSize:12, color:'#8a9099', lineHeight:1.6 }} dangerouslySetInnerHTML={{ __html: formatInline(bulletContent) }} />
-        </div>
-      )
-      continue
-    }
+      // Bold-only line (e.g. "**Call the driver back NOW**")
+      if (line.match(/^\*\*.+\*\*$/)) {
+        items.push(<div key={k++} style={{fontSize:13,color:'#e8eaed',fontWeight:500,margin:'6px 0'}} dangerouslySetInnerHTML={{__html:fmt(line)}}/>)
+        continue
+      }
 
-    // Empty lines
-    if (!line.trim()) {
-      rendered.push(<div key={key++} style={{ height:6 }} />)
-      continue
+      // Default body text
+      items.push(<div key={k++} style={{fontSize:12,color:'#8a9099',lineHeight:1.8,margin:'2px 0'}} dangerouslySetInnerHTML={{__html:fmt(line)}}/>)
     }
-
-    // Horizontal rule
-    if (line.match(/^---+$/)) {
-      rendered.push(<div key={key++} style={{ height:1, background:'rgba(255,255,255,0.06)', margin:'12px 0' }} />)
-      continue
-    }
-
-    // Default — render with inline formatting
-    rendered.push(
-      <div key={key++} style={{ fontSize:12, color:'#8a9099', margin:'2px 0', lineHeight:1.7 }}
-        dangerouslySetInnerHTML={{ __html: formatInline(line) }} />
-    )
+    return items
   }
 
-  return <div style={{ padding:'4px 0' }}>{rendered}</div>
+  return (
+    <div style={{padding:'4px 0'}}>
+      {/* Severity + financial header strip */}
+      {(severity || financialLine) && (
+        <div style={{display:'flex',alignItems:'center',gap:10,padding:'10px 14px',background:'#111418',borderRadius:8,marginBottom:14,flexWrap:'wrap',border:'1px solid rgba(255,255,255,0.06)'}}>
+          {severity && (
+            <span style={{background:SEV_BG[severity],color:SEV_COLOR[severity],fontSize:11,fontFamily:'monospace',fontWeight:700,padding:'3px 10px',borderRadius:4,border:`1px solid ${SEV_COLOR[severity]}30`,letterSpacing:'0.05em'}}>{severity}</span>
+          )}
+          {financialLine && (
+            <span style={{fontSize:12,color:'#8a9099'}} dangerouslySetInnerHTML={{__html:fmt(financialLine)}}/>
+          )}
+        </div>
+      )}
+
+      {/* Preamble lines that aren't severity/financial */}
+      {preamble.filter(l => l.trim() && !l.match(/\b(CRITICAL|HIGH|MEDIUM|LOW)\b/) && !l.match(/£[\d,]+/)).map((l,i) => (
+        <div key={i} style={{fontSize:12,color:'#8a9099',lineHeight:1.8,marginBottom:4}} dangerouslySetInnerHTML={{__html:fmt(l)}}/>
+      ))}
+
+      {/* Colour-coded section cards */}
+      {sections.map((section, i) => {
+        const style = getSectionStyle(section.title)
+        const hasContent = section.lines.some(l => l.trim())
+        if (!hasContent) return null
+        return (
+          <div key={i} style={{background:style.bg,border:`1px solid ${style.border}`,borderRadius:8,padding:'12px 14px',marginBottom:10}}>
+            <div style={{fontSize:11,fontFamily:'monospace',color:style.label,letterSpacing:'0.08em',fontWeight:600,marginBottom:8}}>{section.title.toUpperCase()}</div>
+            {renderLines(section.lines, section.title)}
+          </div>
+        )
+      })}
+    </div>
+  )
 }
 
 // ── MODULE RESULT RENDERER ─────────────────────────────────────────────────
