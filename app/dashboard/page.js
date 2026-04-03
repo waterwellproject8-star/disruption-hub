@@ -362,6 +362,68 @@ function ModuleResult({ result, moduleName }) {
   )
 }
 
+// ── SCENARIO RESULT RENDERER ──────────────────────────────────────────────────
+function ScenarioResult({ result }) {
+  if (!result) return null
+  const skip = ['scenario','actions','cascade']
+  const entries = Object.entries(result).filter(([k]) => !skip.includes(k))
+
+  return (
+    <div>
+      {entries.map(([k, v]) => (
+        <div key={k} style={{ marginBottom: 16 }}>
+          <div style={{ fontFamily:'monospace', fontSize:10, color:'#00e5b0', letterSpacing:'0.08em', marginBottom:6, display:'flex', alignItems:'center', gap:8 }}>
+            <div style={{ height:1, width:12, background:'#00e5b0' }} />
+            {k.replace(/_/g,' ').toUpperCase()}
+          </div>
+          {Array.isArray(v) ? (
+            v.length === 0
+              ? <div style={{ fontSize:12, color:'#4a5260' }}>None</div>
+              : v.map((item, i) => (
+                <div key={i} style={{ padding:'8px 10px', background:'#111418', borderRadius:5, border:'1px solid rgba(255,255,255,0.06)', marginBottom:6 }}>
+                  {typeof item === 'object'
+                    ? Object.entries(item).map(([ik,iv]) => (
+                        <div key={ik} style={{ fontSize:11, color:'#8a9099', marginBottom:2 }}>
+                          <span style={{ color:'#e8eaed', fontWeight:500 }}>{ik.replace(/_/g,' ')}: </span>
+                          {typeof iv === 'boolean' ? (iv ? 'Yes' : 'No') : String(iv)}
+                        </div>
+                      ))
+                    : <div style={{ fontSize:12, color:'#8a9099' }}>{String(item)}</div>
+                  }
+                </div>
+              ))
+          ) : typeof v === 'object' && v !== null ? (
+            <div style={{ padding:'8px 10px', background:'#111418', borderRadius:5, border:'1px solid rgba(255,255,255,0.06)' }}>
+              {Object.entries(v).map(([ik,iv]) => (
+                <div key={ik} style={{ fontSize:11, color:'#8a9099', marginBottom:2 }}>
+                  <span style={{ color:'#e8eaed', fontWeight:500 }}>{ik.replace(/_/g,' ')}: </span>
+                  {String(iv)}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div style={{ fontSize:12, color:'#8a9099', lineHeight:1.7 }}>{String(v)}</div>
+          )}
+        </div>
+      ))}
+      {result.cascade && result.cascade.length > 0 && (
+        <div style={{ marginBottom:16 }}>
+          <div style={{ fontFamily:'monospace', fontSize:10, color:'#ef4444', letterSpacing:'0.08em', marginBottom:6 }}>CASCADE CHAIN</div>
+          {result.cascade.map((c,i) => (
+            <div key={i} style={{ display:'flex', gap:8, alignItems:'flex-start', marginBottom:4 }}>
+              <div style={{ width:20, height:20, borderRadius:'50%', background: c.sla_breached?'#ef4444':'#00e5b0', color:'#fff', display:'flex', alignItems:'center', justifyContent:'center', fontSize:9, fontWeight:700, flexShrink:0 }}>{i}</div>
+              <div style={{ fontSize:11, color:'#8a9099', flex:1 }}>
+                <span style={{ color:'#e8eaed' }}>{c.ref}</span> — {c.description}
+                {c.penalty > 0 && <span style={{ color:'#00e5b0', marginLeft:8 }}>£{c.penalty.toLocaleString()}</span>}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ── MAIN DASHBOARD ─────────────────────────────────────────────────────────
 export default function DashboardPage() {
   const [unlocked, setUnlocked] = useState(false)
@@ -737,15 +799,7 @@ export default function DashboardPage() {
                   {scenarioResult.error
                     ? <div style={{ padding:'14px', color:'#ef4444', fontSize:12, fontFamily:'monospace' }}>Error: {scenarioResult.error}</div>
                     : <div style={{ padding:'14px', maxHeight:400, overflowY:'auto' }}>
-                        <AgentResponse text={
-                          Object.entries(scenarioResult.result || {})
-                            .filter(([k]) => !['scenario','actions'].includes(k))
-                            .map(([k,v]) => `## ${k.replace(/_/g,' ').toUpperCase()}
-${typeof v === 'object' ? JSON.stringify(v, null, 2) : v}`)
-                            .join('
-
-')
-                        } />
+                        <ScenarioResult result={scenarioResult.result} />
                       </div>
                   }
                 </div>
