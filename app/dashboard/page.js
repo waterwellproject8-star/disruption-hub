@@ -728,8 +728,10 @@ export default function DashboardPage() {
   const [scenarioRunning, setScenarioRunning] = useState(null)
   const [cancellingId, setCancellingId] = useState(null)
   const [agentActions, setAgentActions] = useState([])
+  const [moduleActions, setModuleActions] = useState([])
   const [actionStates, setActionStates] = useState({})
   const [sessionIncidents, setSessionIncidents] = useState([])
+  const [liveShipments, setLiveShipments] = useState([])
 
   async function assessCancelAction(approvalId, sentAt) {
     const now = Date.now()
@@ -778,6 +780,7 @@ export default function DashboardPage() {
   useEffect(() => {
     if (!unlocked) return
     loadApprovals()
+    loadShipments()
     const i = setInterval(loadApprovals, 30000)
     return () => clearInterval(i)
   }, [unlocked])
@@ -790,6 +793,15 @@ export default function DashboardPage() {
       if (!res.ok) return
       const data = await res.json()
       setPendingApprovals(data.approvals || [])
+    } catch {}
+  }
+
+  async function loadShipments() {
+    try {
+      const res = await fetch('/api/shipments?client_id=pearson-haulage')
+      if (!res.ok) return
+      const data = await res.json()
+      if (data.shipments?.length > 0) setLiveShipments(data.shipments)
     } catch {}
   }
 
@@ -828,6 +840,7 @@ export default function DashboardPage() {
       // Extract suggested actions from the response
       const extracted = extractActionsFromResponse(full)
       setAgentActions(extracted)
+      setModuleActions([]) // clear module actions when agent runs
       setActionStates({})
       // Log to session incident history in sidebar
       const sevMatch = full.match(/\b(CRITICAL|HIGH|MEDIUM|LOW)\b/)
@@ -880,9 +893,9 @@ export default function DashboardPage() {
       setModuleResult(data)
       if (data.actions_queued > 0) loadApprovals()
       // Generate action buttons from module findings
-      const moduleActions = extractActionsFromModuleResult(data.result, moduleId)
-      setAgentActions(moduleActions)
-      setActionStates({})
+      const extracted = extractActionsFromModuleResult(data.result, moduleId)
+      setModuleActions(extracted)
+      setAgentActions([]) // clear agent actions when running a module
       setActiveTab('modules')
     } catch (e) {
       setModuleResult({ error: e.message })
@@ -1176,7 +1189,7 @@ export default function DashboardPage() {
               <div style={{ width:7, height:7, borderRadius:'50%', background: loading ? '#f59e0b' : '#00e5b0', animation: loading ? 'pulse 1s infinite' : 'none' }} />
               <span style={{ fontFamily:'monospace', fontSize:10, color:'#4a5260' }}>{loading ? 'ANALYSING...' : 'AGENT READY'}</span>
               {messages.length > 0 && (
-                <button onClick={() => { setMessages([]); setResponse(''); setActiveShipment(null); setAgentActions([]); setActionStates({}) }} style={{ fontSize:10, color:'#4a5260', background:'none', border:'1px solid rgba(255,255,255,0.06)', borderRadius:4, padding:'3px 8px', cursor:'pointer', fontFamily:'monospace', marginLeft:4 }}>CLEAR ×</button>
+                <button onClick={() => { setMessages([]); setResponse(''); setActiveShipment(null); setAgentActions([]); setModuleActions([]); setActionStates({}) }} style={{ fontSize:10, color:'#4a5260', background:'none', border:'1px solid rgba(255,255,255,0.06)', borderRadius:4, padding:'3px 8px', cursor:'pointer', fontFamily:'monospace', marginLeft:4 }}>CLEAR ×</button>
               )}
             </div>
           </div>
@@ -1204,7 +1217,7 @@ export default function DashboardPage() {
                 )}
 
                 {/* ── SUGGESTED ACTIONS ── */}
-                {agentActions.length > 0 && !loading && activeTab === 'agent' && (
+                {agentActions.length > 0 && !loading && (
                   <div style={{ marginTop:16, padding:'12px 14px', background:'#0d1014', borderRadius:8, border:'1px solid rgba(0,229,176,0.12)' }}>
                     <div style={{ fontSize:10, fontFamily:'monospace', color:'#00e5b0', letterSpacing:'0.08em', marginBottom:10 }}>SUGGESTED ACTIONS — click to execute</div>
                     <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
@@ -1296,11 +1309,11 @@ export default function DashboardPage() {
               )}
 
               {/* Module action buttons */}
-              {agentActions.length > 0 && !moduleRunning && activeTab === 'modules' && (
+              {moduleActions.length > 0 && !moduleRunning && (
                 <div style={{ marginTop:16, padding:'12px 14px', background:'#0d1014', borderRadius:8, border:'1px solid rgba(0,229,176,0.12)' }}>
                   <div style={{ fontSize:10, fontFamily:'monospace', color:'#00e5b0', letterSpacing:'0.08em', marginBottom:10 }}>SUGGESTED ACTIONS — click to execute</div>
                   <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
-                    {agentActions.map(action => {
+                    {moduleActions.map(action => {
                       const state = actionStates[action.id]
                       const isDone = state === 'done'
                       const isFiring = state === 'firing'
