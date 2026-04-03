@@ -63,6 +63,25 @@ function PinGate({ onUnlock }) {
     if (pin.toUpperCase() === DASHBOARD_PIN) { onUnlock() }
     else { setError(true); setPin(''); setTimeout(() => setError(false), 2000) }
   }
+  async function runScenario(scenarioId) {
+    setScenarioRunning(scenarioId)
+    setScenarioResult(null)
+    setActiveTab('scenarios')
+    try {
+      const res = await fetch('/api/scenarios', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ scenario: scenarioId, use_demo: true })
+      })
+      const data = await res.json()
+      setScenarioResult(data)
+    } catch (e) {
+      setScenarioResult({ error: e.message })
+    } finally {
+      setScenarioRunning(null)
+    }
+  }
+
   return (
     <div style={{ minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center', background:'#0a0c0e', fontFamily:'IBM Plex Sans, sans-serif' }}>
       <div style={{ width:360, padding:'40px 36px', background:'#111418', border:'1px solid rgba(255,255,255,0.08)', borderRadius:12, textAlign:'center' }}>
@@ -81,53 +100,84 @@ function PinGate({ onUnlock }) {
 }
 
 // ── AGENT RESPONSE RENDERER ────────────────────────────────────────────────
+function cleanLine(line) {
+  // Strip raw HTML tags that the AI occasionally outputs
+  return line
+    .replace(/<strong[^>]*>(.*?)<\/strong>/g, '$1')
+    .replace(/<span[^>]*>(.*?)<\/span>/g, '$1')
+    .replace(/<[^>]+>/g, '')
+}
+
+function formatInline(text) {
+  // Handle inline formatting for dangerouslySetInnerHTML use
+  return text
+    .replace(/\*\*(.*?)\*\*/g, '<strong style="color:#e8eaed;font-weight:600">$1</strong>')
+    .replace(/(£[\d,]+(?:–£[\d,]+)?(?:K)?)/g, '<span style="color:#00e5b0;font-weight:600;font-family:monospace">$1</span>')
+}
+
 function AgentResponse({ text }) {
   const lines = text.split('\n')
   const rendered = []
   let key = 0
 
   for (let i = 0; i < lines.length; i++) {
-    const line = lines[i]
+    const raw = lines[i]
+    const line = cleanLine(raw)
 
     // Section headers
-    if (line.startsWith('## ')) {
+    if (line.startsWith('## ') || line.startsWith('> ')) {
+      if (line.startsWith('## ')) {
+        rendered.push(
+          <div key={key++} style={{ display:'flex', alignItems:'center', gap:8, margin:'20px 0 10px', paddingTop:16, borderTop:'1px solid rgba(255,255,255,0.06)' }}>
+            <div style={{ height:1, width:12, background:'#00e5b0' }} />
+            <span style={{ fontFamily:'monospace', fontSize:10, color:'#00e5b0', letterSpacing:'0.1em', fontWeight:600 }}>{line.replace('## ', '').toUpperCase()}</span>
+          </div>
+        )
+      } else {
+        // Blockquote — important callout
+        rendered.push(
+          <div key={key++} style={{ margin:'10px 0', padding:'10px 14px', background:'rgba(239,68,68,0.06)', borderLeft:'3px solid #ef4444', borderRadius:'0 6px 6px 0' }}>
+            <span style={{ fontSize:12, color:'#e8eaed', lineHeight:1.6 }} dangerouslySetInnerHTML={{ __html: formatInline(line.replace(/^> /, '')) }} />
+          </div>
+        )
+      }
+      continue
+    }
+
+    // Severity badges
+    if (line.match(/^(CRITICAL|HIGH|MEDIUM|LOW)$/)) {
+      const colors = { CRITICAL:'#ef4444', HIGH:'#f59e0b', MEDIUM:'#3b82f6', LOW:'#8a9099' }
+      const bgs = { CRITICAL:'rgba(239,68,68,0.1)', HIGH:'rgba(245,158,11,0.1)', MEDIUM:'rgba(59,130,246,0.1)', LOW:'rgba(138,144,153,0.1)' }
+      const sev = line.trim()
       rendered.push(
-        <div key={key++} style={{ display:'flex', alignItems:'center', gap:8, margin:'20px 0 10px', paddingTop:16, borderTop:'1px solid rgba(255,255,255,0.06)' }}>
-          <div style={{ height:1, width:12, background:'#00e5b0' }} />
-          <span style={{ fontFamily:'monospace', fontSize:10, color:'#00e5b0', letterSpacing:'0.1em', fontWeight:600 }}>{line.replace('## ', '').toUpperCase()}</span>
+        <div key={key++} style={{ display:'inline-flex', alignItems:'center', margin:'6px 0' }}>
+          <span style={{ background:bgs[sev], color:colors[sev], fontSize:10, fontFamily:'monospace', padding:'3px 10px', borderRadius:4, fontWeight:700, border:`1px solid ${colors[sev]}40`, letterSpacing:'0.05em' }}>{sev}</span>
         </div>
       )
       continue
     }
 
-    // Severity lines
-    if (line.includes('CRITICAL')) {
-      rendered.push(<div key={key++} style={{ display:'flex', alignItems:'center', gap:8, margin:'3px 0' }}>
-        <span style={{ background:'#ef4444', color:'#fff', fontSize:9, fontFamily:'monospace', padding:'2px 6px', borderRadius:3, fontWeight:700 }}>CRITICAL</span>
-        <span style={{ fontSize:12, color:'#e8eaed' }}>{line.replace(/.*CRITICAL[:\s]*/,'')}</span>
-      </div>)
-      continue
-    }
-    if (line.includes('Severity: HIGH') || line.match(/^- Severity: HIGH/)) {
-      rendered.push(<div key={key++} style={{ display:'flex', alignItems:'center', gap:8, margin:'3px 0' }}>
-        <span style={{ background:'#f59e0b', color:'#000', fontSize:9, fontFamily:'monospace', padding:'2px 6px', borderRadius:3, fontWeight:700 }}>HIGH</span>
-        <span style={{ fontSize:12, color:'#e8eaed' }}>{line.replace(/.*HIGH[:\s]*/,'')}</span>
-      </div>)
-      continue
-    }
-
-    // Financial impact lines - highlight in green
-    if (line.match(/£[\d,]+/) && (line.includes('Impact') || line.includes('Exposure') || line.includes('exposure') || line.includes('Financial'))) {
-      const highlighted = line.replace(/(£[\d,]+(?:–£[\d,]+)?(?:K)?)/g, '<span style="color:#00e5b0;font-weight:600;font-family:monospace">$1</span>')
-      rendered.push(<div key={key++} style={{ fontSize:12, color:'#8a9099', margin:'3px 0', lineHeight:1.6 }} dangerouslySetInnerHTML={{ __html: highlighted.replace(/^- /, '') }} />)
-      continue
+    if (line.includes('Severity:') && (line.includes('CRITICAL') || line.includes('HIGH') || line.includes('MEDIUM') || line.includes('LOW'))) {
+      const sevMatch = line.match(/CRITICAL|HIGH|MEDIUM|LOW/)
+      const sev = sevMatch ? sevMatch[0] : null
+      const colors = { CRITICAL:'#ef4444', HIGH:'#f59e0b', MEDIUM:'#3b82f6', LOW:'#8a9099' }
+      const bgs = { CRITICAL:'rgba(239,68,68,0.1)', HIGH:'rgba(245,158,11,0.1)', MEDIUM:'rgba(59,130,246,0.1)', LOW:'rgba(138,144,153,0.1)' }
+      if (sev) {
+        rendered.push(
+          <div key={key++} style={{ display:'flex', alignItems:'center', gap:8, margin:'4px 0' }}>
+            <span style={{ fontSize:11, color:'#8a9099' }}>Severity</span>
+            <span style={{ background:bgs[sev], color:colors[sev], fontSize:10, fontFamily:'monospace', padding:'2px 8px', borderRadius:4, fontWeight:700 }}>{sev}</span>
+          </div>
+        )
+        continue
+      }
     }
 
     // Numbered actions - make them cards
-    const actionMatch = line.match(/^(\d+)\.\s+(.+)/)
-    if (actionMatch) {
+    const actionMatch = line.match(/^(\d+)\.?\s+(.+)/)
+    if (actionMatch && !line.match(/^\d+\s*$/)) {
       const [, num, content] = actionMatch
-      const isUrgent = content.includes('NOW') || content.includes('IMMEDIATELY') || content.includes('05:0') || content.includes('14:')
+      const isUrgent = content.includes('NOW') || content.includes('IMMEDIATELY') || content.includes('999')
       rendered.push(
         <div key={key++} style={{ display:'flex', gap:10, margin:'6px 0', padding:'10px 12px', background:'#111418', borderRadius:6, border: isUrgent ? '1px solid rgba(239,68,68,0.2)' : '1px solid rgba(255,255,255,0.06)' }}>
           <div style={{ width:20, height:20, borderRadius:'50%', background: isUrgent ? '#ef4444' : '#00e5b0', color:'#000', display:'flex', alignItems:'center', justifyContent:'center', fontSize:10, fontWeight:700, flexShrink:0, marginTop:1 }}>{num}</div>
@@ -137,36 +187,48 @@ function AgentResponse({ text }) {
       continue
     }
 
-    // Bullet points
-    if (line.startsWith('- ') || line.startsWith('— ')) {
-      const content = line.replace(/^[-—]\s+/, '')
-      const hasAmount = content.match(/£[\d,]+/)
+    // Numbered action content (bold name)
+    if (actionMatch) {
+      const [, num, content] = actionMatch
+      const isUrgent = content.includes('NOW') || content.includes('IMMEDIATELY') || content.includes('999')
       rendered.push(
-        <div key={key++} style={{ display:'flex', gap:8, margin:'2px 0', paddingLeft:4 }}>
-          <span style={{ color:'#00e5b0', fontSize:10, marginTop:3, flexShrink:0 }}>—</span>
-          <span style={{ fontSize:12, color: hasAmount ? '#e8eaed' : '#8a9099', lineHeight:1.6 }}>
-            {hasAmount ? content.replace(/(£[\d,]+(?:–£[\d,]+)?(?:\s*(?:total|exposure|cargo|penalty))?)/gi, (m) => `<strong style="color:#00e5b0">${m}</strong>`) : content}
-          </span>
+        <div key={key++} style={{ display:'flex', gap:10, margin:'6px 0', padding:'10px 12px', background:'#111418', borderRadius:6, border: isUrgent ? '1px solid rgba(239,68,68,0.2)' : '1px solid rgba(255,255,255,0.06)' }}>
+          <div style={{ width:20, height:20, borderRadius:'50%', background: isUrgent ? '#ef4444' : '#00e5b0', color:'#000', display:'flex', alignItems:'center', justifyContent:'center', fontSize:10, fontWeight:700, flexShrink:0, marginTop:1 }}>{num}</div>
+          <div style={{ fontSize:12, color:'#e8eaed', lineHeight:1.6, flex:1 }} dangerouslySetInnerHTML={{ __html: formatInline(content) }} />
         </div>
       )
       continue
     }
 
-    // Bold text
-    if (line.includes('**')) {
-      const html = line.replace(/\*\*(.*?)\*\*/g, '<strong style="color:#e8eaed;font-weight:600">$1</strong>')
-      rendered.push(<div key={key++} style={{ fontSize:12, color:'#8a9099', margin:'2px 0', lineHeight:1.6 }} dangerouslySetInnerHTML={{ __html: html }} />)
+    // Bullet points
+    if (line.startsWith('- ') || line.startsWith('— ') || line.startsWith('—\n')) {
+      const bulletContent = line.replace(/^[-—]\s+/, '')
+      rendered.push(
+        <div key={key++} style={{ display:'flex', gap:8, margin:'3px 0', paddingLeft:4 }}>
+          <span style={{ color:'#00e5b0', fontSize:10, marginTop:3, flexShrink:0 }}>—</span>
+          <span style={{ fontSize:12, color:'#8a9099', lineHeight:1.6 }} dangerouslySetInnerHTML={{ __html: formatInline(bulletContent) }} />
+        </div>
+      )
       continue
     }
 
     // Empty lines
     if (!line.trim()) {
-      rendered.push(<div key={key++} style={{ height:4 }} />)
+      rendered.push(<div key={key++} style={{ height:6 }} />)
       continue
     }
 
-    // Default
-    rendered.push(<div key={key++} style={{ fontSize:12, color:'#8a9099', margin:'2px 0', lineHeight:1.6 }}>{line}</div>)
+    // Horizontal rule
+    if (line.match(/^---+$/)) {
+      rendered.push(<div key={key++} style={{ height:1, background:'rgba(255,255,255,0.06)', margin:'12px 0' }} />)
+      continue
+    }
+
+    // Default — render with inline formatting
+    rendered.push(
+      <div key={key++} style={{ fontSize:12, color:'#8a9099', margin:'2px 0', lineHeight:1.7 }}
+        dangerouslySetInnerHTML={{ __html: formatInline(line) }} />
+    )
   }
 
   return <div style={{ padding:'4px 0' }}>{rendered}</div>
@@ -314,6 +376,49 @@ export default function DashboardPage() {
   const [moduleResult, setModuleResult] = useState(null)
   const [activeModuleName, setActiveModuleName] = useState(null)
   const [approvingId, setApprovingId] = useState(null)
+  const [cancelAssessment, setCancelAssessment] = useState(null)
+  const [scenarioResult, setScenarioResult] = useState(null)
+  const [scenarioRunning, setScenarioRunning] = useState(null)
+  const [cancellingId, setCancellingId] = useState(null)
+
+  async function assessCancelAction(approvalId, sentAt) {
+    const now = Date.now()
+    const sentTime = sentAt ? new Date(sentAt).getTime() : null
+    const minutesSinceSent = sentTime ? Math.round((now - sentTime) / 60000) : 0
+
+    let assessment
+    if (!sentAt) {
+      assessment = { type: 'clean_cancel', risk: 'NONE', message: 'Action not yet sent. Cancel removes it completely — no impact on driver.', approvalId }
+    } else if (minutesSinceSent < 8) {
+      assessment = { type: 'disregard_cancel', risk: 'LOW', message: `SMS sent ${minutesSinceSent} min ago. Driver may not have seen it. Cancel sends "DISREGARD — continue original route" immediately.`, approvalId, minutesSinceSent }
+    } else {
+      const estimatedMiles = Math.round(minutesSinceSent * 0.5)
+      assessment = {
+        type: 'partial_revert', risk: 'HIGH',
+        message: `SMS sent ${minutesSinceSent} minutes ago. Driver is likely ~${estimatedMiles} miles into the diversion.`,
+        approvalId, minutesSinceSent, estimatedMiles,
+        options: [
+          { id: 'continue_new_route', label: 'Continue on new route', description: `Driver is already ${estimatedMiles} miles in. Recalculate ETA and update customer. Recommended.`, recommended: estimatedMiles > 3 },
+          { id: 'ask_driver_position', label: 'Ask driver for position first', description: 'Send SMS asking driver to confirm their current position before deciding.', recommended: estimatedMiles <= 3 }
+        ]
+      }
+    }
+    setCancelAssessment(assessment)
+  }
+
+  async function executeCancelAction(approvalId, cancelType) {
+    setCancellingId(approvalId)
+    try {
+      await fetch('/api/approvals', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ approval_id: approvalId, action: 'reject', cancel_type: cancelType })
+      })
+      setCancelAssessment(null)
+      await loadApprovals()
+    } catch {}
+    finally { setCancellingId(null) }
+  }
   const responseRef = useRef(null)
 
   useEffect(() => {
@@ -500,6 +605,7 @@ export default function DashboardPage() {
             <button style={{ ...TAB_STYLE(activeTab==='approvals'), ...(pendingApprovals.length>0?{borderColor:'rgba(239,68,68,0.4)',color:'#ef4444',background:'rgba(239,68,68,0.08)'}:{}) }} onClick={() => setActiveTab('approvals')}>
               APPROVALS {pendingApprovals.length > 0 ? `(${pendingApprovals.length})` : ''}
             </button>
+            <button style={TAB_STYLE(activeTab==='scenarios')} onClick={() => setActiveTab('scenarios')}>SCENARIOS</button>
             <div style={{ marginLeft:'auto', display:'flex', alignItems:'center', gap:8 }}>
               <div style={{ width:7, height:7, borderRadius:'50%', background: loading ? '#f59e0b' : '#00e5b0', animation: loading ? 'pulse 1s infinite' : 'none' }} />
               <span style={{ fontFamily:'monospace', fontSize:10, color:'#4a5260' }}>{loading ? 'ANALYSING...' : 'AGENT READY'}</span>
@@ -588,6 +694,65 @@ export default function DashboardPage() {
             </div>
           )}
 
+          {/* ── SCENARIOS TAB ─────────────────────────────────────────────── */}
+          {activeTab === 'scenarios' && (
+            <div style={{ flex:1, overflowY:'auto', padding:'20px' }}>
+              <div style={{ fontSize:10, color:'#4a5260', fontFamily:'monospace', marginBottom:14 }}>// 10 OPERATIONAL SCENARIOS — click any to run with demo data</div>
+              <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(220px,1fr))', gap:8, marginBottom:20 }}>
+                {[
+                  { id:'driver_silent', label:'Driver Goes Silent', icon:'📵', color:'#ef4444' },
+                  { id:'delivery_rejection', label:'Delivery Rejection', icon:'🚫', color:'#f59e0b' },
+                  { id:'churn_prediction', label:'Client Churn Risk', icon:'📉', color:'#f59e0b' },
+                  { id:'subcontractor_noshow', label:'Subcontractor No-Show', icon:'👻', color:'#ef4444' },
+                  { id:'fuel_card_declined', label:'Fuel Card Declined', icon:'⛽', color:'#f59e0b' },
+                  { id:'planned_closures', label:'Planned Road Closures', icon:'🚧', color:'#3b82f6' },
+                  { id:'licence_check', label:'Driver Licence Check', icon:'🪪', color:'#f59e0b' },
+                  { id:'claim_pre_emption', label:'Insurance Claim Pack', icon:'🛡', color:'#3b82f6' },
+                  { id:'border_doc_failure', label:'Border Doc Failure', icon:'🛃', color:'#ef4444' },
+                  { id:'cascade_calculator', label:'Cascade Calculator', icon:'🌊', color:'#ef4444' },
+                ].map(s => (
+                  <button key={s.id} onClick={() => runScenario(s.id)} disabled={!!scenarioRunning}
+                    style={{ textAlign:'left', padding:'12px 13px', borderRadius:7, border:`1px solid ${s.color}30`, background:`${s.color}08`, cursor:scenarioRunning?'default':'pointer', opacity:scenarioRunning&&scenarioRunning!==s.id?0.4:1, transition:'all 0.15s' }}>
+                    <div style={{ display:'flex', alignItems:'center', gap:7, marginBottom:5 }}>
+                      <span style={{ fontSize:15 }}>{s.icon}</span>
+                      <span style={{ fontSize:11, fontWeight:500, color:'#e8eaed', lineHeight:1.3 }}>{s.label}</span>
+                    </div>
+                    <div style={{ fontSize:9, color:s.color, fontFamily:'monospace' }}>
+                      {scenarioRunning===s.id ? '● RUNNING...' : 'CLICK TO RUN DEMO'}
+                    </div>
+                  </button>
+                ))}
+              </div>
+              {scenarioRunning && (
+                <div style={{ display:'flex', alignItems:'center', gap:10, padding:'14px', background:'#111418', borderRadius:8, border:'1px solid rgba(0,229,176,0.15)' }}>
+                  <div style={{ width:16, height:16, border:'2px solid #00e5b0', borderTopColor:'transparent', borderRadius:'50%', animation:'spin 0.8s linear infinite', flexShrink:0 }} />
+                  <span style={{ fontFamily:'monospace', fontSize:11, color:'#00e5b0' }}>Analysing scenario...</span>
+                </div>
+              )}
+              {scenarioResult && !scenarioRunning && (
+                <div style={{ border:'1px solid rgba(0,229,176,0.15)', borderRadius:8, overflow:'hidden' }}>
+                  <div style={{ padding:'10px 14px', background:'rgba(0,229,176,0.06)', borderBottom:'1px solid rgba(0,229,176,0.1)', fontFamily:'monospace', fontSize:11, color:'#00e5b0' }}>
+                    SCENARIO RESULT — {scenarioResult.scenario?.toUpperCase().replace(/_/g,' ')}
+                  </div>
+                  {scenarioResult.error
+                    ? <div style={{ padding:'14px', color:'#ef4444', fontSize:12, fontFamily:'monospace' }}>Error: {scenarioResult.error}</div>
+                    : <div style={{ padding:'14px', maxHeight:400, overflowY:'auto' }}>
+                        <AgentResponse text={
+                          Object.entries(scenarioResult.result || {})
+                            .filter(([k]) => !['scenario','actions'].includes(k))
+                            .map(([k,v]) => `## ${k.replace(/_/g,' ').toUpperCase()}
+${typeof v === 'object' ? JSON.stringify(v, null, 2) : v}`)
+                            .join('
+
+')
+                        } />
+                      </div>
+                  }
+                </div>
+              )}
+            </div>
+          )}
+
           {/* ── APPROVALS TAB ──────────────────────────────────────────────── */}
           {activeTab === 'approvals' && (
             <div style={{ flex:1, overflowY:'auto', padding:'20px' }}>
@@ -621,10 +786,12 @@ export default function DashboardPage() {
                           <div style={{ display:'flex', gap:6 }}>
                             <button onClick={() => handleApproval(a.id,'approve')} disabled={isProcessing}
                               style={{ padding:'7px 14px', borderRadius:5, border:'none', background:'#00e5b0', color:'#000', fontWeight:600, fontSize:11, cursor:isProcessing?'default':'pointer', fontFamily:'monospace' }}>
-                              {isProcessing?'...':'✓ APPROVE'}
+                              {isProcessing?'...':'✓ SEND'}
                             </button>
-                            <button onClick={() => handleApproval(a.id,'reject')} disabled={isProcessing}
-                              style={{ padding:'7px 12px', borderRadius:5, fontSize:11, cursor:isProcessing?'default':'pointer', border:'1px solid rgba(239,68,68,0.3)', background:'transparent', color:'#ef4444', fontFamily:'monospace' }}>✕</button>
+                            <button onClick={() => assessCancelAction(a.id, a.sent_at)} disabled={isProcessing}
+                              style={{ padding:'7px 12px', borderRadius:5, fontSize:11, cursor:isProcessing?'default':'pointer', border:'1px solid rgba(245,158,11,0.4)', background:'rgba(245,158,11,0.06)', color:'#f59e0b', fontFamily:'monospace' }}>
+                              CANCEL
+                            </button>
                           </div>
                         </div>
                         {a.action_details?.content && (
@@ -636,6 +803,72 @@ export default function DashboardPage() {
                     )
                   })}
                 </>
+              )}
+
+              {/* ── CANCEL ASSESSMENT MODAL ── */}
+              {cancelAssessment && (
+                <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.7)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:1000 }}>
+                  <div style={{ background:'#111418', border:'1px solid rgba(255,255,255,0.12)', borderRadius:12, padding:'24px', maxWidth:480, width:'90%' }}>
+                    <div style={{ fontFamily:'monospace', fontSize:11, color: cancelAssessment.risk === 'NONE' ? '#00e5b0' : cancelAssessment.risk === 'LOW' ? '#f59e0b' : '#ef4444', letterSpacing:'0.08em', marginBottom:12 }}>
+                      CANCEL ASSESSMENT — {cancelAssessment.risk} RISK
+                    </div>
+                    <div style={{ fontSize:13, color:'#e8eaed', lineHeight:1.7, marginBottom:20 }}>
+                      {cancelAssessment.message}
+                    </div>
+
+                    {cancelAssessment.type === 'clean_cancel' && (
+                      <div style={{ display:'flex', gap:8 }}>
+                        <button onClick={() => executeCancelAction(cancelAssessment.approvalId, 'clean_cancel')}
+                          style={{ flex:1, padding:'10px', background:'#ef4444', border:'none', borderRadius:6, color:'#fff', fontWeight:600, fontSize:12, cursor:'pointer', fontFamily:'monospace' }}>
+                          CONFIRM CANCEL
+                        </button>
+                        <button onClick={() => setCancelAssessment(null)}
+                          style={{ padding:'10px 16px', background:'transparent', border:'1px solid rgba(255,255,255,0.12)', borderRadius:6, color:'#8a9099', fontSize:12, cursor:'pointer', fontFamily:'monospace' }}>
+                          KEEP ACTION
+                        </button>
+                      </div>
+                    )}
+
+                    {cancelAssessment.type === 'disregard_cancel' && (
+                      <div>
+                        <div style={{ padding:'10px 12px', background:'rgba(245,158,11,0.08)', border:'1px solid rgba(245,158,11,0.2)', borderRadius:6, fontSize:12, color:'#f59e0b', fontFamily:'monospace', marginBottom:14 }}>
+                          Will send to driver: "DISREGARD previous route instruction. Continue on original route."
+                        </div>
+                        <div style={{ display:'flex', gap:8 }}>
+                          <button onClick={() => executeCancelAction(cancelAssessment.approvalId, 'disregard')}
+                            style={{ flex:1, padding:'10px', background:'#f59e0b', border:'none', borderRadius:6, color:'#000', fontWeight:600, fontSize:12, cursor:'pointer', fontFamily:'monospace' }}>
+                            SEND DISREGARD + CANCEL
+                          </button>
+                          <button onClick={() => setCancelAssessment(null)}
+                            style={{ padding:'10px 16px', background:'transparent', border:'1px solid rgba(255,255,255,0.12)', borderRadius:6, color:'#8a9099', fontSize:12, cursor:'pointer', fontFamily:'monospace' }}>
+                            KEEP ACTION
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {cancelAssessment.type === 'partial_revert' && (
+                      <div>
+                        <div style={{ padding:'10px 12px', background:'rgba(239,68,68,0.08)', border:'1px solid rgba(239,68,68,0.2)', borderRadius:6, fontSize:12, color:'#ef4444', fontFamily:'monospace', marginBottom:14 }}>
+                          ⚠ Driver likely already {cancelAssessment.estimatedMiles} miles into diversion. Choose carefully.
+                        </div>
+                        <div style={{ display:'flex', flexDirection:'column', gap:8, marginBottom:12 }}>
+                          {cancelAssessment.options?.map(opt => (
+                            <button key={opt.id} onClick={() => executeCancelAction(cancelAssessment.approvalId, opt.id)}
+                              style={{ padding:'10px 14px', background: opt.recommended ? 'rgba(0,229,176,0.1)' : 'rgba(255,255,255,0.04)', border: opt.recommended ? '1px solid rgba(0,229,176,0.3)' : '1px solid rgba(255,255,255,0.08)', borderRadius:6, color: opt.recommended ? '#00e5b0' : '#8a9099', fontSize:12, cursor:'pointer', textAlign:'left', fontFamily:'monospace' }}>
+                              {opt.recommended ? '✓ ' : ''}{opt.label}
+                              <div style={{ fontSize:10, color:'#4a5260', marginTop:3, fontFamily:'IBM Plex Sans' }}>{opt.description}</div>
+                            </button>
+                          ))}
+                        </div>
+                        <button onClick={() => setCancelAssessment(null)}
+                          style={{ width:'100%', padding:'8px', background:'transparent', border:'1px solid rgba(255,255,255,0.08)', borderRadius:6, color:'#4a5260', fontSize:11, cursor:'pointer', fontFamily:'monospace' }}>
+                          DISMISS — TAKE NO ACTION
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
               )}
             </div>
           )}
