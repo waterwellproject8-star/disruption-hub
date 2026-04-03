@@ -179,11 +179,25 @@ function AgentResponse({ text }) {
       if (numMatch) {
         const [,num,content] = numMatch
         const urgent = content.includes('NOW') || content.includes('IMMEDIATELY') || content.includes('999')
-        const isActions = sectionTitle && (sectionTitle.toUpperCase().includes('ACTION') || sectionTitle.toUpperCase().includes('IMMEDIATE'))
-        const dotBg = isActions ? (urgent ? '#ef4444' : '#ef4444') : '#00e5b0'
+        const titleUp = (sectionTitle || '').toUpperCase()
+        const isContact = titleUp.includes('CONTACT') || titleUp.includes('WHO TO')
+        const isReroute = titleUp.includes('REROUTE') || titleUp.includes('REROUTING') || titleUp.includes('OPTION')
+        const isPrevention = titleUp.includes('PREVENTION')
+        const dotBg = isContact ? '#00e5b0' : isReroute ? '#a855f7' : isPrevention ? '#4a5260' : urgent ? '#ef4444' : '#ef4444'
+        const dotText = isContact ? '#000' : '#fff'
+        // Contact items get a different card style — teal left border, no dark bg
+        if (isContact) {
+          items.push(
+            <div key={k++} style={{margin:'6px 0',padding:'10px 14px',background:'rgba(0,229,176,0.04)',borderRadius:6,borderLeft:'3px solid rgba(0,229,176,0.3)'}}>
+              <div style={{fontSize:11,fontWeight:600,color:'#00e5b0',marginBottom:4}}>Contact {num}</div>
+              <div style={{fontSize:12,color:'#e8eaed',lineHeight:1.7}} dangerouslySetInnerHTML={{__html:fmt(content)}}/>
+            </div>
+          )
+          continue
+        }
         items.push(
           <div key={k++} style={{display:'flex',gap:10,margin:'5px 0',padding:'10px 12px',background:'rgba(0,0,0,0.2)',borderRadius:6,border:'1px solid rgba(255,255,255,0.06)'}}>
-            <div style={{width:22,height:22,borderRadius:'50%',background:dotBg,color:'#fff',display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,fontWeight:700,flexShrink:0,marginTop:1}}>{num}</div>
+            <div style={{width:22,height:22,borderRadius:'50%',background:dotBg,color:dotText,display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,fontWeight:700,flexShrink:0,marginTop:1}}>{num}</div>
             <div style={{fontSize:12,color:'#e8eaed',lineHeight:1.7,flex:1}} dangerouslySetInnerHTML={{__html:fmt(content)}}/>
           </div>
         )
@@ -704,6 +718,8 @@ export default function DashboardPage() {
   const [scenarioResult, setScenarioResult] = useState(null)
   const [scenarioRunning, setScenarioRunning] = useState(null)
   const [cancellingId, setCancellingId] = useState(null)
+  const [agentActions, setAgentActions] = useState([])
+  const [actionStates, setActionStates] = useState({})
 
   async function assessCancelAction(approvalId, sentAt) {
     const now = Date.now()
@@ -799,6 +815,10 @@ export default function DashboardPage() {
         }
       }
       setMessages([...newMessages, { role: 'assistant', content: full }])
+      // Extract suggested actions from the response
+      const extracted = extractActionsFromResponse(full)
+      setAgentActions(extracted)
+      setActionStates({})
     } catch { setResponse('Connection error. Check your API key.') }
     finally { setLoading(false) }
   }
@@ -840,6 +860,58 @@ export default function DashboardPage() {
       await loadApprovals()
     } catch {}
     finally { setApprovingId(null) }
+  }
+
+  function extractActionsFromResponse(text) {
+    const actions = []
+    const lines = text.split('\n')
+    const actionPatterns = [
+      { pattern: /call.{0,40}(driver|depot|carrier|manager|controller|ops)/i, type: 'call', icon: '📞' },
+      { pattern: /send.{0,30}(sms|text|message|whatsapp)/i, type: 'sms', icon: '💬' },
+      { pattern: /send.{0,30}(email|notification)/i, type: 'email', icon: '✉' },
+      { pattern: /dispatch.{0,30}(relief|vehicle|driver)/i, type: 'dispatch', icon: '🚛' },
+      { pattern: /notify.{0,40}(customer|client|consignee|dc)/i, type: 'notify', icon: '📣' },
+      { pattern: /reroute.{0,30}(driver|vehicle)/i, type: 'reroute', icon: '🗺' },
+      { pattern: /book.{0,30}(service|maintenance|engineer)/i, type: 'book', icon: '🔧' },
+      { pattern: /contact.{0,40}(highways|police|emergency)/i, type: 'emergency', icon: '🚨' },
+    ]
+    for (const line of lines) {
+      const clean = line.replace(/^\d+\.?\s+/,'').replace(/\*\*/g,'').trim()
+      if (!clean || clean.length < 15 || clean.length > 200) continue
+      for (const { pattern, type, icon } of actionPatterns) {
+        if (pattern.test(clean)) {
+          // Extract a short label from the line
+          const label = clean.split('—')[0].split('.')[0].trim().substring(0, 60)
+          if (!actions.find(a => a.label === label)) {
+            actions.push({ id: `action-${actions.length}`, label, type, icon, full: clean })
+          }
+          break
+        }
+      }
+    }
+    return actions.slice(0, 4) // Max 4 action buttons
+  }
+
+  async function fireAction(actionId, actionLabel, actionType) {
+    setActionStates(prev => ({ ...prev, [actionId]: 'firing' }))
+    await new Promise(r => setTimeout(r, 1200)) // Simulate sending
+    // In production: POST to /api/approvals to create a real approval item
+    // For demo: just show confirmed state
+    setActionStates(prev => ({ ...prev, [actionId]: 'done' }))
+    // Log to approvals if Supabase connected
+    try {
+      await fetch('/api/approvals', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          approval_id: actionId,
+          action: 'approve',
+          action_type: actionType,
+          action_label: actionLabel,
+          approved_by: 'ops_manager'
+        })
+      })
+    } catch {} // Silently fail if no Supabase
   }
 
   async function runScenario(scenarioId) {
@@ -953,7 +1025,7 @@ export default function DashboardPage() {
               <div style={{ width:7, height:7, borderRadius:'50%', background: loading ? '#f59e0b' : '#00e5b0', animation: loading ? 'pulse 1s infinite' : 'none' }} />
               <span style={{ fontFamily:'monospace', fontSize:10, color:'#4a5260' }}>{loading ? 'ANALYSING...' : 'AGENT READY'}</span>
               {messages.length > 0 && (
-                <button onClick={() => { setMessages([]); setResponse(''); setActiveShipment(null) }} style={{ fontSize:10, color:'#4a5260', background:'none', border:'1px solid rgba(255,255,255,0.06)', borderRadius:4, padding:'3px 8px', cursor:'pointer', fontFamily:'monospace', marginLeft:4 }}>CLEAR ×</button>
+                <button onClick={() => { setMessages([]); setResponse(''); setActiveShipment(null); setAgentActions([]); setActionStates({}) }} style={{ fontSize:10, color:'#4a5260', background:'none', border:'1px solid rgba(255,255,255,0.06)', borderRadius:4, padding:'3px 8px', cursor:'pointer', fontFamily:'monospace', marginLeft:4 }}>CLEAR ×</button>
               )}
             </div>
           </div>
@@ -977,6 +1049,49 @@ export default function DashboardPage() {
                 {messages.length >= 2 && (
                   <div style={{ marginTop:12, fontSize:10, color:'#4a5260', fontFamily:'monospace' }}>
                     // Ask a follow-up — "draft the client email", "cheapest option that hits SLA", "what's our liability here"
+                  </div>
+                )}
+
+                {/* ── SUGGESTED ACTIONS ── */}
+                {agentActions.length > 0 && !loading && (
+                  <div style={{ marginTop:16, padding:'12px 14px', background:'#0d1014', borderRadius:8, border:'1px solid rgba(0,229,176,0.12)' }}>
+                    <div style={{ fontSize:10, fontFamily:'monospace', color:'#00e5b0', letterSpacing:'0.08em', marginBottom:10 }}>SUGGESTED ACTIONS — click to execute</div>
+                    <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+                      {agentActions.map(action => {
+                        const state = actionStates[action.id]
+                        const isDone = state === 'done'
+                        const isFiring = state === 'firing'
+                        return (
+                          <div key={action.id} style={{ display:'flex', alignItems:'center', gap:10, padding:'9px 12px', background: isDone ? 'rgba(0,229,176,0.06)' : '#111418', borderRadius:6, border: isDone ? '1px solid rgba(0,229,176,0.2)' : '1px solid rgba(255,255,255,0.06)', transition:'all 0.3s' }}>
+                            <span style={{ fontSize:14, flexShrink:0 }}>{action.icon}</span>
+                            <div style={{ flex:1, minWidth:0 }}>
+                              <div style={{ fontSize:11, color: isDone ? '#00e5b0' : '#e8eaed', lineHeight:1.4, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
+                                {action.label}
+                              </div>
+                              <div style={{ fontSize:9, color:'#4a5260', fontFamily:'monospace', marginTop:1 }}>{action.type.toUpperCase()}</div>
+                            </div>
+                            {isDone ? (
+                              <div style={{ display:'flex', alignItems:'center', gap:5, flexShrink:0 }}>
+                                <div style={{ width:6, height:6, borderRadius:'50%', background:'#00e5b0' }} />
+                                <span style={{ fontSize:10, color:'#00e5b0', fontFamily:'monospace' }}>SENT</span>
+                              </div>
+                            ) : (
+                              <button
+                                onClick={() => fireAction(action.id, action.label, action.type)}
+                                disabled={isFiring}
+                                style={{ padding:'5px 12px', background: isFiring ? 'transparent' : '#00e5b0', color: isFiring ? '#00e5b0' : '#000', border: isFiring ? '1px solid rgba(0,229,176,0.3)' : 'none', borderRadius:5, fontSize:10, fontWeight:600, cursor: isFiring ? 'default' : 'pointer', fontFamily:'monospace', flexShrink:0, minWidth:60, transition:'all 0.2s' }}>
+                                {isFiring ? '...' : 'FIRE →'}
+                              </button>
+                            )}
+                          </div>
+                        )
+                      })}
+                    </div>
+                    {Object.values(actionStates).some(s => s === 'done') && (
+                      <div style={{ marginTop:8, fontSize:10, color:'#4a5260', fontFamily:'monospace' }}>
+                        Executed actions logged · <span style={{ color:'#00e5b0', cursor:'pointer' }} onClick={() => setActiveTab('approvals')}>View in approvals →</span>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
