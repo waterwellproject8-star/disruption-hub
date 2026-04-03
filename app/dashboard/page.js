@@ -785,16 +785,12 @@ export default function DashboardPage() {
   }, [unlocked])
 
   useEffect(() => {
-    if (!unlocked) return
-    // Small delay to ensure component is fully mounted
-    const t = setTimeout(() => {
-      fetch('/api/shipments?client_id=pearson-haulage')
-        .then(r => r.json())
-        .then(data => { if (data.shipments?.length > 0) setLiveShipments(data.shipments) })
-        .catch(() => {})
-    }, 500)
-    return () => clearTimeout(t)
-  }, [unlocked])
+    // Load live shipments on every mount — no dependency on auth state
+    fetch('/api/shipments?client_id=pearson-haulage')
+      .then(r => r.json())
+      .then(data => { if (data.shipments?.length > 0) setLiveShipments(data.shipments) })
+      .catch(() => {})
+  }, [])
 
   if (!unlocked) return <PinGate onUnlock={() => setUnlocked(true)} />
 
