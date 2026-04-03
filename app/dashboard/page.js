@@ -60,7 +60,10 @@ function PinGate({ onUnlock }) {
   const [pin, setPin] = useState('')
   const [error, setError] = useState(false)
   const handleSubmit = () => {
-    if (pin.toUpperCase() === DASHBOARD_PIN) { onUnlock() }
+    if (pin.toUpperCase() === DASHBOARD_PIN) {
+      if (typeof window !== 'undefined') localStorage.setItem('dh_unlocked','true')
+      onUnlock()
+    }
     else { setError(true); setPin(''); setTimeout(() => setError(false), 2000) }
   }
   return (
@@ -702,7 +705,12 @@ function ScenarioResult({ result }) {
 
 // ── MAIN DASHBOARD ─────────────────────────────────────────────────────────
 export default function DashboardPage() {
-  const [unlocked, setUnlocked] = useState(false)
+  const [unlocked, setUnlocked] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('dh_unlocked') === 'true'
+    }
+    return false
+  })
   const [messages, setMessages] = useState([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
@@ -714,6 +722,7 @@ export default function DashboardPage() {
   const [moduleResult, setModuleResult] = useState(null)
   const [activeModuleName, setActiveModuleName] = useState(null)
   const [approvingId, setApprovingId] = useState(null)
+  const [localApprovals, setLocalApprovals] = useState([])
   const [cancelAssessment, setCancelAssessment] = useState(null)
   const [scenarioResult, setScenarioResult] = useState(null)
   const [scenarioRunning, setScenarioRunning] = useState(null)
@@ -957,24 +966,42 @@ export default function DashboardPage() {
 
   async function fireAction(actionId, actionLabel, actionType) {
     setActionStates(prev => ({ ...prev, [actionId]: 'firing' }))
-    await new Promise(r => setTimeout(r, 1200)) // Simulate sending
-    // In production: POST to /api/approvals to create a real approval item
-    // For demo: just show confirmed state
+    await new Promise(r => setTimeout(r, 1200))
     setActionStates(prev => ({ ...prev, [actionId]: 'done' }))
-    // Log to approvals if Supabase connected
+
+    // Add to local approvals list for demo — shows in APPROVALS tab immediately
+    const typeConfig = {
+      call:     { ico: '📞', bg: 'rgba(59,130,246,0.07)',   border: 'rgba(59,130,246,0.2)' },
+      sms:      { ico: '💬', bg: 'rgba(245,158,11,0.07)',   border: 'rgba(245,158,11,0.22)' },
+      email:    { ico: '✉',  bg: 'rgba(0,229,176,0.05)',    border: 'rgba(0,229,176,0.18)' },
+      dispatch: { ico: '🚛', bg: 'rgba(168,85,247,0.06)',   border: 'rgba(168,85,247,0.2)' },
+      notify:   { ico: '📣', bg: 'rgba(0,229,176,0.05)',    border: 'rgba(0,229,176,0.18)' },
+      reroute:  { ico: '🗺', bg: 'rgba(168,85,247,0.06)',   border: 'rgba(168,85,247,0.2)' },
+      book:     { ico: '🔧', bg: 'rgba(59,130,246,0.07)',   border: 'rgba(59,130,246,0.2)' },
+      block:    { ico: '🚨', bg: 'rgba(239,68,68,0.07)',    border: 'rgba(239,68,68,0.2)' },
+      emergency:{ ico: '🚨', bg: 'rgba(239,68,68,0.07)',    border: 'rgba(239,68,68,0.2)' },
+    }
+    const cfg = typeConfig[actionType] || typeConfig.email
+    setLocalApprovals(prev => [{
+      id: actionId,
+      action_label: actionLabel,
+      action_type: actionType,
+      status: 'executed',
+      ico: cfg.ico,
+      bg: cfg.bg,
+      border: cfg.border,
+      executed_at: new Date().toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit'}),
+      financial_value: 0
+    }, ...prev])
+
+    // Also try real Supabase if connected
     try {
       await fetch('/api/approvals', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          approval_id: actionId,
-          action: 'approve',
-          action_type: actionType,
-          action_label: actionLabel,
-          approved_by: 'ops_manager'
-        })
+        body: JSON.stringify({ approval_id: actionId, action: 'approve', action_type: actionType, action_label: actionLabel, approved_by: 'ops_manager' })
       })
-    } catch {} // Silently fail if no Supabase
+    } catch {}
   }
 
   async function runScenario(scenarioId) {
