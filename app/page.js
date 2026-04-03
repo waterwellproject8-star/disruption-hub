@@ -143,7 +143,7 @@ export default function HomePage() {
       .replace(/^(CRITICAL|HIGH|MEDIUM|LOW)$/gm, (m) => {
         const c = {CRITICAL:'#ef4444',HIGH:'#f59e0b',MEDIUM:'#3b82f6',LOW:'#8a9099'}[m]
         const bg = {CRITICAL:'rgba(239,68,68,0.1)',HIGH:'rgba(245,158,11,0.1)',MEDIUM:'rgba(59,130,246,0.1)',LOW:'rgba(138,144,153,0.1)'}[m]
-        return \`<span style="background:\${bg};color:\${c};font-family:monospace;font-size:10px;padding:2px 8px;border-radius:4px;font-weight:700">\${m}</span>\`
+        return `<span style="background:${bg};color:${c};font-family:monospace;font-size:10px;padding:2px 8px;border-radius:4px;font-weight:700">${m}</span>`
       })
       // Bold text
       .replace(/\*\*(.*?)\*\*/g, '<strong style="color:#e8eaed;font-weight:600">$1</strong>')
@@ -154,7 +154,7 @@ export default function HomePage() {
         const urgent = text.includes('NOW') || text.includes('IMMEDIATELY') || text.includes('999')
         const border = urgent ? 'rgba(239,68,68,0.2)' : 'rgba(255,255,255,0.06)'
         const bg = urgent ? '#ef4444' : '#00e5b0'
-        return \`<div style="display:flex;gap:10px;margin:6px 0;padding:10px 12px;background:#111418;border-radius:6px;border:1px solid \${border}"><div style="width:20px;height:20px;border-radius:50%;background:\${bg};color:#000;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;margin-top:1px">\${num}</div><div style="font-size:12px;color:#e8eaed;line-height:1.6;flex:1">\${text}</div></div>\`
+        return `<div style="display:flex;gap:10px;margin:6px 0;padding:10px 12px;background:#111418;border-radius:6px;border:1px solid ${border}"><div style="width:20px;height:20px;border-radius:50%;background:${bg};color:#000;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;margin-top:1px">${num}</div><div style="font-size:12px;color:#e8eaed;line-height:1.6;flex:1">${text}</div></div>`
       })
       // Bullet points
       .replace(/^[-—]\s+(.+)$/gm, '<div style="display:flex;gap:8px;margin:3px 0;padding-left:4px"><span style="color:#00e5b0;font-size:10px;margin-top:3px;flex-shrink:0">—</span><span style="font-size:12px;color:#8a9099;line-height:1.6">$1</span></div>')
