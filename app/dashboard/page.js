@@ -907,30 +907,55 @@ export default function DashboardPage() {
   function extractActionsFromResponse(text) {
     const actions = []
     const lines = text.split('\n')
+
+    // Match any numbered action line (1., 2., etc.)
     const actionPatterns = [
-      { pattern: /call.{0,40}(driver|depot|carrier|manager|controller|ops)/i, type: 'call', icon: '📞' },
-      { pattern: /send.{0,30}(sms|text|message|whatsapp)/i, type: 'sms', icon: '💬' },
-      { pattern: /send.{0,30}(email|notification)/i, type: 'email', icon: '✉' },
-      { pattern: /dispatch.{0,30}(relief|vehicle|driver)/i, type: 'dispatch', icon: '🚛' },
-      { pattern: /notify.{0,40}(customer|client|consignee|dc)/i, type: 'notify', icon: '📣' },
-      { pattern: /reroute.{0,30}(driver|vehicle)/i, type: 'reroute', icon: '🗺' },
-      { pattern: /book.{0,30}(service|maintenance|engineer)/i, type: 'book', icon: '🔧' },
-      { pattern: /contact.{0,40}(highways|police|emergency)/i, type: 'emergency', icon: '🚨' },
+      { pattern: /999|emergency.service|ambulance|police/i, type: 'emergency', icon: '🚨', label: 'Call 999 — emergency services' },
+      { pattern: /call.{0,60}(driver|carl|james|mark|paul|depot|carrier|ops|manager|controller|haulage|express|freight|yodel|dhl|xpo)/i, type: 'call', icon: '📞' },
+      { pattern: /telematics|webfleet|samsara|gps.{0,20}(pull|check|confirm)/i, type: 'call', icon: '📍', label: 'Pull telematics — confirm vehicle position' },
+      { pattern: /send.{0,40}(sms|text|message|whatsapp|instruction|alert)/i, type: 'sms', icon: '💬' },
+      { pattern: /send|email|notify|notification/i, type: 'email', icon: '✉' },
+      { pattern: /dispatch.{0,40}(relief|vehicle|driver|replace)/i, type: 'dispatch', icon: '🚛' },
+      { pattern: /relief.{0,20}vehicle|relief.{0,20}driver|dispatch.{0,20}vehicle/i, type: 'dispatch', icon: '🚛' },
+      { pattern: /reroute|re-route|divert|alternative.{0,20}route/i, type: 'reroute', icon: '🗺' },
+      { pattern: /highways.england|0300|motorway/i, type: 'call', icon: '🛣' },
+      { pattern: /contact|speak|inform|update|alert.{0,20}(tesco|nhs|dc|customer|client|consignee)/i, type: 'notify', icon: '📣' },
     ]
+
     for (const line of lines) {
-      const clean = line.replace(/^\d+\.?\s+/,'').replace(/\*\*/g,'').trim()
-      if (!clean || clean.length < 15 || clean.length > 200) continue
-      for (const { pattern, type, icon } of actionPatterns) {
+      // Only process numbered action lines
+      const numMatch = line.match(/^(\d+)\.?\s+(.{15,180})/)
+      if (!numMatch) continue
+      const clean = numMatch[2].replace(/\*\*/g,'').trim()
+
+      for (const { pattern, type, icon, label: forcedLabel } of actionPatterns) {
         if (pattern.test(clean)) {
-          // Extract a short label from the line
-          const label = clean.split('—')[0].split('.')[0].trim().substring(0, 60)
+          const label = forcedLabel || clean.split('—')[0].split('·')[0].split('.')[0].trim().substring(0, 65)
           if (!actions.find(a => a.label === label)) {
-            actions.push({ id: `action-${actions.length}`, label, type, icon, full: clean })
+            actions.push({ label, type, icon, full: clean })
           }
           break
         }
       }
     }
+
+    // If no numbered matches found, try key phrase scan across all lines
+    if (actions.length === 0) {
+      for (const line of lines) {
+        const clean = line.replace(/^[-—*\d.]+\s*/,'').replace(/\*\*/g,'').trim()
+        if (clean.length < 15 || clean.length > 180) continue
+        if (/call 999|call.{0,30}(driver|ops|carrier)|dispatch.{0,20}(vehicle|relief)|send.{0,20}(sms|message)/i.test(clean)) {
+          const label = clean.split('—')[0].trim().substring(0,65)
+          if (!actions.find(a => a.label === label)) {
+            const type = /999/.test(clean) ? 'emergency' : /call/.test(clean) ? 'call' : /dispatch/.test(clean) ? 'dispatch' : 'sms'
+            const icon = /999/.test(clean) ? '🚨' : /call/.test(clean) ? '📞' : /dispatch/.test(clean) ? '🚛' : '💬'
+            actions.push({ label, type, icon, full: clean })
+          }
+        }
+        if (actions.length >= 4) break
+      }
+    }
+
     return actions.slice(0, 4).map(a => ({
       ...a,
       id: 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
