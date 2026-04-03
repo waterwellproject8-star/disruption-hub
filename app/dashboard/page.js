@@ -1119,12 +1119,19 @@ export default function DashboardPage() {
           <span style={{ fontSize:12, color:'#e8eaed', fontWeight:500 }}>Operations Dashboard</span>
         </div>
         <div style={{ display:'flex', alignItems:'center', gap:16 }}>
-          {pendingApprovals.length > 0 && (
-            <button onClick={() => setActiveTab('approvals')} style={{ display:'flex', alignItems:'center', gap:6, background:'rgba(239,68,68,0.1)', border:'1px solid rgba(239,68,68,0.25)', borderRadius:6, padding:'5px 10px', cursor:'pointer' }}>
-              <div style={{ width:7, height:7, borderRadius:'50%', background:'#ef4444', animation:'pulse 2s infinite' }} />
-              <span style={{ fontSize:11, color:'#ef4444', fontFamily:'monospace' }}>{pendingApprovals.length} AWAITING APPROVAL</span>
-            </button>
-          )}
+          {(pendingApprovals.length > 0 || localApprovals.length > 0) && (() => {
+            const pendingCount = pendingApprovals.filter(a => a.status === 'pending').length
+            const totalCount = pendingApprovals.length + localApprovals.length
+            const hasPending = pendingCount > 0
+            return (
+              <button onClick={() => setActiveTab('approvals')} style={{ display:'flex', alignItems:'center', gap:6, background: hasPending ? 'rgba(239,68,68,0.1)' : 'rgba(0,229,176,0.08)', border: hasPending ? '1px solid rgba(239,68,68,0.25)' : '1px solid rgba(0,229,176,0.2)', borderRadius:6, padding:'5px 10px', cursor:'pointer' }}>
+                <div style={{ width:7, height:7, borderRadius:'50%', background: hasPending ? '#ef4444' : '#00e5b0', animation: hasPending ? 'pulse 2s infinite' : 'none' }} />
+                <span style={{ fontSize:11, color: hasPending ? '#ef4444' : '#00e5b0', fontFamily:'monospace' }}>
+                  {hasPending ? `${pendingCount} AWAITING APPROVAL` : `${totalCount} ACTIONS LOGGED`}
+                </span>
+              </button>
+            )
+          })()}
           <span style={{ fontSize:11, color:'#4a5260' }}>Acme Logistics Ltd</span>
         </div>
       </nav>
