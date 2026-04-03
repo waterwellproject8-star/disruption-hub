@@ -1,10 +1,14 @@
 {
   "functions": {
-    "app/api/modules/route.js": {
-      "maxDuration": 30
-    },
-    "app/api/agent/route.js": {
-      "maxDuration": 30
+    "app/api/modules/route.js": { "maxDuration": 30 },
+    "app/api/agent/route.js": { "maxDuration": 30 },
+    "app/api/scenarios/route.js": { "maxDuration": 30 },
+    "app/api/scheduled/run/route.js": { "maxDuration": 60 }
+  },
+  "crons": [
+    {
+      "path": "/api/scheduled/run",
+      "schedule": "0 5 * * *"
     }
-  }
+  ]
 }
