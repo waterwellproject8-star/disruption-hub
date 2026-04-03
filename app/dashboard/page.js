@@ -720,6 +720,7 @@ export default function DashboardPage() {
   const [cancellingId, setCancellingId] = useState(null)
   const [agentActions, setAgentActions] = useState([])
   const [actionStates, setActionStates] = useState({})
+  const [sessionIncidents, setSessionIncidents] = useState([])
 
   async function assessCancelAction(approvalId, sentAt) {
     const now = Date.now()
@@ -819,6 +820,17 @@ export default function DashboardPage() {
       const extracted = extractActionsFromResponse(full)
       setAgentActions(extracted)
       setActionStates({})
+      // Log to session incident history in sidebar
+      const sevMatch = full.match(/\b(CRITICAL|HIGH|MEDIUM|LOW)\b/)
+      const moneyMatch = full.match(/£([\d,]+)/)
+      const sev = sevMatch ? sevMatch[1] : 'MEDIUM'
+      const saved = moneyMatch ? '£' + moneyMatch[1] : null
+      const ref = newMessages[0]?.content?.match(/REF-[\w]+/)?.[0] || 'MANUAL'
+      const incidentType = newMessages[0]?.content?.slice(0,40).replace(/\n.*/,'') || 'Analysis'
+      setSessionIncidents(prev => [{
+        ref, type: incidentType.substring(0,30), severity: sev,
+        saved, date: 'Just now'
+      }, ...prev].slice(0, 8))
     } catch { setResponse('Connection error. Check your API key.') }
     finally { setLoading(false) }
   }
@@ -842,6 +854,11 @@ export default function DashboardPage() {
       const data = await res.json()
       setModuleResult(data)
       if (data.actions_queued > 0) loadApprovals()
+      // Generate action buttons from module findings
+      const moduleActions = extractActionsFromModuleResult(data.result, moduleId)
+      setAgentActions(moduleActions)
+      setActionStates({})
+      setActiveTab('modules')
     } catch (e) {
       setModuleResult({ error: e.message })
     } finally {
@@ -890,6 +907,52 @@ export default function DashboardPage() {
       }
     }
     return actions.slice(0, 4) // Max 4 action buttons
+  }
+
+  function extractActionsFromModuleResult(result, moduleId) {
+    if (!result) return []
+    const actions = []
+
+    // Invoice — dispute actions
+    if (result.discrepancies?.length > 0) {
+      actions.push({ id:'inv-dispute', label:`Dispute ${result.discrepancies.length} overcharge${result.discrepancies.length>1?'s':''} — recover £${(result.total_overcharge||0).toLocaleString()}`, type:'email', icon:'✉' })
+    }
+    // SLA — reroute instructions
+    if (result.at_risk_deliveries?.length > 0) {
+      result.at_risk_deliveries.filter(d=>d.reroute_saves_sla).forEach(d => {
+        actions.push({ id:`reroute-${d.ref}`, label:`Reroute ${d.ref} — saves £${(d.penalty_if_breached||0).toLocaleString()} penalty`, type:'sms', icon:'💬' })
+      })
+    }
+    // Driver hours — notify affected drivers
+    if (result.drivers_at_risk?.length > 0) {
+      result.drivers_at_risk.filter(d=>d.breach_risk).slice(0,2).forEach(d => {
+        actions.push({ id:`hours-${d.name}`, label:`Alert ${d.name} — ${d.remaining_hours}h remaining this week`, type:'sms', icon:'💬' })
+      })
+    }
+    // Vehicle health — book service
+    if (result.vehicles_at_risk?.length > 0) {
+      result.vehicles_at_risk.slice(0,2).forEach(v => {
+        actions.push({ id:`vehicle-${v.reg}`, label:`Book service for ${v.reg} — ${v.failure_probability}% breakdown risk`, type:'book', icon:'🔧' })
+      })
+    }
+    // Compliance failures — block dispatch
+    if (result.compliance_failures?.length > 0) {
+      actions.push({ id:'compliance-block', label:`Block dispatch — ${result.compliance_failures.length} compliance failure${result.compliance_failures.length>1?'s':''}`, type:'block', icon:'🚨' })
+    }
+    // Licence flags
+    if (result.flags?.length > 0) {
+      actions.push({ id:'licence-flag', label:`Flag ${result.flags.length} driver${result.flags.length>1?'s':''} — licence issues found`, type:'notify', icon:'📣' })
+    }
+    // Fuel — send fill instruction
+    if (result.vehicles_to_fill?.length > 0) {
+      actions.push({ id:'fuel-fill', label:`Send fuel instruction to ${result.vehicles_to_fill.length} driver${result.vehicles_to_fill.length>1?'s':''} — save £${(result.total_saving||0).toFixed(0)}`, type:'sms', icon:'⛽' })
+    }
+    // Tenders found
+    if (result.matching_tenders?.length > 0) {
+      actions.push({ id:'tender-brief', label:`Send tender briefing — ${result.matching_tenders.length} match${result.matching_tenders.length>1?'es':''}`, type:'email', icon:'🏆' })
+    }
+
+    return actions.slice(0, 4)
   }
 
   async function fireAction(actionId, actionLabel, actionType) {
@@ -995,15 +1058,15 @@ export default function DashboardPage() {
           {/* Recent Incidents */}
           <div style={{ padding:'14px' }}>
             <div style={{ fontSize:9, fontFamily:'monospace', color:'#4a5260', letterSpacing:'0.08em', marginBottom:8 }}>RECENT INCIDENTS</div>
-            {INCIDENT_LOG.map((inc,i) => (
+            {[...sessionIncidents, ...INCIDENT_LOG].slice(0,8).map((inc,i) => (
               <div key={i} style={{ padding:'8px 0', borderBottom:'1px solid rgba(255,255,255,0.03)', display:'grid', gridTemplateColumns:'1fr auto' }}>
                 <div>
-                  <div style={{ fontSize:10, color:'#e8eaed', fontFamily:'monospace' }}>{inc.ref} — {inc.type}</div>
+                  <div style={{ fontSize:10, color: i===0&&sessionIncidents.length>0?'#00e5b0':'#e8eaed', fontFamily:'monospace' }}>{inc.ref} — {inc.type.substring(0,22)}</div>
                   <div style={{ fontSize:9, color:'#4a5260', marginTop:1 }}>{inc.date}</div>
                 </div>
                 <div style={{ textAlign:'right' }}>
                   <div style={{ fontSize:9, color:SEV_COLORS[inc.severity], fontFamily:'monospace', padding:'1px 5px', borderRadius:2, background:SEV_BG[inc.severity], display:'inline-block' }}>{inc.severity}</div>
-                  <div style={{ fontSize:9, color:'#00e5b0', marginTop:3 }}>saved {inc.saved}</div>
+                  {inc.saved && <div style={{ fontSize:9, color:'#00e5b0', marginTop:3 }}>{inc.saved}</div>}
                 </div>
               </div>
             ))}
@@ -1053,7 +1116,7 @@ export default function DashboardPage() {
                 )}
 
                 {/* ── SUGGESTED ACTIONS ── */}
-                {agentActions.length > 0 && !loading && (
+                {agentActions.length > 0 && !loading && activeTab === 'agent' && (
                   <div style={{ marginTop:16, padding:'12px 14px', background:'#0d1014', borderRadius:8, border:'1px solid rgba(0,229,176,0.12)' }}>
                     <div style={{ fontSize:10, fontFamily:'monospace', color:'#00e5b0', letterSpacing:'0.08em', marginBottom:10 }}>SUGGESTED ACTIONS — click to execute</div>
                     <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
@@ -1141,6 +1204,40 @@ export default function DashboardPage() {
                 <div style={{ display:'flex', alignItems:'center', gap:10, padding:'14px', background:'#111418', borderRadius:8, border:'1px solid rgba(0,229,176,0.15)' }}>
                   <div style={{ width:16, height:16, border:'2px solid #00e5b0', borderTopColor:'transparent', borderRadius:'50%', animation:'spin 0.8s linear infinite', flexShrink:0 }} />
                   <span style={{ fontFamily:'monospace', fontSize:11, color:'#00e5b0' }}>Running {MODULES.find(m=>m.id===moduleRunning)?.label}...</span>
+                </div>
+              )}
+
+              {/* Module action buttons */}
+              {agentActions.length > 0 && !moduleRunning && activeTab === 'modules' && (
+                <div style={{ marginTop:16, padding:'12px 14px', background:'#0d1014', borderRadius:8, border:'1px solid rgba(0,229,176,0.12)' }}>
+                  <div style={{ fontSize:10, fontFamily:'monospace', color:'#00e5b0', letterSpacing:'0.08em', marginBottom:10 }}>SUGGESTED ACTIONS — click to execute</div>
+                  <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+                    {agentActions.map(action => {
+                      const state = actionStates[action.id]
+                      const isDone = state === 'done'
+                      const isFiring = state === 'firing'
+                      return (
+                        <div key={action.id} style={{ display:'flex', alignItems:'center', gap:10, padding:'9px 12px', background: isDone ? 'rgba(0,229,176,0.06)' : '#111418', borderRadius:6, border: isDone ? '1px solid rgba(0,229,176,0.2)' : '1px solid rgba(255,255,255,0.06)', transition:'all 0.3s' }}>
+                          <span style={{ fontSize:14, flexShrink:0 }}>{action.icon}</span>
+                          <div style={{ flex:1, minWidth:0 }}>
+                            <div style={{ fontSize:11, color: isDone ? '#00e5b0' : '#e8eaed', lineHeight:1.4 }}>{action.label}</div>
+                            <div style={{ fontSize:9, color:'#4a5260', fontFamily:'monospace', marginTop:1 }}>{action.type.toUpperCase()}</div>
+                          </div>
+                          {isDone ? (
+                            <div style={{ display:'flex', alignItems:'center', gap:5, flexShrink:0 }}>
+                              <div style={{ width:6, height:6, borderRadius:'50%', background:'#00e5b0' }} />
+                              <span style={{ fontSize:10, color:'#00e5b0', fontFamily:'monospace' }}>SENT</span>
+                            </div>
+                          ) : (
+                            <button onClick={() => fireAction(action.id, action.label, action.type)} disabled={isFiring}
+                              style={{ padding:'5px 12px', background: isFiring ? 'transparent' : '#00e5b0', color: isFiring ? '#00e5b0' : '#000', border: isFiring ? '1px solid rgba(0,229,176,0.3)' : 'none', borderRadius:5, fontSize:10, fontWeight:600, cursor: isFiring ? 'default' : 'pointer', fontFamily:'monospace', flexShrink:0, minWidth:60, transition:'all 0.2s' }}>
+                              {isFiring ? '...' : 'FIRE →'}
+                            </button>
+                          )}
+                        </div>
+                      )
+                    })}
+                  </div>
                 </div>
               )}
 
