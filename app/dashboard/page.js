@@ -786,7 +786,7 @@ export default function DashboardPage() {
 
   async function loadApprovals() {
     try {
-      const res = await fetch('/api/approvals?status=pending')
+      const res = await fetch('/api/approvals?client_id=pearson-haulage')
       if (!res.ok) return
       const data = await res.json()
       setPendingApprovals(data.approvals || [])
@@ -1168,7 +1168,7 @@ export default function DashboardPage() {
           <div style={{ padding:'10px 20px', borderBottom:'1px solid rgba(255,255,255,0.06)', display:'flex', alignItems:'center', gap:8 }}>
             <button style={TAB_STYLE(activeTab==='agent')} onClick={() => setActiveTab('agent')}>AGENT</button>
             <button style={TAB_STYLE(activeTab==='modules')} onClick={() => setActiveTab('modules')}>MODULES</button>
-            <button style={{ ...TAB_STYLE(activeTab==='approvals'), ...(pendingApprovals.length>0?{borderColor:'rgba(239,68,68,0.4)',color:'#ef4444',background:'rgba(239,68,68,0.08)'}:{}) }} onClick={() => setActiveTab('approvals')}>
+            <button style={{ ...TAB_STYLE(activeTab==='approvals'), ...(pendingApprovals.length>0?{borderColor:'rgba(239,68,68,0.4)',color:'#ef4444',background:'rgba(239,68,68,0.08)'}:{}) }} onClick={() => { setActiveTab('approvals'); loadApprovals() }}>
               APPROVALS {pendingApprovals.length > 0 ? `(${pendingApprovals.length})` : ''}
             </button>
             <button style={TAB_STYLE(activeTab==='scenarios')} onClick={() => setActiveTab('scenarios')}>SCENARIOS</button>
@@ -1391,54 +1391,95 @@ export default function DashboardPage() {
           {/* ── APPROVALS TAB ──────────────────────────────────────────────── */}
           {activeTab === 'approvals' && (
             <div style={{ flex:1, overflowY:'auto', padding:'20px' }}>
-              {pendingApprovals.length === 0 ? (
-                <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', height:'60%', gap:12, opacity:0.3 }}>
-                  <div style={{ fontFamily:'monospace', fontSize:32, color:'#4a5260' }}>✓</div>
-                  <div style={{ fontSize:12, color:'#4a5260' }}>No pending approvals</div>
+
+              {/* Session executed actions */}
+              {localApprovals.length > 0 && (
+                <div style={{ marginBottom:16 }}>
+                  <div style={{ fontSize:10, color:'#4a5260', fontFamily:'monospace', marginBottom:10 }}>// EXECUTED THIS SESSION</div>
+                  {localApprovals.map(a => (
+                    <div key={a.id} style={{ border:`1px solid ${a.border}`, borderRadius:8, background:a.bg, marginBottom:7 }}>
+                      <div style={{ padding:'10px 14px', display:'flex', alignItems:'center', gap:10 }}>
+                        <span style={{ fontSize:15 }}>{a.ico}</span>
+                        <div style={{ flex:1, minWidth:0 }}>
+                          <div style={{ fontSize:12, color:'#e8eaed', fontWeight:500 }}>{a.action_label}</div>
+                          <div style={{ fontSize:9, color:'#4a5260', fontFamily:'monospace', marginTop:2 }}>{(a.action_type||'').toUpperCase()} · sent at {a.executed_at}</div>
+                        </div>
+                        <div style={{ display:'flex', alignItems:'center', gap:5, flexShrink:0 }}>
+                          <div style={{ width:6, height:6, borderRadius:'50%', background:'#00e5b0' }} />
+                          <span style={{ fontSize:10, color:'#00e5b0', fontFamily:'monospace' }}>EXECUTED</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  {pendingApprovals.length > 0 && <div style={{ height:1, background:'rgba(255,255,255,0.06)', margin:'12px 0' }} />}
                 </div>
-              ) : (
+              )}
+
+              {/* Supabase records */}
+              {pendingApprovals.length > 0 ? (
                 <>
-                  <div style={{ fontSize:10, color:'#4a5260', fontFamily:'monospace', marginBottom:14 }}>// {pendingApprovals.length} ACTION{pendingApprovals.length!==1?'S':''} AWAITING YOUR APPROVAL</div>
+                  <div style={{ fontSize:10, color:'#4a5260', fontFamily:'monospace', marginBottom:10 }}>// LOGGED ACTIONS — {pendingApprovals.length} record{pendingApprovals.length!==1?'s':''}</div>
                   {pendingApprovals.map(a => {
-                    const ac = {
-                      send_sms:   { bg:'rgba(245,158,11,0.07)', border:'rgba(245,158,11,0.22)', ico:'💬' },
-                      send_email: { bg:'rgba(0,229,176,0.05)',  border:'rgba(0,229,176,0.18)', ico:'✉' },
-                      make_call:  { bg:'rgba(59,130,246,0.07)', border:'rgba(59,130,246,0.2)', ico:'📞' },
-                      raise_po:   { bg:'rgba(168,85,247,0.06)', border:'rgba(168,85,247,0.2)', ico:'🛒' },
-                    }[a.action_type] || { bg:'rgba(0,229,176,0.05)', border:'rgba(0,229,176,0.18)', ico:'✉' }
+                    const typeMap = {
+                      call:      { bg:'rgba(59,130,246,0.07)',  border:'rgba(59,130,246,0.2)',  ico:'📞' },
+                      email:     { bg:'rgba(0,229,176,0.05)',   border:'rgba(0,229,176,0.18)',  ico:'✉' },
+                      sms:       { bg:'rgba(245,158,11,0.07)',  border:'rgba(245,158,11,0.22)', ico:'💬' },
+                      dispatch:  { bg:'rgba(168,85,247,0.06)', border:'rgba(168,85,247,0.2)',  ico:'🚛' },
+                      notify:    { bg:'rgba(0,229,176,0.05)',   border:'rgba(0,229,176,0.18)',  ico:'📣' },
+                      emergency: { bg:'rgba(239,68,68,0.07)',   border:'rgba(239,68,68,0.2)',   ico:'🚨' },
+                      reroute:   { bg:'rgba(168,85,247,0.06)', border:'rgba(168,85,247,0.2)',  ico:'🗺' },
+                      send_sms:  { bg:'rgba(245,158,11,0.07)',  border:'rgba(245,158,11,0.22)', ico:'💬' },
+                      send_email:{ bg:'rgba(0,229,176,0.05)',   border:'rgba(0,229,176,0.18)',  ico:'✉' },
+                      make_call: { bg:'rgba(59,130,246,0.07)',  border:'rgba(59,130,246,0.2)',  ico:'📞' },
+                    }
+                    const ac = typeMap[a.action_type] || { bg:'rgba(0,229,176,0.05)', border:'rgba(0,229,176,0.18)', ico:'✉' }
+                    const isExecuted = a.status === 'executed'
+                    const isPending = a.status === 'pending'
                     const isProcessing = approvingId === a.id
+                    const timeStr = a.executed_at ? new Date(a.executed_at).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}) : ''
                     return (
-                      <div key={a.id} style={{ border:`1px solid ${ac.border}`, borderRadius:8, background:ac.bg, marginBottom:10, overflow:'hidden' }}>
-                        <div style={{ padding:'12px 14px', display:'flex', alignItems:'center', gap:10 }}>
-                          <span style={{ fontSize:18 }}>{ac.ico}</span>
+                      <div key={a.id} style={{ border:`1px solid ${ac.border}`, borderRadius:8, background:ac.bg, marginBottom:8 }}>
+                        <div style={{ padding:'10px 14px', display:'flex', alignItems:'center', gap:10 }}>
+                          <span style={{ fontSize:15 }}>{ac.ico}</span>
                           <div style={{ flex:1, minWidth:0 }}>
-                            <div style={{ fontSize:12, fontWeight:500, marginBottom:2 }}>{a.action_label}</div>
-                            <div style={{ fontSize:10, color:'#8a9099', fontFamily:'monospace' }}>
-                              {a.action_type?.replace(/_/g,' ').toUpperCase()}
-                              {a.financial_value > 0 && <span style={{ marginLeft:10, color:'#00e5b0' }}>£{Number(a.financial_value).toLocaleString()} value</span>}
+                            <div style={{ fontSize:12, color:'#e8eaed', fontWeight:500 }}>{a.action_label}</div>
+                            <div style={{ fontSize:9, color:'#4a5260', fontFamily:'monospace', marginTop:2 }}>
+                              {(a.action_type||'').toUpperCase()}
+                              {timeStr && <span style={{ marginLeft:8 }}>{timeStr}</span>}
+                              {a.financial_value > 0 && <span style={{ marginLeft:8, color:'#00e5b0' }}>£{Number(a.financial_value).toLocaleString()}</span>}
                             </div>
                           </div>
-                          <div style={{ display:'flex', gap:6 }}>
-                            <button onClick={() => handleApproval(a.id,'approve')} disabled={isProcessing}
-                              style={{ padding:'7px 14px', borderRadius:5, border:'none', background:'#00e5b0', color:'#000', fontWeight:600, fontSize:11, cursor:isProcessing?'default':'pointer', fontFamily:'monospace' }}>
-                              {isProcessing?'...':'✓ SEND'}
-                            </button>
-                            <button onClick={() => assessCancelAction(a.id, a.sent_at)} disabled={isProcessing}
-                              style={{ padding:'7px 12px', borderRadius:5, fontSize:11, cursor:isProcessing?'default':'pointer', border:'1px solid rgba(245,158,11,0.4)', background:'rgba(245,158,11,0.06)', color:'#f59e0b', fontFamily:'monospace' }}>
-                              CANCEL
-                            </button>
-                          </div>
+                          {isExecuted ? (
+                            <div style={{ display:'flex', alignItems:'center', gap:5, flexShrink:0 }}>
+                              <div style={{ width:6, height:6, borderRadius:'50%', background:'#00e5b0' }} />
+                              <span style={{ fontSize:10, color:'#00e5b0', fontFamily:'monospace' }}>EXECUTED</span>
+                            </div>
+                          ) : isPending ? (
+                            <div style={{ display:'flex', gap:6 }}>
+                              <button onClick={() => handleApproval(a.id,'approve')} disabled={isProcessing}
+                                style={{ padding:'6px 12px', borderRadius:5, border:'none', background:'#00e5b0', color:'#000', fontWeight:600, fontSize:11, cursor:isProcessing?'default':'pointer', fontFamily:'monospace' }}>
+                                {isProcessing?'...':'✓ SEND'}
+                              </button>
+                              <button onClick={() => assessCancelAction(a.id, a.sent_at)} disabled={isProcessing}
+                                style={{ padding:'6px 10px', borderRadius:5, fontSize:11, cursor:'pointer', border:'1px solid rgba(245,158,11,0.4)', background:'rgba(245,158,11,0.06)', color:'#f59e0b', fontFamily:'monospace' }}>
+                                CANCEL
+                              </button>
+                            </div>
+                          ) : (
+                            <span style={{ fontSize:10, color:'#4a5260', fontFamily:'monospace' }}>{(a.status||'').toUpperCase()}</span>
+                          )}
                         </div>
-                        {a.action_details?.content && (
-                          <div style={{ padding:'9px 14px', borderTop:'1px solid rgba(255,255,255,0.04)', fontFamily:'monospace', fontSize:10, color:'#8a9099', lineHeight:1.6, maxHeight:80, overflow:'hidden' }}>
-                            {a.action_details.content}
-                          </div>
-                        )}
                       </div>
                     )
                   })}
                 </>
-              )}
+              ) : localApprovals.length === 0 ? (
+                <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', height:'60%', gap:12, opacity:0.3 }}>
+                  <div style={{ fontFamily:'monospace', fontSize:32, color:'#4a5260' }}>✓</div>
+                  <div style={{ fontSize:12, color:'#4a5260' }}>No actions yet</div>
+                  <div style={{ fontSize:11, color:'#4a5260', textAlign:'center', maxWidth:240 }}>Fire actions from agent analyses to see them here</div>
+                </div>
+              ) : null}
 
               {/* ── CANCEL ASSESSMENT MODAL ── */}
               {cancelAssessment && (

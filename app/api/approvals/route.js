@@ -1,20 +1,34 @@
-import { getPendingApprovals, approveAction, rejectAction } from '../../../lib/supabase.js'
+import { createClient } from '@supabase/supabase-js'
+import { approveAction, rejectAction } from '../../../lib/supabase.js'
 import { executeAction } from '../../../lib/actions.js'
 
-// GET /api/approvals?status=pending
+function getDB() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (!url || !key || url.includes('placeholder')) return null
+  return createClient(url, key)
+}
+
+// GET /api/approvals?client_id=pearson-haulage
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url)
-    const clientId = searchParams.get('client_id')
+    const clientId = searchParams.get('client_id') || 'pearson-haulage'
+    const db = getDB()
+    if (!db) return Response.json({ approvals: [], count: 0 })
 
-    // No Supabase yet — return empty approvals list
-    try {
-      const approvals = await getPendingApprovals(clientId || 'demo')
-      return Response.json({ approvals: approvals || [], count: approvals?.length || 0 })
-    } catch {
-      return Response.json({ approvals: [], count: 0 })
-    }
+    // Return all recent approvals — both executed and pending
+    const { data, error } = await db
+      .from('approvals')
+      .select('*')
+      .eq('client_id', clientId)
+      .order('created_at', { ascending: false })
+      .limit(20)
+
+    if (error) throw error
+    return Response.json({ approvals: data || [], count: data?.length || 0 })
   } catch (error) {
+    console.error('Approvals GET error:', error.message)
     return Response.json({ approvals: [], count: 0 })
   }
 }
