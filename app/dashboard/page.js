@@ -780,9 +780,20 @@ export default function DashboardPage() {
   useEffect(() => {
     if (!unlocked) return
     loadApprovals()
-    loadShipments()
     const i = setInterval(loadApprovals, 30000)
     return () => clearInterval(i)
+  }, [unlocked])
+
+  useEffect(() => {
+    if (!unlocked) return
+    // Small delay to ensure component is fully mounted
+    const t = setTimeout(() => {
+      fetch('/api/shipments?client_id=pearson-haulage')
+        .then(r => r.json())
+        .then(data => { if (data.shipments?.length > 0) setLiveShipments(data.shipments) })
+        .catch(() => {})
+    }, 500)
+    return () => clearTimeout(t)
   }, [unlocked])
 
   if (!unlocked) return <PinGate onUnlock={() => setUnlocked(true)} />
