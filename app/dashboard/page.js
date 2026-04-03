@@ -63,25 +63,6 @@ function PinGate({ onUnlock }) {
     if (pin.toUpperCase() === DASHBOARD_PIN) { onUnlock() }
     else { setError(true); setPin(''); setTimeout(() => setError(false), 2000) }
   }
-  async function runScenario(scenarioId) {
-    setScenarioRunning(scenarioId)
-    setScenarioResult(null)
-    setActiveTab('scenarios')
-    try {
-      const res = await fetch('/api/scenarios', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ scenario: scenarioId, use_demo: true })
-      })
-      const data = await res.json()
-      setScenarioResult(data)
-    } catch (e) {
-      setScenarioResult({ error: e.message })
-    } finally {
-      setScenarioRunning(null)
-    }
-  }
-
   return (
     <div style={{ minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center', background:'#0a0c0e', fontFamily:'IBM Plex Sans, sans-serif' }}>
       <div style={{ width:360, padding:'40px 36px', background:'#111418', border:'1px solid rgba(255,255,255,0.08)', borderRadius:12, textAlign:'center' }}>
@@ -578,6 +559,25 @@ export default function DashboardPage() {
       await loadApprovals()
     } catch {}
     finally { setApprovingId(null) }
+  }
+
+  async function runScenario(scenarioId) {
+    setScenarioRunning(scenarioId)
+    setScenarioResult(null)
+    setActiveTab('scenarios')
+    try {
+      const res = await fetch('/api/scenarios', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ scenario: scenarioId, use_demo: true })
+      })
+      const data = await res.json()
+      setScenarioResult(data)
+    } catch (e) {
+      setScenarioResult({ error: e.message })
+    } finally {
+      setScenarioRunning(null)
+    }
   }
 
   return (
