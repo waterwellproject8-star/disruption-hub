@@ -131,12 +131,36 @@ export default function HomePage() {
 
   const formatResponse = (text) => {
     return text
-      .replace(/## (.*)/g, '<h3 style="color:#00e5b0;font-family:\'IBM Plex Mono\',monospace;font-size:12px;letter-spacing:0.08em;margin:18px 0 8px;text-transform:uppercase">$1</h3>')
-      .replace(/\*\*(.*?)\*\*/g, '<strong style="color:#e8eaed">$1</strong>')
-      .replace(/- (CRITICAL.*)/g, '<div style="color:#ef4444;font-weight:500">— $1</div>')
-      .replace(/- (HIGH.*)/g, '<div style="color:#f59e0b;font-weight:500">— $1</div>')
-      .replace(/- (.*)/g, '<div style="color:#8a9099;padding:1px 0">— $1</div>')
-      .replace(/\n(\d+)\. /g, '<div style="margin:4px 0;color:#e8eaed"><span style="color:#00e5b0;font-family:monospace">$1.</span> ')
+      // Strip any raw HTML tags the AI might output
+      .replace(/<strong[^>]*>(.*?)<\/strong>/g, '$1')
+      .replace(/<span[^>]*>(.*?)<\/span>/g, '$1')
+      .replace(/<[^>]+>/g, '')
+      // Section headers
+      .replace(/^## (.*)$/gm, '<div style="display:flex;align-items:center;gap:8px;margin:20px 0 8px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.06)"><div style="height:1px;width:10px;background:#00e5b0;flex-shrink:0"></div><span style="color:#00e5b0;font-family:IBM Plex Mono,monospace;font-size:10px;letter-spacing:0.1em;font-weight:600;text-transform:uppercase">$1</span></div>')
+      // Blockquotes - callouts
+      .replace(/^> (.*)$/gm, '<div style="margin:8px 0;padding:8px 12px;background:rgba(239,68,68,0.06);border-left:3px solid #ef4444;border-radius:0 5px 5px 0;font-size:12px;color:#e8eaed;line-height:1.6">$1</div>')
+      // Severity badges
+      .replace(/^(CRITICAL|HIGH|MEDIUM|LOW)$/gm, (m) => {
+        const c = {CRITICAL:'#ef4444',HIGH:'#f59e0b',MEDIUM:'#3b82f6',LOW:'#8a9099'}[m]
+        const bg = {CRITICAL:'rgba(239,68,68,0.1)',HIGH:'rgba(245,158,11,0.1)',MEDIUM:'rgba(59,130,246,0.1)',LOW:'rgba(138,144,153,0.1)'}[m]
+        return \`<span style="background:\${bg};color:\${c};font-family:monospace;font-size:10px;padding:2px 8px;border-radius:4px;font-weight:700">\${m}</span>\`
+      })
+      // Bold text
+      .replace(/\*\*(.*?)\*\*/g, '<strong style="color:#e8eaed;font-weight:600">$1</strong>')
+      // Money amounts
+      .replace(/(£[\d,]+(?:–£[\d,]+)?(?:K)?)/g, '<span style="color:#00e5b0;font-weight:600;font-family:monospace">$1</span>')
+      // Numbered actions
+      .replace(/^(\d+)\.?\s+(.+)$/gm, (match, num, text) => {
+        const urgent = text.includes('NOW') || text.includes('IMMEDIATELY') || text.includes('999')
+        const border = urgent ? 'rgba(239,68,68,0.2)' : 'rgba(255,255,255,0.06)'
+        const bg = urgent ? '#ef4444' : '#00e5b0'
+        return \`<div style="display:flex;gap:10px;margin:6px 0;padding:10px 12px;background:#111418;border-radius:6px;border:1px solid \${border}"><div style="width:20px;height:20px;border-radius:50%;background:\${bg};color:#000;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;margin-top:1px">\${num}</div><div style="font-size:12px;color:#e8eaed;line-height:1.6;flex:1">\${text}</div></div>\`
+      })
+      // Bullet points
+      .replace(/^[-—]\s+(.+)$/gm, '<div style="display:flex;gap:8px;margin:3px 0;padding-left:4px"><span style="color:#00e5b0;font-size:10px;margin-top:3px;flex-shrink:0">—</span><span style="font-size:12px;color:#8a9099;line-height:1.6">$1</span></div>')
+      // Horizontal rules
+      .replace(/^---+$/gm, '<div style="height:1px;background:rgba(255,255,255,0.06);margin:12px 0"></div>')
+      // Line breaks
       .replace(/\n/g, '<br>')
   }
 
@@ -370,15 +394,85 @@ export default function HomePage() {
       </section>
 
       {/* Pricing */}
-      <section id="pricing" style={{ padding: '80px 32px', maxWidth: 900, margin: '0 auto' }}>
+      <section id="pricing" style={{ padding: '80px 32px', maxWidth: 1000, margin: '0 auto' }}>
         <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--accent)', letterSpacing: '0.1em', marginBottom: 16 }}>PRICING</div>
         <h2 style={{ fontSize: 26, fontWeight: 400, marginBottom: 8 }}>Simple. No contracts. Cancel anytime.</h2>
-        <p style={{ color: 'var(--text2)', marginBottom: 36, fontSize: 14 }}>One missed SLA typically costs more than a year of DisruptionHub.</p>
+        <p style={{ color: 'var(--text2)', marginBottom: 12, fontSize: 14 }}>One missed SLA typically costs more than a year of DisruptionHub.</p>
+
+        {/* Founding client banner */}
+        <div style={{ background: 'rgba(0,229,176,0.06)', border: '1px solid rgba(0,229,176,0.2)', borderRadius: 8, padding: '12px 20px', marginBottom: 32, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
+          <div>
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--accent)', letterSpacing: '0.08em' }}>FOUNDING CLIENT OFFER</span>
+            <p style={{ fontSize: 13, color: 'var(--text2)', margin: '4px 0 0' }}>First 5 clients lock in at <strong style={{ color: 'var(--text)' }}>£499/month for life</strong> — never increases regardless of what we add. 3 of 5 spots remaining.</p>
+          </div>
+          <a href="mailto:hello@disruptionhub.ai?subject=Founding client enquiry" style={{ background: 'var(--accent)', color: '#000', padding: '8px 16px', borderRadius: 6, fontWeight: 600, fontSize: 12, textDecoration: 'none', whiteSpace: 'nowrap' }}>Claim your spot →</a>
+        </div>
+
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(240px,1fr))', gap: 16 }}>
           {[
-            { name: 'Starter', price: '£299', period: '/month', target: '1–5 vehicles', features: ['Live disruption dashboard', 'Manual incident input', 'Weather & traffic alerts', '5 agent analyses/day', 'Email incident reports'], cta: 'Get started' },
-            { name: 'Professional', price: '£799', period: '/month', target: '5–50 vehicles', featured: true, features: ['Everything in Starter', 'TMS webhook integration', 'Auto-triggered analysis', 'Slack & Teams alerts', 'Unlimited analyses', 'Incident history & trends', 'WMS stock monitoring'], cta: 'Start free pilot' },
-            { name: 'Enterprise', price: '£1499', period: '/month', target: '50+ vehicles', features: ['Everything in Professional', 'White-label dashboard', 'Custom agent training', 'Multi-depot management', 'API access', 'Dedicated onboarding', 'SLA guarantee'], cta: 'Talk to us' },
+            {
+              name: 'Advisory',
+              price: '£399',
+              period: '/month',
+              target: '1–20 vehicles',
+              badge: null,
+              features: [
+                'Live disruption analysis',
+                'Unlimited agent analyses',
+                'Structured action plans',
+                'Driver PWA app',
+                'Customer tracking portal',
+                'Manual incident input',
+              ],
+              note: null,
+              cta: 'Start £99 pilot',
+              featured: false,
+            },
+            {
+              name: 'Autonomous',
+              price: '£799',
+              period: '/month',
+              target: '20–50 vehicles',
+              badge: 'MOST POPULAR',
+              features: [
+                'Everything in Advisory',
+                '16 AI modules running 24/7',
+                'Auto-triggered on disruptions',
+                'SLA breach prediction',
+                'Driver hours monitoring',
+                'Vehicle health alerts',
+                'Fuel optimisation',
+                'Invoice recovery',
+                'Planned closure alerts',
+                'TMS & telematics webhook',
+                'Cascade penalty calculator',
+              ],
+              note: '→ Founding clients: £499/mo for life',
+              cta: 'Start £99 pilot',
+              featured: true,
+            },
+            {
+              name: 'Intelligence',
+              price: '£1,499',
+              period: '/month',
+              target: '50+ vehicles',
+              badge: null,
+              features: [
+                'Everything in Autonomous',
+                'Cargo theft prevention',
+                'Cash flow forecasting',
+                'Client churn prediction',
+                'Workforce pipeline',
+                'Subcontractor trust scores',
+                'Rate benchmarking',
+                'Insurance claim pre-emption',
+                'Border doc failure handler',
+                'Carbon & ESG reporting',
+              ],
+              note: null,
+              cta: 'Talk to us',
+              featured: false,
+            },
           ].map(p => (
             <div key={p.name} style={{
               border: p.featured ? '1px solid var(--accent)' : '1px solid var(--border)',
@@ -386,19 +480,22 @@ export default function HomePage() {
               background: p.featured ? 'rgba(0,229,176,0.04)' : 'var(--bg2)',
               position: 'relative'
             }}>
-              {p.featured && (
+              {p.badge && (
                 <div style={{
                   position: 'absolute', top: -12, left: '50%', transform: 'translateX(-50%)',
                   background: 'var(--accent)', color: '#000', fontSize: 11, fontWeight: 600,
                   padding: '3px 12px', borderRadius: 3, fontFamily: 'var(--font-mono)',
                   letterSpacing: '0.05em', whiteSpace: 'nowrap'
-                }}>MOST POPULAR</div>
+                }}>{p.badge}</div>
               )}
               <div style={{ fontSize: 13, color: 'var(--text2)', marginBottom: 4 }}>{p.name}</div>
               <div style={{ fontSize: 32, fontWeight: 500, fontFamily: 'var(--font-mono)', color: 'var(--text)', marginBottom: 2 }}>
                 {p.price}<span style={{ fontSize: 14, color: 'var(--text2)', fontWeight: 400 }}>{p.period}</span>
               </div>
-              <div style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 20 }}>{p.target}</div>
+              <div style={{ fontSize: 12, color: 'var(--text3)', marginBottom: p.note ? 6 : 20 }}>{p.target}</div>
+              {p.note && (
+                <div style={{ fontSize: 12, color: 'var(--accent)', marginBottom: 16, fontWeight: 500 }}>{p.note}</div>
+              )}
               <div style={{ borderTop: '1px solid var(--border)', paddingTop: 16, marginBottom: 20 }}>
                 {p.features.map(f => (
                   <div key={f} style={{ fontSize: 13, color: 'var(--text2)', padding: '3px 0', display: 'flex', gap: 8 }}>
@@ -406,7 +503,7 @@ export default function HomePage() {
                   </div>
                 ))}
               </div>
-              <a href="mailto:hello@disruptionhub.ai" style={{
+              <a href={p.cta === 'Talk to us' ? 'mailto:hello@disruptionhub.ai?subject=Intelligence tier enquiry' : 'mailto:hello@disruptionhub.ai?subject=Pilot request'} style={{
                 display: 'block', textAlign: 'center',
                 background: p.featured ? 'var(--accent)' : 'transparent',
                 color: p.featured ? '#000' : 'var(--text)',
@@ -414,8 +511,17 @@ export default function HomePage() {
                 padding: '10px', borderRadius: 6, fontWeight: 600,
                 fontSize: 13, textDecoration: 'none'
               }}>{p.cta} →</a>
+              <div style={{ textAlign: 'center', fontSize: 11, color: 'var(--text3)', marginTop: 10 }}>
+                £99 pilot · 2 weeks · cancel anytime
+              </div>
             </div>
           ))}
+        </div>
+
+        {/* Pilot explanation */}
+        <div style={{ marginTop: 24, padding: '16px 20px', background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: 8 }}>
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text3)', letterSpacing: '0.08em', marginBottom: 6 }}>HOW THE PILOT WORKS</div>
+          <p style={{ fontSize: 13, color: 'var(--text2)', margin: 0 }}>Pay £99. We customise the system with your actual carriers, routes, clients, and SLA thresholds. Run it for two weeks on real disruptions. If you want to continue, you choose your tier. If not, walk away — no questions. The £99 is non-refundable once your onboarding call has taken place.</p>
         </div>
       </section>
 
@@ -441,7 +547,7 @@ export default function HomePage() {
       {/* Footer */}
       <footer style={{ padding: '24px 32px', borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
         <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--text3)' }}>
-          DisruptionHub © 2025
+          DisruptionHub © 2026
         </span>
         <div style={{ display: 'flex', gap: 20 }}>
           <a href="mailto:hello@disruptionhub.ai" style={{ fontSize: 12, color: 'var(--text3)' }}>Contact</a>
