@@ -180,8 +180,8 @@ Provide immediate disruption analysis and action plan.`
 
     let smsSent = false
     if ((severity === 'CRITICAL' || severity === 'HIGH') && contactPhone) {
-      const actionLine = firstAction ? `Action 1: ${firstAction}` : 'Full action plan ready in dashboard'
-      const smsBody = `DisruptionHub ${severity} — ${vehicle_reg || 'Vehicle'}\n${issue_description.substring(0, 60)}\nExposure: £${financialImpact.toLocaleString()}\n\n${actionLine}\n\nReply YES to execute, NO to reject, OPEN to review.`
+      const actionLine = firstAction ? firstAction.substring(0, 60) : 'See dashboard'
+      const smsBody = `DH ${severity} ${vehicle_reg || ""}\n${issue_description.substring(0, 40)}\n£${financialImpact.toLocaleString()} ${actionLine}\nYES/NO/OPEN`
       const result = await sendSMS(contactPhone, smsBody)
       smsSent = result.success || false
     }
