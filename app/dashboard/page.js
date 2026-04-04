@@ -1106,10 +1106,32 @@ export default function DashboardPage() {
 
   return (
     <div style={{ minHeight:'100vh', display:'flex', flexDirection:'column', fontFamily:'IBM Plex Sans, sans-serif', background:'#0a0c0e', color:'#e8eaed' }}>
-      <style>{`@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}} @keyframes spin{to{transform:rotate(360deg)}}`}</style>
+      <style>{`
+        @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+        @keyframes spin{to{transform:rotate(360deg)}}
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { overscroll-behavior: none; }
+        .dh-layout { display: grid; grid-template-columns: 290px 1fr; flex: 1; min-height: 0; }
+        .dh-sidebar { border-right: 1px solid rgba(255,255,255,0.06); background: #0d1014; overflow-y: auto; display: flex; flex-direction: column; }
+        .dh-main { display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+        .dh-tabs { display: flex; gap: 6px; padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,0.06); background: #0a0c0e; flex-shrink: 0; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        .dh-tabs::-webkit-scrollbar { display: none; }
+        .dh-nav { display: flex; align-items: center; justify-content: space-between; padding: 12px 24px; border-bottom: 1px solid rgba(255,255,255,0.06); background: rgba(10,12,14,0.98); position: sticky; top: 0; z-index: 100; }
+        .dh-nav-right { display: flex; align-items: center; gap: 16px; }
+        .dh-client-name { font-size: 11px; color: #4a5260; }
+        @media (max-width: 768px) {
+          .dh-layout { grid-template-columns: 1fr; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+          .dh-sidebar { border-right: none; border-bottom: 1px solid rgba(255,255,255,0.06); overflow-y: visible; max-height: none; }
+          .dh-main { min-height: 80vh; overflow: visible; }
+          .dh-nav { padding: 10px 14px; }
+          .dh-nav-right { gap: 8px; }
+          .dh-client-name { display: none; }
+          .dh-tabs { padding: 8px 10px; gap: 4px; }
+        }
+      `}</style>
 
       {/* NAV */}
-      <nav style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'12px 24px', borderBottom:'1px solid rgba(255,255,255,0.06)', background:'rgba(10,12,14,0.98)', position:'sticky', top:0, zIndex:100 }}>
+      <nav className="dh-nav">
         <div style={{ display:'flex', alignItems:'center', gap:16 }}>
           <Link href="/" style={{ display:'flex', alignItems:'center', gap:8, textDecoration:'none' }}>
             <div style={{ width:24, height:24, background:'#00e5b0', borderRadius:4, display:'flex', alignItems:'center', justifyContent:'center', fontSize:10, fontWeight:700, color:'#000', fontFamily:'monospace' }}>DH</div>
@@ -1118,7 +1140,7 @@ export default function DashboardPage() {
           <span style={{ color:'rgba(255,255,255,0.1)' }}>|</span>
           <span style={{ fontSize:12, color:'#e8eaed', fontWeight:500 }}>Operations Dashboard</span>
         </div>
-        <div style={{ display:'flex', alignItems:'center', gap:16 }}>
+        <div className="dh-nav-right">
           {(pendingApprovals.length > 0 || localApprovals.length > 0) && (() => {
             const pendingCount = pendingApprovals.filter(a => a.status === 'pending').length
             const totalCount = pendingApprovals.length + localApprovals.length
@@ -1132,14 +1154,14 @@ export default function DashboardPage() {
               </button>
             )
           })()}
-          <span style={{ fontSize:11, color:'#4a5260' }}>Acme Logistics Ltd</span>
+          <span className="dh-client-name">Acme Logistics Ltd</span>
         </div>
       </nav>
 
-      <div style={{ display:'grid', gridTemplateColumns:'290px 1fr', flex:1, minHeight:0 }}>
+      <div className="dh-layout">
 
         {/* ── LEFT SIDEBAR ──────────────────────────────────────────────────── */}
-        <div style={{ borderRight:'1px solid rgba(255,255,255,0.06)', background:'#0d1014', overflowY:'auto', display:'flex', flexDirection:'column' }}>
+        <div className="dh-sidebar">
 
           {/* Metrics */}
           <div style={{ padding:'14px', borderBottom:'1px solid rgba(255,255,255,0.06)' }}>
