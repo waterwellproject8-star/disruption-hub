@@ -59,14 +59,14 @@ const ISSUE_GROUPS = [
 
 // Pre-shift checklist items
 const PRESHIFT_CHECKS = [
-  { id:'lights',   label:'Lights & indicators working',   icon:'💡' },
-  { id:'tyres',    label:'Tyres — no visible damage',     icon:'⚫' },
-  { id:'mirrors',  label:'Mirrors adjusted and clean',    icon:'🔲' },
-  { id:'brakes',   label:'Brakes feel normal',            icon:'🛑' },
-  { id:'fuel',     label:'Fuel level checked',            icon:'⛽' },
-  { id:'docs',     label:'Licence & documents present',   icon:'📄' },
-  { id:'load',     label:'Load secured properly',         icon:'🔒' },
-  { id:'fridge',   label:'Refrigeration unit at temp',    icon:'❄' },
+  { id:'lights',   label:'Lights & indicators',         icon:'💡' },
+  { id:'tyres',    label:'Tyres — no damage or flats',  icon:'⚫' },
+  { id:'mirrors',  label:'Mirrors — clean & adjusted',  icon:'🔲' },
+  { id:'brakes',   label:'Brakes — no issues',          icon:'🛑' },
+  { id:'fuel',     label:'Fuel level — checked',        icon:'⛽' },
+  { id:'docs',     label:'Licence & documents',         icon:'📄' },
+  { id:'load',     label:'Load — secured properly',     icon:'🔒' },
+  { id:'fridge',   label:'Fridge unit — at temp',       icon:'❄' },
 ]
 
 const STATUS_COLORS = {
@@ -341,7 +341,25 @@ export default function DriverApp() {
   function startShift() {
     localStorage.setItem('dh_shift_started','true')
     shiftStartTime.current = new Date()
-    setShiftStarted(true); setView('run')
+    setShiftStarted(true)
+    setView('run')
+
+    // Fire alert if any pre-checks failed
+    const failed = PRESHIFT_CHECKS.filter(c => preShiftChecks[c.id] === false).map(c => c.label)
+    if (failed.length > 0) {
+      fetch('/api/driver/alert', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          client_id: driverInfo.clientId,
+          driver_name: driverInfo.name,
+          vehicle_reg: driverInfo.vehicleReg,
+          issue_description: `PRE-SHIFT DEFECT REPORT. Driver ${driverInfo.name} (${driverInfo.vehicleReg}) has flagged the following as NOT OK before starting shift: ${failed.join(', ')}. Vehicle may not be roadworthy. Ops manager must assess before driver departs.`,
+          human_description: `Pre-shift fail: ${failed.join(', ')}`,
+          location_description: 'At depot — pre-departure',
+        })
+      }).catch(() => {})
+    }
   }
 
   function endShift() {
