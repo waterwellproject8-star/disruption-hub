@@ -228,7 +228,7 @@ export default function DriverApp() {
   }
 
   function closePanel() {
-    if (parsedResult && panelState==='result') {
+    if (parsedResult && (panelState==='result'||panelState==='sent')) {
       const alert={...parsedResult,issueId:panelIssue?.id,issueLabel:panelIssue?.label,time:new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})}
       setLastAlert(alert); localStorage.setItem('dh_last_alert',JSON.stringify(alert))
     }
@@ -314,6 +314,22 @@ export default function DriverApp() {
     setPanelState('loading')
     const prompt = buildPrompt(panelIssue?.id)
     const job = activeJob
+
+    // Save a placeholder lastAlert immediately for emergencies
+    // so it persists even if agent times out
+    if (emergencyIds.includes(panelIssue?.id)) {
+      const placeholder = {
+        headline: `${panelIssue.label} — ${inputText || gpsDescription || 'ops alerted'}`,
+        severity: 'HIGH',
+        actions: ['Ops manager has been alerted — awaiting instructions'],
+        detail: '',
+        issueId: panelIssue.id,
+        issueLabel: panelIssue.label,
+        time: new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})
+      }
+      setLastAlert(placeholder)
+      localStorage.setItem('dh_last_alert', JSON.stringify(placeholder))
+    }
 
     if (panelIssue?.id==='cant_complete'||panelIssue?.id==='hours_running_out') {
       setJobs(prev=>prev.map(j=>j.status!=='completed'&&j.ref!==job?.ref?{...j,status:'at_risk'}:j))
@@ -725,7 +741,7 @@ export default function DriverApp() {
               <button onClick={closePanel} style={{background:'rgba(255,255,255,0.06)',border:'none',color:'#8a9099',fontSize:16,cursor:'pointer',width:32,height:32,borderRadius:16,display:'flex',alignItems:'center',justifyContent:'center'}}>✕</button>
             </div>
 
-            <div style={{overflowY:'auto',flex:1,padding:'0 20px 32px'}}>
+            <div style={{overflowY:'auto',flex:1,padding:'0 20px 32px',WebkitOverflowScrolling:'touch'}}>
 
               {/* GPS bar */}
               <div style={{padding:'10px 12px',background:'#0d1014',borderRadius:8,display:'flex',alignItems:'center',gap:10,marginBottom:16}}>
@@ -862,8 +878,9 @@ export default function DriverApp() {
                 <>
                   {panelIssue?.needsText&&(
                     <textarea value={inputText} onChange={e=>setInputText(e.target.value)} rows={4}
+                      onFocus={e=>{setTimeout(()=>e.target.scrollIntoView({behavior:'smooth',block:'center'}),350)}}
                       placeholder={panelIssue.placeholder||'Describe what has happened...'}
-                      style={{width:'100%',padding:'14px',background:'#0d1014',border:'1px solid rgba(255,255,255,0.1)',borderRadius:10,color:'#e8eaed',fontSize:15,lineHeight:1.6,outline:'none',resize:'none',boxSizing:'border-box',marginBottom:14}}/>
+                      style={{width:'100%',padding:'14px',background:'#1a1f26',border:'2px solid rgba(255,255,255,0.18)',borderRadius:10,color:'#e8eaed',fontSize:16,lineHeight:1.6,outline:'none',resize:'none',boxSizing:'border-box',marginBottom:14,WebkitAppearance:'none'}}/>
                   )}
                   {activeJob&&(
                     <div style={{padding:'9px 12px',background:'rgba(0,229,176,0.04)',border:'1px solid rgba(0,229,176,0.1)',borderRadius:8,fontSize:12,color:'#8a9099',marginBottom:16}}>
