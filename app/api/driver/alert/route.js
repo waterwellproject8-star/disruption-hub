@@ -1,8 +1,15 @@
 import Anthropic from '@anthropic-ai/sdk'
+import { createClient } from '@supabase/supabase-js'
 import { sendSMS } from '../../../../lib/twilio.js'
-import { getDB } from '../../../../lib/supabase.js'
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+
+function getDB() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (!url || !key || url.includes('placeholder')) return null
+  return createClient(url, key)
+}
 
 const DRIVER_ALERT_SYSTEM = `You are a Senior Logistics Crisis Director with 25 years of experience across UK and European supply chains. You have personally managed thousands of live disruptions — port closures, cold chain failures, driver crises, supplier collapses, multi-vehicle cascades.
 
@@ -43,7 +50,6 @@ Temperature rules for cold chain cargo:
 
 Always give specific numbers, timeframes, and named actions.`
 
-// Extract first numbered action from AI response
 function extractFirstAction(text) {
   const lines = text.split('\n')
   for (const line of lines) {
@@ -103,7 +109,6 @@ Provide immediate disruption analysis and action plan.`
     // Get client details from Supabase
     let systemPrompt = null
     let contactPhone = null
-    let contactName = null
     const db = getDB()
 
     if (db && client_id) {
@@ -116,17 +121,16 @@ Provide immediate disruption analysis and action plan.`
       if (data) {
         systemPrompt = data.system_prompt
         contactPhone = data.contact_phone
-        contactName = data.contact_name
       }
     }
 
     // Run AI analysis
-    const messages = [{ role: 'user', content: analysisPrompt }]
-    let fullResponse = ''
-
     const finalSystem = systemPrompt
       ? `${DRIVER_ALERT_SYSTEM}\n\nCLIENT CONTEXT:\n${systemPrompt}`
       : DRIVER_ALERT_SYSTEM
+
+    const messages = [{ role: 'user', content: analysisPrompt }]
+    let fullResponse = ''
 
     const stream = await anthropic.messages.stream({
       model: 'claude-sonnet-4-6',
@@ -152,7 +156,6 @@ Provide immediate disruption analysis and action plan.`
 
     // Save to Supabase
     if (db) {
-      // Save incident
       await db.from('incidents').insert({
         client_id,
         user_input: analysisPrompt,
@@ -162,7 +165,6 @@ Provide immediate disruption analysis and action plan.`
         ref: ref || 'DRIVER-ALERT'
       })
 
-      // Create pending approval for HIGH/CRITICAL
       if (firstAction && (severity === 'CRITICAL' || severity === 'HIGH')) {
         const actionTypeMap = {
           call: /call|phone|contact|ring/i,
