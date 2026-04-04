@@ -159,6 +159,26 @@ export default function DriverApp() {
 
       const prompt = prompts[actionId] || `Driver ${driverInfo.name} reports: ${inputText}. Location: ${loc}.`
 
+      // Fire SMS alert IMMEDIATELY — do not wait for agent stream
+      // This ensures ops manager gets the SMS even if agent times out
+      const significantActions = ['rest','breakdown','delayed','defect','temp_check']
+      if (significantActions.includes(actionId)) {
+        fetch('/api/driver/alert', {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({
+            client_id: driverInfo.clientId,
+            driver_name: driverInfo.name,
+            vehicle_reg: driverInfo.vehicleReg,
+            ref: job?.ref,
+            issue_description: prompt,
+            location_description: gpsDescription,
+            latitude: gpsCoords?.latitude,
+            longitude: gpsCoords?.longitude,
+          })
+        }).catch(()=>{}) // fire and forget — never block the UI
+      }
+
       const res  = await fetch('/api/agent', {
         method: 'POST',
         headers: {'Content-Type':'application/json'},
@@ -190,24 +210,7 @@ export default function DriverApp() {
         }
       }
 
-      // Log to incidents via alert API for significant actions
-      const significantActions = ['rest','breakdown','delayed','defect','temp_check']
-      if (significantActions.includes(actionId)) {
-        await fetch('/api/driver/alert', {
-          method:'POST',
-          headers:{'Content-Type':'application/json'},
-          body: JSON.stringify({
-            client_id: driverInfo.clientId,
-            driver_name: driverInfo.name,
-            vehicle_reg: driverInfo.vehicleReg,
-            ref: job?.ref,
-            issue_description: prompt,
-            location_description: gpsDescription,
-            latitude: gpsCoords?.latitude,
-            longitude: gpsCoords?.longitude,
-          })
-        }).catch(()=>{})
-      }
+      // driver/alert already fired above — nothing to do here
 
     } catch(e) {
       setPanelState('error')
