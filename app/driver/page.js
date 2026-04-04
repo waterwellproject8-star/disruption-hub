@@ -71,11 +71,12 @@ export default function DriverApp() {
 
   const [panelOpen, setPanelOpen]     = useState(false)
   const [panelAction, setPanelAction] = useState(null)
-  const [panelState, setPanelState]   = useState('idle')
+  const [panelState, setPanelState]   = useState('idle') // idle|loading|result|sent|resolving|resolved
   const [inputText, setInputText]     = useState('')
   const [parsedResult, setParsedResult] = useState(null)
   const [showDetail, setShowDetail]   = useState(false)
-  const [lastAlert, setLastAlert]     = useState(null) // persisted last alert summary
+  const [lastAlert, setLastAlert]     = useState(null)
+  const [resolvedEta, setResolvedEta] = useState('')
 
   const [gpsCoords, setGpsCoords]           = useState(null)
   const [gpsDescription, setGpsDescription] = useState('')
@@ -155,7 +156,7 @@ export default function DriverApp() {
 
   function closePanel() {
     // Save result to lastAlert if we have one
-    if (parsedResult) {
+    if (parsedResult && panelState === 'result') {
       const alert = {
         ...parsedResult,
         actionType: panelAction,
@@ -164,12 +165,18 @@ export default function DriverApp() {
       setLastAlert(alert)
       localStorage.setItem('dh_last_alert', JSON.stringify(alert))
     }
+    // Clear lastAlert if resolved
+    if (panelState === 'resolved') {
+      setLastAlert(null)
+      localStorage.removeItem('dh_last_alert')
+    }
     setPanelOpen(false)
     setPanelAction(null)
     setPanelState('idle')
     setInputText('')
     setParsedResult(null)
     setShowDetail(false)
+    setResolvedEta('')
   }
 
   function reopenLastAlert() {
@@ -179,6 +186,42 @@ export default function DriverApp() {
     setPanelState('result')
     setPanelOpen(true)
     setShowDetail(false)
+  }
+
+  async function resolveIssue(reason) {
+    setPanelState('resolving')
+    const job = activeJob
+    try {
+      const res = await fetch('/api/driver/resolve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          client_id: driverInfo.clientId,
+          driver_name: driverInfo.name,
+          vehicle_reg: driverInfo.vehicleReg,
+          ref: job?.ref,
+          resolution: reason,
+          location_description: gpsDescription,
+          route: job?.route,
+          sla_window: job?.sla_window,
+          original_issue: panelAction,
+        })
+      })
+      const data = await res.json()
+
+      // Update job status locally to on-track
+      setJobs(prev => prev.map(j =>
+        j.ref === job?.ref ? { ...j, status: 'on-track', alert: null } : j
+      ))
+      if (activeJob?.ref === job?.ref) {
+        setActiveJob(prev => ({ ...prev, status: 'on-track', alert: null }))
+      }
+
+      setResolvedEta(data.revised_eta || '')
+      setPanelState('resolved')
+    } catch {
+      setPanelState('resolved')
+    }
   }
 
   // Parse the structured AI response into parts
@@ -520,12 +563,68 @@ export default function DriverApp() {
                     )}
 
                     <button onClick={closePanel}
-                      style={{width:'100%',padding:14,background:'#00e5b0',border:'none',borderRadius:8,color:'#000',fontWeight:600,fontSize:15,cursor:'pointer'}}>
+                      style={{width:'100%',padding:14,background:'#00e5b0',border:'none',borderRadius:8,color:'#000',fontWeight:600,fontSize:15,cursor:'pointer',marginBottom:8}}>
                       Got it — close
                     </button>
+
+                    {/* Resolution button — for any alert that can be resolved */}
+                    {['breakdown','delayed','defect','temp_check','rest','arrived_collection','arrived_delivery','loading_complete'].includes(panelAction) && (
+                      <button onClick={() => setPanelState('resolving')}
+                        style={{width:'100%',padding:13,background:'transparent',border:'1px solid rgba(0,229,176,0.3)',borderRadius:8,color:'#00e5b0',fontWeight:500,fontSize:14,cursor:'pointer'}}>
+                        ✅ Issue resolved — back on track
+                      </button>
+                    )}
                   </div>
                 )
               })()}
+
+              {/* ── RESOLVING STATE — pick resolution reason ─── */}
+              {panelState==='resolving' && (
+                <div>
+                  <div style={{fontSize:14,fontWeight:600,color:'#e8eaed',marginBottom:6}}>What happened?</div>
+                  <div style={{fontSize:12,color:'#4a5260',marginBottom:16}}>Ops will be notified and your job updates to on-track.</div>
+                  {[
+                    { id:'breakdown_recovered',    label:'🔧 Breakdown recovered',          sub:'Vehicle moving again' },
+                    { id:'delay_cleared',           label:'🟢 Delay cleared',                sub:'Back on schedule' },
+                    { id:'temp_back_in_range',      label:'❄ Temp back in range',           sub:'Cold chain restored' },
+                    { id:'rerouted_clear',          label:'🛣 Rerouted — clear now',         sub:'New route confirmed' },
+                    { id:'collection_complete',     label:'📍 Collection complete',          sub:'Loading done, ready to depart' },
+                    { id:'delivery_accepted',       label:'📦 Delivery accepted',            sub:'POD signed, job complete' },
+                    { id:'other_resolved',          label:'✅ Other — resolved',             sub:'Issue no longer active' },
+                  ].map(opt => (
+                    <button key={opt.id} onClick={() => resolveIssue(opt.label)}
+                      style={{width:'100%',marginBottom:8,padding:'12px 14px',background:'rgba(0,229,176,0.04)',border:'1px solid rgba(0,229,176,0.15)',borderRadius:9,cursor:'pointer',textAlign:'left',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+                      <div>
+                        <div style={{fontSize:14,color:'#e8eaed',fontWeight:500}}>{opt.label}</div>
+                        <div style={{fontSize:11,color:'#4a5260',marginTop:2}}>{opt.sub}</div>
+                      </div>
+                      <span style={{color:'#00e5b0',fontSize:16}}>→</span>
+                    </button>
+                  ))}
+                  <button onClick={() => setPanelState('result')}
+                    style={{width:'100%',padding:10,background:'transparent',border:'none',color:'#4a5260',fontSize:12,cursor:'pointer',marginTop:4}}>
+                    ← Back
+                  </button>
+                </div>
+              )}
+
+              {/* ── RESOLVED STATE ─── */}
+              {panelState==='resolved' && (
+                <div style={{textAlign:'center',padding:'20px 0'}}>
+                  <div style={{fontSize:40,marginBottom:12}}>✅</div>
+                  <div style={{fontSize:18,color:'#00e5b0',fontWeight:600,marginBottom:6}}>Back on track</div>
+                  <div style={{fontSize:13,color:'#8a9099',marginBottom:6}}>Ops manager notified. Job updated.</div>
+                  {resolvedEta && (
+                    <div style={{padding:'10px 16px',background:'rgba(0,229,176,0.06)',border:'1px solid rgba(0,229,176,0.2)',borderRadius:8,marginBottom:20,fontSize:13,color:'#e8eaed'}}>
+                      {resolvedEta}
+                    </div>
+                  )}
+                  <button onClick={closePanel}
+                    style={{padding:'12px 36px',background:'#00e5b0',border:'none',borderRadius:8,color:'#000',fontWeight:600,fontSize:14,cursor:'pointer'}}>
+                    Close
+                  </button>
+                </div>
+              )}
 
               {/* ── SENT STATE ─── */}
               {panelState==='sent' && (
