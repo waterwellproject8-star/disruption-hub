@@ -91,6 +91,7 @@ export async function POST(request) {
       location_description,
       ref,
       force_alert,
+      force_financial_zero,
     } = body
 
     if (!issue_description) {
@@ -198,7 +199,8 @@ Provide immediate disruption analysis and action plan.`
         .substring(0, 50)
         .replace(/\n/g, ' ')
       const actionLine = firstAction ? firstAction.substring(0, 60) : 'See dashboard'
-      const smsBody = `DH ${force_alert && severity==='MEDIUM'?'HIGH':severity} ${vehicle_reg || ''}\n${shortDesc}\n£${financialImpact.toLocaleString()} ${actionLine}\nYES/NO/OPEN`
+      const displayFinancial = force_financial_zero ? 0 : financialImpact
+      const smsBody = `DH ${force_alert && severity==='MEDIUM'?'HIGH':severity} ${vehicle_reg || ''}\n${shortDesc}\n${displayFinancial > 0 ? `£${displayFinancial.toLocaleString()} ` : ''}${actionLine}\nYES/NO/OPEN`
       const result = await sendSMS(contactPhone, smsBody)
       smsSent = result.success || false
     }

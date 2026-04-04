@@ -354,10 +354,11 @@ export default function DriverApp() {
           client_id: driverInfo.clientId,
           driver_name: driverInfo.name,
           vehicle_reg: driverInfo.vehicleReg,
-          issue_description: `PRE-SHIFT DEFECT REPORT. Driver ${driverInfo.name} (${driverInfo.vehicleReg}) has flagged the following as NOT OK before starting shift: ${failed.join(', ')}. Vehicle may not be roadworthy. Ops manager must assess before driver departs.`,
-          human_description: `Pre-shift fail: ${failed.join(', ')}`,
+          issue_description: `PRE-SHIFT VEHICLE DEFECT. Driver ${driverInfo.name} (${driverInfo.vehicleReg}) flagged issues before starting shift: ${failed.map(f => f.replace(' — no issues','').replace(' — checked','').replace(' — at temp','').replace(' — clean & adjusted','').replace(' — secured properly','').replace(' — no damage or flats','')).join(', ')}. Vehicle may not be roadworthy. Ops manager must assess before driver departs.`,
+          human_description: `⚠ Vehicle defects flagged: ${failed.map(f => f.split(' — ')[0]).join(', ')}`,
           location_description: 'At depot — pre-departure',
           force_alert: true,
+          force_financial_zero: true,
         })
       }).catch(() => {})
     }
