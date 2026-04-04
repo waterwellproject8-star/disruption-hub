@@ -11,44 +11,37 @@ function getDB() {
   return createClient(url, key)
 }
 
-const DRIVER_ALERT_SYSTEM = `You are a Senior Logistics Crisis Director with 25 years of experience across UK and European supply chains. You have personally managed thousands of live disruptions — port closures, cold chain failures, driver crises, supplier collapses, multi-vehicle cascades.
+const DRIVER_ALERT_SYSTEM = `You are a Senior Logistics Crisis Director. You are direct and prioritise by financial impact and urgency.
 
-You are direct. You prioritise by financial impact and urgency. You give the ops team the exact decision they need, with the owner and deadline for each action.
-
-When given a driver alert, respond with this structure:
+When given a driver alert, respond with this exact structure:
 
 ## DISRUPTION ASSESSMENT
 - Severity: [CRITICAL / HIGH / MEDIUM / LOW]
 - Estimated Financial Impact: £[X,XXX]
 - Affected Shipments: [number]
-- Time to Resolution: [X hours/days]
+- Time to Resolution: [X hours]
 
 ## IMMEDIATE ACTIONS (Do these NOW)
 1. [Specific action — named owner — specific deadline]
 2. [Specific action — named owner — specific deadline]
 3. [Specific action — named owner — specific deadline]
 
-## REROUTING / REORDER RECOMMENDATIONS
-[Specific alternatives with cost comparisons]
-
 ## WHO TO CONTACT
-[Carrier / supplier / customer — with exact message to send]
+[Carrier / customer — with exact message to send]
 
 ## DOWNSTREAM RISKS
-[What breaks next if unresolved — cascade failures]
+[What breaks next if unresolved]
 
-Four rules that always apply:
-1. Never invent location names not stated in the scenario — if uncertain say "nearest [facility type] — verify via Google Maps before dispatching"
-2. Apply 1.5x buffer to all UK road time estimates and state it explicitly
-3. If a driver is unwell or injured — 999 is the first call, not the ops manager
-4. If location was provided by a driver report (not ops manager), always include as Action 1: "Confirm exact vehicle location with driver — ask for the junction number on the last gantry sign they passed, not their estimated position." Do not issue reroute instructions until position is confirmed.
+Rules:
+1. Never invent location names — if uncertain say "verify via Google Maps before dispatching"
+2. Apply 1.5x buffer to all UK road time estimates
+3. If driver is injured — 999 is the first call
+4. If location is driver-reported, Action 1 must be: confirm exact vehicle location with driver
 
-Temperature rules for cold chain cargo:
-- Chilled (0–5°C): alarm above 5°C = cold chain integrity risk. State this explicitly.
-- Frozen (−18°C to −22°C): alarm above −15°C = critical. Cargo may be unsalvageable.
-- Pharmaceutical chilled: any reading above 5°C must be disclosed to the consignee pharmacist before delivery.
-
-Always give specific numbers, timeframes, and named actions.`
+Temperature rules:
+- Chilled (0–5°C): alarm above 5°C = cold chain risk
+- Frozen (−18°C to −22°C): alarm above −15°C = critical
+- Pharmaceutical: disclose any breach to consignee before delivery`
 
 function extractFirstAction(text) {
   const lines = text.split('\n')
@@ -90,23 +83,19 @@ export async function POST(request) {
       return Response.json({ error: 'issue_description is required' }, { status: 400 })
     }
 
-    // Build location string
     const locationStr = (latitude && longitude)
-      ? `GPS coordinates: ${latitude.toFixed(5)}, ${longitude.toFixed(5)}. Nearest known location: ${location_description || 'verify via maps'}`
-      : location_description || 'Location not confirmed — verify with driver before rerouting'
+      ? `GPS: ${latitude.toFixed(5)}, ${longitude.toFixed(5)}. Area: ${location_description || 'verify via maps'}`
+      : location_description || 'Location not confirmed — verify with driver'
 
-    // Build the analysis prompt
-    const analysisPrompt = `DRIVER ALERT — AUTO-TRIGGERED
+    const analysisPrompt = `DRIVER ALERT
 Driver: ${driver_name || 'Unknown'}
 Vehicle: ${vehicle_reg || 'Unknown'}
-Reference: ${ref || 'No ref'}
+Ref: ${ref || 'DRIVER-ALERT'}
 Location: ${locationStr}
-
-Driver report: "${issue_description}"
+Report: "${issue_description}"
 
 Provide immediate disruption analysis and action plan.`
 
-    // Get client details from Supabase
     let systemPrompt = null
     let contactPhone = null
     const db = getDB()
@@ -124,37 +113,28 @@ Provide immediate disruption analysis and action plan.`
       }
     }
 
-    // Run AI analysis
     const finalSystem = systemPrompt
       ? `${DRIVER_ALERT_SYSTEM}\n\nCLIENT CONTEXT:\n${systemPrompt}`
       : DRIVER_ALERT_SYSTEM
 
-    const messages = [{ role: 'user', content: analysisPrompt }]
-    let fullResponse = ''
-
-    const stream = await anthropic.messages.stream({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 1500,
+    // Use Haiku — fast enough to beat 30s Vercel hobby limit
+    const response = await anthropic.messages.create({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 800,
       system: finalSystem,
-      messages
+      messages: [{ role: 'user', content: analysisPrompt }]
     })
 
-    for await (const chunk of stream) {
-      if (chunk.type === 'content_block_delta' && chunk.delta?.type === 'text_delta') {
-        fullResponse += chunk.delta.text
-      }
-    }
+    const fullResponse = response.content[0]?.text || ''
 
-    // Determine severity and financial impact
     const sevMatch = fullResponse.match(/\b(CRITICAL|HIGH|MEDIUM|LOW)\b/)
     const severity = sevMatch?.[1] || 'HIGH'
     const moneyMatch = fullResponse.match(/£([\d,]+)/)
     const financialImpact = moneyMatch ? parseInt(moneyMatch[1].replace(/,/g, '')) : 0
 
-    // Extract first action BEFORE db block to avoid temporal dead zone
+    // Extract first action BEFORE db block — fixes temporal dead zone bug
     const firstAction = extractFirstAction(fullResponse)
 
-    // Save to Supabase
     if (db) {
       await db.from('incidents').insert({
         client_id,
@@ -179,9 +159,6 @@ Provide immediate disruption analysis and action plan.`
           if (pattern.test(firstAction)) { detectedType = type; break }
         }
 
-        const carrierPhone = extractCarrierPhone(systemPrompt)
-        const carrierName = extractCarrierName(fullResponse)
-
         await db.from('approvals').insert({
           client_id,
           action_type: detectedType,
@@ -189,8 +166,8 @@ Provide immediate disruption analysis and action plan.`
           action_details: {
             vehicle_reg,
             ref: ref || 'DRIVER-ALERT',
-            carrier_name: carrierName,
-            carrier_phone: carrierPhone,
+            carrier_name: extractCarrierName(fullResponse),
+            carrier_phone: extractCarrierPhone(systemPrompt),
             driver_phone: null,
             script: firstAction,
             source: 'driver_alert'
@@ -201,15 +178,10 @@ Provide immediate disruption analysis and action plan.`
       }
     }
 
-    // Send SMS alert to ops manager for HIGH/CRITICAL
     let smsSent = false
     if ((severity === 'CRITICAL' || severity === 'HIGH') && contactPhone) {
-      const actionLine = firstAction
-        ? `Action 1: ${firstAction}`
-        : 'Full action plan ready in dashboard'
-
+      const actionLine = firstAction ? `Action 1: ${firstAction}` : 'Full action plan ready in dashboard'
       const smsBody = `DisruptionHub ${severity} — ${vehicle_reg || 'Vehicle'}\n${issue_description.substring(0, 60)}\nExposure: £${financialImpact.toLocaleString()}\n\n${actionLine}\n\nReply YES to execute, NO to reject, OPEN to review.`
-
       const result = await sendSMS(contactPhone, smsBody)
       smsSent = result.success || false
     }
