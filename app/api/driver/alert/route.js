@@ -191,6 +191,24 @@ Provide immediate disruption analysis and action plan.`
           status: 'pending'
         })
       }
+
+      // Pre-shift defect — always create a pending approval so YES reply works
+      if (force_alert && force_financial_zero) {
+        await db.from('approvals').insert({
+          client_id,
+          action_type: 'call',
+          action_label: `Call ${driver_name || 'driver'} before departure — vehicle defects flagged: ${human_description?.replace('Pre-shift fail: ', '') || 'see dashboard'}`,
+          action_details: {
+            vehicle_reg,
+            ref: 'PRE-SHIFT',
+            driver_phone: null,
+            script: `Call ${driver_name} on ${vehicle_reg}. They flagged: ${human_description?.replace('Pre-shift fail: ', '') || 'vehicle defects'}. Assess whether vehicle is safe to depart.`,
+            source: 'preshift_check'
+          },
+          financial_value: 0,
+          status: 'pending'
+        })
+      }
     }
 
     let smsSent = false
