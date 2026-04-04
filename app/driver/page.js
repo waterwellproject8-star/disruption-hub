@@ -75,6 +75,7 @@ export default function DriverApp() {
   const [inputText, setInputText]     = useState('')
   const [parsedResult, setParsedResult] = useState(null)
   const [showDetail, setShowDetail]   = useState(false)
+  const [lastAlert, setLastAlert]     = useState(null) // persisted last alert summary
 
   const [gpsCoords, setGpsCoords]           = useState(null)
   const [gpsDescription, setGpsDescription] = useState('')
@@ -89,6 +90,11 @@ export default function DriverApp() {
       loadJobs(info)
     } else {
       setLoading(false)
+    }
+    // Restore last alert
+    const savedAlert = localStorage.getItem('dh_last_alert')
+    if (savedAlert) {
+      try { setLastAlert(JSON.parse(savedAlert)) } catch {}
     }
   }, [])
 
@@ -148,11 +154,30 @@ export default function DriverApp() {
   }
 
   function closePanel() {
+    // Save result to lastAlert if we have one
+    if (parsedResult) {
+      const alert = {
+        ...parsedResult,
+        actionType: panelAction,
+        time: new Date().toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' }),
+      }
+      setLastAlert(alert)
+      localStorage.setItem('dh_last_alert', JSON.stringify(alert))
+    }
     setPanelOpen(false)
     setPanelAction(null)
     setPanelState('idle')
     setInputText('')
     setParsedResult(null)
+    setShowDetail(false)
+  }
+
+  function reopenLastAlert() {
+    if (!lastAlert) return
+    setParsedResult(lastAlert)
+    setPanelAction(lastAlert.actionType || 'breakdown')
+    setPanelState('result')
+    setPanelOpen(true)
     setShowDetail(false)
   }
 
@@ -206,6 +231,7 @@ export default function DriverApp() {
           vehicle_reg: driverInfo.vehicleReg,
           ref: job?.ref,
           issue_description: prompt,
+          human_description: inputText || panelAction, // what the driver actually typed
           location_description: gpsDescription,
           latitude: gpsCoords?.latitude,
           longitude: gpsCoords?.longitude,
@@ -336,6 +362,26 @@ export default function DriverApp() {
             {loading ? 'Loading...' : `${jobs.length} run${jobs.length!==1?'s':''} today`}
           </div>
         </div>
+
+        {/* LAST ALERT CARD — tap to reopen instructions */}
+        {lastAlert && (
+          <div onClick={reopenLastAlert}
+            style={{margin:'0 12px 12px',padding:'12px 14px',borderRadius:10,cursor:'pointer',border:`1px solid ${SEV_STYLES[lastAlert.severity]?.border||'rgba(245,158,11,0.35)'}`,background:`${SEV_STYLES[lastAlert.severity]?.bg||'rgba(245,158,11,0.08)'}`,transition:'all 0.15s'}}>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:5}}>
+              <div style={{display:'flex',alignItems:'center',gap:7}}>
+                <span style={{fontSize:16}}>{SEV_STYLES[lastAlert.severity]?.icon||'⚠️'}</span>
+                <div>
+                  <div style={{fontSize:10,color:SEV_STYLES[lastAlert.severity]?.color||'#f59e0b',fontFamily:'monospace',fontWeight:700,letterSpacing:'0.06em'}}>LAST ALERT · {lastAlert.time}</div>
+                  <div style={{fontSize:13,color:'#e8eaed',fontWeight:500,marginTop:2}}>{lastAlert.headline}</div>
+                </div>
+              </div>
+              <div style={{fontSize:11,color:'#4a5260',flexShrink:0,marginLeft:8}}>Tap to reopen →</div>
+            </div>
+            {lastAlert.actions?.[0] && (
+              <div style={{fontSize:11,color:'#8a9099',marginTop:4,paddingLeft:23}}>Step 1: {lastAlert.actions[0]}</div>
+            )}
+          </div>
+        )}
 
         {/* JOB CARDS */}
         {jobs.map(job => {

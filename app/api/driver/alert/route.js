@@ -45,13 +45,25 @@ Temperature rules:
 
 function extractFirstAction(text) {
   const lines = text.split('\n')
+  const skipPatterns = /confirm.*location|exact.*vehicle.*location|verify.*position|location.*unconfirmed/i
+  
+  // Try to get action 2 or 3 if action 1 is just the location-confirm boilerplate
+  const actions = []
   for (const line of lines) {
-    const match = line.match(/^1\.?\s+(.{20,120})/)
+    const match = line.match(/^([123])\.?\s+(.{15,120})/)
     if (match) {
-      return match[1].replace(/\*\*/g, '').split('—')[0].trim().substring(0, 100)
+      const action = match[2].replace(/\*\*/g, '').split('—')[0].trim().substring(0, 100)
+      actions.push(action)
     }
   }
-  return null
+  
+  // Return first non-boilerplate action
+  for (const action of actions) {
+    if (!skipPatterns.test(action)) return action
+  }
+  
+  // Fall back to first action even if boilerplate
+  return actions[0] || null
 }
 
 function extractCarrierPhone(systemPrompt) {
@@ -73,6 +85,7 @@ export async function POST(request) {
       driver_name,
       vehicle_reg,
       issue_description,
+      human_description,
       latitude,
       longitude,
       location_description,
@@ -180,8 +193,12 @@ Provide immediate disruption analysis and action plan.`
 
     let smsSent = false
     if ((severity === 'CRITICAL' || severity === 'HIGH') && contactPhone) {
+      // Use what the driver actually typed, not the system prompt
+      const shortDesc = (human_description || location_description || 'Driver alert')
+        .substring(0, 50)
+        .replace(/\n/g, ' ')
       const actionLine = firstAction ? firstAction.substring(0, 60) : 'See dashboard'
-      const smsBody = `DH ${severity} ${vehicle_reg || ""}\n${issue_description.substring(0, 40)}\n£${financialImpact.toLocaleString()} ${actionLine}\nYES/NO/OPEN`
+      const smsBody = `DH ${severity} ${vehicle_reg || ''}\n${shortDesc}\n£${financialImpact.toLocaleString()} ${actionLine}\nYES/NO/OPEN`
       const result = await sendSMS(contactPhone, smsBody)
       smsSent = result.success || false
     }
