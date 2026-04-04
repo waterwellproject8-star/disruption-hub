@@ -166,11 +166,23 @@ export default function HomePage() {
 
   return (
     <div style={{ minHeight: '100vh', position: 'relative', zIndex: 1 }}>
+      <style>{`
+        @media (max-width: 640px) {
+          .dh-stats { flex-wrap: wrap !important; }
+          .dh-stats > div { flex: 1 1 45% !important; min-width: 140px !important; padding: 16px 12px !important; border-right: none !important; border-bottom: 1px solid var(--border) !important; }
+          .dh-nav-links { gap: 12px !important; }
+          .dh-nav-links a:not(:last-child) { display: none !important; }
+          .dh-hero { padding: 48px 20px 40px !important; }
+          .dh-section { padding: 0 20px !important; }
+          .dh-pricing-grid { grid-template-columns: 1fr !important; }
+          .dh-pilot-box { flex-direction: column !important; gap: 12px !important; }
+        }
+      `}</style>
 
       {/* Nav */}
       <nav style={{
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '16px 32px', borderBottom: '1px solid rgba(255,255,255,0.06)',
+        padding: '12px 20px', borderBottom: '1px solid rgba(255,255,255,0.06)',
         position: 'sticky', top: 0, background: 'rgba(10,12,14,0.95)',
         backdropFilter: 'blur(12px)', zIndex: 100
       }}>
@@ -184,7 +196,7 @@ export default function HomePage() {
             Disruption<span style={{ color: 'var(--accent)' }}>Hub</span>
           </span>
         </div>
-        <div style={{ display: 'flex', gap: 24, alignItems: 'center' }}>
+        <div className="dh-nav-links" style={{ display: 'flex', gap: 24, alignItems: 'center' }}>
           <a href="#demo" style={{ color: 'var(--text2)', fontSize: 13 }}>Live demo</a>
           <a href="#pricing" style={{ color: 'var(--text2)', fontSize: 13 }}>Pricing</a>
           <Link href="/dashboard" style={{
@@ -195,7 +207,7 @@ export default function HomePage() {
       </nav>
 
       {/* Hero */}
-      <section style={{ padding: '80px 32px 60px', maxWidth: 900, margin: '0 auto', textAlign: 'center' }}>
+      <section className="dh-hero" style={{ padding: '80px 32px 60px', maxWidth: 900, margin: '0 auto', textAlign: 'center' }}>
         <div style={{
           display: 'inline-block', fontFamily: 'var(--font-mono)', fontSize: 11,
           color: 'var(--accent)', letterSpacing: '0.12em', padding: '4px 12px',
@@ -226,10 +238,10 @@ export default function HomePage() {
       </section>
 
       {/* Stats bar */}
-      <div style={{
+      <div className="dh-stats" style={{
         display: 'flex', justifyContent: 'center', gap: 0,
         borderTop: '1px solid var(--border)', borderBottom: '1px solid var(--border)',
-        margin: '0 0 60px'
+        margin: '0 0 60px', flexWrap: 'wrap'
       }}>
         {STATS.map((s, i) => (
           <div key={i} style={{
@@ -400,7 +412,7 @@ export default function HomePage() {
         <p style={{ color: 'var(--text2)', marginBottom: 12, fontSize: 14 }}>One missed SLA typically costs more than a year of DisruptionHub.</p>
 
         {/* Founding client banner */}
-        <div style={{ background: 'rgba(0,229,176,0.06)', border: '1px solid rgba(0,229,176,0.2)', borderRadius: 8, padding: '12px 20px', marginBottom: 32, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
+        <div className="dh-pilot-box" style={{ background: 'rgba(0,229,176,0.06)', border: '1px solid rgba(0,229,176,0.2)', borderRadius: 8, padding: '12px 20px', marginBottom: 32, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
           <div>
             <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--accent)', letterSpacing: '0.08em' }}>FOUNDING CLIENT OFFER</span>
             <p style={{ fontSize: 13, color: 'var(--text2)', margin: '4px 0 0' }}>First 5 clients lock in at <strong style={{ color: 'var(--text)' }}>£499/month for life</strong> — never increases regardless of what we add. 3 of 5 spots remaining.</p>
@@ -408,7 +420,7 @@ export default function HomePage() {
           <a href="mailto:hello@disruptionhub.ai?subject=Founding client enquiry" style={{ background: 'var(--accent)', color: '#000', padding: '8px 16px', borderRadius: 6, fontWeight: 600, fontSize: 12, textDecoration: 'none', whiteSpace: 'nowrap' }}>Claim your spot →</a>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(240px,1fr))', gap: 16 }}>
+        <div className="dh-pricing-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(240px,1fr))', gap: 16 }}>
           {[
             {
               name: 'Advisory',
