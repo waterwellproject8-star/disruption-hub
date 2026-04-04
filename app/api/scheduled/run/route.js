@@ -1,114 +1,220 @@
 import { runModule } from '../../../../lib/anthropic.js'
-import { logModuleRun, getClientConfig } from '../../../../lib/supabase.js'
 import { runRegulationMonitor, generateWeeklyComplianceDigest } from '../../../../lib/regulation-monitor.js'
-import { checkPlannedClosures, checkLicenceStatus } from '../../../../lib/scenarios.js'
+import { createClient } from '@supabase/supabase-js'
+import { sendSMS } from '../../../../lib/twilio.js'
 
-// Vercel Cron — add this to vercel.json:
-// "crons": [{ "path": "/api/scheduled/run", "schedule": "0 5 * * *" }]
-// Runs at 5am UTC every day
+const DAILY_MODULES   = ['driver_hours','fuel','vehicle_health','sla_prediction','hazmat','regulation']
+const WEEKLY_MODULES  = ['invoice','carrier','benchmarking','tender','consolidation','driver_retention']
+const MONTHLY_MODULES = ['carbon','forecast','insurance']
 
-const DAILY_MODULES = ['driver_hours', 'fuel', 'vehicle_health', 'sla_prediction']
-const WEEKLY_MODULES = ['invoice', 'carrier', 'benchmarking', 'tender', 'consolidation', 'driver_retention']
-const MONTHLY_MODULES = ['carbon', 'forecast', 'insurance']
+function getDB() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (!url || !key || url.includes('placeholder')) return null
+  return createClient(url, key)
+}
 
 export async function POST(request) {
-  // Auth check
   const authHeader = request.headers.get('authorization')
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}` && process.env.NODE_ENV === 'production') {
     return Response.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const now = new Date()
-  const dayOfWeek = now.getDay() // 0=Sun, 1=Mon
-  const dayOfMonth = now.getDate()
-  const isMonday = dayOfWeek === 1
-  const isFirstOfMonth = dayOfMonth === 1
-  const isSunday = dayOfWeek === 0
+  const now     = new Date()
+  const dow     = now.getDay()
+  const dom     = now.getDate()
+  const isMonday = dow === 1
+  const isFirst  = dom === 1
 
-  const results = {
-    ran_at: now.toISOString(),
-    modules_run: 0,
-    regulation_checked: false,
-    closures_checked: false,
-    licence_checked: false,
-    weekly_digest: null,
-    errors: []
-  }
-
-  // ── 1. REGULATION MONITOR — runs daily ─────────────────────────────────────
-  try {
-    const regulationResult = await runRegulationMonitor()
-    results.regulation_checked = true
-    results.regulation_changes = regulationResult.relevant_changes?.length || 0
-
-    // If changes found — this would queue a notification to all clients
-    if (regulationResult.relevant_changes?.length > 0) {
-      console.log(`Regulation monitor: ${regulationResult.relevant_changes.length} changes found`)
-    }
-  } catch (e) {
-    results.errors.push(`regulation_monitor: ${e.message}`)
-  }
-
-  // ── 2. WEEKLY DIGEST — runs every Monday ───────────────────────────────────
-  if (isMonday) {
-    try {
-      const digest = await generateWeeklyComplianceDigest()
-      results.weekly_digest = digest.headline
-    } catch (e) {
-      results.errors.push(`weekly_digest: ${e.message}`)
-    }
-  }
-
-  // ── 3. PLANNED CLOSURE CHECK — runs daily ──────────────────────────────────
-  try {
-    const closureResult = await checkPlannedClosures([
-      { name: 'M1 corridor', corridor: 'M1' },
-      { name: 'M6 corridor', corridor: 'M6' },
-      { name: 'A1 corridor', corridor: 'A1' },
-      { name: 'M25 corridor', corridor: 'M25' },
-    ])
-    results.closures_checked = true
-    results.closures_found = closureResult.closures_found || 0
-  } catch (e) {
-    results.errors.push(`planned_closures: ${e.message}`)
-  }
-
-  // ── 4. LICENCE CHECK — runs every Monday ───────────────────────────────────
-  // In production this would pull driver list from Supabase per client
-  if (isMonday) {
-    results.licence_checked = true
-    // When Supabase is connected: fetch all drivers across all clients, run checkLicenceStatus()
-  }
-
-  // ── 5. MODULE RUNS — per schedule ──────────────────────────────────────────
-  // In production: iterate over all active clients from Supabase
-  // For now: runs with demo data to verify the pipeline works
   const modulesToRun = [...DAILY_MODULES]
   if (isMonday) modulesToRun.push(...WEEKLY_MODULES)
-  if (isFirstOfMonth) modulesToRun.push(...MONTHLY_MODULES)
+  if (isFirst)  modulesToRun.push(...MONTHLY_MODULES)
 
-  for (const moduleId of modulesToRun) {
+  const results = { ran_at: now.toISOString(), clients: [], errors: [] }
+  const db = getDB()
+  if (!db) return Response.json({ success: false, reason: 'no_db' })
+
+  // Get all active clients
+  const { data: clients } = await db.from('clients').select('*').eq('active', true)
+  if (!clients?.length) return Response.json({ success: true, message: 'No active clients', ...results })
+
+  for (const client of clients) {
+    const clientResult = { id: client.id, modules_run: 0, alerts_sent: 0, errors: [] }
+
+    for (const moduleId of modulesToRun) {
+      try {
+        // Run the module with client system prompt context
+        const moduleData = {
+          client_id: client.id,
+          fleet_size: client.fleet_size,
+          trigger: 'scheduled',
+          timestamp: now.toISOString()
+        }
+        const result = await runModule(moduleId, moduleData, client.system_prompt)
+
+        // Save to module_runs table
+        const { data: savedRun } = await db.from('module_runs').insert({
+          client_id: client.id,
+          module: moduleId,
+          input: moduleData,
+          output: result,
+          severity: result?.severity || result?.result?.severity || null,
+          financial_impact: result?.financial_impact || result?.result?.financial_impact || 0,
+          status: 'complete'
+        }).select().single()
+
+        clientResult.modules_run++
+
+        // Determine if this result needs an alert
+        const severity = result?.severity || result?.result?.severity ||
+          result?.all_clear === false ? 'HIGH' : null
+        const financial = result?.financial_impact || result?.result?.financial_impact ||
+          result?.total_overcharge || result?.total_breakdown_risk || 0
+
+        const needsAlert = severity === 'CRITICAL' || severity === 'HIGH' ||
+          (financial > 500) ||
+          (result?.compliance_failures?.length > 0) ||
+          (result?.flags_found > 0) ||
+          (result?.drivers_at_risk?.length > 0) ||
+          (result?.vehicles_at_risk?.length > 0) ||
+          (result?.discrepancies?.length > 0)
+
+        // Send SMS alert for Autonomous tier clients
+        if (needsAlert && client.tier === 'autonomous' && client.contact_phone) {
+          const moduleLabel = {
+            driver_hours: 'Driver Hours Monitor',
+            vehicle_health: 'Vehicle Health',
+            sla_prediction: 'SLA Prediction',
+            invoice: 'Invoice Recovery',
+            hazmat: 'Hazmat Check',
+            regulation: 'Regulation Alert',
+            carrier: 'Carrier Scorecard',
+            fuel: 'Fuel Optimisation',
+            driver_retention: 'Driver Retention'
+          }[moduleId] || moduleId
+
+          const alertDetail = buildModuleAlertSummary(moduleId, result)
+          const smsBody = `DisruptionHub — ${severity || 'ACTION REQUIRED'}\n${moduleLabel}\n${alertDetail}\nFinancial: £${Number(financial).toLocaleString()}\n\nOpen dashboard to review. Reply OPEN for link.`
+
+          await sendSMS(client.contact_phone, smsBody)
+          clientResult.alerts_sent++
+
+          // Also create a pending approval for the first recommended action
+          const firstAction = result?.actions?.[0] || result?.result?.actions?.[0]
+          if (firstAction && savedRun) {
+            await db.from('approvals').insert({
+              client_id: client.id,
+              module_run_id: savedRun.id,
+              action_type: firstAction.type || 'email',
+              action_label: firstAction.label || firstAction.content?.substring(0,100) || 'Review module results',
+              action_details: firstAction,
+              financial_value: financial,
+              status: 'pending'
+            })
+          }
+        }
+
+      } catch (e) {
+        clientResult.errors.push(`${moduleId}: ${e.message}`)
+        results.errors.push(`${client.id}/${moduleId}: ${e.message}`)
+      }
+    }
+
+    // Run regulation monitor for all clients
     try {
-      // When Supabase connected: run per client with their real data
-      // runModule(moduleId, clientData, clientSystemPrompt)
-      results.modules_run++
+      const regResult = await runRegulationMonitor({ fleet_type: client.system_prompt })
+      if (regResult.relevant_changes?.length > 0) {
+        await db.from('module_runs').insert({
+          client_id: client.id,
+          module: 'regulation',
+          input: { trigger: 'scheduled' },
+          output: regResult,
+          severity: regResult.relevant_changes[0]?.urgency === 'IMMEDIATE' ? 'CRITICAL' : 'MEDIUM',
+          status: 'complete'
+        })
+      }
     } catch (e) {
-      results.errors.push(`module_${moduleId}: ${e.message}`)
+      results.errors.push(`${client.id}/regulation: ${e.message}`)
+    }
+
+    // Weekly digest on Mondays
+    if (isMonday) {
+      try {
+        const digest = await generateWeeklyComplianceDigest()
+        if (client.contact_phone && client.tier === 'autonomous') {
+          await sendSMS(client.contact_phone, `DisruptionHub Weekly Digest\n${digest.headline}\n${digest.summary?.substring(0,160)}\n\nOpen dashboard for full details.`)
+        }
+      } catch {}
+    }
+
+    results.clients.push(clientResult)
+  }
+
+  // ── 6. MONTHLY REPORT — runs on 1st of each month ────────────────────────
+  if (isFirst) {
+    for (const client of clients) {
+      try {
+        await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'https://disruptionhub.ai'}/api/reports/monthly`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ client_id: client.id })
+        })
+      } catch (e) {
+        results.errors.push(`${client.id}/monthly_report: ${e.message}`)
+      }
     }
   }
 
   return Response.json({
     success: true,
-    ...results,
-    summary: `Ran at ${now.toISOString()}. ${results.modules_run} modules scheduled. ${results.regulation_changes || 0} regulation changes. ${results.closures_found || 0} closures found. ${results.errors.length} errors.`
+    ran_at: now.toISOString(),
+    clients_processed: clients.length,
+    total_modules_run: results.clients.reduce((s,c) => s + c.modules_run, 0),
+    total_alerts_sent: results.clients.reduce((s,c) => s + c.alerts_sent, 0),
+    monthly_reports_triggered: isFirst ? clients.length : 0,
+    errors: results.errors
   })
 }
 
-// GET — for manual trigger / health check
+function buildModuleAlertSummary(moduleId, result) {
+  const r = result?.result || result
+  switch (moduleId) {
+    case 'driver_hours':
+      const atRisk = r?.drivers_at_risk?.length || 0
+      return atRisk > 0 ? `${atRisk} driver${atRisk>1?'s':''} at WTD breach risk` : 'Driver hours flag found'
+    case 'vehicle_health':
+      const veh = r?.vehicles_at_risk?.length || 0
+      return veh > 0 ? `${veh} vehicle${veh>1?'s':''} flagged for maintenance` : 'Vehicle health flag found'
+    case 'invoice':
+      const disc = r?.discrepancies?.length || 0
+      return disc > 0 ? `${disc} overcharge${disc>1?'s':''} found — recoverable` : 'Invoice discrepancy found'
+    case 'sla_prediction':
+      const sla = r?.at_risk_deliveries?.length || 0
+      return sla > 0 ? `${sla} deliver${sla>1?'ies':'y'} at SLA breach risk` : 'SLA risk detected'
+    case 'hazmat':
+      return `Compliance failure — dispatch blocked`
+    case 'regulation':
+      return `Regulatory change requires action`
+    case 'carrier':
+      return `Carrier performance below threshold`
+    case 'fuel':
+      return `Fuel saving opportunity identified`
+    default:
+      return `Action required — open dashboard`
+  }
+}
+
+// GET — health check and manual trigger
 export async function GET(request) {
   const authHeader = request.headers.get('authorization')
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return Response.json({ error: 'Unauthorized' }, { status: 401 })
   }
-  return Response.json({ status: 'scheduled runner ready', next_run: '05:00 UTC daily' })
+  return Response.json({
+    status: 'scheduled runner ready',
+    next_run: '05:00 UTC daily',
+    daily_modules: DAILY_MODULES,
+    weekly_modules: WEEKLY_MODULES,
+    monthly_modules: MONTHLY_MODULES
+  })
 }

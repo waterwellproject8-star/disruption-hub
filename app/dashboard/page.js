@@ -22,22 +22,28 @@ const SEV_COLORS = { 'CRITICAL': '#ef4444', 'HIGH': '#f59e0b', 'MEDIUM': '#3b82f
 const SEV_BG = { 'CRITICAL': 'rgba(239,68,68,0.1)', 'HIGH': 'rgba(245,158,11,0.1)', 'MEDIUM': 'rgba(59,130,246,0.1)', 'LOW': 'rgba(138,144,153,0.1)' }
 
 const MODULES = [
-  { id: 'disruption', label: 'Disruption Analysis', icon: '⚡', cat: 'ops' },
-  { id: 'sla_prediction', label: 'SLA Breach Prediction', icon: '🔮', cat: 'ops' },
-  { id: 'invoice', label: 'Invoice Recovery', icon: '🧾', cat: 'save' },
-  { id: 'driver_hours', label: 'Driver Hours Monitor', icon: '⏱', cat: 'compliance' },
-  { id: 'hazmat', label: 'Hazmat Checker', icon: '⚠️', cat: 'compliance' },
-  { id: 'carrier', label: 'Carrier Scorecard', icon: '📊', cat: 'ops' },
-  { id: 'fuel', label: 'Fuel Optimisation', icon: '⛽', cat: 'save' },
-  { id: 'vehicle_health', label: 'Vehicle Health', icon: '🔧', cat: 'ops' },
-  { id: 'driver_retention', label: 'Driver Retention', icon: '👤', cat: 'ops' },
-  { id: 'carbon', label: 'Carbon & ESG', icon: '🌱', cat: 'growth' },
-  { id: 'tender', label: 'Tender Intelligence', icon: '🏆', cat: 'growth' },
-  { id: 'regulation', label: 'Regulation Monitor', icon: '📜', cat: 'compliance' },
-  { id: 'consolidation', label: 'Load Consolidation', icon: '📦', cat: 'save' },
-  { id: 'forecast', label: 'Demand Forecast', icon: '📈', cat: 'ops' },
-  { id: 'benchmarking', label: 'Rate Benchmarking', icon: '💹', cat: 'growth' },
-  { id: 'insurance', label: 'Claims Intelligence', icon: '🛡', cat: 'compliance' },
+  { id: 'disruption',         label: 'Disruption Analysis',       icon: '⚡', cat: 'ops' },
+  { id: 'sla_prediction',     label: 'SLA Breach Prediction',     icon: '🔮', cat: 'ops' },
+  { id: 'invoice',            label: 'Invoice Recovery',          icon: '🧾', cat: 'save' },
+  { id: 'driver_hours',       label: 'Driver Hours Monitor',      icon: '⏱', cat: 'compliance' },
+  { id: 'hazmat',             label: 'Hazmat Checker',            icon: '⚠️', cat: 'compliance' },
+  { id: 'carrier',            label: 'Carrier Scorecard',         icon: '📊', cat: 'ops' },
+  { id: 'fuel',               label: 'Fuel Optimisation',         icon: '⛽', cat: 'save' },
+  { id: 'vehicle_health',     label: 'Vehicle Health',            icon: '🔧', cat: 'ops' },
+  { id: 'driver_retention',   label: 'Driver Retention',          icon: '👤', cat: 'ops' },
+  { id: 'carbon',             label: 'Carbon & ESG',              icon: '🌱', cat: 'growth' },
+  { id: 'tender',             label: 'Tender Intelligence',       icon: '🏆', cat: 'growth' },
+  { id: 'regulation',         label: 'Regulation Monitor',        icon: '📜', cat: 'compliance' },
+  { id: 'consolidation',      label: 'Load Consolidation',        icon: '📦', cat: 'save' },
+  { id: 'forecast',           label: 'Demand Forecast',           icon: '📈', cat: 'ops' },
+  { id: 'benchmarking',       label: 'Rate Benchmarking',         icon: '💹', cat: 'growth' },
+  { id: 'insurance',          label: 'Claims Intelligence',       icon: '🛡', cat: 'compliance' },
+  { id: 'cargo_theft',        label: 'Cargo Theft Prevention',    icon: '🔒', cat: 'compliance' },
+  { id: 'ghost_freight',      label: 'Ghost Freight Detection',   icon: '👻', cat: 'compliance' },
+  { id: 'subcontractor',      label: 'Subcontractor Trust',       icon: '🤝', cat: 'ops' },
+  { id: 'cash_flow',          label: 'Cash Flow Forecast',        icon: '💰', cat: 'growth' },
+  { id: 'churn_prediction',   label: 'Client Churn Prediction',   icon: '📉', cat: 'growth' },
+  { id: 'workforce_pipeline', label: 'Workforce Pipeline',        icon: '👥', cat: 'ops' },
 ]
 
 const CAT_COLORS = {
@@ -625,11 +631,180 @@ function ModuleResult({ result, moduleName }) {
           </SectionBlock>
         )}
 
+        {/* ── CARGO THEFT ── */}
+        {r.risk_flags?.length > 0 && (
+          <SectionBlock label={`THEFT RISK FLAGS — ${r.overall_risk}`} labelColor={r.overall_risk==='CRITICAL'?'#ef4444':'#f59e0b'}>
+            {r.total_cargo_at_risk > 0 && (
+              <div style={{ fontSize:11, color:'#ef4444', marginBottom:8, fontFamily:'monospace' }}>
+                Total cargo at risk: £{r.total_cargo_at_risk.toLocaleString()}
+              </div>
+            )}
+            {r.risk_flags.map((f,i) => (
+              <ItemCard key={i} bg={f.urgency==='IMMEDIATE'?'rgba(239,68,68,0.07)':'rgba(245,158,11,0.05)'} border={f.urgency==='IMMEDIATE'?'rgba(239,68,68,0.2)':'rgba(245,158,11,0.2)'}>
+                <div style={{ display:'flex', justifyContent:'space-between', marginBottom:4 }}>
+                  <span style={{ fontSize:12, color:'#e8eaed', fontWeight:500 }}>{f.vehicle_reg} — {f.driver}</span>
+                  <span style={{ fontSize:10, color:f.urgency==='IMMEDIATE'?'#ef4444':'#f59e0b', fontFamily:'monospace', fontWeight:700 }}>{f.urgency?.replace(/_/g,' ')}</span>
+                </div>
+                <div style={{ fontSize:11, color:'#f59e0b', marginBottom:4 }}>{f.flag_type?.replace(/_/g,' ').toUpperCase()} · {f.location}</div>
+                <div style={{ fontSize:11, color:'#8a9099', marginBottom:f.secure_parking_options?.length>0?8:0 }}>{f.action_required}</div>
+                {f.cargo_value > 0 && (
+                  <div style={{ fontSize:10, color:'#ef4444', marginBottom:f.secure_parking_options?.length>0?8:0 }}>
+                    Cargo at risk: £{f.cargo_value.toLocaleString()}
+                  </div>
+                )}
+                {f.secure_parking_options?.length > 0 && (
+                  <div>
+                    <div style={{ fontSize:9, color:'#00e5b0', fontFamily:'monospace', letterSpacing:'0.06em', marginBottom:5 }}>SECURE PARKING OPTIONS — DIVERT NOW</div>
+                    {f.secure_parking_options.map((p,pi) => (
+                      <div key={pi} style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', padding:'7px 9px', background:'rgba(0,229,176,0.05)', border:'1px solid rgba(0,229,176,0.15)', borderRadius:5, marginBottom:4 }}>
+                        <div style={{ flex:1 }}>
+                          <div style={{ fontSize:11, color:'#e8eaed', fontWeight:500, marginBottom:2 }}>{p.name}</div>
+                          <div style={{ fontSize:10, color:'#8a9099' }}>{p.direction} · {p.distance_miles} miles</div>
+                          {p.note && <div style={{ fontSize:10, color:'#f59e0b', marginTop:2 }}>{p.note}</div>}
+                          <div style={{ display:'flex', gap:8, marginTop:3 }}>
+                            {p.accredited && <span style={{ fontSize:9, color:'#00e5b0', fontFamily:'monospace' }}>✓ ACCREDITED</span>}
+                            {p.cctv && <span style={{ fontSize:9, color:'#8a9099', fontFamily:'monospace' }}>CCTV</span>}
+                            {p.security_patrol && <span style={{ fontSize:9, color:'#8a9099', fontFamily:'monospace' }}>SECURITY PATROL</span>}
+                          </div>
+                        </div>
+                        <div style={{ fontSize:16, fontWeight:700, color:'#00e5b0', fontFamily:'monospace', marginLeft:12, flexShrink:0 }}>
+                          {p.cost_gbp===0 ? 'FREE' : `£${p.cost_gbp}`}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </ItemCard>
+            ))}
+          </SectionBlock>
+        )}
+        {r.secure_parking_policy && (
+          <SectionBlock label="SECURE PARKING POLICY" labelColor="#00e5b0">
+            <ItemCard bg="rgba(0,229,176,0.04)" border="rgba(0,229,176,0.15)">
+              <div style={{ fontSize:11, color:'#e8eaed', marginBottom:6 }}>{r.secure_parking_policy.policy}</div>
+              <div style={{ display:'flex', gap:16, flexWrap:'wrap' }}>
+                <div><span style={{ fontSize:10, color:'#4a5260' }}>Annual cost: </span><span style={{ fontSize:11, color:'#f59e0b', fontWeight:600 }}>£{r.secure_parking_policy.annual_cost_estimate?.toLocaleString()}</span></div>
+                <div><span style={{ fontSize:10, color:'#4a5260' }}>Risk mitigated: </span><span style={{ fontSize:11, color:'#00e5b0', fontWeight:600 }}>£{r.secure_parking_policy.annual_theft_risk_mitigated?.toLocaleString()}</span></div>
+                <div><span style={{ fontSize:10, color:'#4a5260' }}>ROI: </span><span style={{ fontSize:11, color:'#00e5b0', fontWeight:600 }}>{r.secure_parking_policy.roi}</span></div>
+              </div>
+            </ItemCard>
+          </SectionBlock>
+        )}
+        {r.high_risk_routes?.length > 0 && (
+          <SectionBlock label="HIGH RISK ROUTES" labelColor="#f59e0b">
+            {r.high_risk_routes.map((rt,i) => (
+              <ItemCard key={i}>
+                <div style={{ fontSize:11, color:'#e8eaed', fontWeight:500, marginBottom:3 }}>{rt.route}</div>
+                <div style={{ fontSize:11, color:'#f59e0b', marginBottom:3 }}>{rt.known_risk}</div>
+                <div style={{ fontSize:11, color:'#8a9099' }}>{rt.recommendation}</div>
+              </ItemCard>
+            ))}
+          </SectionBlock>
+        )}
+
+        {/* ── GHOST FREIGHT ── */}
+        {r.suspicious_entries?.length > 0 && (
+          <SectionBlock label="SUSPICIOUS ENTRIES" labelColor="#ef4444">
+            {r.suspicious_entries.map((s,i) => (
+              <ItemCard key={i} bg="rgba(239,68,68,0.05)" border="rgba(239,68,68,0.18)">
+                <div style={{ display:'flex', justifyContent:'space-between', marginBottom:4 }}>
+                  <span style={{ fontSize:11, color:'#e8eaed', fontWeight:500 }}>{s.entity}</span>
+                  <span style={{ fontSize:10, color:'#ef4444', fontFamily:'monospace' }}>{s.type?.replace(/_/g,' ').toUpperCase()}</span>
+                </div>
+                <div style={{ fontSize:11, color:'#8a9099', marginBottom:4 }}>{s.evidence}</div>
+                <div style={{ fontSize:11, color:'#00e5b0' }}>Action: {s.action}</div>
+                {s.financial_exposure > 0 && <div style={{ fontSize:10, color:'#ef4444', marginTop:3 }}>Exposure: £{s.financial_exposure.toLocaleString()} · Confidence: {s.confidence}</div>}
+              </ItemCard>
+            ))}
+          </SectionBlock>
+        )}
+
+        {/* ── SUBCONTRACTOR TRUST ── */}
+        {r.trust_scores?.length > 0 && (
+          <SectionBlock label="SUBCONTRACTOR TRUST SCORES">
+            {r.trust_scores.map((s,i) => {
+              const scoreColor = s.overall_score >= 80 ? '#00e5b0' : s.overall_score >= 60 ? '#f59e0b' : '#ef4444'
+              return (
+                <ItemCard key={i} bg={s.recommendation==='terminate'?'rgba(239,68,68,0.06)':s.recommendation==='use_with_caution'?'rgba(245,158,11,0.04)':'rgba(0,229,176,0.03)'} border={s.recommendation==='terminate'?'rgba(239,68,68,0.2)':s.recommendation==='use_with_caution'?'rgba(245,158,11,0.15)':'rgba(0,229,176,0.12)'}>
+                  <div style={{ display:'flex', justifyContent:'space-between', marginBottom:4 }}>
+                    <span style={{ fontSize:12, color:'#e8eaed', fontWeight:500 }}>{s.name}</span>
+                    <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                      <span style={{ fontSize:16, fontWeight:700, color:scoreColor, fontFamily:'monospace' }}>{s.overall_score}</span>
+                      <span style={{ fontSize:10, color:s.recommendation==='terminate'?'#ef4444':s.recommendation==='use_with_caution'?'#f59e0b':'#00e5b0', fontFamily:'monospace', fontWeight:700 }}>{s.recommendation?.replace(/_/g,' ').toUpperCase()}</span>
+                    </div>
+                  </div>
+                  {s.flags?.map((f,fi) => <div key={fi} style={{ fontSize:10, color:'#f59e0b', marginBottom:2 }}>— {f}</div>)}
+                </ItemCard>
+              )
+            })}
+          </SectionBlock>
+        )}
+
+        {/* ── CASH FLOW ── */}
+        {r.forecast_weeks?.length > 0 && !r.preparation_actions && (
+          <SectionBlock label={`CASH FLOW FORECAST — ${r.overall_health?.replace(/_/g,' ')}`} labelColor={r.overall_health==='CRITICAL'||r.overall_health==='STRAINED'?'#ef4444':'#00e5b0'}>
+            {r.total_penalty_exposure > 0 && <div style={{ fontSize:11, color:'#ef4444', marginBottom:8 }}>Total penalty exposure: £{r.total_penalty_exposure.toLocaleString()} · Outstanding receivables: £{r.outstanding_receivables?.toLocaleString()}</div>}
+            {r.forecast_weeks.map((w,i) => (
+              <ItemCard key={i} bg={w.net<0?'rgba(239,68,68,0.05)':'rgba(0,229,176,0.03)'} border={w.net<0?'rgba(239,68,68,0.15)':'rgba(0,229,176,0.12)'}>
+                <div style={{ display:'flex', justifyContent:'space-between', marginBottom:4 }}>
+                  <span style={{ fontSize:11, color:'#e8eaed', fontWeight:500 }}>{w.week}</span>
+                  <span style={{ fontSize:12, color:w.net<0?'#ef4444':'#00e5b0', fontFamily:'monospace', fontWeight:700 }}>{w.net<0?'-':'+'}£{Math.abs(w.net).toLocaleString()}</span>
+                </div>
+                {w.alert && <div style={{ fontSize:10, color:'#f59e0b', marginBottom:4 }}>{w.alert}</div>}
+                {w.risk_items?.map((ri,ri_i) => <div key={ri_i} style={{ fontSize:10, color:'#4a5260', marginBottom:1 }}>— {ri.description}: £{ri.amount.toLocaleString()} due {ri.due_date}</div>)}
+              </ItemCard>
+            ))}
+          </SectionBlock>
+        )}
+
+        {/* ── CHURN PREDICTION ── */}
+        {r.clients_at_risk?.length > 0 && (
+          <SectionBlock label="CLIENT CHURN PREDICTION" labelColor={r.high_risk_count>0?'#ef4444':'#00e5b0'}>
+            {r.total_revenue_at_risk > 0 && <div style={{ fontSize:11, color:'#ef4444', marginBottom:8 }}>Total revenue at risk: £{r.total_revenue_at_risk.toLocaleString()}/year</div>}
+            {r.clients_at_risk.map((c,i) => (
+              <ItemCard key={i} bg={c.churn_risk==='HIGH'||c.churn_risk==='CRITICAL'?'rgba(239,68,68,0.05)':'rgba(0,229,176,0.03)'} border={c.churn_risk==='HIGH'||c.churn_risk==='CRITICAL'?'rgba(239,68,68,0.18)':'rgba(0,229,176,0.12)'}>
+                <div style={{ display:'flex', justifyContent:'space-between', marginBottom:4 }}>
+                  <span style={{ fontSize:12, color:'#e8eaed', fontWeight:500 }}>{c.client}</span>
+                  <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                    <span style={{ fontSize:12, color:c.churn_risk==='HIGH'||c.churn_risk==='CRITICAL'?'#ef4444':'#00e5b0', fontFamily:'monospace', fontWeight:700 }}>{c.churn_probability_pct}%</span>
+                    <span style={{ fontSize:10, color:c.churn_risk==='HIGH'||c.churn_risk==='CRITICAL'?'#ef4444':'#00e5b0', fontFamily:'monospace' }}>{c.churn_risk}</span>
+                  </div>
+                </div>
+                <div style={{ fontSize:10, color:'#4a5260', marginBottom:4 }}>Contract renewal: {c.days_to_contract_renewal} days · Revenue at risk: £{c.revenue_at_risk?.toLocaleString()}/yr</div>
+                {c.risk_signals?.slice(0,2).map((s,si) => <div key={si} style={{ fontSize:10, color:'#f59e0b', marginBottom:1 }}>— {s}</div>)}
+                <div style={{ fontSize:11, color:'#00e5b0', marginTop:5 }}>{c.recommended_action}</div>
+              </ItemCard>
+            ))}
+          </SectionBlock>
+        )}
+
+        {/* ── WORKFORCE PIPELINE ── */}
+        {r.upcoming_issues?.length > 0 && (
+          <SectionBlock label={`WORKFORCE PIPELINE — ${r.workforce_health?.replace(/_/g,' ')}`} labelColor={r.workforce_health==='AT_RISK'||r.workforce_health==='CRITICAL'?'#ef4444':'#00e5b0'}>
+            {r.headcount_risk?.shortfall > 0 && (
+              <div style={{ padding:'8px 10px', background:'rgba(239,68,68,0.06)', border:'1px solid rgba(239,68,68,0.15)', borderRadius:6, marginBottom:8 }}>
+                <span style={{ fontSize:11, color:'#ef4444' }}>Driver shortfall: {r.headcount_risk.shortfall} · Agency dependency: {r.headcount_risk.agency_dependency_pct}%</span>
+              </div>
+            )}
+            {r.upcoming_issues.map((u,i) => (
+              <ItemCard key={i} bg={u.days_remaining<60?'rgba(239,68,68,0.05)':'rgba(245,158,11,0.04)'} border={u.days_remaining<60?'rgba(239,68,68,0.18)':'rgba(245,158,11,0.15)'}>
+                <div style={{ display:'flex', justifyContent:'space-between', marginBottom:4 }}>
+                  <span style={{ fontSize:12, color:'#e8eaed', fontWeight:500 }}>{u.driver}</span>
+                  <span style={{ fontSize:10, color:u.days_remaining<60?'#ef4444':'#f59e0b', fontFamily:'monospace' }}>{u.days_remaining} days · {u.issue_type?.replace(/_/g,' ').toUpperCase()}</span>
+                </div>
+                <div style={{ fontSize:11, color:'#00e5b0' }}>{u.action}</div>
+              </ItemCard>
+            ))}
+          </SectionBlock>
+        )}
+
         {/* ── Generic all-clear ── */}
         {!r.sections && !r.discrepancies && !r.carriers && !r.drivers_at_risk && !r.vehicles_at_risk
           && !r.at_risk_deliveries && !r.vehicles_to_fill && !r.compliance_failures && !r.flags
           && !r.relevant_changes && !r.matching_tenders && !r.opportunities && !r.lane_analysis
-          && !r.forecast_periods && !r.verdict && !r.at_risk_drivers && (
+          && !r.forecast_periods && !r.verdict && !r.at_risk_drivers
+          && !r.risk_flags && !r.suspicious_entries && !r.trust_scores
+          && !r.forecast_weeks && !r.clients_at_risk && !r.upcoming_issues && (
           <div style={{ padding:'20px 14px', textAlign:'center' }}>
             <div style={{ fontFamily:'monospace', fontSize:11, color:'#00e5b0', marginBottom:6 }}>✓ ALL CLEAR</div>
             <div style={{ fontSize:12, color:'#4a5260' }}>No issues detected. Module continues monitoring.</div>
@@ -730,6 +905,7 @@ export default function DashboardPage() {
   const [agentActions, setAgentActions] = useState([])
   const [moduleActions, setModuleActions] = useState([])
   const [actionStates, setActionStates] = useState({})
+  const [latestRuns, setLatestRuns] = useState({})
   const [sessionIncidents, setSessionIncidents] = useState([])
   const [liveShipments, setLiveShipments] = useState([])
 
@@ -785,10 +961,15 @@ export default function DashboardPage() {
   }, [unlocked])
 
   useEffect(() => {
-    // Load live shipments on every mount — no dependency on auth state
+    // Load live shipments on every mount
     fetch('/api/shipments?client_id=pearson-haulage')
       .then(r => r.json())
       .then(data => { if (data.shipments?.length > 0) setLiveShipments(data.shipments) })
+      .catch(() => {})
+    // Load latest module run results
+    fetch('/api/modules/latest?client_id=pearson-haulage')
+      .then(r => r.json())
+      .then(data => { if (data.latest) setLatestRuns(data.latest) })
       .catch(() => {})
   }, [])
 
@@ -1317,21 +1498,55 @@ export default function DashboardPage() {
           {/* ── MODULES TAB ────────────────────────────────────────────────── */}
           {activeTab === 'modules' && (
             <div style={{ flex:1, overflowY:'auto', padding:'20px' }}>
-              <div style={{ fontSize:10, color:'#4a5260', fontFamily:'monospace', marginBottom:14 }}>// INTELLIGENCE MODULES — click any to run manually · they also scan automatically on schedule</div>
+              <div style={{ fontSize:10, color:'#4a5260', fontFamily:'monospace', marginBottom:6 }}>// INTELLIGENCE MODULES — auto-scan runs at 05:00 daily · click any to run now</div>
+              <div style={{ display:'flex', gap:12, marginBottom:14, flexWrap:'wrap' }}>
+                {Object.values(latestRuns).some(r=>r.has_issues) && (
+                  <div style={{ display:'flex', alignItems:'center', gap:5, fontSize:10, color:'#ef4444', fontFamily:'monospace' }}>
+                    <div style={{ width:6, height:6, borderRadius:'50%', background:'#ef4444' }}/> {Object.values(latestRuns).filter(r=>r.has_issues).length} module{Object.values(latestRuns).filter(r=>r.has_issues).length!==1?'s require':' requires'} attention
+                  </div>
+                )}
+                {Object.values(latestRuns).length > 0 && (
+                  <div style={{ fontSize:10, color:'#4a5260', fontFamily:'monospace' }}>
+                    Last scan: {(() => { const latest = Object.values(latestRuns).sort((a,b)=>new Date(b.ran_at)-new Date(a.ran_at))[0]; if(!latest?.ran_at) return 'never'; const mins = Math.floor((Date.now()-new Date(latest.ran_at))/60000); return mins<60?`${mins}m ago`:mins<1440?`${Math.floor(mins/60)}h ago`:`${Math.floor(mins/1440)}d ago` })()}
+                  </div>
+                )}
+                {Object.values(latestRuns).length === 0 && (
+                  <div style={{ fontSize:10, color:'#4a5260', fontFamily:'monospace' }}>No auto-scans run yet — enable cron or click a module to run manually</div>
+                )}
+              </div>
               <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(190px,1fr))', gap:8, marginBottom:20 }}>
                 {MODULES.map(m => {
                   const c = CAT_COLORS[m.cat]
                   const isRunning = moduleRunning === m.id
+                  const lastRun = latestRuns[m.id]
+                  const hasIssue = lastRun?.has_issues
+                  const isClear = lastRun && !hasIssue
+                  const ranAt = lastRun?.ran_at ? new Date(lastRun.ran_at) : null
+                  const ranAgo = ranAt ? (() => {
+                    const mins = Math.floor((Date.now() - ranAt) / 60000)
+                    if (mins < 60) return `${mins}m ago`
+                    const hrs = Math.floor(mins / 60)
+                    if (hrs < 24) return `${hrs}h ago`
+                    return `${Math.floor(hrs/24)}d ago`
+                  })() : null
+                  // Border and bg override if issues found
+                  const borderColor = hasIssue ? 'rgba(239,68,68,0.4)' : isClear ? 'rgba(0,229,176,0.25)' : c.border
+                  const bgColor = hasIssue ? 'rgba(239,68,68,0.06)' : isClear ? 'rgba(0,229,176,0.04)' : c.bg
                   return (
                     <button key={m.id} onClick={() => runModule(m.id)} disabled={!!moduleRunning}
-                      style={{ textAlign:'left', padding:'12px 13px', borderRadius:7, border:`1px solid ${c.border}`, background:c.bg, cursor:moduleRunning?'default':'pointer', transition:'all 0.15s', opacity:moduleRunning&&moduleRunning!==m.id?0.4:1 }}>
-                      <div style={{ display:'flex', alignItems:'center', gap:7, marginBottom:5 }}>
+                      style={{ textAlign:'left', padding:'12px 13px', borderRadius:7, border:`1px solid ${borderColor}`, background:bgColor, cursor:moduleRunning?'default':'pointer', transition:'all 0.15s', opacity:moduleRunning&&moduleRunning!==m.id?0.4:1, position:'relative' }}>
+                      {hasIssue && <div style={{ position:'absolute', top:7, right:9, width:7, height:7, borderRadius:'50%', background:'#ef4444' }} />}
+                      {isClear && <div style={{ position:'absolute', top:7, right:9, width:7, height:7, borderRadius:'50%', background:'#00e5b0' }} />}
+                      <div style={{ display:'flex', alignItems:'center', gap:7, marginBottom:4 }}>
                         <span style={{ fontSize:15 }}>{m.icon}</span>
                         <span style={{ fontSize:11, fontWeight:500, color:'#e8eaed', lineHeight:1.3 }}>{m.label}</span>
                       </div>
-                      <div style={{ fontSize:9, color:c.text, fontFamily:'monospace', letterSpacing:'0.04em' }}>
-                        {isRunning ? '● RUNNING...' : m.cat.toUpperCase()}
+                      <div style={{ fontSize:9, fontFamily:'monospace', letterSpacing:'0.04em', color: isRunning?'#00e5b0':hasIssue?'#ef4444':isClear?'#00e5b0':c.text }}>
+                        {isRunning ? '● RUNNING...' : hasIssue ? '● ACTION REQUIRED' : isClear ? `✓ CLEAR · ${ranAgo}` : m.cat.toUpperCase()}
                       </div>
+                      {hasIssue && lastRun.financial_impact > 0 && (
+                        <div style={{ fontSize:9, color:'#ef4444', fontFamily:'monospace', marginTop:3 }}>£{Number(lastRun.financial_impact).toLocaleString()}</div>
+                      )}
                     </button>
                   )
                 })}

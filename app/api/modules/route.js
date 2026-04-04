@@ -265,6 +265,146 @@ const DEMO_RESULTS = {
       { type: 'pod_signature', description: 'Signed POD with no damage noted at time of delivery.', exonerates_driver: true, timestamp: '2026-03-15T14:43:00' }
     ],
     actions: []
+  },
+
+  cargo_theft: {
+    demo_mode: true,
+    overall_risk: 'HIGH',
+    total_cargo_at_risk: 18500,
+    risk_flags: [
+      {
+        vehicle_reg: 'BK21 XYZ',
+        driver: 'Carl Hughes',
+        flag_type: 'unauthorised_stop',
+        location: 'Watford Gap Services, M1 J17',
+        duration_mins: 94,
+        time_of_day: '02:15',
+        cargo_value: 12000,
+        action_required: 'Contact Carl immediately — 94-minute stop at 02:15 with £12,000 retail cargo at Watford Gap. This is the highest-theft services on the M1. If he is resting, redirect to Northampton Truck Stop (M1 J15A — 4 miles south) or Rugby Truck Stop (M45 junction — 8 miles). Both are Sold Secure accredited with CCTV and security patrols. Cost: £28-35 per night. Against £12,000 cargo at risk this is non-negotiable.',
+        urgency: 'IMMEDIATE',
+        secure_parking_options: [
+          { name: 'Northampton Truck Stop', distance_miles: 4, direction: 'M1 J15A southbound', cost_gbp: 28, accredited: true, cctv: true, security_patrol: true },
+          { name: 'Rugby Truck Stop (M45)', distance_miles: 8, direction: 'M45 junction exit', cost_gbp: 32, accredited: true, cctv: true, security_patrol: true },
+          { name: 'Toddington Services (Gridserve)', distance_miles: 12, direction: 'M1 J11A northbound', cost_gbp: 0, accredited: false, cctv: true, security_patrol: false, note: 'Free but not accredited — acceptable for cargo under £5k only' }
+        ]
+      },
+      {
+        vehicle_reg: 'LK19 FGH',
+        driver: 'Mark Davies',
+        flag_type: 'high_risk_zone',
+        location: 'A406 North Circular — Wembley stretch',
+        duration_mins: 22,
+        time_of_day: '23:40',
+        cargo_value: 6500,
+        action_required: 'Monitor — North Circular Wembley is a known cargo theft hotspot after 22:00. If Mark needs to stop, direct him to Staples Corner BP Truck Park (0.6 miles) at £22/night. Do not allow roadside or lay-by stops with cargo above £3,000 in this zone.',
+        urgency: 'WITHIN_1HR',
+        secure_parking_options: [
+          { name: 'Staples Corner BP Truck Park', distance_miles: 0.6, direction: 'A406 eastbound, Staples Corner', cost_gbp: 22, accredited: true, cctv: true, security_patrol: false }
+        ]
+      }
+    ],
+    secure_parking_policy: {
+      threshold_cargo_value: 5000,
+      policy: 'All overnight stops with cargo exceeding £5,000 must use an accredited secure truck park. Drivers to book via company account — cost recoverable against client surcharge on high-value loads.',
+      annual_cost_estimate: 1680,
+      annual_theft_risk_mitigated: 45000,
+      roi: '27x return on secure parking spend'
+    },
+    high_risk_routes: [
+      { route: 'M1 J15-J19 overnight', known_risk: 'Highest cargo theft density in East Midlands corridor — 47 recorded incidents in 2025', recommendation: 'Mandate Northampton or Rugby Truck Stop for any overnight rest on this stretch. Brief all drivers on no lay-by stops.' },
+      { route: 'A406 North Circular after 22:00', known_risk: 'Organised gang activity targeting unattended vehicles — average loss £8,400', recommendation: 'Reroute overnight M25 if possible. If North Circular unavoidable — Staples Corner Truck Park only.' }
+    ],
+    prevention_measures: [
+      'Set telematics alert: any stop exceeding 45 minutes between 22:00-06:00 triggers automatic ops notification',
+      'Brief all drivers: Watford Gap, Leicester Forest East, and Toddington are the three highest-theft services on the M1 — never leave vehicle unattended',
+      'Company Truck Stop Account with Truckstop Network — £180/year, covers 200+ accredited sites, pays for itself on first prevented theft',
+      'High-value loads above £10,000: pre-book secure parking at route planning stage, not on the road',
+      'SMS instruction to driver before departure on any run with cargo above £8,000: confirm they have the secure parking list for their route'
+    ],
+    actions: []
+  },
+
+  ghost_freight: {
+    demo_mode: true,
+    fraud_risk: 'MEDIUM',
+    flagged_count: 2,
+    total_financial_exposure: 3400,
+    all_clear: false,
+    suspicious_entries: [
+      {
+        type: 'double_broker',
+        entity: 'SpeedFreight Solutions Ltd',
+        evidence: 'Booked via broker at £3.20/mile but carrier charged £4.80/mile — 50% uplift suggests double brokering. Carrier on delivery note differs from carrier on booking confirmation.',
+        financial_exposure: 2100,
+        confidence: 'HIGH',
+        action: 'Do not pay invoice INV-2024-8901. Request original carrier booking confirmation and CMR. If double-brokered without consent, dispute in full.'
+      },
+      {
+        type: 'no_show_carrier',
+        entity: 'Premier Haulage UK',
+        evidence: 'Vehicle registration on CMR (YK18 TRP) does not match DVLA records for this operator. Operator VAT number returns a dissolved company. Load was collected and delivered but by unverified entity.',
+        financial_exposure: 1300,
+        confidence: 'MEDIUM',
+        action: 'Flag for investigation. Do not rebook. Report to National Vehicle Crime Intelligence Service if goods were at risk.'
+      }
+    ],
+    verification_failures: [
+      { carrier: 'Premier Haulage UK', issue: 'VAT number matches dissolved company', check_required: 'Verify via Companies House and DVLA before rebooking' }
+    ],
+    actions: []
+  },
+
+  subcontractor: {
+    demo_mode: true,
+    total_assessed: 4,
+    approved_count: 2,
+    recommended_for_removal: 1,
+    trust_scores: [
+      { name: 'FastFreight UK', overall_score: 84, score_breakdown: { on_time_performance: 88, dvsa_compliance: 92, insurance_validity: 100, payment_behaviour: 78, incident_history: 82 }, risk_level: 'LOW', recommendation: 'approved', flags: ['Two late payments in last 6 months'], last_incident: 'Minor delay M1 closure — Feb 2026' },
+      { name: 'DHL Express', overall_score: 91, score_breakdown: { on_time_performance: 94, dvsa_compliance: 98, insurance_validity: 100, payment_behaviour: 95, incident_history: 88 }, risk_level: 'LOW', recommendation: 'approved', flags: [], last_incident: 'None in last 12 months' },
+      { name: 'Yodel', overall_score: 61, score_breakdown: { on_time_performance: 67, dvsa_compliance: 71, insurance_validity: 100, payment_behaviour: 82, incident_history: 45 }, risk_level: 'MEDIUM', recommendation: 'use_with_caution', flags: ['OTR below contract threshold 3 of last 4 months', '2 DVSA improvement notices in last 18 months', '4 damage claims outstanding'], last_incident: 'Damaged pharmaceutical load — Mar 2026' },
+      { name: 'XPO Logistics', overall_score: 38, score_breakdown: { on_time_performance: 44, dvsa_compliance: 52, insurance_validity: 85, payment_behaviour: 61, incident_history: 28 }, risk_level: 'CRITICAL', recommendation: 'terminate', flags: ['OTR 44% — 26 points below contract minimum', 'Insurance renewal overdue 3 months', '3 prohibition notices last 6 months', '7 damage claims unresolved'], last_incident: 'Load rejected at DC — Apr 2026' }
+    ],
+    actions: []
+  },
+
+  cash_flow: {
+    demo_mode: true,
+    overall_health: 'STRAINED',
+    total_penalty_exposure: 4800,
+    outstanding_receivables: 28400,
+    recommended_credit_facility: 15000,
+    forecast_weeks: [
+      { week: 'Week 1 (7-13 Apr)', cash_in: 18200, cash_out: 22600, net: -4400, risk_items: [ { type: 'carrier_invoice', description: 'FastFreight UK monthly invoice due', amount: 8400, due_date: '10 Apr', mitigation: '30-day terms — push to day 28' }, { type: 'sla_penalty', description: 'Tesco Bradford slot breach REF-PH4421', amount: 340, due_date: '8 Apr', mitigation: 'Dispute filed — likely waived' } ], alert: 'Net negative — fuel costs and carrier invoices coinciding' },
+      { week: 'Week 2 (14-20 Apr)', cash_in: 31600, cash_out: 19800, net: 11800, risk_items: [], alert: null },
+      { week: 'Week 3 (21-27 Apr)', cash_in: 22100, cash_out: 26300, net: -4200, risk_items: [ { type: 'fuel_bill', description: 'Bunker fuel account settlement', amount: 6800, due_date: '24 Apr', mitigation: 'Consider weekly settlement to smooth cash flow' }, { type: 'customer_late_payment', description: 'B&Q 60-day terms — Feb invoice outstanding', amount: 4200, due_date: 'Overdue', mitigation: 'Chase accounts payable directly' } ], alert: 'Two simultaneous outgoings — consider revolving credit' }
+    ],
+    actions: []
+  },
+
+  churn_prediction: {
+    demo_mode: true,
+    total_revenue_at_risk: 48000,
+    high_risk_count: 1,
+    clients_at_risk: [
+      { client: 'Tesco DC Bradford', churn_risk: 'HIGH', churn_probability_pct: 68, risk_signals: ['3 SLA breaches in last 6 weeks — up from 0 previously', 'Booking volume down 22% month on month', 'Account manager site visit 4 months ago', 'Two informal complaints logged'], days_to_contract_renewal: 47, revenue_at_risk: 38000, recommended_action: 'Urgent account review. Schedule senior visit within 7 days. Contract renewal in 47 days — non-renewal is likely without intervention.', relationship_score: 42 },
+      { client: 'NHS Sheffield', churn_risk: 'LOW', churn_probability_pct: 12, risk_signals: ['One minor delivery query — resolved same day'], days_to_contract_renewal: 180, revenue_at_risk: 10000, recommended_action: 'Relationship healthy. Maintain current service level.', relationship_score: 87 }
+    ],
+    actions: []
+  },
+
+  workforce_pipeline: {
+    demo_mode: true,
+    workforce_health: 'AT_RISK',
+    total_replacement_cost_at_risk: 24000,
+    headcount_risk: { current_drivers: 35, required_drivers: 38, shortfall: 3, agency_dependency_pct: 22 },
+    upcoming_issues: [
+      { driver: 'Terry Walsh', issue_type: 'cpc_expiry', date: '2026-06-14', days_remaining: 71, replacement_lead_time_days: 90, action: 'URGENT — CPC expiry in 71 days, lead time 90 days. Book CPC refresher now or begin recruitment immediately.' },
+      { driver: 'Robert Holt', issue_type: 'retirement', date: '2026-08-01', days_remaining: 119, replacement_lead_time_days: 90, action: 'Begin Class 1 recruitment now. 4 weeks advertising + 4 weeks notice + 4 weeks onboarding = 12 weeks minimum.' },
+      { driver: 'Dean Ashworth', issue_type: 'licence_expiry', date: '2026-05-22', days_remaining: 48, replacement_lead_time_days: 14, action: 'Remind driver to renew DVLA licence. Medical renewal required — book GP appointment.' }
+    ],
+    recruitment_recommendations: ['Post Class 1 HGV vacancy on regional job boards', 'Consider DfT-funded apprenticeship scheme', 'Reduce agency dependency from 22% to below 15% target'],
+    actions: []
   }
 }
 

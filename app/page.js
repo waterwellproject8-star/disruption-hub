@@ -412,83 +412,76 @@ export default function HomePage() {
         <p style={{ color: 'var(--text2)', marginBottom: 12, fontSize: 14 }}>One missed SLA typically costs more than a year of DisruptionHub.</p>
 
         {/* Founding client banner */}
-        <div className="dh-pilot-box" style={{ background: 'rgba(0,229,176,0.06)', border: '1px solid rgba(0,229,176,0.2)', borderRadius: 8, padding: '12px 20px', marginBottom: 32, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
+        <div style={{ background: 'rgba(0,229,176,0.06)', border: '1px solid rgba(0,229,176,0.2)', borderRadius: 8, padding: '12px 20px', marginBottom: 32, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
           <div>
-            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--accent)', letterSpacing: '0.08em' }}>FOUNDING CLIENT OFFER</span>
-            <p style={{ fontSize: 13, color: 'var(--text2)', margin: '4px 0 0' }}>First 5 clients lock in at <strong style={{ color: 'var(--text)' }}>£499/month for life</strong> — never increases regardless of what we add. 3 of 5 spots remaining.</p>
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--accent)', letterSpacing: '0.08em' }}>FOUNDING CLIENT OFFER — 5 SPOTS ONLY</span>
+            <p style={{ fontSize: 13, color: 'var(--text2)', margin: '4px 0 0' }}>First 5 clients lock in at <strong style={{ color: 'var(--text)' }}>£499/month for life</strong> — half price, never increases, regardless of what we add. 5 spots only.</p>
           </div>
           <a href="mailto:hello@disruptionhub.ai?subject=Founding client enquiry" style={{ background: 'var(--accent)', color: '#000', padding: '8px 16px', borderRadius: 6, fontWeight: 600, fontSize: 12, textDecoration: 'none', whiteSpace: 'nowrap' }}>Claim your spot →</a>
         </div>
 
-        <div className="dh-pricing-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(240px,1fr))', gap: 16 }}>
+        <div className="dh-pricing-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: 20 }}>
           {[
             {
-              name: 'Advisory',
-              price: '£399',
+              name: 'Professional',
+              price: '£699',
               period: '/month',
-              target: '1–20 vehicles',
+              target: 'You manage it — the system makes you better',
               badge: null,
               features: [
-                'Live disruption analysis',
-                'Unlimited agent analyses',
-                'Structured action plans',
-                'Driver PWA app',
-                'Customer tracking portal',
-                'Manual incident input',
+                'Live disruption agent — unlimited analyses',
+                'Structured action plans in 30 seconds',
+                'Colour-coded response cards (assessment, actions, contacts, rerouting, risks, prevention)',
+                'Driver PWA app — job list, delivery confirmation',
+                'Driver issue reporting with GPS location capture',
+                '16 intelligence modules — run manually or on schedule',
+                'Invoice recovery — carrier overcharge detection',
+                'SLA breach prediction — 2–4 hours ahead',
+                'Driver hours monitor — WTD compliance',
+                'Vehicle health alerts — predictive maintenance',
+                'Fuel optimisation — fill-now vs wait decisions',
+                'Carrier performance scoring',
+                'Regulation monitor — DVSA/DfT/HMRC alerts',
+                'Licence and DQC expiry checking',
+                'Full incident history and audit trail',
+                'Custom system prompt — your carriers, routes, SLAs',
               ],
-              note: null,
+              note: '→ Founding clients: £499/mo for life — 5 spots',
               cta: 'Start £99 pilot',
               featured: false,
             },
             {
               name: 'Autonomous',
-              price: '£799',
+              price: '£999',
               period: '/month',
-              target: '20–50 vehicles',
-              badge: 'MOST POPULAR',
+              target: 'The system manages it — you approve and sleep',
+              badge: 'FULLY AUTONOMOUS',
               features: [
-                'Everything in Advisory',
-                '16 AI modules running 24/7',
-                'Auto-triggered on disruptions',
-                'SLA breach prediction',
-                'Driver hours monitoring',
-                'Vehicle health alerts',
-                'Fuel optimisation',
-                'Invoice recovery',
-                'Planned closure alerts',
-                'TMS & telematics webhook',
-                'Cascade penalty calculator',
+                'Everything in Professional',
+                'Auto-triggered analysis — driver alert fires analysis instantly',
+                'GPS location capture — no junction errors',
+                'SMS wakeup — ops manager alerted on HIGH/CRITICAL severity',
+                'Approve by SMS reply — YES fires the action, no app needed',
+                'TMS webhook — Mandata/Microlise triggers automatic analysis',
+                'Auto-reroute instructions pushed to driver app',
+                'Cascade prevention — downstream risks flagged before they hit',
+                'Cold chain breach protocol — temperature thresholds enforced',
+                'NHS pharmaceutical delivery compliance built in',
+                'Tender intelligence — matching opportunities surfaced automatically',
+                'Load consolidation — daily saving opportunities',
+                'Carbon and ESG reporting',
+                'Demand forecasting — capacity planning 4 weeks ahead',
+                'Insurance claim pre-emption — incident documentation',
+                'Rate benchmarking — lane pricing vs market',
               ],
-              note: '→ Founding clients: £499/mo for life',
+              note: '→ Founding clients: £499/mo for life — 5 spots',
               cta: 'Start £99 pilot',
               featured: true,
-            },
-            {
-              name: 'Intelligence',
-              price: '£1,499',
-              period: '/month',
-              target: '50+ vehicles',
-              badge: null,
-              features: [
-                'Everything in Autonomous',
-                'Cargo theft prevention',
-                'Cash flow forecasting',
-                'Client churn prediction',
-                'Workforce pipeline',
-                'Subcontractor trust scores',
-                'Rate benchmarking',
-                'Insurance claim pre-emption',
-                'Border doc failure handler',
-                'Carbon & ESG reporting',
-              ],
-              note: null,
-              cta: 'Talk to us',
-              featured: false,
             },
           ].map(p => (
             <div key={p.name} style={{
               border: p.featured ? '1px solid var(--accent)' : '1px solid var(--border)',
-              borderRadius: 10, padding: '24px',
+              borderRadius: 10, padding: '28px',
               background: p.featured ? 'rgba(0,229,176,0.04)' : 'var(--bg2)',
               position: 'relative'
             }}>
@@ -496,31 +489,31 @@ export default function HomePage() {
                 <div style={{
                   position: 'absolute', top: -12, left: '50%', transform: 'translateX(-50%)',
                   background: 'var(--accent)', color: '#000', fontSize: 11, fontWeight: 600,
-                  padding: '3px 12px', borderRadius: 3, fontFamily: 'var(--font-mono)',
+                  padding: '3px 14px', borderRadius: 3, fontFamily: 'var(--font-mono)',
                   letterSpacing: '0.05em', whiteSpace: 'nowrap'
                 }}>{p.badge}</div>
               )}
-              <div style={{ fontSize: 13, color: 'var(--text2)', marginBottom: 4 }}>{p.name}</div>
-              <div style={{ fontSize: 32, fontWeight: 500, fontFamily: 'var(--font-mono)', color: 'var(--text)', marginBottom: 2 }}>
+              <div style={{ fontSize: 14, color: 'var(--text2)', marginBottom: 4 }}>{p.name}</div>
+              <div style={{ fontSize: 38, fontWeight: 500, fontFamily: 'var(--font-mono)', color: 'var(--text)', marginBottom: 2 }}>
                 {p.price}<span style={{ fontSize: 14, color: 'var(--text2)', fontWeight: 400 }}>{p.period}</span>
               </div>
-              <div style={{ fontSize: 12, color: 'var(--text3)', marginBottom: p.note ? 6 : 20 }}>{p.target}</div>
+              <div style={{ fontSize: 13, color: 'var(--text3)', marginBottom: 6, lineHeight: 1.5 }}>{p.target}</div>
               {p.note && (
-                <div style={{ fontSize: 12, color: 'var(--accent)', marginBottom: 16, fontWeight: 500 }}>{p.note}</div>
+                <div style={{ fontSize: 12, color: 'var(--accent)', marginBottom: 18, fontWeight: 500 }}>{p.note}</div>
               )}
-              <div style={{ borderTop: '1px solid var(--border)', paddingTop: 16, marginBottom: 20 }}>
+              <div style={{ borderTop: '1px solid var(--border)', paddingTop: 18, marginBottom: 22 }}>
                 {p.features.map(f => (
-                  <div key={f} style={{ fontSize: 13, color: 'var(--text2)', padding: '3px 0', display: 'flex', gap: 8 }}>
-                    <span style={{ color: 'var(--accent)' }}>✓</span> {f}
+                  <div key={f} style={{ fontSize: 13, color: 'var(--text2)', padding: '4px 0', display: 'flex', gap: 9, lineHeight: 1.5 }}>
+                    <span style={{ color: 'var(--accent)', flexShrink: 0 }}>✓</span> {f}
                   </div>
                 ))}
               </div>
-              <a href={p.cta === 'Talk to us' ? 'mailto:hello@disruptionhub.ai?subject=Intelligence tier enquiry' : 'mailto:hello@disruptionhub.ai?subject=Pilot request'} style={{
+              <a href={`mailto:hello@disruptionhub.ai?subject=${p.name} pilot request`} style={{
                 display: 'block', textAlign: 'center',
                 background: p.featured ? 'var(--accent)' : 'transparent',
                 color: p.featured ? '#000' : 'var(--text)',
                 border: p.featured ? 'none' : '1px solid var(--border2)',
-                padding: '10px', borderRadius: 6, fontWeight: 600,
+                padding: '11px', borderRadius: 6, fontWeight: 600,
                 fontSize: 13, textDecoration: 'none'
               }}>{p.cta} →</a>
               <div style={{ textAlign: 'center', fontSize: 11, color: 'var(--text3)', marginTop: 10 }}>
@@ -533,9 +526,8 @@ export default function HomePage() {
         {/* Pilot explanation */}
         <div style={{ marginTop: 24, padding: '16px 20px', background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: 8 }}>
           <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text3)', letterSpacing: '0.08em', marginBottom: 6 }}>HOW THE PILOT WORKS</div>
-          <p style={{ fontSize: 13, color: 'var(--text2)', margin: 0 }}>Pay £99. We customise the system with your actual carriers, routes, clients, and SLA thresholds. Run it for two weeks on real disruptions. If you want to continue, you choose your tier. If not, walk away — no questions. The £99 is non-refundable once your onboarding call has taken place.</p>
-        </div>
-      </section>
+          <p style={{ fontSize: 13, color: 'var(--text2)', margin: 0 }}>Pay £99. We customise the system with your actual carriers, routes, clients, and SLA thresholds. Run it for two weeks on real disruptions. If you want to continue, you choose your tier. If not, walk away. The £99 is non-refundable once your onboarding call has taken place.</p>
+        </div>      </section>
 
       {/* CTA */}
       <section style={{
@@ -557,13 +549,45 @@ export default function HomePage() {
       </section>
 
       {/* Footer */}
-      <footer style={{ padding: '24px 32px', borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
-        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--text3)' }}>
-          DisruptionHub © 2026
-        </span>
-        <div style={{ display: 'flex', gap: 20 }}>
-          <a href="mailto:hello@disruptionhub.ai" style={{ fontSize: 12, color: 'var(--text3)' }}>Contact</a>
-          <Link href="/dashboard" style={{ fontSize: 12, color: 'var(--text3)' }}>Dashboard</Link>
+      <footer style={{ padding: '32px 32px 24px', borderTop: '1px solid var(--border)', background: 'var(--bg2)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 24, maxWidth: 1000, margin: '0 auto', marginBottom: 24 }}>
+          <div>
+            <div style={{ fontFamily: 'var(--font-mono)', fontSize: 13, color: 'var(--accent)', marginBottom: 6 }}>DisruptionHub</div>
+            <div style={{ fontSize: 12, color: 'var(--text3)', maxWidth: 260, lineHeight: 1.6 }}>AI operations intelligence for UK logistics. Helping fleet operators turn disruptions into 30-second decisions.</div>
+          </div>
+          <div style={{ display: 'flex', gap: 48, flexWrap: 'wrap' }}>
+            <div>
+              <div style={{ fontSize: 11, color: 'var(--text3)', fontFamily: 'var(--font-mono)', letterSpacing: '0.06em', marginBottom: 10 }}>PRODUCT</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <a href="#demo" style={{ fontSize: 12, color: 'var(--text2)', textDecoration: 'none' }}>Live demo</a>
+                <a href="#pricing" style={{ fontSize: 12, color: 'var(--text2)', textDecoration: 'none' }}>Pricing</a>
+                <Link href="/dashboard" style={{ fontSize: 12, color: 'var(--text2)', textDecoration: 'none' }}>Dashboard</Link>
+              </div>
+            </div>
+            <div>
+              <div style={{ fontSize: 11, color: 'var(--text3)', fontFamily: 'var(--font-mono)', letterSpacing: '0.06em', marginBottom: 10 }}>LEGAL</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <Link href="/legal/terms" style={{ fontSize: 12, color: 'var(--text2)', textDecoration: 'none' }}>Terms of Service</Link>
+                <Link href="/legal/privacy" style={{ fontSize: 12, color: 'var(--text2)', textDecoration: 'none' }}>Privacy Policy</Link>
+                <Link href="/legal/acceptable-use" style={{ fontSize: 12, color: 'var(--text2)', textDecoration: 'none' }}>Acceptable Use</Link>
+                <Link href="/legal/dpa" style={{ fontSize: 12, color: 'var(--text2)', textDecoration: 'none' }}>Data Processing</Link>
+              </div>
+            </div>
+            <div>
+              <div style={{ fontSize: 11, color: 'var(--text3)', fontFamily: 'var(--font-mono)', letterSpacing: '0.06em', marginBottom: 10 }}>CONTACT</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <a href="mailto:hello@disruptionhub.ai" style={{ fontSize: 12, color: 'var(--text2)', textDecoration: 'none' }}>hello@disruptionhub.ai</a>
+                <a href="mailto:hello@disruptionhub.ai?subject=Pilot request" style={{ fontSize: 12, color: 'var(--accent)', textDecoration: 'none' }}>Start £99 pilot →</a>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style={{ borderTop: '1px solid var(--border)', paddingTop: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8, maxWidth: 1000, margin: '0 auto' }}>
+          <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text3)' }}>DisruptionHub © 2026 · Decision support only · Always verify before acting</span>
+          <div style={{ display: 'flex', gap: 16 }}>
+            <Link href="/legal" style={{ fontSize: 11, color: 'var(--text3)', textDecoration: 'none' }}>Legal</Link>
+            <Link href="/terms" style={{ fontSize: 11, color: 'var(--text3)', textDecoration: 'none' }}>Terms</Link>
+          </div>
         </div>
       </footer>
     </div>

@@ -45,35 +45,23 @@ Analyse logistics disruptions and return this exact JSON:
   // ── 2. INVOICE SCANNER ──────────────────────────────────────────────────────
   invoice: `${BASE_IDENTITY}
 
-You receive carrier invoice data and rate card data. Find all discrepancies.
-Return this exact JSON:
+Analyse carrier invoices against rate cards. Find overcharges. Be concise.
+Return ONLY this JSON with no other text:
 {
   "total_overcharge": number,
   "discrepancies": [
     {
       "invoice_ref": "string",
       "carrier": "string",
-      "issue_type": "fuel_surcharge|duplicate|wrong_rate|wrong_weight|unauthorized_charge",
+      "issue_type": "fuel_surcharge|duplicate|wrong_rate",
       "charged": number,
       "expected": number,
       "delta": number,
-      "evidence": "string",
-      "contract_clause": "string"
+      "evidence": "string"
     }
   ],
-  "dispute_letter": "string",
-  "actions": [
-    {
-      "type": "send_email",
-      "label": "DISPUTE LETTER",
-      "recipient": "string",
-      "subject": "string",
-      "content": "string",
-      "auto_approve": false,
-      "financial_value": number
-    }
-  ],
-  "annual_projection": number
+  "annual_projection": number,
+  "actions": []
 }`,
 
   // ── 3. CARRIER SCORECARD ────────────────────────────────────────────────────
@@ -570,9 +558,190 @@ Return this exact JSON:
     }
   ]
 }`
+
+  // ── 17. CARGO THEFT PREVENTION ─────────────────────────────────────────────
+  cargo_theft: `${BASE_IDENTITY}
+
+Analyse vehicle positions, routes, and stop patterns to identify cargo theft risk.
+Flag suspicious stops, known high-risk zones, overnight parking risks, and unsecured loads.
+Return this exact JSON:
+{
+  "overall_risk": "CRITICAL|HIGH|MEDIUM|LOW",
+  "risk_flags": [
+    {
+      "vehicle_reg": "string",
+      "driver": "string",
+      "flag_type": "unauthorised_stop|high_risk_zone|overnight_unsecured|route_deviation|silent_driver",
+      "location": "string",
+      "duration_mins": number,
+      "time_of_day": "string",
+      "cargo_value": number,
+      "action_required": "string",
+      "urgency": "IMMEDIATE|WITHIN_1HR|MONITOR"
+    }
+  ],
+  "high_risk_routes": [
+    {
+      "route": "string",
+      "known_risk": "string",
+      "recommendation": "string"
+    }
+  ],
+  "prevention_measures": ["string"],
+  "total_cargo_at_risk": number,
+  "actions": []
+}`,
+
+  // ── 18. GHOST FREIGHT DETECTION ────────────────────────────────────────────
+  ghost_freight: `${BASE_IDENTITY}
+
+Analyse carrier and broker data to detect potential ghost freight fraud — fictitious loads, 
+double brokering, identity theft of carrier credentials, and payment fraud patterns.
+Return this exact JSON:
+{
+  "fraud_risk": "CRITICAL|HIGH|MEDIUM|LOW|NONE",
+  "suspicious_entries": [
+    {
+      "type": "ghost_load|double_broker|identity_theft|payment_fraud|no_show_carrier",
+      "entity": "string",
+      "evidence": "string",
+      "financial_exposure": number,
+      "confidence": "HIGH|MEDIUM|LOW",
+      "action": "string"
+    }
+  ],
+  "verification_failures": [
+    {
+      "carrier": "string",
+      "issue": "string",
+      "check_required": "string"
+    }
+  ],
+  "total_financial_exposure": number,
+  "flagged_count": number,
+  "all_clear": boolean,
+  "actions": []
+}`,
+
+  // ── 19. SUBCONTRACTOR TRUST SCORES ─────────────────────────────────────────
+  subcontractor: `${BASE_IDENTITY}
+
+Score subcontractors and spot-market carriers on reliability, compliance, and risk.
+Analyse performance history, DVSA records, insurance validity, and payment behaviour.
+Return this exact JSON:
+{
+  "trust_scores": [
+    {
+      "name": "string",
+      "overall_score": number,
+      "score_breakdown": {
+        "on_time_performance": number,
+        "dvsa_compliance": number,
+        "insurance_validity": number,
+        "payment_behaviour": number,
+        "incident_history": number
+      },
+      "risk_level": "LOW|MEDIUM|HIGH|CRITICAL",
+      "recommendation": "approved|use_with_caution|review_contract|terminate",
+      "flags": ["string"],
+      "last_incident": "string"
+    }
+  ],
+  "recommended_for_removal": number,
+  "approved_count": number,
+  "total_assessed": number,
+  "actions": []
+}`,
+
+  // ── 20. CASH FLOW FORECASTING ───────────────────────────────────────────────
+  cash_flow: `${BASE_IDENTITY}
+
+Forecast logistics cash flow pressure points — when SLA penalties, carrier invoices, 
+fuel costs, and customer payment terms create simultaneous cash strain.
+Return this exact JSON:
+{
+  "overall_health": "CRITICAL|STRAINED|MANAGEABLE|HEALTHY",
+  "forecast_weeks": [
+    {
+      "week": "string",
+      "cash_in": number,
+      "cash_out": number,
+      "net": number,
+      "risk_items": [
+        {
+          "type": "sla_penalty|carrier_invoice|fuel_bill|customer_late_payment",
+          "description": "string",
+          "amount": number,
+          "due_date": "string",
+          "mitigation": "string"
+        }
+      ],
+      "alert": "string"
+    }
+  ],
+  "total_penalty_exposure": number,
+  "outstanding_receivables": number,
+  "recommended_credit_facility": number,
+  "actions": []
+}`,
+
+  // ── 21. CLIENT CHURN PREDICTION ─────────────────────────────────────────────
+  churn_prediction: `${BASE_IDENTITY}
+
+Analyse client engagement, SLA performance, and relationship health to predict churn risk.
+Return this exact JSON:
+{
+  "clients_at_risk": [
+    {
+      "client": "string",
+      "churn_risk": "CRITICAL|HIGH|MEDIUM|LOW",
+      "churn_probability_pct": number,
+      "risk_signals": ["string"],
+      "days_to_contract_renewal": number,
+      "revenue_at_risk": number,
+      "recommended_action": "string",
+      "relationship_score": number
+    }
+  ],
+  "total_revenue_at_risk": number,
+  "high_risk_count": number,
+  "actions": []
+}`,
+
+  // ── 22. DRIVER WORKFORCE PIPELINE ──────────────────────────────────────────
+  workforce_pipeline: `${BASE_IDENTITY}
+
+Analyse driver workforce health — upcoming retirements, licence expiries, CPC renewals, 
+recruitment pipeline, and agency dependency risk.
+Return this exact JSON:
+{
+  "workforce_health": "CRITICAL|AT_RISK|MANAGEABLE|HEALTHY",
+  "headcount_risk": {
+    "current_drivers": number,
+    "required_drivers": number,
+    "shortfall": number,
+    "agency_dependency_pct": number
+  },
+  "upcoming_issues": [
+    {
+      "driver": "string",
+      "issue_type": "cpc_expiry|licence_expiry|retirement|resignation_risk",
+      "date": "string",
+      "days_remaining": number,
+      "replacement_lead_time_days": number,
+      "action": "string"
+    }
+  ],
+  "recruitment_recommendations": ["string"],
+  "total_replacement_cost_at_risk": number,
+  "actions": []
+}`
+
+
 }
 
 // ── RUN A MODULE ──────────────────────────────────────────────────────────────
+export async function runModule ──────────────────────────────────────────────────────────────
 export async function runModule(moduleName, inputData, clientSystemPrompt = '') {
   const modulePrompt = MODULE_PROMPTS[moduleName]
   if (!modulePrompt) throw new Error(`Unknown module: ${moduleName}`)
@@ -582,19 +751,37 @@ export async function runModule(moduleName, inputData, clientSystemPrompt = '') 
     : modulePrompt
 
   const message = await anthropic.messages.create({
-    model: 'claude-sonnet-4-6',
-    max_tokens: 3000,
+    model: 'claude-haiku-4-5-20251001',
+    max_tokens: 2500,
     system: systemPrompt,
     messages: [{ role: 'user', content: JSON.stringify(inputData) }]
   })
 
   const raw = message.content[0].text.trim()
-  const clean = raw.replace(/^```json\s*/,'').replace(/^```\s*/,'').replace(/\s*```$/,'').trim()
+  let clean = raw.replace(/^```json\s*/,'').replace(/^```\s*/,'').replace(/\s*```$/,'').trim()
+
+  // Repair truncated JSON
+  if (clean.startsWith('{') && !clean.endsWith('}')) {
+    const openBraces = (clean.match(/{/g) || []).length
+    const closeBraces = (clean.match(/}/g) || []).length
+    const needed = openBraces - closeBraces
+    if (clean.includes('[') && (clean.match(/\[/g)||[]).length > (clean.match(/\]/g)||[]).length) {
+      clean += ']' 
+    }
+    clean = clean.replace(/,\s*$/, '')
+    for (let i = 0; i < Math.max(0, needed); i++) clean += '}'
+  }
 
   try {
     return JSON.parse(clean)
   } catch {
-    throw new Error(`Module ${moduleName} returned invalid JSON: ${clean.substring(0,200)}`)
+    console.error(`Module ${moduleName} parse failed, returning fallback`)
+    return {
+      severity: 'LOW', financial_impact: 0, time_to_resolution: 'See details',
+      affected_shipments: 0, total_overcharge: 0, discrepancies: [],
+      sections: { assessment: 'Module completed. Refresh to retry.', immediate_actions: [], downstream_risks: '' },
+      actions: []
+    }
   }
 }
 

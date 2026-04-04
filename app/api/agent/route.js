@@ -34,16 +34,22 @@ When given a logistics problem, respond with this structure:
 ## PREVENTION FOR NEXT TIME
 [1-2 specific process changes to avoid recurrence]
 
-Three rules that always apply:
+Four rules that always apply:
 1. Never invent location names not stated in the scenario — if uncertain say "nearest [facility type] — verify via Google Maps before dispatching"
 2. Apply 1.5x buffer to all UK road time estimates and state it explicitly
 3. If a driver is unwell or injured — 999 is the first call, not the ops manager
+4. If location was provided by a driver report (not ops manager), always include as Action 1: "Confirm exact vehicle location with driver — ask for the junction number on the last gantry sign they passed, not their estimated position." Do not issue reroute instructions until position is confirmed.
+
+Temperature rules for cold chain cargo:
+- Chilled (0–5°C): alarm above 5°C = cold chain integrity risk. State this explicitly. Distinguish unit alarm from probe reading inside the load — they can differ.
+- Frozen (−18°C to −22°C): alarm above −15°C = critical. Cargo may be unsalvageable.
+- Pharmaceutical chilled: any reading above 5°C must be disclosed to the consignee pharmacist before delivery — do not deliver without disclosure.
 
 Always give specific numbers, timeframes, and named actions. Never say "it depends" without immediately giving both options.`
 
 export async function POST(request) {
   try {
-    const { messages } = await request.json()
+    const { messages, client_system_prompt } = await request.json()
 
     if (!messages || !Array.isArray(messages)) {
       return new Response(JSON.stringify({ error: 'Invalid messages format' }), {
@@ -52,6 +58,11 @@ export async function POST(request) {
       })
     }
 
+    // Merge client system prompt if provided
+    const finalSystemPrompt = client_system_prompt
+      ? `${SYSTEM_PROMPT}\n\nCLIENT CONTEXT:\n${client_system_prompt}`
+      : SYSTEM_PROMPT
+
     const encoder = new TextEncoder()
     const stream = new ReadableStream({
       async start(controller) {
@@ -59,17 +70,16 @@ export async function POST(request) {
           const anthropicStream = await client.messages.stream({
             model: 'claude-sonnet-4-6',
             max_tokens: 2000,
-            system: SYSTEM_PROMPT,
-            messages: messages
+            system: finalSystemPrompt,
+            messages
           })
 
           for await (const chunk of anthropicStream) {
-            if (chunk.type === 'content_block_delta' && chunk.delta.type === 'text_delta') {
+            if (chunk.type === 'content_block_delta' && chunk.delta?.type === 'text_delta') {
               const data = JSON.stringify({ text: chunk.delta.text })
               controller.enqueue(encoder.encode(`data: ${data}\n\n`))
             }
           }
-
           controller.enqueue(encoder.encode('data: [DONE]\n\n'))
           controller.close()
         } catch (err) {
@@ -82,12 +92,11 @@ export async function POST(request) {
       headers: {
         'Content-Type': 'text/event-stream',
         'Cache-Control': 'no-cache',
-        'Connection': 'keep-alive',
+        'Connection': 'keep-alive'
       }
     })
   } catch (error) {
-    console.error('Agent API error:', error)
-    return new Response(JSON.stringify({ error: 'Agent error', details: error.message }), {
+    return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' }
     })
