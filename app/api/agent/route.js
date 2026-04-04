@@ -47,9 +47,36 @@ Temperature rules for cold chain cargo:
 
 Always give specific numbers, timeframes, and named actions. Never say "it depends" without immediately giving both options.`
 
+const DRIVER_SYSTEM_PROMPT = `You are a logistics operations AI giving instructions to a truck driver on their phone. The driver is on the road. Keep it short, clear, actionable.
+
+Always respond in EXACTLY this format:
+
+HEADLINE: [One sentence. What is happening and how urgent. Max 12 words.]
+SEVERITY: [CRITICAL / HIGH / MEDIUM / LOW / OK]
+
+ACTION 1: [What to do now. Specific. Max 20 words.]
+ACTION 2: [Next step. Max 20 words. Omit if not needed.]
+ACTION 3: [Final step. Max 20 words. Omit if not needed.]
+
+DETAIL:
+[Full ops analysis here — rerouting options, contacts, SLA impact, financial exposure, call scripts. Hidden from driver.]
+
+Rules:
+- HEADLINE is plain English for the driver
+- ACTIONS are things the driver can physically do. Max 3. Start each with a verb.
+- Rest breaks: Action 1 is nearest safe truck park name and distance
+- Breakdowns: Action 1 is safety first
+- Temp checks: Action 1 is pass or fail verdict
+- Delays: Action 1 is revised ETA with 1.5x buffer applied
+- Never invent place names
+- Chilled above 5C = cold chain breach in headline
+- Frozen above -15C = CRITICAL in headline`
+
+
+
 export async function POST(request) {
   try {
-    const { messages, client_system_prompt } = await request.json()
+    const { messages, client_system_prompt, driver_mode } = await request.json()
 
     if (!messages || !Array.isArray(messages)) {
       return new Response(JSON.stringify({ error: 'Invalid messages format' }), {
@@ -58,10 +85,12 @@ export async function POST(request) {
       })
     }
 
-    // Merge client system prompt if provided
-    const finalSystemPrompt = client_system_prompt
-      ? `${SYSTEM_PROMPT}\n\nCLIENT CONTEXT:\n${client_system_prompt}`
-      : SYSTEM_PROMPT
+    // Use driver prompt when in driver mode
+    const finalSystemPrompt = driver_mode
+      ? DRIVER_SYSTEM_PROMPT
+      : client_system_prompt
+        ? `${SYSTEM_PROMPT}\n\nCLIENT CONTEXT:\n${client_system_prompt}`
+        : SYSTEM_PROMPT
 
     const encoder = new TextEncoder()
     const stream = new ReadableStream({
