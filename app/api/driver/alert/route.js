@@ -89,7 +89,8 @@ export async function POST(request) {
       latitude,
       longitude,
       location_description,
-      ref
+      ref,
+      force_alert,
     } = body
 
     if (!issue_description) {
@@ -192,13 +193,12 @@ Provide immediate disruption analysis and action plan.`
     }
 
     let smsSent = false
-    if ((severity === 'CRITICAL' || severity === 'HIGH') && contactPhone) {
-      // Use what the driver actually typed, not the system prompt
+    if ((force_alert || severity === 'CRITICAL' || severity === 'HIGH') && contactPhone) {
       const shortDesc = (human_description || location_description || 'Driver alert')
         .substring(0, 50)
         .replace(/\n/g, ' ')
       const actionLine = firstAction ? firstAction.substring(0, 60) : 'See dashboard'
-      const smsBody = `DH ${severity} ${vehicle_reg || ''}\n${shortDesc}\n£${financialImpact.toLocaleString()} ${actionLine}\nYES/NO/OPEN`
+      const smsBody = `DH ${force_alert && severity==='MEDIUM'?'HIGH':severity} ${vehicle_reg || ''}\n${shortDesc}\n£${financialImpact.toLocaleString()} ${actionLine}\nYES/NO/OPEN`
       const result = await sendSMS(contactPhone, smsBody)
       smsSent = result.success || false
     }

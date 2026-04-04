@@ -357,6 +357,7 @@ export default function DriverApp() {
           issue_description: `PRE-SHIFT DEFECT REPORT. Driver ${driverInfo.name} (${driverInfo.vehicleReg}) has flagged the following as NOT OK before starting shift: ${failed.join(', ')}. Vehicle may not be roadworthy. Ops manager must assess before driver departs.`,
           human_description: `Pre-shift fail: ${failed.join(', ')}`,
           location_description: 'At depot — pre-departure',
+          force_alert: true,
         })
       }).catch(() => {})
     }
