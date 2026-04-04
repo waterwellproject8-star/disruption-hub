@@ -103,9 +103,12 @@ export default function DriverApp() {
   const [undoCountdown, setUndoCountdown] = useState(0)
   const undoTimer = useRef(null)
   const countdownTimer = useRef(null)
+  const shiftStartTime = useRef(null)
 
   const [preShiftChecks, setPreShiftChecks] = useState({})
   const [shiftStarted, setShiftStarted]     = useState(false)
+  const [shiftEnded, setShiftEnded]         = useState(false)
+  const [shiftSummary, setShiftSummary]     = useState(null)
 
   const [panelOpen, setPanelOpen]       = useState(false)
   const [panelIssue, setPanelIssue]     = useState(null)
@@ -300,6 +303,14 @@ export default function DriverApp() {
   }
 
   async function sendAlert() {
+    // Block non-emergency alerts when all jobs are done
+    const emergencyIds = ['breakdown','medical','theft_threat','driver_unwell']
+    if (!activeJob || activeJob.status==='completed') {
+      if (!emergencyIds.includes(panelIssue?.id)) {
+        setPanelState('no_active_job')
+        return
+      }
+    }
     setPanelState('loading')
     const prompt = buildPrompt(panelIssue?.id)
     const job = activeJob
@@ -329,7 +340,21 @@ export default function DriverApp() {
 
   function startShift() {
     localStorage.setItem('dh_shift_started','true')
+    shiftStartTime.current = new Date()
     setShiftStarted(true); setView('run')
+  }
+
+  function endShift() {
+    const completed = jobs.filter(j=>j.status==='completed').length
+    const total = jobs.length
+    const incidents = lastAlert ? 1 : 0
+    const start = shiftStartTime.current
+    const end = new Date()
+    const duration = start ? Math.round((end-start)/60000) : null
+    setShiftSummary({ completed, total, incidents, duration, endTime: end.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}) })
+    setShiftEnded(true)
+    localStorage.removeItem('dh_shift_started')
+    localStorage.removeItem('dh_last_alert')
   }
 
   const cargoIcon = t=>!t?'📦':t.includes('pharma')?'💊':t.includes('frozen')?'🧊':t.includes('chilled')?'❄':'📦'
@@ -406,6 +431,52 @@ export default function DriverApp() {
         {Object.keys(preShiftChecks).length===0&&(
           <div style={{textAlign:'center',padding:'20px 0',fontSize:13,color:'#4a5260'}}>Tick each item above to continue</div>
         )}
+      </div>
+    </div>
+  )
+
+  // ── SHIFT SUMMARY ─────────────────────────────────────────────────────────
+  if (shiftEnded && shiftSummary) return (
+    <div style={{minHeight:'100vh',background:'#0a0c0e',color:'#e8eaed',fontFamily:'IBM Plex Sans,sans-serif',display:'flex',alignItems:'center',justifyContent:'center',padding:24}}>
+      <div style={{width:'100%',maxWidth:400}}>
+        <div style={{textAlign:'center',marginBottom:32}}>
+          <div style={{fontSize:56,marginBottom:12}}>🏁</div>
+          <div style={{fontSize:26,fontWeight:700,color:'#00e5b0',marginBottom:4}}>Shift Complete</div>
+          <div style={{fontSize:14,color:'#4a5260'}}>Signed off at {shiftSummary.endTime}</div>
+        </div>
+
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:20}}>
+          <div style={{padding:'20px',background:'rgba(0,229,176,0.06)',border:'1px solid rgba(0,229,176,0.2)',borderRadius:12,textAlign:'center'}}>
+            <div style={{fontSize:36,fontWeight:700,color:'#00e5b0',fontFamily:'monospace'}}>{shiftSummary.completed}</div>
+            <div style={{fontSize:13,color:'#8a9099',marginTop:4}}>Runs delivered</div>
+          </div>
+          <div style={{padding:'20px',background:'rgba(59,130,246,0.06)',border:'1px solid rgba(59,130,246,0.2)',borderRadius:12,textAlign:'center'}}>
+            <div style={{fontSize:36,fontWeight:700,color:'#3b82f6',fontFamily:'monospace'}}>{shiftSummary.total}</div>
+            <div style={{fontSize:13,color:'#8a9099',marginTop:4}}>Total jobs today</div>
+          </div>
+        </div>
+
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:28}}>
+          <div style={{padding:'16px',background:'#111418',border:'1px solid rgba(255,255,255,0.06)',borderRadius:12,textAlign:'center'}}>
+            <div style={{fontSize:28,fontWeight:700,color:shiftSummary.incidents>0?'#f59e0b':'#00e5b0',fontFamily:'monospace'}}>{shiftSummary.incidents}</div>
+            <div style={{fontSize:13,color:'#8a9099',marginTop:4}}>Incidents logged</div>
+          </div>
+          <div style={{padding:'16px',background:'#111418',border:'1px solid rgba(255,255,255,0.06)',borderRadius:12,textAlign:'center'}}>
+            <div style={{fontSize:28,fontWeight:700,color:'#e8eaed',fontFamily:'monospace'}}>{shiftSummary.duration ? `${shiftSummary.duration}m` : '—'}</div>
+            <div style={{fontSize:13,color:'#8a9099',marginTop:4}}>Shift duration</div>
+          </div>
+        </div>
+
+        {shiftSummary.completed===shiftSummary.total&&(
+          <div style={{padding:'14px',background:'rgba(0,229,176,0.06)',border:'1px solid rgba(0,229,176,0.2)',borderRadius:10,textAlign:'center',marginBottom:20,fontSize:14,color:'#00e5b0',fontWeight:500}}>
+            ✓ All runs delivered — full shift complete
+          </div>
+        )}
+
+        <button onClick={()=>{localStorage.removeItem('dh_driver_info');localStorage.removeItem('dh_shift_started');setSetupDone(false);setShiftStarted(false);setShiftEnded(false);setJobs([]);setActiveJob(null);setShiftSummary(null)}}
+          style={{width:'100%',padding:'16px',background:'#111418',border:'1px solid rgba(255,255,255,0.08)',borderRadius:10,color:'#4a5260',fontWeight:500,fontSize:14,cursor:'pointer'}}>
+          Sign out
+        </button>
       </div>
     </div>
   )
@@ -560,21 +631,39 @@ export default function DriverApp() {
             )
           })()}
 
-          {/* ISSUE SECTIONS */}
-          {ISSUE_GROUPS.map(group=>(
-            <div key={group.id} style={{marginBottom:4}}>
-              <div style={{padding:'6px 16px',fontSize:10,color:group.color,fontFamily:'monospace',fontWeight:700,letterSpacing:'0.1em'}}>{group.label}</div>
-              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:7,padding:'0 12px 10px'}}>
-                {group.issues.map(issue=>(
-                  <button key={issue.id} onClick={()=>openIssue(issue)}
-                    style={{padding:'13px 10px',borderRadius:9,background:'#111418',border:`1px solid rgba(255,255,255,0.07)`,display:'flex',alignItems:'center',gap:10,cursor:'pointer',outline:'none',textAlign:'left'}}>
-                    <span style={{fontSize:22,flexShrink:0}}>{issue.icon}</span>
-                    <span style={{fontSize:13,color:'#e8eaed',lineHeight:1.3,fontWeight:400}}>{issue.label}</span>
-                  </button>
-                ))}
+          {/* ISSUE SECTIONS — only show if there are active jobs */}
+          {jobs.some(j=>j.status!=='completed') ? (
+            <>
+              {ISSUE_GROUPS.map(group=>(
+                <div key={group.id} style={{marginBottom:4}}>
+                  <div style={{padding:'6px 16px',fontSize:10,color:group.color,fontFamily:'monospace',fontWeight:700,letterSpacing:'0.1em'}}>{group.label}</div>
+                  <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:7,padding:'0 12px 10px'}}>
+                    {group.issues.map(issue=>(
+                      <button key={issue.id} onClick={()=>openIssue(issue)}
+                        style={{padding:'13px 10px',borderRadius:9,background:'#111418',border:`1px solid rgba(255,255,255,0.07)`,display:'flex',alignItems:'center',gap:10,cursor:'pointer',outline:'none',textAlign:'left'}}>
+                        <span style={{fontSize:22,flexShrink:0}}>{issue.icon}</span>
+                        <span style={{fontSize:13,color:'#e8eaed',lineHeight:1.3,fontWeight:400}}>{issue.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </>
+          ) : (
+            /* All runs complete */
+            <div style={{margin:'8px 12px 16px',padding:'24px 20px',borderRadius:12,background:'rgba(0,229,176,0.05)',border:'1px solid rgba(0,229,176,0.2)',textAlign:'center'}}>
+              <div style={{fontSize:40,marginBottom:10}}>🎉</div>
+              <div style={{fontSize:20,fontWeight:700,color:'#00e5b0',marginBottom:6}}>All runs complete</div>
+              <div style={{fontSize:14,color:'#8a9099',marginBottom:24,lineHeight:1.5}}>
+                {jobs.length} run{jobs.length!==1?'s':''} delivered today. Good work.
               </div>
+              <button onClick={endShift}
+                style={{width:'100%',padding:'16px',background:'#00e5b0',border:'none',borderRadius:10,color:'#000',fontWeight:700,fontSize:16,cursor:'pointer',marginBottom:12}}>
+                ✓ End shift
+              </button>
+              <div style={{fontSize:11,color:'#4a5260'}}>This will generate your shift summary</div>
             </div>
-          ))}
+          )}
 
           {/* Pre-shift check link */}
           <div style={{padding:'4px 12px 16px'}}>
@@ -727,6 +816,16 @@ export default function DriverApp() {
                   <div style={{fontSize:18,color:'#00e5b0',fontWeight:700,marginBottom:6}}>Ops notified</div>
                   <div style={{fontSize:14,color:'#4a5260',marginBottom:24}}>Your manager has been alerted.</div>
                   <button onClick={closePanel} style={{padding:'13px 40px',background:'#00e5b0',border:'none',borderRadius:10,color:'#000',fontWeight:700,fontSize:15,cursor:'pointer'}}>Close</button>
+                </div>
+              )}
+
+              {panelState==='no_active_job'&&(
+                <div style={{textAlign:'center',padding:'32px 0'}}>
+                  <div style={{fontSize:44,marginBottom:12}}>✅</div>
+                  <div style={{fontSize:18,color:'#00e5b0',fontWeight:700,marginBottom:8}}>All runs are complete</div>
+                  <div style={{fontSize:14,color:'#8a9099',marginBottom:8,lineHeight:1.6}}>There is no active delivery to raise this against.</div>
+                  <div style={{fontSize:13,color:'#4a5260',marginBottom:24}}>If this is a vehicle or personal emergency, use the Breakdown or Medical buttons.</div>
+                  <button onClick={closePanel} style={{padding:'13px 40px',background:'rgba(255,255,255,0.06)',border:'1px solid rgba(255,255,255,0.1)',borderRadius:10,color:'#8a9099',fontWeight:500,fontSize:14,cursor:'pointer'}}>Close</button>
                 </div>
               )}
 
