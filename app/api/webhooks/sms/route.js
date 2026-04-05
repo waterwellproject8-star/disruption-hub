@@ -17,7 +17,7 @@ export async function POST(request) {
     const from = formData.get('From') || ''
 
     const db = getDB()
-    if (!db) return twimlReply('System not configured. Open disruptionhub.ai/dashboard.')
+    if (!db) return twimlReply('DH: System error. Open disruptionhub.ai')
 
     // Find client by ops manager phone number
     const { data: clients } = await db.from('clients')
@@ -26,7 +26,7 @@ export async function POST(request) {
       .limit(1)
 
     if (!clients?.length) {
-      return twimlReply('Number not recognised. Log in at disruptionhub.ai/dashboard to review actions.')
+      return twimlReply('DH: Number not found. Check disruptionhub.ai')
     }
 
     const client = clients[0]
@@ -43,7 +43,7 @@ export async function POST(request) {
         .limit(1)
 
       if (!approvals?.length) {
-        return twimlReply('No pending actions found. All actions may already be executed.\n\nOpen disruptionhub.ai/dashboard for full incident log.')
+        return twimlReply('DH: No pending actions. Check disruptionhub.ai')
       }
 
       const approval = approvals[0]
@@ -67,10 +67,10 @@ export async function POST(request) {
 
         if (driverPhone) {
           await sendSMS(driverPhone, dispatchMsg)
-          return twimlReply(`✓ Recovery dispatched.\n\nDriver on ${vehicleReg} has been notified by SMS to stay with the vehicle.\n\nOpen dashboard to monitor.`)
+          return twimlReply(`DH: ✓ Recovery dispatched. Driver notified.`)
         }
 
-        return twimlReply(`✓ Recovery dispatched: ${actionLabel.substring(0, 100)}\n\nNo driver phone on file — call driver directly to confirm.\n\nOpen disruptionhub.ai/dashboard to add driver phone.`)
+        return twimlReply(`DH: ✓ Dispatched. No driver phone — call directly.`)
       }
 
       // ── SMS / REROUTE — send instruction to driver ────────────────────────
@@ -87,11 +87,11 @@ export async function POST(request) {
           const result = await sendSMS(driverPhone, smsText)
           return twimlReply(
             result.success
-              ? `✓ Instruction sent to driver.\n"${actionLabel.substring(0, 80)}"\n\nDriver will receive the message now. Open dashboard to monitor.`
-              : `✓ Approved. Driver phone not on file — forward manually:\n${actionLabel.substring(0, 100)}`
+              ? `DH: ✓ Driver notified. Check dashboard.`
+              : `DH: ✓ Approved. Send to driver manually.`
           )
         }
-        return twimlReply(`✓ Approved: ${actionLabel.substring(0, 100)}\n\nNo driver phone on file. Send instruction manually.`)
+        return twimlReply(`DH: ✓ Approved. No driver phone — send manually.`)
       }
 
       // ── CALL / EMERGENCY — outbound voice call to carrier ─────────────────
@@ -117,29 +117,29 @@ export async function POST(request) {
           const result = await makeCall(carrierPhone, voiceMessage)
 
           if (result.success) {
-            return twimlReply(`✓ Calling ${details.carrier_name || carrierPhone} now.\n\nAutomated message being delivered. They will call you back on ${client.contact_phone}.\n\nOpen dashboard to monitor.`)
+            return twimlReply(`DH: ✓ Calling ${details.carrier_name || carrierPhone}. Await callback.`)
           } else if (result.simulated) {
-            return twimlReply(`✓ Logged. Call ${details.carrier_name || 'the carrier'} manually.\n\nNumber: ${carrierPhone}\n\nSay: "${voiceMessage.substring(0, 80)}..."`)
+            return twimlReply(`DH: Call ${details.carrier_name || 'carrier'} manually: ${carrierPhone}`)
           } else {
-            return twimlReply(`✓ Logged. Call to ${carrierPhone} failed — ${result.error || 'unknown error'}. Call manually.`)
+            return twimlReply(`DH: Call failed. Call ${carrierPhone} manually.`)
           }
         }
 
-        return twimlReply(`✓ Approved. No carrier number found.\nAction: ${actionLabel.substring(0, 100)}\n\nCall carrier manually. Open dashboard for contacts.`)
+        return twimlReply(`DH: ✓ Approved. No carrier number — call manually.`)
       }
 
       // ── EMAIL / NOTIFY ────────────────────────────────────────────────────
       if (actionType === 'email' || actionType === 'notify') {
-        return twimlReply(`✓ Notification logged: ${actionLabel.substring(0, 100)}\n\nEmail queued. Open dashboard to verify and send.`)
+        return twimlReply(`DH: ✓ Logged. Open dashboard to send.`)
       }
 
       // ── PRE-SHIFT CHECK ───────────────────────────────────────────────────
       if (details.source === 'preshift_check') {
-        return twimlReply(`✓ Logged — pre-shift defect acknowledged.\n\nAction: ${actionLabel.substring(0, 100)}\n\nOpen disruptionhub.ai/dashboard to log outcome.`)
+        return twimlReply(`DH: ✓ Pre-shift defect logged. Call driver.`)
       }
 
       // ── DEFAULT ───────────────────────────────────────────────────────────
-      return twimlReply(`✓ Executed: ${actionLabel.substring(0, 100)}\n\nOpen disruptionhub.ai/dashboard to review full incident log.`)
+      return twimlReply(`DH: ✓ Done. Check dashboard.`)
     }
 
     // ── NO / REJECT ───────────────────────────────────────────────────────────
@@ -153,9 +153,9 @@ export async function POST(request) {
 
       if (approvals?.length) {
         await db.from('approvals').update({ status: 'rejected' }).eq('id', approvals[0].id)
-        return twimlReply(`✗ Action rejected: ${approvals[0].action_label?.substring(0, 80)}\n\nOpen disruptionhub.ai/dashboard\nPIN: DH2026\n\nTap APPROVALS tab to review alternatives.`)
+        return twimlReply(`DH: ✗ Rejected. Open disruptionhub.ai PIN:DH2026`)
       }
-      return twimlReply('No pending actions to reject.\n\nOpen disruptionhub.ai/dashboard for full log.')
+      return twimlReply('DH: Nothing to reject. Check dashboard.')
     }
 
     // ── OPEN / REVIEW ─────────────────────────────────────────────────────────
@@ -172,7 +172,8 @@ export async function POST(request) {
         ? `\nPending action: "${pending[0].action_label?.substring(0, 80)}"\n`
         : '\nNo pending actions.\n'
 
-      return twimlReply(`disruptionhub.ai/dashboard\nPIN: DH2026\n${pendingLine}\nTap APPROVALS tab — it is highlighted in the top navigation.\n\nReply YES to approve or NO to reject without opening.`)
+      const shortPending = pending?.[0] ? pending[0].action_label?.substring(0,50) : 'none'
+      return twimlReply(`DH: disruptionhub.ai PIN:DH2026\nPending: ${shortPending}\nYES/NO to act.`)
     }
 
     // ── STATUS ────────────────────────────────────────────────────────────────
@@ -184,18 +185,18 @@ export async function POST(request) {
         .limit(3)
 
       const summary = recent?.map(i =>
-        `${i.ref} — ${i.severity}${i.financial_impact > 0 ? ` (£${Number(i.financial_impact).toLocaleString()})` : ''}`
-      ).join('\n') || 'No recent incidents'
+        `${i.severity} ${i.ref}${i.financial_impact > 0 ? ` £${Number(i.financial_impact).toLocaleString()}` : ''}`
+      ).join(' | ') || 'None'
 
-      return twimlReply(`DisruptionHub — Recent incidents:\n${summary}\n\nReply OPEN for dashboard link.`)
+      return twimlReply(`DH: ${summary}`)
     }
 
     // ── HELP / DEFAULT ────────────────────────────────────────────────────────
-    return twimlReply('DisruptionHub commands:\nYES — approve pending action\nNO — reject action\nOPEN — dashboard link + pending action\nSTATUS — recent incidents')
+    return twimlReply('DH: YES=approve NO=reject OPEN=dashboard STATUS=incidents')
 
   } catch (e) {
     console.error('SMS webhook error:', e.message)
-    return twimlReply('Error processing request. Open disruptionhub.ai/dashboard.')
+    return twimlReply('DH: Error. Open disruptionhub.ai')
   }
 }
 

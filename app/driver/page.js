@@ -331,8 +331,10 @@ export default function DriverApp() {
       localStorage.setItem('dh_last_alert', JSON.stringify(placeholder))
     }
 
-    if (panelIssue?.id==='cant_complete'||panelIssue?.id==='hours_running_out') {
-      setJobs(prev=>prev.map(j=>j.status!=='completed'&&j.ref!==job?.ref?{...j,status:'at_risk'}:j))
+    if (panelIssue?.id==='cant_complete'||panelIssue?.id==='hours_running_out'||panelIssue?.id==='driver_unwell') {
+      // Mark ALL non-completed jobs AT_RISK including current one
+      setJobs(prev=>prev.map(j=>j.status!=='completed'?{...j,status:'at_risk',alert:'Driver cannot complete — reassignment required'}:j))
+      if (activeJob) setActiveJob(prev=>({...prev,status:'at_risk',alert:'Driver cannot complete — reassignment required'}))
     }
 
     fetch('/api/driver/alert',{
