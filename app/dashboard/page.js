@@ -1538,7 +1538,7 @@ export default function DashboardPage() {
           <div style={{ padding:'10px 20px', borderBottom:'1px solid rgba(255,255,255,0.06)', display:'flex', alignItems:'center', gap:8 }}>
             <button style={TAB_STYLE(activeTab==='agent')} onClick={() => setActiveTab('agent')}>AGENT</button>
             <button style={TAB_STYLE(activeTab==='modules')} onClick={() => setActiveTab('modules')}>MODULES</button>
-            <button style={{ ...TAB_STYLE(activeTab==='approvals'), ...(pendingApprovals.length>0?{borderColor:'rgba(239,68,68,0.4)',color:'#ef4444',background:'rgba(239,68,68,0.08)'}:{}) }} onClick={() => { setActiveTab('approvals'); loadApprovals(); loadFleet() }}>
+            <button style={{ ...TAB_STYLE(activeTab==='approvals'), ...((pendingApprovals.length>0||fleet.length>0)?{borderColor:'rgba(239,68,68,0.4)',color:'#ef4444',background:'rgba(239,68,68,0.08)'}:{}) }} onClick={() => { setActiveTab('approvals'); loadApprovals(); loadFleet() }}>
               APPROVALS {pendingApprovals.length > 0 ? `(${pendingApprovals.length})` : ''}
             </button>
             <button style={TAB_STYLE(activeTab==='scenarios')} onClick={() => setActiveTab('scenarios')}>SCENARIOS</button>
@@ -1797,6 +1797,60 @@ export default function DashboardPage() {
           {activeTab === 'approvals' && (
             <div style={{ flex:1, overflowY:'auto', padding:'20px' }}>
 
+              {/* ── ACTIVE FLEET — always visible at top ── */}
+              <div style={{ marginBottom:20 }}>
+                <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:10 }}>
+                  <div style={{ fontSize:10, color:'#00e5b0', fontFamily:'monospace', fontWeight:700, letterSpacing:'0.08em' }}>ACTIVE FLEET</div>
+                  <button onClick={loadFleet} style={{ background:'none', border:'none', color:'#4a5260', fontSize:11, cursor:'pointer', fontFamily:'monospace' }}>↻ refresh</button>
+                </div>
+
+                {fleet.length === 0 ? (
+                  <div style={{ padding:'16px', background:'#111418', border:'1px solid rgba(255,255,255,0.06)', borderRadius:10, textAlign:'center' }}>
+                    <div style={{ fontSize:11, color:'#4a5260', marginBottom:4 }}>No drivers currently on shift</div>
+                    <div style={{ fontSize:10, color:'#4a5260', fontFamily:'monospace' }}>Fleet appears here when drivers are active</div>
+                  </div>
+                ) : (
+                  fleet.map(vehicle => (
+                    <div key={vehicle.vehicle_reg} style={{ background:'#111418', border:'1px solid rgba(255,255,255,0.08)', borderRadius:10, marginBottom:10, overflow:'hidden' }}>
+                      <div style={{ padding:'10px 14px', borderBottom:'1px solid rgba(255,255,255,0.05)', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+                        <div>
+                          <span style={{ fontFamily:'monospace', fontSize:13, color:'#e8eaed', fontWeight:700 }}>{vehicle.vehicle_reg}</span>
+                          {vehicle.driver_name && <span style={{ fontSize:12, color:'#8a9099', marginLeft:8 }}>{vehicle.driver_name}</span>}
+                          <span style={{ fontSize:10, color:'#4a5260', marginLeft:8, fontFamily:'monospace' }}>{vehicle.jobs.length} job{vehicle.jobs.length !== 1 ? 's' : ''}</span>
+                        </div>
+                        <button
+                          onClick={() => setCancelConfirm({ vehicle_reg: vehicle.vehicle_reg, cancel_all: true })}
+                          disabled={cancellingJob === vehicle.vehicle_reg}
+                          style={{ padding:'4px 10px', borderRadius:5, border:'1px solid rgba(239,68,68,0.3)', background:'rgba(239,68,68,0.07)', color:'#ef4444', fontSize:10, cursor:'pointer', fontFamily:'monospace' }}>
+                          Cancel all
+                        </button>
+                      </div>
+                      {vehicle.jobs.map(job => {
+                        const sc = { at_risk:'#ef4444', at_collection:'#3b82f6', loaded:'#00e5b0', at_customer:'#3b82f6', delayed:'#f59e0b', disrupted:'#ef4444', 'on-track':'#00e5b0', part_delivered:'#f59e0b' }[job.status] || '#8a9099'
+                        return (
+                          <div key={job.ref} style={{ padding:'9px 14px', borderBottom:'1px solid rgba(255,255,255,0.03)', display:'flex', alignItems:'center', gap:10 }}>
+                            <div style={{ width:6, height:6, borderRadius:'50%', background:sc, flexShrink:0 }}/>
+                            <div style={{ flex:1, minWidth:0 }}>
+                              <span style={{ fontFamily:'monospace', fontSize:12, color:'#e8eaed', fontWeight:600 }}>{job.ref}</span>
+                              <span style={{ fontSize:10, color:sc, fontFamily:'monospace', marginLeft:8 }}>{job.status.replace(/_/g,' ').toUpperCase()}</span>
+                              {job.alert && <div style={{ fontSize:10, color:'#f59e0b', marginTop:2 }}>⚠ {job.alert}</div>}
+                            </div>
+                            <button
+                              onClick={() => setCancelConfirm({ vehicle_reg: vehicle.vehicle_reg, ref: job.ref, cancel_all: false })}
+                              disabled={cancellingJob === job.ref}
+                              style={{ padding:'4px 10px', borderRadius:5, border:'1px solid rgba(239,68,68,0.2)', background:'transparent', color:'#ef4444', fontSize:10, cursor:'pointer', fontFamily:'monospace', flexShrink:0 }}>
+                              {cancellingJob === job.ref ? '...' : 'Cancel / Reassign'}
+                            </button>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  ))
+                )}
+              </div>
+
+              <div style={{ height:1, background:'rgba(255,255,255,0.06)', marginBottom:20 }}/>
+
               {/* Session executed actions */}
               {localApprovals.length > 0 && (
                 <div style={{ marginBottom:16 }}>
@@ -1885,52 +1939,6 @@ export default function DashboardPage() {
                   <div style={{ fontSize:11, color:'#4a5260', textAlign:'center', maxWidth:240 }}>Fire actions from agent analyses to see them here</div>
                 </div>
               ) : null}
-
-              {/* ── ACTIVE FLEET PANEL ── */}
-              {fleet.length > 0 && (
-                <div style={{ marginTop:16, paddingTop:16, borderTop:'1px solid rgba(255,255,255,0.06)' }}>
-                  <div style={{ fontSize:10, color:'#4a5260', fontFamily:'monospace', marginBottom:10 }}>// ACTIVE FLEET — ops can cancel or reassign jobs</div>
-                  {fleet.map(vehicle => (
-                    <div key={vehicle.vehicle_reg} style={{ background:'#111418', border:'1px solid rgba(255,255,255,0.08)', borderRadius:10, marginBottom:10, overflow:'hidden' }}>
-                      {/* Vehicle header */}
-                      <div style={{ padding:'10px 14px', borderBottom:'1px solid rgba(255,255,255,0.05)', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-                        <div>
-                          <span style={{ fontFamily:'monospace', fontSize:12, color:'#e8eaed', fontWeight:600 }}>{vehicle.vehicle_reg}</span>
-                          {vehicle.driver_name && <span style={{ fontSize:11, color:'#4a5260', marginLeft:8 }}>{vehicle.driver_name}</span>}
-                          <span style={{ fontSize:10, color:'#4a5260', marginLeft:8 }}>{vehicle.jobs.length} active job{vehicle.jobs.length !== 1 ? 's' : ''}</span>
-                        </div>
-                        <button
-                          onClick={() => setCancelConfirm({ vehicle_reg: vehicle.vehicle_reg, cancel_all: true })}
-                          disabled={cancellingJob === vehicle.vehicle_reg}
-                          style={{ padding:'4px 10px', borderRadius:5, border:'1px solid rgba(239,68,68,0.3)', background:'rgba(239,68,68,0.07)', color:'#ef4444', fontSize:10, cursor:'pointer', fontFamily:'monospace' }}>
-                          Cancel all
-                        </button>
-                      </div>
-                      {/* Job list */}
-                      {vehicle.jobs.map(job => {
-                        const statusColors = { at_risk:'#ef4444', at_collection:'#3b82f6', loaded:'#00e5b0', at_customer:'#3b82f6', delayed:'#f59e0b', disrupted:'#ef4444', 'on-track':'#00e5b0', part_delivered:'#f59e0b' }
-                        const sc = statusColors[job.status] || '#8a9099'
-                        return (
-                          <div key={job.ref} style={{ padding:'8px 14px', borderBottom:'1px solid rgba(255,255,255,0.03)', display:'flex', alignItems:'center', gap:10 }}>
-                            <div style={{ width:6, height:6, borderRadius:'50%', background:sc, flexShrink:0 }}/>
-                            <div style={{ flex:1, minWidth:0 }}>
-                              <span style={{ fontFamily:'monospace', fontSize:11, color:'#e8eaed' }}>{job.ref}</span>
-                              <span style={{ fontSize:10, color:sc, fontFamily:'monospace', marginLeft:8 }}>{job.status.replace(/_/g,' ').toUpperCase()}</span>
-                              {job.alert && <div style={{ fontSize:10, color:'#f59e0b', marginTop:2 }}>⚠ {job.alert}</div>}
-                            </div>
-                            <button
-                              onClick={() => setCancelConfirm({ vehicle_reg: vehicle.vehicle_reg, ref: job.ref, cancel_all: false })}
-                              disabled={cancellingJob === job.ref}
-                              style={{ padding:'3px 8px', borderRadius:4, border:'1px solid rgba(239,68,68,0.2)', background:'transparent', color:'#ef4444', fontSize:10, cursor:'pointer', fontFamily:'monospace', flexShrink:0 }}>
-                              {cancellingJob === job.ref ? '...' : 'Cancel'}
-                            </button>
-                          </div>
-                        )
-                      })}
-                    </div>
-                  ))}
-                </div>
-              )}
 
               {/* ── CANCEL JOB CONFIRM MODAL ── */}
               {cancelConfirm && (
