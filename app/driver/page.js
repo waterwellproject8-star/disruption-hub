@@ -129,6 +129,7 @@ export default function DriverApp() {
   const [defectBlocked, setDefectBlocked]       = useState(false)
   const [opsAcknowledged, setOpsAcknowledged]   = useState(false)
   const [escalationTimer, setEscalationTimer]   = useState(null)
+  const [resumeConfirm, setResumeConfirm]       = useState(false)
 
   const [panelOpen, setPanelOpen]       = useState(false)
   const [panelIssue, setPanelIssue]     = useState(null)
@@ -401,14 +402,21 @@ export default function DriverApp() {
       setLastAlert(placeholder); localStorage.setItem('dh_last_alert',JSON.stringify(placeholder))
     }
 
-    if (['cant_complete','hours_running_out','driver_unwell'].includes(panelIssue?.id)) {
+    if (['cant_complete','hours_running_out','driver_unwell','vehicle_theft','accident','theft_threat'].includes(panelIssue?.id)) {
+      const atRiskReason = panelIssue?.id === 'vehicle_theft'
+        ? 'Vehicle stolen — all runs undeliverable'
+        : panelIssue?.id === 'accident'
+        ? 'Accident reported — driver and vehicle status unknown'
+        : panelIssue?.id === 'theft_threat'
+        ? 'Security threat — driver safety priority, runs on hold'
+        : 'Driver cannot complete — reassignment required'
       setJobs(prev=>{
-        const updated = prev.map(j=>j.status!=='completed'?{...j,status:'at_risk',alert:'Driver cannot complete — reassignment required'}:j)
+        const updated = prev.map(j=>j.status!=='completed'?{...j,status:'at_risk',alert:atRiskReason}:j)
         saveJobProgress(updated)
-        updated.filter(j=>j.status==='at_risk').forEach(j=>pushProgressToSupabase(j.ref,'at_risk','Driver cannot complete — reassignment required'))
+        updated.filter(j=>j.status==='at_risk').forEach(j=>pushProgressToSupabase(j.ref,'at_risk',atRiskReason))
         return updated
       })
-      if (activeJob) setActiveJob(prev=>({...prev,status:'at_risk',alert:'Driver cannot complete — reassignment required'}))
+      if (activeJob) setActiveJob(prev=>({...prev,status:'at_risk',alert:atRiskReason}))
     }
 
     if (panelIssue?.id==='part_delivery') {
@@ -418,7 +426,7 @@ export default function DriverApp() {
     }
 
     fetch('/api/driver/alert',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({client_id:driverInfo.clientId,driver_name:driverInfo.name,driver_phone:driverInfo.phone||null,vehicle_reg:driverInfo.vehicleReg,ref:job?.ref,issue_description:prompt,human_description:inputText||panelIssue?.label,location_description:gpsDescription,latitude:gpsCoords?.latitude,longitude:gpsCoords?.longitude})
+      body:JSON.stringify({client_id:driverInfo.clientId,driver_name:driverInfo.name,driver_phone:driverInfo.phone||null,vehicle_reg:driverInfo.vehicleReg,ref:job?.ref,issue_type:panelIssue?.id,issue_description:prompt,human_description:inputText||panelIssue?.label,location_description:gpsDescription,latitude:gpsCoords?.latitude,longitude:gpsCoords?.longitude})
     }).catch(()=>{})
 
     if (emergencyIds.includes(panelIssue?.id)) {
@@ -865,18 +873,61 @@ export default function DriverApp() {
                 {isAtRisk&&(
                   <div style={{padding:'13px 16px'}}>
                     <div style={{padding:'11px 13px',background:'rgba(239,68,68,0.05)',border:'1px solid rgba(239,68,68,0.18)',borderRadius:8,marginBottom:9,fontSize:13,color:'#ef4444'}}>
-                      🛑 Progress locked — job handed to ops.
+                      🛑 Progress locked — jobs handed to ops.
                     </div>
-                    <button onClick={()=>{
-                      setJobs(prev=>{const u=prev.map(j=>j.status==='at_risk'?{...j,status:'on-track',alert:null}:j);saveJobProgress(u);u.filter(j=>j.status==='on-track').forEach(j=>pushProgressToSupabase(j.ref,'on-track',null));return u})
-                      setActiveJob(prev=>({...prev,status:'on-track',alert:null}))
-                      showToast('Job resumed — ops notified')
-                      fetch('/api/driver/alert',{method:'POST',headers:{'Content-Type':'application/json'},
-                        body:JSON.stringify({client_id:driverInfo.clientId,driver_name:driverInfo.name,driver_phone:driverInfo.phone||null,vehicle_reg:driverInfo.vehicleReg,issue_description:`DRIVER RESUMED. ${driverInfo.name} (${driverInfo.vehicleReg}) has self-resolved and resumed their run.`,human_description:`${driverInfo.name} resumed — situation resolved`,location_description:gpsDescription||'location not confirmed',force_alert:false})
-                      }).catch(()=>{})
-                    }} style={{width:'100%',padding:'12px',borderRadius:9,border:'1px solid rgba(0,229,176,0.28)',background:'rgba(0,229,176,0.04)',color:'#00e5b0',fontSize:14,fontWeight:500,cursor:'pointer'}}>
-                      ✓ Situation resolved — I can continue
-                    </button>
+
+                    {!resumeConfirm ? (
+                      <>
+                        {/* Primary action — continue */}
+                        <button onClick={()=>setResumeConfirm(true)}
+                          style={{width:'100%',padding:'13px',borderRadius:9,border:'1px solid rgba(0,229,176,0.28)',background:'rgba(0,229,176,0.04)',color:'#00e5b0',fontSize:14,fontWeight:500,cursor:'pointer',marginBottom:8}}>
+                          ✓ Situation resolved — I can continue
+                        </button>
+                        {/* End shift — always available when jobs are locked */}
+                        <button onClick={endShift}
+                          style={{width:'100%',padding:'13px',borderRadius:9,border:'1px solid rgba(255,255,255,0.1)',background:'transparent',color:'#8a9099',fontSize:14,fontWeight:500,cursor:'pointer'}}>
+                          End shift now
+                        </button>
+                      </>
+                    ) : (
+                      /* Confirmation screen — warn about potential conflict */
+                      <div style={{padding:'12px',background:'rgba(245,158,11,0.06)',border:'1px solid rgba(245,158,11,0.25)',borderRadius:9}}>
+                        <div style={{fontSize:14,fontWeight:600,color:'#f59e0b',marginBottom:6}}>⚠ Check with ops first</div>
+                        <div style={{fontSize:13,color:'#8a9099',marginBottom:14,lineHeight:1.6}}>
+                          If ops has already assigned your runs to another driver, pressing continue will create a conflict. Confirm with ops before proceeding.
+                        </div>
+                        <div style={{display:'flex',gap:8}}>
+                          <button onClick={()=>{
+                            setResumeConfirm(false)
+                            setJobs(prev=>{const u=prev.map(j=>j.status==='at_risk'?{...j,status:'on-track',alert:null}:j);saveJobProgress(u);u.filter(j=>j.status==='on-track').forEach(j=>pushProgressToSupabase(j.ref,'on-track',null));return u})
+                            setActiveJob(prev=>({...prev,status:'on-track',alert:null}))
+                            showToast('Resumed — ops notified')
+                            fetch('/api/driver/alert',{method:'POST',headers:{'Content-Type':'application/json'},
+                              body:JSON.stringify({
+                                client_id:driverInfo.clientId,
+                                driver_name:driverInfo.name,
+                                driver_phone:driverInfo.phone||null,
+                                vehicle_reg:driverInfo.vehicleReg,
+                                issue_description:`⚠ DRIVER SELF-RESUMED: ${driverInfo.name} (${driverInfo.vehicleReg}) has pressed continue and resumed their runs. If you have already assigned these jobs to another driver please call them immediately to avoid conflict.`,
+                                human_description:`${driverInfo.name} self-resumed — check for conflict`,
+                                location_description:gpsDescription||'location not confirmed',
+                                force_alert:false
+                              })
+                            }).catch(()=>{})
+                          }} style={{flex:1,padding:'11px',borderRadius:8,border:'none',background:'#00e5b0',color:'#000',fontWeight:700,fontSize:13,cursor:'pointer'}}>
+                            Confirmed — continue
+                          </button>
+                          <button onClick={()=>setResumeConfirm(false)}
+                            style={{padding:'11px 14px',borderRadius:8,border:'1px solid rgba(255,255,255,0.1)',background:'transparent',color:'#8a9099',fontSize:13,cursor:'pointer'}}>
+                            Back
+                          </button>
+                        </div>
+                        <button onClick={()=>{setResumeConfirm(false);endShift()}}
+                          style={{width:'100%',marginTop:8,padding:'10px',borderRadius:8,border:'1px solid rgba(255,255,255,0.08)',background:'transparent',color:'#4a5260',fontSize:12,cursor:'pointer'}}>
+                          End shift instead
+                        </button>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
