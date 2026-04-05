@@ -1,5 +1,4 @@
 import Anthropic from '@anthropic-ai/sdk'
-import { sendSMS } from '@/lib/twilio'
 import { createClient } from '@supabase/supabase-js'
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
@@ -11,6 +10,34 @@ function getSupabase() {
   return createClient(url, key)
 }
 
+// Inlined SMS — no lib import needed
+async function sendSMS(to, body) {
+  const sid   = process.env.TWILIO_ACCOUNT_SID
+  const token = process.env.TWILIO_AUTH_TOKEN
+  const from  = process.env.TWILIO_PHONE_NUMBER
+  if (!sid || !token || !from || sid.includes('placeholder') || sid.startsWith('AC_')) {
+    console.log('[Twilio SMS - not configured] To:', to, 'Body:', body)
+    return { success: false, simulated: true }
+  }
+  try {
+    const res = await fetch(
+      `https://api.twilio.com/2010-04-01/Accounts/${sid}/Messages.json`,
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Basic ' + Buffer.from(`${sid}:${token}`).toString('base64'),
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: new URLSearchParams({ To: to, From: from, Body: body })
+      }
+    )
+    const data = await res.json()
+    return { success: res.ok, sid: data.sid, error: data.message }
+  } catch (e) {
+    return { success: false, error: e.message }
+  }
+}
+
 // Convert structured machine payload into natural-language incident description
 function buildDescription(system, event_type, payload) {
   const p = payload || {}
@@ -19,7 +46,7 @@ function buildDescription(system, event_type, payload) {
     if (event_type === 'job_delayed')
       return `MANDATA TMS ALERT — Job Delayed\nVehicle: ${p.vehicle_reg||'unknown'}\nDelay: ${p.delay_minutes||'?'} minutes behind schedule\nReason: ${p.reason||'not specified'}\nSLA deadline: ${p.sla_deadline||'unknown'}\nConsignee: ${p.consignee||'unknown'}\nJob ID: ${p.job_id||'unknown'}`
     if (event_type === 'job_cancelled')
-      return `MANDATA TMS ALERT — Job Cancellation\nVehicle: ${p.vehicle_reg||'unknown'}\nJob ID: ${p.job_id||'unknown'}\nReason: ${p.reason||'not specified'}\nValue at risk: £${p.value_gbp||0}\nCollection point: ${p.collection||'unknown'}\nConsignee: ${p.consignee||'unknown'}`
+      return `MANDATA TMS ALERT — Job Cancellation\nVehicle: ${p.vehicle_reg||'unknown'}\nJob ID: ${p.job_id||'unknown'}\nReason: ${p.reason||'not specified'}\nValue at risk: £${p.value_gbp||0}\nCollection: ${p.collection||'unknown'}\nConsignee: ${p.consignee||'unknown'}`
     if (event_type === 'pod_problem')
       return `MANDATA TMS ALERT — POD Not Received\nVehicle: ${p.vehicle_reg||'unknown'}\nJob: ${p.job_id||'unknown'}\nConsignee: ${p.consignee||'unknown'}\nHours overdue: ${p.hours_overdue||'?'}\nDelivery value: £${p.value_gbp||0}`
   }
@@ -30,46 +57,45 @@ function buildDescription(system, event_type, payload) {
     if (event_type === 'off_route')
       return `WEBFLEET TELEMATICS ALERT — Vehicle Off Planned Route\nVehicle: ${p.vehicle_reg||'unknown'}\nDeviation: ${p.deviation_miles||'?'} miles\nPlanned route: ${p.planned_route||'unknown'}\nCurrent location: ${p.current_location||'unknown'}\nDriver: ${p.driver_name||'unknown'}`
     if (event_type === 'panic_button')
-      return `WEBFLEET TELEMATICS ALERT — PANIC BUTTON ACTIVATED\nVehicle: ${p.vehicle_reg||'unknown'}\nDriver: ${p.driver_name||'unknown'}\nLocation: ${p.location||'unknown'}\nCargo value: £${p.cargo_value||0}\nIMMEDIATE RESPONSE REQUIRED — treat as security or medical incident first`
+      return `WEBFLEET TELEMATICS ALERT — PANIC BUTTON ACTIVATED\nVehicle: ${p.vehicle_reg||'unknown'}\nDriver: ${p.driver_name||'unknown'}\nLocation: ${p.location||'unknown'}\nCargo value: £${p.cargo_value||0}\nIMMEDIATE RESPONSE REQUIRED`
   }
 
   if (system === 'microlise') {
     if (event_type === 'speeding')
-      return `MICROLISE FLEET ALERT — Speed Violation\nVehicle: ${p.vehicle_reg||'unknown'}\nRecorded speed: ${p.speed_mph||'?'}mph\nPosted limit: ${p.limit_mph||56}mph\nLocation: ${p.location||'unknown'}\nDriver: ${p.driver_name||'unknown'}\nO/C recording captured`
+      return `MICROLISE FLEET ALERT — Speed Violation\nVehicle: ${p.vehicle_reg||'unknown'}\nRecorded speed: ${p.speed_mph||'?'}mph\nPosted limit: ${p.limit_mph||56}mph\nLocation: ${p.location||'unknown'}\nDriver: ${p.driver_name||'unknown'}`
     if (event_type === 'harsh_braking')
-      return `MICROLISE FLEET ALERT — Harsh Braking Event\nVehicle: ${p.vehicle_reg||'unknown'}\nG-force recorded: ${p.g_force||'?'}G\nLocation: ${p.location||'unknown'}\nCargo type: ${p.cargo_type||'general freight'}\nPossible load shift or cargo damage — inspection required`
+      return `MICROLISE FLEET ALERT — Harsh Braking Event\nVehicle: ${p.vehicle_reg||'unknown'}\nG-force recorded: ${p.g_force||'?'}G\nLocation: ${p.location||'unknown'}\nCargo type: ${p.cargo_type||'general freight'}`
     if (event_type === 'long_stop')
-      return `MICROLISE FLEET ALERT — Unexpected Long Stop\nVehicle: ${p.vehicle_reg||'unknown'}\nStopped for: ${p.stop_duration_mins||'?'} minutes\nLocation: ${p.location||'unknown'}\nDriver: ${p.driver_name||'unknown'}\nNo pre-planned stop at this location`
+      return `MICROLISE FLEET ALERT — Unexpected Long Stop\nVehicle: ${p.vehicle_reg||'unknown'}\nStopped for: ${p.stop_duration_mins||'?'} minutes\nLocation: ${p.location||'unknown'}\nDriver: ${p.driver_name||'unknown'}`
   }
 
   if (system === 'samsara') {
     if (event_type === 'sensor_alert')
-      return `SAMSARA TELEMATICS ALERT — Door Sensor Event\nVehicle: ${p.vehicle_reg||'unknown'}\nEvent type: ${p.event||'unknown'}\nLocation: ${p.location||'unknown'}\nTime stopped: ${p.time_stopped_mins||'?'} minutes\nPossible unauthorised access or cargo issue`
+      return `SAMSARA TELEMATICS ALERT — Door Sensor Event\nVehicle: ${p.vehicle_reg||'unknown'}\nEvent: ${p.event||'unknown'}\nLocation: ${p.location||'unknown'}\nTime stopped: ${p.time_stopped_mins||'?'} minutes`
     if (event_type === 'fatigue_alert')
-      return `SAMSARA TELEMATICS ALERT — Driver Fatigue Warning\nVehicle: ${p.vehicle_reg||'unknown'}\nDriver: ${p.driver_name||'unknown'}\nHours driven today: ${p.hours_driven||'?'}\nNext mandatory break due in: ${p.next_break_due_mins||'?'} minutes\nLocation: ${p.location||'unknown'}\nEU Regulation 561/2006 compliance at risk`
+      return `SAMSARA TELEMATICS ALERT — Driver Fatigue Warning\nVehicle: ${p.vehicle_reg||'unknown'}\nDriver: ${p.driver_name||'unknown'}\nHours driven: ${p.hours_driven||'?'}\nNext break due in: ${p.next_break_due_mins||'?'} minutes\nLocation: ${p.location||'unknown'}\nEU Reg 561/2006 compliance at risk`
     if (event_type === 'idling')
       return `SAMSARA TELEMATICS ALERT — Excessive Idling\nVehicle: ${p.vehicle_reg||'unknown'}\nIdle time: ${p.idle_minutes||'?'} minutes\nFuel wasted: ${p.fuel_wasted_litres||'?'} litres\nLocation: ${p.location||'unknown'}`
   }
 
   if (system === 'wms') {
     if (event_type === 'short_pick')
-      return `WMS ALERT — Short Pick at Despatch\nOrder: ${p.order_id||'unknown'}\nWarehouse: ${p.warehouse||'unknown'}\nOrdered quantity: ${p.ordered_qty||'?'} units\nAvailable quantity: ${p.available_qty||'?'} units\nShortfall: ${p.ordered_qty&&p.available_qty ? p.ordered_qty-p.available_qty : '?'} units\nProduct: ${p.product_code||'unknown'}\nConsignee: ${p.consignee||'unknown'}\nDespatch deadline: ${p.despatch_deadline||'unknown'}`
+      return `WMS ALERT — Short Pick at Despatch\nOrder: ${p.order_id||'unknown'}\nWarehouse: ${p.warehouse||'unknown'}\nOrdered: ${p.ordered_qty||'?'} units\nAvailable: ${p.available_qty||'?'} units\nShortfall: ${p.ordered_qty&&p.available_qty?p.ordered_qty-p.available_qty:'?'} units\nProduct: ${p.product_code||'unknown'}\nConsignee: ${p.consignee||'unknown'}\nDespatch deadline: ${p.despatch_deadline||'unknown'}`
     if (event_type === 'hold')
-      return `WMS ALERT — Despatch Hold Applied\nOrder: ${p.order_id||'unknown'}\nWarehouse: ${p.warehouse||'unknown'}\nHold reason: ${p.hold_reason||'not specified'}\nConsignee: ${p.consignee||'unknown'}\nValue at risk: £${p.value_gbp||0}\nNo despatch until hold cleared`
+      return `WMS ALERT — Despatch Hold Applied\nOrder: ${p.order_id||'unknown'}\nWarehouse: ${p.warehouse||'unknown'}\nHold reason: ${p.hold_reason||'not specified'}\nConsignee: ${p.consignee||'unknown'}\nValue at risk: £${p.value_gbp||0}`
     if (event_type === 'overweight')
-      return `WMS ALERT — Overweight Load Detected\nVehicle: ${p.vehicle_reg||'unknown'}\nLoaded weight: ${p.loaded_weight_kg||'?'}kg\nLegal maximum: ${p.legal_max_kg||44000}kg\nOverweight by: ${p.loaded_weight_kg && p.legal_max_kg ? p.loaded_weight_kg-p.legal_max_kg : '?'}kg\nDepot: ${p.depot||'unknown'}\nConsignee: ${p.consignee||'unknown'}\nVehicle MUST NOT depart — legal and safety breach`
+      return `WMS ALERT — Overweight Load Detected\nVehicle: ${p.vehicle_reg||'unknown'}\nLoaded: ${p.loaded_weight_kg||'?'}kg\nLegal max: ${p.legal_max_kg||44000}kg\nOverweight by: ${p.loaded_weight_kg&&p.legal_max_kg?p.loaded_weight_kg-p.legal_max_kg:'?'}kg\nDepot: ${p.depot||'unknown'}\nConsignee: ${p.consignee||'unknown'}\nVehicle MUST NOT depart`
   }
 
   if (system === 'customer') {
     if (event_type === 'cancellation')
-      return `CUSTOMER PORTAL ALERT — Booking Cancellation Received\nRef: ${p.booking_ref||'unknown'}\nCollection: ${p.collection||'unknown'}\nDelivery: ${p.delivery||'unknown'}\nPallets: ${p.pallets||'?'}\nValue: £${p.value_gbp||0}\nReason given: ${p.reason||'none'}\nDriver status: ${p.driver_already_dispatched ? 'ALREADY DISPATCHED — urgent recall needed' : 'Not yet dispatched'}`
+      return `CUSTOMER PORTAL ALERT — Booking Cancellation\nRef: ${p.booking_ref||'unknown'}\nCollection: ${p.collection||'unknown'}\nDelivery: ${p.delivery||'unknown'}\nPallets: ${p.pallets||'?'}\nValue: £${p.value_gbp||0}\nReason: ${p.reason||'none'}\nDriver dispatched: ${p.driver_already_dispatched?'YES — recall needed':'No'}`
     if (event_type === 'sla_dispute')
       return `CUSTOMER PORTAL ALERT — SLA Dispute Raised\nRef: ${p.booking_ref||'unknown'}\nConsignee: ${p.consignee||'unknown'}\nClaimed late by: ${p.claimed_late_mins||'?'} minutes\nPenalty claimed: £${p.penalty_claimed||0}\nDisputed job: ${p.disputed_ref||'unknown'}`
     if (event_type === 'change_request')
-      return `CUSTOMER PORTAL ALERT — Collection Time Change Request\nRef: ${p.booking_ref||'unknown'}\nOriginal time: ${p.original_time||'unknown'}\nNew requested time: ${p.new_time||'unknown'}\nCollection point: ${p.collection||'unknown'}\nDriver already dispatched: ${p.driver_already_dispatched ? 'YES — may need recall' : 'No'}`
+      return `CUSTOMER PORTAL ALERT — Collection Time Change Request\nRef: ${p.booking_ref||'unknown'}\nOriginal time: ${p.original_time||'unknown'}\nNew time: ${p.new_time||'unknown'}\nCollection: ${p.collection||'unknown'}\nDriver already dispatched: ${p.driver_already_dispatched?'YES':'No'}`
   }
 
-  // Fallback for any system/event combo not mapped above
   return `WEBHOOK ALERT — ${(system||'UNKNOWN').toUpperCase()} / ${(event_type||'unknown').replace(/_/g,' ')}\n${JSON.stringify(p, null, 2)}`
 }
 
@@ -114,7 +140,7 @@ export async function POST(request) {
     const db = getSupabase()
     const description = buildDescription(system, event_type, payload)
 
-    // Run AI analysis
+    // AI analysis
     const msg = await anthropic.messages.create({
       model: 'claude-sonnet-4-6',
       max_tokens: 1500,
@@ -130,7 +156,7 @@ export async function POST(request) {
     const moneyMatch = analysis.match(/£([\d,]+)/)
     const financialImpact = moneyMatch ? parseInt(moneyMatch[1].replace(/,/g, '')) : 0
 
-    // Get client ops manager phone
+    // Get client ops phone
     let contactPhone = null
     if (db) {
       try {
@@ -139,7 +165,7 @@ export async function POST(request) {
       } catch {}
     }
 
-    // Log to webhook_log table
+    // Log to webhook_log
     let webhookLogId = null
     if (db) {
       try {
@@ -162,31 +188,27 @@ export async function POST(request) {
       }
     }
 
-    // Log to incidents table
+    // Log to incidents
     if (db) {
       try {
-        const ref = `WH-${system.toUpperCase()}-${Date.now().toString(36).toUpperCase()}`
         await db.from('incidents').insert({
           client_id,
           user_input: description,
           ai_response: analysis,
           severity,
           financial_impact: financialImpact,
-          ref
+          ref: `WH-${system.toUpperCase()}-${Date.now().toString(36).toUpperCase()}`
         })
       } catch {}
     }
 
-    // Send SMS for HIGH/CRITICAL
+    // SMS for HIGH/CRITICAL
     let smsSent = false
-    const shouldAlert = severity === 'CRITICAL' || severity === 'HIGH'
-
-    if (shouldAlert && contactPhone) {
-      const sysLabels = { mandata: 'Mandata', webfleet: 'Webfleet', microlise: 'Microlise', samsara: 'Samsara', wms: 'WMS', customer: 'Customer' }
+    if ((severity === 'CRITICAL' || severity === 'HIGH') && contactPhone) {
+      const sysLabels = { mandata:'Mandata', webfleet:'Webfleet', microlise:'Microlise', samsara:'Samsara', wms:'WMS', customer:'Customer' }
       const firstAction = analysis.match(/1\.\s+(.{20,100})/)?.[1]?.split('—')[0]?.trim() || 'See dashboard'
       const eventLabel = event_type.replace(/_/g, ' ')
-      const smsBody = `DH ${severity} — ${sysLabels[system]||system} ${eventLabel}\n${firstAction.substring(0, 80)}\n${financialImpact > 0 ? `£${financialImpact.toLocaleString()} ` : ''}YES/NO/OPEN`
-
+      const smsBody = `DH ${severity} — ${sysLabels[system]||system} ${eventLabel}\n${firstAction.substring(0,80)}\n${financialImpact>0?`£${financialImpact.toLocaleString()} `:''}YES/NO/OPEN`
       const result = await sendSMS(contactPhone, smsBody)
       smsSent = result?.success || false
 
@@ -200,7 +222,7 @@ export async function POST(request) {
           await db.from('approvals').insert({
             client_id,
             action_type: 'sms',
-            action_label: `${sysLabels[system]||system} ${eventLabel} — ${firstAction.substring(0, 120)}`,
+            action_label: `${sysLabels[system]||system} ${eventLabel} — ${firstAction.substring(0,120)}`,
             action_details: { system, event_type, payload, source: 'webhook_inbound' },
             financial_value: financialImpact,
             status: 'pending'
@@ -226,7 +248,7 @@ export async function POST(request) {
   }
 }
 
-// GET — fetch recent inbound/outbound webhook log for dashboard
+// GET — fetch webhook log for dashboard
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url)
