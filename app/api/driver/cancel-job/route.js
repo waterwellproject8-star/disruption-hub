@@ -46,11 +46,45 @@ async function getDriverName(db, client_id, vehicle_reg) {
 
 export async function POST(request) {
   try {
-    const { client_id, vehicle_reg, ref, cancel_all, reason, reassign_to, approved_by = 'ops_manager' } = await request.json()
-    if (!client_id || !vehicle_reg) return Response.json({ error: 'client_id and vehicle_reg required' }, { status: 400 })
+    const { client_id, vehicle_reg, ref, cancel_all, reason, reassign_to, reassign_only, approved_by = 'ops_manager' } = await request.json()
+    if (!client_id) return Response.json({ error: 'client_id required' }, { status: 400 })
 
     const db = getDB()
     if (!db) return Response.json({ error: 'DB not configured' }, { status: 500 })
+
+    // ── REASSIGN ONLY — job already cancelled, just push to new driver ────
+    if (reassign_only && reassign_to && ref) {
+      const reassignedDriverPhone = await getDriverPhone(db, client_id, reassign_to)
+      const reassignedDriverName  = await getDriverName(db, client_id, reassign_to)
+
+      try {
+        await db.from('driver_progress').upsert({
+          client_id, vehicle_reg: reassign_to, driver_name: reassignedDriverName,
+          ref, status: 'on-track',
+          alert: `Assigned by ops${reason ? ` — ${reason}` : ''}`,
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'client_id,vehicle_reg,ref' })
+      } catch(e) { console.error('reassign upsert:', e.message) }
+
+      let newDriverNotified = false
+      if (reassignedDriverPhone) {
+        const msg = `DisruptionHub OPS — NEW JOB ASSIGNED\n\nJob ${ref} added to your schedule.\nCheck your driver app — it updates automatically.${reason ? `\nNote: ${reason}` : ''}`
+        const result = await sendSMS(reassignedDriverPhone, msg)
+        newDriverNotified = result.success || false
+      }
+
+      try {
+        await db.from('incidents').insert({
+          client_id, user_input: `OPS REASSIGNMENT: Job ${ref} assigned to ${reassign_to}. By: ${approved_by}`,
+          ai_response: `Job ${ref} reassigned to ${reassign_to}`, severity: 'LOW', financial_impact: 0,
+          ref: `OPS-ASSIGN-${ref}-${Date.now().toString(36).toUpperCase()}`
+        })
+      } catch {}
+
+      return Response.json({ success: true, reassigned: ref, to: reassign_to, new_driver_notified: newDriverNotified })
+    }
+
+    if (!vehicle_reg) return Response.json({ error: 'vehicle_reg required' }, { status: 400 })
 
     const { data: activeJobs } = await db.from('driver_progress').select('ref, status, driver_name, alert')
       .eq('client_id', client_id).eq('vehicle_reg', vehicle_reg)
@@ -142,21 +176,47 @@ export async function GET(request) {
     const client_id = searchParams.get('client_id')
     if (!client_id) return Response.json({ error: 'client_id required' }, { status: 400 })
     const db = getDB()
-    if (!db) return Response.json({ fleet: [] })
+    if (!db) return Response.json({ fleet: [], unassigned: [] })
 
-    const { data, error } = await db.from('driver_progress')
+    // Active jobs — grouped by vehicle
+    const { data: activeData, error: activeError } = await db.from('driver_progress')
       .select('vehicle_reg, driver_name, ref, status, alert, updated_at')
-      .eq('client_id', client_id).not('status', 'eq', 'completed').not('status', 'eq', 'cancelled')
+      .eq('client_id', client_id)
+      .not('status', 'eq', 'completed')
+      .not('status', 'eq', 'cancelled')
       .order('updated_at', { ascending: false })
 
-    if (error) throw error
+    if (activeError) throw activeError
 
     const grouped = {}
-    for (const row of (data || [])) {
+    for (const row of (activeData || [])) {
       if (!grouped[row.vehicle_reg]) grouped[row.vehicle_reg] = { vehicle_reg: row.vehicle_reg, driver_name: row.driver_name, jobs: [] }
       grouped[row.vehicle_reg].jobs.push({ ref: row.ref, status: row.status, alert: row.alert, updated_at: row.updated_at })
     }
-    return Response.json({ fleet: Object.values(grouped) })
+
+    // Cancelled jobs from last 8 hours — available for reassignment
+    const eightHoursAgo = new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString()
+    const { data: cancelledData } = await db.from('driver_progress')
+      .select('vehicle_reg, driver_name, ref, status, alert, updated_at')
+      .eq('client_id', client_id)
+      .eq('status', 'cancelled')
+      .gte('updated_at', eightHoursAgo)
+      .order('updated_at', { ascending: false })
+
+    // Deduplicate — if a ref has been reassigned already (exists in active), exclude it
+    const activeRefs = new Set((activeData || []).map(r => r.ref))
+    const unassigned = (cancelledData || [])
+      .filter(r => !activeRefs.has(r.ref))
+      .map(r => ({
+        ref: r.ref,
+        original_vehicle: r.vehicle_reg,
+        original_driver: r.driver_name,
+        cancelled_at: r.updated_at,
+        reason: r.alert
+      }))
+
+    return Response.json({ fleet: Object.values(grouped), unassigned })
+
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 })
   }

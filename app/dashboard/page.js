@@ -967,10 +967,12 @@ export default function DashboardPage() {
   const [whResult, setWhResult] = useState(null)
   const [whLogLoading, setWhLogLoading] = useState(false)
   const [fleet, setFleet] = useState([])
+  const [unassigned, setUnassigned] = useState([])
   const [cancellingJob, setCancellingJob] = useState(null)
   const [cancelReason, setCancelReason] = useState('')
-  const [cancelConfirm, setCancelConfirm] = useState(null) // { vehicle_reg, ref, cancel_all }
+  const [cancelConfirm, setCancelConfirm] = useState(null)
   const [reassignTo, setReassignTo] = useState('')
+  const [reassignJobRef, setReassignJobRef] = useState(null) // ref being reassigned from unassigned queue
 
   async function assessCancelAction(approvalId, sentAt) {
     const now = Date.now()
@@ -1370,7 +1372,30 @@ export default function DashboardPage() {
       if (!res.ok) return
       const data = await res.json()
       setFleet(data.fleet || [])
+      setUnassigned(data.unassigned || [])
     } catch {}
+  }
+
+  async function reassignUnassigned(ref, toVehicle, reason) {
+    setCancellingJob(ref)
+    try {
+      await fetch('/api/driver/cancel-job', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          client_id: 'pearson-haulage',
+          ref,
+          reassign_to: toVehicle,
+          reassign_only: true,
+          reason: reason || 'Assigned by ops',
+          approved_by: 'ops_manager'
+        })
+      })
+      setReassignJobRef(null)
+      setReassignTo('')
+      await loadFleet()
+    } catch {}
+    finally { setCancellingJob(null) }
   }
 
   async function cancelJob({ vehicle_reg, ref, cancel_all }) {
@@ -1850,6 +1875,55 @@ export default function DashboardPage() {
               </div>
 
               <div style={{ height:1, background:'rgba(255,255,255,0.06)', marginBottom:20 }}/>
+
+              {/* ── UNASSIGNED JOBS QUEUE ── */}
+              {unassigned.length > 0 && (
+                <div style={{ marginBottom:20 }}>
+                  <div style={{ fontSize:10, color:'#f59e0b', fontFamily:'monospace', fontWeight:700, letterSpacing:'0.08em', marginBottom:10 }}>
+                    UNASSIGNED JOBS — {unassigned.length} waiting to be reassigned
+                  </div>
+                  {unassigned.map(job => (
+                    <div key={job.ref} style={{ background:'rgba(245,158,11,0.05)', border:'1px solid rgba(245,158,11,0.2)', borderRadius:10, marginBottom:8, overflow:'hidden' }}>
+                      <div style={{ padding:'10px 14px', display:'flex', alignItems:'center', gap:10 }}>
+                        <div style={{ flex:1, minWidth:0 }}>
+                          <span style={{ fontFamily:'monospace', fontSize:13, color:'#e8eaed', fontWeight:700 }}>{job.ref}</span>
+                          <span style={{ fontSize:11, color:'#8a9099', marginLeft:8 }}>was {job.original_vehicle}{job.original_driver ? ` · ${job.original_driver}` : ''}</span>
+                          {job.reason && <div style={{ fontSize:10, color:'#f59e0b', marginTop:2 }}>↳ {job.reason}</div>}
+                        </div>
+                        {reassignJobRef === job.ref ? (
+                          <div style={{ display:'flex', gap:6, alignItems:'center' }}>
+                            <select value={reassignTo} onChange={e => setReassignTo(e.target.value)}
+                              style={{ padding:'5px 8px', background:'#0a0c0e', border:'1px solid rgba(255,255,255,0.12)', borderRadius:5, color: reassignTo ? '#e8eaed' : '#4a5260', fontSize:11, outline:'none', cursor:'pointer', fontFamily:'IBM Plex Sans' }}>
+                              <option value=''>Pick driver...</option>
+                              {fleet.map(v => (
+                                <option key={v.vehicle_reg} value={v.vehicle_reg}>
+                                  {v.vehicle_reg}{v.driver_name ? ` — ${v.driver_name}` : ''}
+                                </option>
+                              ))}
+                            </select>
+                            <button
+                              onClick={() => reassignTo && reassignUnassigned(job.ref, reassignTo, job.reason)}
+                              disabled={!reassignTo || cancellingJob === job.ref}
+                              style={{ padding:'5px 10px', borderRadius:5, border:'none', background: reassignTo ? '#00e5b0' : 'rgba(0,229,176,0.2)', color: reassignTo ? '#000' : '#4a5260', fontSize:11, fontWeight:700, cursor: reassignTo ? 'pointer' : 'default', fontFamily:'monospace', whiteSpace:'nowrap' }}>
+                              {cancellingJob === job.ref ? '...' : 'Assign →'}
+                            </button>
+                            <button onClick={() => { setReassignJobRef(null); setReassignTo('') }}
+                              style={{ padding:'5px 8px', borderRadius:5, border:'1px solid rgba(255,255,255,0.08)', background:'transparent', color:'#4a5260', fontSize:11, cursor:'pointer' }}>
+                              ✕
+                            </button>
+                          </div>
+                        ) : (
+                          <button onClick={() => { setReassignJobRef(job.ref); setReassignTo('') }}
+                            style={{ padding:'5px 12px', borderRadius:5, border:'1px solid rgba(0,229,176,0.3)', background:'rgba(0,229,176,0.06)', color:'#00e5b0', fontSize:11, cursor:'pointer', fontFamily:'monospace', whiteSpace:'nowrap' }}>
+                            Assign to driver
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                  <div style={{ height:1, background:'rgba(255,255,255,0.06)', marginBottom:20, marginTop:10 }}/>
+                </div>
+              )}
 
               {/* Session executed actions */}
               {localApprovals.length > 0 && (
