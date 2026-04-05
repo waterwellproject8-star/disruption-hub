@@ -53,6 +53,57 @@ const CAT_COLORS = {
   growth:     { bg: 'rgba(168,85,247,0.08)',  border: 'rgba(168,85,247,0.2)', text: '#a855f7' },
 }
 
+const WEBHOOK_SYSTEMS = {
+  mandata: {
+    label: 'Mandata TMS', icon: '🚛', color: '#3b82f6',
+    events: {
+      job_delayed:   { label: 'Job Delayed',       fields: { vehicle_reg: 'BN21 XKT', delay_minutes: 45, reason: 'M62 congestion near J26', sla_deadline: '15:30', consignee: 'Tesco DC Donington', job_id: 'MAN-44821' } },
+      job_cancelled: { label: 'Job Cancelled',     fields: { vehicle_reg: 'BN21 XKT', job_id: 'MAN-44822', reason: 'Customer cancelled 2h before collection', value_gbp: 2400, collection: 'Leeds DC', consignee: 'Asda Lutterworth' } },
+      pod_problem:   { label: 'POD Not Received',  fields: { vehicle_reg: 'BN21 XKT', job_id: 'MAN-44823', consignee: 'NHS Supply Chain Redditch', hours_overdue: 3, value_gbp: 6800 } },
+    }
+  },
+  webfleet: {
+    label: 'Webfleet Telematics', icon: '🌡', color: '#ef4444',
+    events: {
+      temp_alarm:   { label: 'Temperature Alarm',    fields: { vehicle_reg: 'LK72 ABX', temp_reading: 7.2, threshold: 5.0, cargo_type: 'chilled', location: 'M1 southbound J18', driver_name: 'Dave P' } },
+      off_route:    { label: 'Vehicle Off Route',    fields: { vehicle_reg: 'BN21 XKT', deviation_miles: 8, planned_route: 'M62 westbound', current_location: 'A1(M) northbound J8', driver_name: 'Dave P' } },
+      panic_button: { label: 'Panic Button Pressed', fields: { vehicle_reg: 'BN21 XKT', driver_name: 'Dave P', location: 'A638 nr Wakefield', cargo_value: 18000 } },
+    }
+  },
+  microlise: {
+    label: 'Microlise Fleet', icon: '📍', color: '#a855f7',
+    events: {
+      speeding:      { label: 'Speed Violation',       fields: { vehicle_reg: 'BN21 XKT', speed_mph: 68, limit_mph: 56, location: 'M62 westbound J26', driver_name: 'Dave P' } },
+      harsh_braking: { label: 'Harsh Braking Event',   fields: { vehicle_reg: 'BN21 XKT', g_force: 0.45, location: 'A1 southbound J34', cargo_type: 'fragile electronics' } },
+      long_stop:     { label: 'Unexpected Long Stop',  fields: { vehicle_reg: 'BN21 XKT', stop_duration_mins: 92, location: 'Toddington Services M1', driver_name: 'Dave P' } },
+    }
+  },
+  samsara: {
+    label: 'Samsara Telematics', icon: '📡', color: '#00e5b0',
+    events: {
+      sensor_alert:  { label: 'Door Sensor Alert',    fields: { vehicle_reg: 'BN21 XKT', event: 'rear_door_open', location: 'B1234 industrial estate Sheffield', time_stopped_mins: 18 } },
+      fatigue_alert: { label: 'Driver Fatigue Alert', fields: { vehicle_reg: 'BN21 XKT', driver_name: 'Dave P', hours_driven: 4.5, next_break_due_mins: 10, location: 'M1 northbound J29' } },
+      idling:        { label: 'Excessive Idling',     fields: { vehicle_reg: 'BN21 XKT', idle_minutes: 45, fuel_wasted_litres: 6.2, location: 'Leeds Distribution Centre' } },
+    }
+  },
+  wms: {
+    label: 'Warehouse WMS', icon: '🏭', color: '#f59e0b',
+    events: {
+      short_pick: { label: 'Short Pick',      fields: { order_id: 'ORD-88321', warehouse: 'Leeds DC', ordered_qty: 24, available_qty: 18, product_code: 'FRZN-MIX-001', consignee: 'Asda DC Lutterworth', despatch_deadline: '13:00' } },
+      hold:       { label: 'Despatch Hold',   fields: { order_id: 'ORD-88322', warehouse: 'Birmingham DC', hold_reason: 'customs documentation incomplete', consignee: 'NHS Supply Chain', value_gbp: 8500 } },
+      overweight: { label: 'Overweight Load', fields: { vehicle_reg: 'BN21 XKT', loaded_weight_kg: 44800, legal_max_kg: 44000, depot: 'Manchester DC', consignee: 'B&Q Swindon' } },
+    }
+  },
+  customer: {
+    label: 'Customer Portal', icon: '👤', color: '#8b5cf6',
+    events: {
+      cancellation:   { label: 'Booking Cancellation',      fields: { booking_ref: 'BKG-55221', collection: 'Birmingham DC', delivery: 'NHS Supply Chain Redditch', pallets: 12, value_gbp: 3400, reason: 'production delay', driver_already_dispatched: false } },
+      sla_dispute:    { label: 'SLA Dispute Raised',        fields: { booking_ref: 'BKG-55222', consignee: 'Tesco DC Donington', claimed_late_mins: 47, penalty_claimed: 1200, disputed_ref: 'REF-9103' } },
+      change_request: { label: 'Collection Time Change',    fields: { booking_ref: 'BKG-55223', original_time: '08:00', new_time: '11:30', collection: 'Sheffield DC', driver_already_dispatched: true } },
+    }
+  }
+}
+
 const TAB_STYLE = (active) => ({
   padding: '6px 16px', borderRadius: 6, fontSize: 11, cursor: 'pointer',
   fontFamily: 'monospace', letterSpacing: '0.04em',
@@ -908,6 +959,13 @@ export default function DashboardPage() {
   const [latestRuns, setLatestRuns] = useState({})
   const [sessionIncidents, setSessionIncidents] = useState([])
   const [liveShipments, setLiveShipments] = useState([])
+  const [whSystem, setWhSystem] = useState('webfleet')
+  const [whEvent, setWhEvent] = useState('temp_alarm')
+  const [whPayload, setWhPayload] = useState(null)
+  const [whFiring, setWhFiring] = useState(false)
+  const [whLog, setWhLog] = useState([])
+  const [whResult, setWhResult] = useState(null)
+  const [whLogLoading, setWhLogLoading] = useState(false)
 
   async function assessCancelAction(approvalId, sentAt) {
     const now = Date.now()
@@ -1285,6 +1343,49 @@ export default function DashboardPage() {
     }
   }
 
+  async function loadWebhookLog() {
+    setWhLogLoading(true)
+    try {
+      const res = await fetch('/api/webhooks/inbound?client_id=pearson-haulage&limit=30')
+      if (!res.ok) return
+      const data = await res.json()
+      setWhLog(data.logs || [])
+    } catch {}
+    finally { setWhLogLoading(false) }
+  }
+
+  function getWhPayload() {
+    if (whPayload) return whPayload
+    return WEBHOOK_SYSTEMS[whSystem]?.events[whEvent]?.fields || {}
+  }
+
+  async function fireWebhook() {
+    setWhFiring(true)
+    setWhResult(null)
+    try {
+      const res = await fetch('/api/webhooks/inbound', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          system: whSystem,
+          event_type: whEvent,
+          payload: getWhPayload(),
+          client_id: 'pearson-haulage'
+        })
+      })
+      const data = await res.json()
+      setWhResult(data)
+      // Reload log to show new entry
+      await loadWebhookLog()
+      // If approval created, refresh approvals tab badge
+      if (data.severity === 'CRITICAL' || data.severity === 'HIGH') loadApprovals()
+    } catch (e) {
+      setWhResult({ error: e.message })
+    } finally {
+      setWhFiring(false)
+    }
+  }
+
   return (
     <div style={{ minHeight:'100vh', display:'flex', flexDirection:'column', fontFamily:'IBM Plex Sans, sans-serif', background:'#0a0c0e', color:'#e8eaed' }}>
       <style>{`
@@ -1402,6 +1503,7 @@ export default function DashboardPage() {
               APPROVALS {pendingApprovals.length > 0 ? `(${pendingApprovals.length})` : ''}
             </button>
             <button style={TAB_STYLE(activeTab==='scenarios')} onClick={() => setActiveTab('scenarios')}>SCENARIOS</button>
+            <button style={TAB_STYLE(activeTab==='integrations')} onClick={() => { setActiveTab('integrations'); loadWebhookLog() }}>INTEGRATIONS</button>
             <div style={{ marginLeft:'auto', display:'flex', alignItems:'center', gap:8 }}>
               <div style={{ width:7, height:7, borderRadius:'50%', background: loading ? '#f59e0b' : '#00e5b0', animation: loading ? 'pulse 1s infinite' : 'none' }} />
               <span style={{ fontFamily:'monospace', fontSize:10, color:'#4a5260' }}>{loading ? 'ANALYSING...' : 'AGENT READY'}</span>
@@ -1812,6 +1914,186 @@ export default function DashboardPage() {
               )}
             </div>
           )}
+          {/* ── INTEGRATIONS TAB ───────────────────────────────────────────── */}
+          {activeTab === 'integrations' && (() => {
+            const sys = WEBHOOK_SYSTEMS[whSystem]
+            const evtConfig = sys?.events[whEvent]
+            const currentPayload = getWhPayload()
+            const SEV_C = { CRITICAL:'#ef4444', HIGH:'#f59e0b', MEDIUM:'#3b82f6', LOW:'#8a9099' }
+            const SEV_BG2 = { CRITICAL:'rgba(239,68,68,0.12)', HIGH:'rgba(245,158,11,0.12)', MEDIUM:'rgba(59,130,246,0.12)', LOW:'rgba(138,144,153,0.12)' }
+
+            return (
+              <div style={{ flex:1, overflowY:'auto', padding:'20px', display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, alignItems:'start' }}>
+
+                {/* ── LEFT: TEST CONSOLE ── */}
+                <div>
+                  <div style={{ fontSize:10, color:'#4a5260', fontFamily:'monospace', marginBottom:14 }}>// INTEGRATION TEST CONSOLE — fire real payloads, trigger live AI + SMS chain</div>
+
+                  {/* System selector */}
+                  <div style={{ marginBottom:14 }}>
+                    <div style={{ fontSize:9, fontFamily:'monospace', color:'#4a5260', letterSpacing:'0.08em', marginBottom:8 }}>SELECT SYSTEM</div>
+                    <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
+                      {Object.entries(WEBHOOK_SYSTEMS).map(([key, s]) => (
+                        <button key={key} onClick={() => {
+                          setWhSystem(key)
+                          const firstEvt = Object.keys(s.events)[0]
+                          setWhEvent(firstEvt)
+                          setWhPayload(null)
+                          setWhResult(null)
+                        }}
+                          style={{ padding:'6px 12px', borderRadius:6, border: whSystem===key ? `1px solid ${s.color}` : '1px solid rgba(255,255,255,0.08)', background: whSystem===key ? `${s.color}15` : 'transparent', color: whSystem===key ? s.color : '#4a5260', fontSize:11, cursor:'pointer', fontFamily:'monospace', transition:'all 0.15s' }}>
+                          {s.icon} {s.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Event selector */}
+                  <div style={{ marginBottom:14 }}>
+                    <div style={{ fontSize:9, fontFamily:'monospace', color:'#4a5260', letterSpacing:'0.08em', marginBottom:8 }}>SELECT EVENT TYPE</div>
+                    <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
+                      {sys && Object.entries(sys.events).map(([key, evt]) => (
+                        <button key={key} onClick={() => { setWhEvent(key); setWhPayload(null); setWhResult(null) }}
+                          style={{ padding:'5px 11px', borderRadius:5, border: whEvent===key ? `1px solid ${sys.color}80` : '1px solid rgba(255,255,255,0.07)', background: whEvent===key ? `${sys.color}12` : '#111418', color: whEvent===key ? sys.color : '#8a9099', fontSize:11, cursor:'pointer', fontFamily:'monospace', transition:'all 0.15s' }}>
+                          {evt.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Payload fields */}
+                  {evtConfig && (
+                    <div style={{ marginBottom:14 }}>
+                      <div style={{ fontSize:9, fontFamily:'monospace', color:'#4a5260', letterSpacing:'0.08em', marginBottom:8 }}>PAYLOAD — edit fields then fire</div>
+                      <div style={{ background:'#111418', border:'1px solid rgba(255,255,255,0.08)', borderRadius:8, overflow:'hidden' }}>
+                        {Object.entries(currentPayload).map(([key, val], i, arr) => (
+                          <div key={key} style={{ display:'flex', alignItems:'center', padding:'8px 12px', borderBottom: i < arr.length-1 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
+                            <span style={{ fontSize:10, fontFamily:'monospace', color:'#4a5260', width:160, flexShrink:0 }}>{key.replace(/_/g,' ')}</span>
+                            <input
+                              defaultValue={String(val)}
+                              onChange={e => {
+                                const updated = { ...getWhPayload(), [key]: isNaN(e.target.value) ? e.target.value : (e.target.value === '' ? '' : Number(e.target.value)) }
+                                setWhPayload(updated)
+                              }}
+                              style={{ flex:1, background:'transparent', border:'none', outline:'none', color:'#e8eaed', fontSize:11, fontFamily:'IBM Plex Mono, monospace' }}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Fire button */}
+                  <button onClick={fireWebhook} disabled={whFiring}
+                    style={{ width:'100%', padding:'12px', background: whFiring ? '#111418' : sys?.color || '#00e5b0', border: whFiring ? `1px solid ${sys?.color||'#00e5b0'}40` : 'none', borderRadius:7, color: whFiring ? (sys?.color||'#00e5b0') : '#000', fontWeight:700, fontSize:13, cursor: whFiring ? 'default' : 'pointer', fontFamily:'monospace', letterSpacing:'0.04em', transition:'all 0.2s', marginBottom:14 }}>
+                    {whFiring ? (
+                      <span style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:8 }}>
+                        <span style={{ width:12, height:12, border:'2px solid currentColor', borderTopColor:'transparent', borderRadius:'50%', display:'inline-block', animation:'spin 0.8s linear infinite' }} />
+                        FIRING WEBHOOK...
+                      </span>
+                    ) : `${sys?.icon || '⚡'} FIRE ${sys?.label?.toUpperCase() || ''} → ${evtConfig?.label?.toUpperCase() || ''}`}
+                  </button>
+
+                  {/* Result */}
+                  {whResult && !whFiring && (
+                    <div style={{ border: whResult.error ? '1px solid rgba(239,68,68,0.25)' : `1px solid ${SEV_C[whResult.severity]||'#00e5b0'}30`, borderRadius:8, overflow:'hidden' }}>
+                      {/* Result header */}
+                      <div style={{ padding:'10px 14px', background: whResult.error ? 'rgba(239,68,68,0.08)' : `${SEV_BG2[whResult.severity]||'rgba(0,229,176,0.06)'}`, display:'flex', alignItems:'center', gap:10, flexWrap:'wrap' }}>
+                        {whResult.error ? (
+                          <span style={{ fontSize:11, fontFamily:'monospace', color:'#ef4444' }}>✗ ERROR — {whResult.error}</span>
+                        ) : (
+                          <>
+                            <span style={{ fontSize:11, fontFamily:'monospace', color: SEV_C[whResult.severity]||'#00e5b0', fontWeight:700, padding:'2px 8px', borderRadius:4, background:`${SEV_C[whResult.severity]||'#00e5b0'}15`, border:`1px solid ${SEV_C[whResult.severity]||'#00e5b0'}30` }}>{whResult.severity}</span>
+                            {whResult.financial_impact > 0 && <span style={{ fontSize:11, fontFamily:'monospace', color:'#00e5b0' }}>£{whResult.financial_impact.toLocaleString()}</span>}
+                            <span style={{ fontSize:10, fontFamily:'monospace', color: whResult.sms_sent ? '#00e5b0' : '#f59e0b' }}>
+                              {whResult.sms_sent ? '✓ SMS FIRED TO OPS' : whResult.simulated ? '◎ SIMULATED — no ops phone' : '✗ SMS FAILED'}
+                            </span>
+                          </>
+                        )}
+                      </div>
+                      {/* AI analysis preview */}
+                      {whResult.analysis && (
+                        <div style={{ padding:'12px 14px', maxHeight:280, overflowY:'auto' }}>
+                          <AgentResponse text={whResult.analysis} />
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* ── RIGHT: WEBHOOK AUDIT LOG ── */}
+                <div>
+                  <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:14 }}>
+                    <div style={{ fontSize:10, color:'#4a5260', fontFamily:'monospace' }}>// WEBHOOK AUDIT LOG</div>
+                    <button onClick={loadWebhookLog} disabled={whLogLoading}
+                      style={{ fontSize:10, color:'#4a5260', background:'none', border:'1px solid rgba(255,255,255,0.06)', borderRadius:4, padding:'3px 8px', cursor:'pointer', fontFamily:'monospace' }}>
+                      {whLogLoading ? '...' : 'REFRESH ↺'}
+                    </button>
+                  </div>
+
+                  {whLog.length === 0 && !whLogLoading && (
+                    <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:'40px 20px', gap:10, opacity:0.3 }}>
+                      <div style={{ fontSize:28, color:'#4a5260' }}>⚡</div>
+                      <div style={{ fontSize:12, color:'#4a5260', textAlign:'center' }}>No webhook events yet</div>
+                      <div style={{ fontSize:11, color:'#4a5260', textAlign:'center', maxWidth:200 }}>Fire a webhook from the console to see the full audit trail here</div>
+                    </div>
+                  )}
+
+                  {whLogLoading && whLog.length === 0 && (
+                    <div style={{ display:'flex', alignItems:'center', gap:8, padding:'16px 0' }}>
+                      <div style={{ width:14, height:14, border:'2px solid #00e5b0', borderTopColor:'transparent', borderRadius:'50%', animation:'spin 0.8s linear infinite' }} />
+                      <span style={{ fontSize:11, color:'#4a5260', fontFamily:'monospace' }}>Loading log...</span>
+                    </div>
+                  )}
+
+                  {whLog.map(entry => {
+                    const sysConfig = WEBHOOK_SYSTEMS[entry.system_name]
+                    const sysColor = sysConfig?.color || '#8a9099'
+                    const sevColor = SEV_C[entry.severity] || '#8a9099'
+                    const timeStr = entry.created_at ? new Date(entry.created_at).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'}) : ''
+                    const dateStr = entry.created_at ? new Date(entry.created_at).toLocaleDateString('en-GB',{day:'numeric',month:'short'}) : ''
+                    return (
+                      <div key={entry.id} style={{ padding:'10px 12px', background:'#111418', borderRadius:7, border:'1px solid rgba(255,255,255,0.06)', marginBottom:6 }}>
+                        <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:5, flexWrap:'wrap' }}>
+                          {/* System badge */}
+                          <span style={{ fontSize:10, fontFamily:'monospace', color:sysColor, background:`${sysColor}12`, border:`1px solid ${sysColor}25`, padding:'2px 7px', borderRadius:4 }}>
+                            {sysConfig?.icon || '⚡'} {entry.system_name?.toUpperCase()}
+                          </span>
+                          {/* Severity badge */}
+                          {entry.severity && (
+                            <span style={{ fontSize:10, fontFamily:'monospace', color:sevColor, background:`${sevColor}12`, border:`1px solid ${sevColor}25`, padding:'2px 7px', borderRadius:4 }}>
+                              {entry.severity}
+                            </span>
+                          )}
+                          {/* Financial impact */}
+                          {entry.financial_impact > 0 && (
+                            <span style={{ fontSize:10, fontFamily:'monospace', color:'#00e5b0' }}>£{Number(entry.financial_impact).toLocaleString()}</span>
+                          )}
+                          {/* SMS status */}
+                          <span style={{ fontSize:9, fontFamily:'monospace', color: entry.sms_fired ? '#00e5b0' : entry.simulated ? '#4a5260' : '#f59e0b', marginLeft:'auto' }}>
+                            {entry.sms_fired ? '✓ SMS SENT' : entry.simulated ? '◎ SIM' : '— SMS NOT SENT'}
+                          </span>
+                        </div>
+                        <div style={{ fontSize:11, color:'#e8eaed', marginBottom:3 }}>
+                          {entry.event_type?.replace(/_/g,' ')}
+                        </div>
+                        {entry.payload && (
+                          <div style={{ fontSize:10, color:'#4a5260', fontFamily:'monospace', marginBottom:3 }}>
+                            {entry.payload.vehicle_reg && `${entry.payload.vehicle_reg} · `}
+                            {entry.payload.location && `${entry.payload.location} · `}
+                            {entry.payload.consignee && entry.payload.consignee}
+                          </div>
+                        )}
+                        <div style={{ fontSize:9, color:'#4a5260', fontFamily:'monospace' }}>{dateStr} {timeStr}</div>
+                      </div>
+                    )
+                  })}
+                </div>
+
+              </div>
+            )
+          })()}
+
         </div>
       </div>
     </div>
