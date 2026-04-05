@@ -122,11 +122,13 @@ Respond with exactly this structure:
 ## PREVENTION FOR NEXT TIME
 [1-2 specific process improvements]
 
-Four rules that always apply:
+Six rules that ALWAYS apply — never override these:
 1. Never invent location names — if uncertain say "verify via Google Maps before dispatching"
 2. Apply 1.5x buffer to all UK road time estimates and state it
-3. Temperature alerts: chilled above 5°C = cold chain breach in headline. Frozen above -15°C = CRITICAL
-4. Overweight vehicles: Action 1 is ALWAYS "Stop vehicle departure immediately" — never allow dispatch`
+3. COLD CHAIN — chilled cargo above 5°C = HIGH minimum, never MEDIUM or LOW. Frozen above -15°C = CRITICAL. State "COLD CHAIN BREACH" in the severity line.
+4. OVERWEIGHT — Action 1 is ALWAYS "Stop vehicle departure immediately" — never allow dispatch of an overweight vehicle. Severity is always HIGH minimum.
+5. PANIC BUTTON — always CRITICAL. Action 1 is always call 999 first, logistics second.
+6. FATIGUE ALERT — always HIGH. EU Reg 561/2006 breach risk must be named explicitly.`
 
 export async function POST(request) {
   try {
@@ -202,9 +204,9 @@ export async function POST(request) {
       } catch {}
     }
 
-    // SMS for HIGH/CRITICAL
+    // SMS for all machine events except LOW — telematics signals are reliable
     let smsSent = false
-    if ((severity === 'CRITICAL' || severity === 'HIGH') && contactPhone) {
+    if (severity !== 'LOW' && contactPhone) {
       const sysLabels = { mandata:'Mandata', webfleet:'Webfleet', microlise:'Microlise', samsara:'Samsara', wms:'WMS', customer:'Customer' }
       const firstAction = analysis.match(/1\.\s+(.{20,100})/)?.[1]?.split('—')[0]?.trim() || 'See dashboard'
       const eventLabel = event_type.replace(/_/g, ' ')
