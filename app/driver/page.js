@@ -780,7 +780,7 @@ export default function DriverApp() {
             <div style={{fontSize:11,color:'#4a5260',fontFamily:'monospace',letterSpacing:'0.06em'}}>
               {new Date().toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'}).toUpperCase()}
             </div>
-            <div style={{display:'flex',alignItems:'center',gap:10'}}>
+            <div style={{display:'flex',alignItems:'center',gap:10}}>
               {loading
                 ? <div style={{fontSize:11,color:'#4a5260',fontFamily:'monospace'}}>Loading...</div>
                 : <div style={{fontSize:11,fontFamily:'monospace',color:'#4a5260'}}>
