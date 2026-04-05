@@ -130,6 +130,7 @@ export default function DriverApp() {
   const [opsAcknowledged, setOpsAcknowledged]   = useState(false)
   const [escalationTimer, setEscalationTimer]   = useState(null)
   const [resumeConfirm, setResumeConfirm]       = useState(false)
+  const [opsJobUpdate, setOpsJobUpdate]         = useState(null) // banner when ops cancels jobs
 
   const [panelOpen, setPanelOpen]       = useState(false)
   const [panelIssue, setPanelIssue]     = useState(null)
@@ -177,6 +178,41 @@ export default function DriverApp() {
     } else { setLoading(false) }
     return () => { clearTimeout(undoTimer.current); clearInterval(countdownTimer.current) }
   }, [])
+
+  // ── OPS-INITIATED JOB POLL — checks every 60s for cancelled jobs ──────────
+  useEffect(() => {
+    if (!shiftStarted || !driverInfo.clientId || !driverInfo.vehicleReg) return
+
+    const checkForCancelledJobs = async () => {
+      try {
+        const res = await fetch(`/api/driver/progress?client_id=${driverInfo.clientId}&vehicle_reg=${encodeURIComponent(driverInfo.vehicleReg)}`)
+        if (!res.ok) return
+        const data = await res.json()
+        const cancelled = (data.progress || []).filter(p => p.status === 'cancelled')
+
+        if (cancelled.length > 0) {
+          // Remove cancelled jobs from state
+          setJobs(prev => {
+            const updated = prev.filter(j => !cancelled.find(c => c.ref === j.ref))
+            saveJobProgress(updated)
+            // If active job was cancelled, move to next
+            return updated
+          })
+          setActiveJob(prev => {
+            if (prev && cancelled.find(c => c.ref === prev.ref)) return null
+            return prev
+          })
+          // Show ops notification banner
+          const refs = cancelled.map(c => c.ref).join(', ')
+          setOpsJobUpdate(`Ops has reassigned ${cancelled.length > 1 ? 'jobs' : 'job'} ${refs} from your schedule`)
+          setTimeout(() => setOpsJobUpdate(null), 12000)
+        }
+      } catch {}
+    }
+
+    const interval = setInterval(checkForCancelledJobs, 60000)
+    return () => clearInterval(interval)
+  }, [shiftStarted, driverInfo.clientId, driverInfo.vehicleReg])
 
   const showToast = (msg, type='ok') => { setToast({msg,type}); setTimeout(()=>setToast(null),3500) }
 
@@ -782,6 +818,18 @@ export default function DriverApp() {
         <div style={{margin:'8px 12px 0',padding:'10px 13px',background:'rgba(59,130,246,0.08)',border:'1px solid rgba(59,130,246,0.25)',borderRadius:9}}>
           <div style={{fontSize:9,color:'#3b82f6',fontFamily:'monospace',fontWeight:700,letterSpacing:'0.08em',marginBottom:4}}>OPS MESSAGE</div>
           <div style={{fontSize:13,color:'#e8eaed'}}>{opsMessages[opsMessages.length-1]}</div>
+        </div>
+      )}
+
+      {/* Ops job cancellation banner */}
+      {opsJobUpdate&&(
+        <div style={{margin:'8px 12px 0',padding:'12px 14px',background:'rgba(239,68,68,0.08)',border:'1px solid rgba(239,68,68,0.3)',borderRadius:9,display:'flex',alignItems:'flex-start',gap:10}}>
+          <span style={{fontSize:18,flexShrink:0}}>📋</span>
+          <div>
+            <div style={{fontSize:12,color:'#ef4444',fontFamily:'monospace',fontWeight:700,marginBottom:3}}>SCHEDULE UPDATED BY OPS</div>
+            <div style={{fontSize:13,color:'#e8eaed'}}>{opsJobUpdate}</div>
+            <div style={{fontSize:11,color:'#8a9099',marginTop:3}}>Your job list has been updated automatically.</div>
+          </div>
         </div>
       )}
 

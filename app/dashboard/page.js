@@ -966,6 +966,10 @@ export default function DashboardPage() {
   const [whLog, setWhLog] = useState([])
   const [whResult, setWhResult] = useState(null)
   const [whLogLoading, setWhLogLoading] = useState(false)
+  const [fleet, setFleet] = useState([])
+  const [cancellingJob, setCancellingJob] = useState(null)
+  const [cancelReason, setCancelReason] = useState('')
+  const [cancelConfirm, setCancelConfirm] = useState(null) // { vehicle_reg, ref, cancel_all }
 
   async function assessCancelAction(approvalId, sentAt) {
     const now = Date.now()
@@ -1359,6 +1363,38 @@ export default function DashboardPage() {
     return WEBHOOK_SYSTEMS[whSystem]?.events[whEvent]?.fields || {}
   }
 
+  async function loadFleet() {
+    try {
+      const res = await fetch('/api/driver/cancel-job?client_id=pearson-haulage')
+      if (!res.ok) return
+      const data = await res.json()
+      setFleet(data.fleet || [])
+    } catch {}
+  }
+
+  async function cancelJob({ vehicle_reg, ref, cancel_all }) {
+    setCancellingJob(ref || vehicle_reg)
+    try {
+      await fetch('/api/driver/cancel-job', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          client_id: 'pearson-haulage',
+          vehicle_reg,
+          ref: ref || undefined,
+          cancel_all: cancel_all || false,
+          reason: cancelReason || 'Reassigned by ops',
+          approved_by: 'ops_manager'
+        })
+      })
+      setCancelConfirm(null)
+      setCancelReason('')
+      await loadFleet()
+      await loadApprovals()
+    } catch {}
+    finally { setCancellingJob(null) }
+  }
+
   async function fireWebhook() {
     setWhFiring(true)
     setWhResult(null)
@@ -1499,7 +1535,7 @@ export default function DashboardPage() {
           <div style={{ padding:'10px 20px', borderBottom:'1px solid rgba(255,255,255,0.06)', display:'flex', alignItems:'center', gap:8 }}>
             <button style={TAB_STYLE(activeTab==='agent')} onClick={() => setActiveTab('agent')}>AGENT</button>
             <button style={TAB_STYLE(activeTab==='modules')} onClick={() => setActiveTab('modules')}>MODULES</button>
-            <button style={{ ...TAB_STYLE(activeTab==='approvals'), ...(pendingApprovals.length>0?{borderColor:'rgba(239,68,68,0.4)',color:'#ef4444',background:'rgba(239,68,68,0.08)'}:{}) }} onClick={() => { setActiveTab('approvals'); loadApprovals() }}>
+            <button style={{ ...TAB_STYLE(activeTab==='approvals'), ...(pendingApprovals.length>0?{borderColor:'rgba(239,68,68,0.4)',color:'#ef4444',background:'rgba(239,68,68,0.08)'}:{}) }} onClick={() => { setActiveTab('approvals'); loadApprovals(); loadFleet() }}>
               APPROVALS {pendingApprovals.length > 0 ? `(${pendingApprovals.length})` : ''}
             </button>
             <button style={TAB_STYLE(activeTab==='scenarios')} onClick={() => setActiveTab('scenarios')}>SCENARIOS</button>
@@ -1846,6 +1882,88 @@ export default function DashboardPage() {
                   <div style={{ fontSize:11, color:'#4a5260', textAlign:'center', maxWidth:240 }}>Fire actions from agent analyses to see them here</div>
                 </div>
               ) : null}
+
+              {/* ── ACTIVE FLEET PANEL ── */}
+              {fleet.length > 0 && (
+                <div style={{ marginTop:16, paddingTop:16, borderTop:'1px solid rgba(255,255,255,0.06)' }}>
+                  <div style={{ fontSize:10, color:'#4a5260', fontFamily:'monospace', marginBottom:10 }}>// ACTIVE FLEET — ops can cancel or reassign jobs</div>
+                  {fleet.map(vehicle => (
+                    <div key={vehicle.vehicle_reg} style={{ background:'#111418', border:'1px solid rgba(255,255,255,0.08)', borderRadius:10, marginBottom:10, overflow:'hidden' }}>
+                      {/* Vehicle header */}
+                      <div style={{ padding:'10px 14px', borderBottom:'1px solid rgba(255,255,255,0.05)', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+                        <div>
+                          <span style={{ fontFamily:'monospace', fontSize:12, color:'#e8eaed', fontWeight:600 }}>{vehicle.vehicle_reg}</span>
+                          {vehicle.driver_name && <span style={{ fontSize:11, color:'#4a5260', marginLeft:8 }}>{vehicle.driver_name}</span>}
+                          <span style={{ fontSize:10, color:'#4a5260', marginLeft:8 }}>{vehicle.jobs.length} active job{vehicle.jobs.length !== 1 ? 's' : ''}</span>
+                        </div>
+                        <button
+                          onClick={() => setCancelConfirm({ vehicle_reg: vehicle.vehicle_reg, cancel_all: true })}
+                          disabled={cancellingJob === vehicle.vehicle_reg}
+                          style={{ padding:'4px 10px', borderRadius:5, border:'1px solid rgba(239,68,68,0.3)', background:'rgba(239,68,68,0.07)', color:'#ef4444', fontSize:10, cursor:'pointer', fontFamily:'monospace' }}>
+                          Cancel all
+                        </button>
+                      </div>
+                      {/* Job list */}
+                      {vehicle.jobs.map(job => {
+                        const statusColors = { at_risk:'#ef4444', at_collection:'#3b82f6', loaded:'#00e5b0', at_customer:'#3b82f6', delayed:'#f59e0b', disrupted:'#ef4444', 'on-track':'#00e5b0', part_delivered:'#f59e0b' }
+                        const sc = statusColors[job.status] || '#8a9099'
+                        return (
+                          <div key={job.ref} style={{ padding:'8px 14px', borderBottom:'1px solid rgba(255,255,255,0.03)', display:'flex', alignItems:'center', gap:10 }}>
+                            <div style={{ width:6, height:6, borderRadius:'50%', background:sc, flexShrink:0 }}/>
+                            <div style={{ flex:1, minWidth:0 }}>
+                              <span style={{ fontFamily:'monospace', fontSize:11, color:'#e8eaed' }}>{job.ref}</span>
+                              <span style={{ fontSize:10, color:sc, fontFamily:'monospace', marginLeft:8 }}>{job.status.replace(/_/g,' ').toUpperCase()}</span>
+                              {job.alert && <div style={{ fontSize:10, color:'#f59e0b', marginTop:2 }}>⚠ {job.alert}</div>}
+                            </div>
+                            <button
+                              onClick={() => setCancelConfirm({ vehicle_reg: vehicle.vehicle_reg, ref: job.ref, cancel_all: false })}
+                              disabled={cancellingJob === job.ref}
+                              style={{ padding:'3px 8px', borderRadius:4, border:'1px solid rgba(239,68,68,0.2)', background:'transparent', color:'#ef4444', fontSize:10, cursor:'pointer', fontFamily:'monospace', flexShrink:0 }}>
+                              {cancellingJob === job.ref ? '...' : 'Cancel'}
+                            </button>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* ── CANCEL JOB CONFIRM MODAL ── */}
+              {cancelConfirm && (
+                <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.75)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:1001 }}>
+                  <div style={{ background:'#111418', border:'1px solid rgba(255,255,255,0.12)', borderRadius:12, padding:'24px', maxWidth:420, width:'90%' }}>
+                    <div style={{ fontFamily:'monospace', fontSize:11, color:'#ef4444', letterSpacing:'0.08em', marginBottom:12 }}>
+                      {cancelConfirm.cancel_all ? 'CANCEL ALL JOBS' : `CANCEL JOB — ${cancelConfirm.ref}`}
+                    </div>
+                    <div style={{ fontSize:13, color:'#e8eaed', marginBottom:6 }}>
+                      {cancelConfirm.cancel_all
+                        ? `Remove all active jobs from ${cancelConfirm.vehicle_reg}. Driver will be SMS'd to end shift.`
+                        : `Remove ${cancelConfirm.ref} from ${cancelConfirm.vehicle_reg}. Driver will be SMS'd to drop this job.`}
+                    </div>
+                    <div style={{ fontSize:12, color:'#8a9099', marginBottom:14 }}>Driver app will update within 60 seconds automatically.</div>
+                    <input
+                      value={cancelReason}
+                      onChange={e => setCancelReason(e.target.value)}
+                      placeholder='Reason (e.g. Reassigned to BK22 ABC) — optional'
+                      style={{ width:'100%', padding:'10px 12px', background:'#0a0c0e', border:'1px solid rgba(255,255,255,0.1)', borderRadius:6, color:'#e8eaed', fontSize:12, outline:'none', marginBottom:14, boxSizing:'border-box', fontFamily:'IBM Plex Sans' }}
+                    />
+                    <div style={{ display:'flex', gap:8 }}>
+                      <button
+                        onClick={() => cancelJob(cancelConfirm)}
+                        disabled={!!cancellingJob}
+                        style={{ flex:1, padding:'10px', background:'#ef4444', border:'none', borderRadius:6, color:'#fff', fontWeight:600, fontSize:12, cursor:'pointer', fontFamily:'monospace' }}>
+                        {cancellingJob ? '...' : 'Confirm cancel'}
+                      </button>
+                      <button
+                        onClick={() => { setCancelConfirm(null); setCancelReason('') }}
+                        style={{ padding:'10px 16px', background:'transparent', border:'1px solid rgba(255,255,255,0.1)', borderRadius:6, color:'#8a9099', fontSize:12, cursor:'pointer', fontFamily:'monospace' }}>
+                        Keep job
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* ── CANCEL ASSESSMENT MODAL ── */}
               {cancelAssessment && (
