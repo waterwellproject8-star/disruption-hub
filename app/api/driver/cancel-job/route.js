@@ -46,7 +46,7 @@ async function getDriverName(db, client_id, vehicle_reg) {
 
 export async function POST(request) {
   try {
-    const { client_id, vehicle_reg, ref, cancel_all, reason, reassign_to, reassign_only, approved_by = 'ops_manager' } = await request.json()
+    const { client_id, vehicle_reg, ref, cancel_all, reason, reassign_to, reassign_only, has_goods, approved_by = 'ops_manager' } = await request.json()
     if (!client_id) return Response.json({ error: 'client_id required' }, { status: 400 })
 
     const db = getDB()
@@ -142,9 +142,16 @@ export async function POST(request) {
     // SMS original driver
     let originalNotified = false
     if (originalDriverPhone) {
-      const msg = cancel_all
-        ? `DisruptionHub OPS\n\nAll your remaining jobs have been reassigned${reassign_to ? ` to ${reassign_to}` : ''}. Please end your shift and return to depot.${reason ? `\nReason: ${reason}` : ''}`
-        : `DisruptionHub OPS\n\nJob ${cancelledRefs.join(', ')} removed from your schedule${reassign_to ? ` and reassigned to ${reassign_to}` : ''}. Continue with remaining runs.${reason ? `\nReason: ${reason}` : ''}`
+      let msg
+      if (cancel_all) {
+        msg = has_goods
+          ? `DisruptionHub OPS\n\nAll your runs have been cancelled. Return all goods to depot immediately.\n${reason ? `Reason: ${reason}` : ''}`
+          : `DisruptionHub OPS\n\nAll your remaining jobs have been removed from your schedule${reassign_to ? ` and reassigned to ${reassign_to}` : ''}. Return to depot.\n${reason ? `Reason: ${reason}` : ''}`
+      } else {
+        msg = has_goods
+          ? `DisruptionHub OPS\n\nJob ${cancelledRefs.join(', ')} has been cancelled. You have goods on board — return them to depot before continuing.\n${reason ? `Reason: ${reason}` : ''}`
+          : `DisruptionHub OPS\n\nJob ${cancelledRefs.join(', ')} removed from your schedule${reassign_to ? ` and reassigned to ${reassign_to}` : ''}. Continue with remaining runs.\n${reason ? `Reason: ${reason}` : ''}`
+      }
       const result = await sendSMS(originalDriverPhone, msg)
       originalNotified = result.success || false
     }

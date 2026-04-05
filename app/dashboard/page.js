@@ -1398,7 +1398,7 @@ export default function DashboardPage() {
     finally { setCancellingJob(null) }
   }
 
-  async function cancelJob({ vehicle_reg, ref, cancel_all }) {
+  async function cancelJob({ vehicle_reg, ref, cancel_all, hasGoods }) {
     setCancellingJob(ref || vehicle_reg)
     try {
       await fetch('/api/driver/cancel-job', {
@@ -1409,7 +1409,8 @@ export default function DashboardPage() {
           vehicle_reg,
           ref: ref || undefined,
           cancel_all: cancel_all || false,
-          reason: cancelReason || 'Reassigned by ops',
+          reason: cancelReason || (hasGoods ? 'Return goods to depot' : 'Cancelled by ops'),
+          has_goods: hasGoods || false,
           reassign_to: reassignTo || undefined,
           approved_by: 'ops_manager'
         })
@@ -1567,7 +1568,7 @@ export default function DashboardPage() {
               APPROVALS {pendingApprovals.length > 0 ? `(${pendingApprovals.length})` : ''}
             </button>
             <button style={TAB_STYLE(activeTab==='scenarios')} onClick={() => setActiveTab('scenarios')}>SCENARIOS</button>
-            <button style={TAB_STYLE(activeTab==='integrations')} onClick={() => { setActiveTab('integrations'); loadWebhookLog() }}>INTEGRATIONS</button>
+            <button style={TAB_STYLE(activeTab==='integrations')} onClick={() => { setActiveTab('integrations'); loadWebhookLog() }}>SETUP</button>
             <div style={{ marginLeft:'auto', display:'flex', alignItems:'center', gap:8 }}>
               <div style={{ width:7, height:7, borderRadius:'50%', background: loading ? '#f59e0b' : '#00e5b0', animation: loading ? 'pulse 1s infinite' : 'none' }} />
               <span style={{ fontFamily:'monospace', fontSize:10, color:'#4a5260' }}>{loading ? 'ANALYSING...' : 'AGENT READY'}</span>
@@ -1852,20 +1853,30 @@ export default function DashboardPage() {
                       </div>
                       {vehicle.jobs.map(job => {
                         const sc = { at_risk:'#ef4444', at_collection:'#3b82f6', loaded:'#00e5b0', at_customer:'#3b82f6', delayed:'#f59e0b', disrupted:'#ef4444', 'on-track':'#00e5b0', part_delivered:'#f59e0b' }[job.status] || '#8a9099'
+                        const hasGoods = ['loaded','at_customer','part_delivered'].includes(job.status)
+                        const isCurrent = ['at_collection','loaded','at_customer'].includes(job.status)
                         return (
-                          <div key={job.ref} style={{ padding:'9px 14px', borderBottom:'1px solid rgba(255,255,255,0.03)', display:'flex', alignItems:'center', gap:10 }}>
-                            <div style={{ width:6, height:6, borderRadius:'50%', background:sc, flexShrink:0 }}/>
-                            <div style={{ flex:1, minWidth:0 }}>
-                              <span style={{ fontFamily:'monospace', fontSize:12, color:'#e8eaed', fontWeight:600 }}>{job.ref}</span>
-                              <span style={{ fontSize:10, color:sc, fontFamily:'monospace', marginLeft:8 }}>{job.status.replace(/_/g,' ').toUpperCase()}</span>
-                              {job.alert && <div style={{ fontSize:10, color:'#f59e0b', marginTop:2 }}>⚠ {job.alert}</div>}
+                          <div key={job.ref} style={{ padding:'9px 14px', borderBottom:'1px solid rgba(255,255,255,0.03)', background: isCurrent ? 'rgba(59,130,246,0.03)' : 'transparent' }}>
+                            <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+                              <div style={{ width:6, height:6, borderRadius:'50%', background:sc, flexShrink:0 }}/>
+                              <div style={{ flex:1, minWidth:0 }}>
+                                <span style={{ fontFamily:'monospace', fontSize:12, color:'#e8eaed', fontWeight:600 }}>{job.ref}</span>
+                                <span style={{ fontSize:10, color:sc, fontFamily:'monospace', marginLeft:8 }}>{job.status.replace(/_/g,' ').toUpperCase()}</span>
+                                {isCurrent && <span style={{ fontSize:9, color:'#3b82f6', fontFamily:'monospace', marginLeft:6 }}>ACTIVE</span>}
+                                {job.alert && <div style={{ fontSize:10, color:'#f59e0b', marginTop:2 }}>⚠ {job.alert}</div>}
+                              </div>
+                              <button
+                                onClick={() => setCancelConfirm({ vehicle_reg: vehicle.vehicle_reg, ref: job.ref, cancel_all: false, hasGoods, isCurrent })}
+                                disabled={cancellingJob === job.ref}
+                                style={{ padding:'4px 10px', borderRadius:5, border:`1px solid ${hasGoods ? 'rgba(245,158,11,0.4)' : 'rgba(239,68,68,0.2)'}`, background:'transparent', color: hasGoods ? '#f59e0b' : '#ef4444', fontSize:10, cursor:'pointer', fontFamily:'monospace', flexShrink:0 }}>
+                                {cancellingJob === job.ref ? '...' : 'Cancel'}
+                              </button>
                             </div>
-                            <button
-                              onClick={() => setCancelConfirm({ vehicle_reg: vehicle.vehicle_reg, ref: job.ref, cancel_all: false })}
-                              disabled={cancellingJob === job.ref}
-                              style={{ padding:'4px 10px', borderRadius:5, border:'1px solid rgba(239,68,68,0.2)', background:'transparent', color:'#ef4444', fontSize:10, cursor:'pointer', fontFamily:'monospace', flexShrink:0 }}>
-                              {cancellingJob === job.ref ? '...' : 'Cancel / Reassign'}
-                            </button>
+                            {hasGoods && (
+                              <div style={{ fontSize:10, color:'#f59e0b', marginTop:4, marginLeft:16 }}>
+                                ⚠ Goods on vehicle — driver will be told to return to depot
+                              </div>
+                            )}
                           </div>
                         )
                       })}
@@ -2024,8 +2035,15 @@ export default function DashboardPage() {
                     <div style={{ fontSize:13, color:'#e8eaed', marginBottom:6 }}>
                       {cancelConfirm.cancel_all
                         ? `Remove all active jobs from ${cancelConfirm.vehicle_reg}.`
-                        : `Remove ${cancelConfirm.ref} from ${cancelConfirm.vehicle_reg}.`}
+                        : cancelConfirm.hasGoods
+                          ? `⚠ ${cancelConfirm.ref} — driver has goods on vehicle. They will be instructed to return to depot.`
+                          : `Remove ${cancelConfirm.ref} from ${cancelConfirm.vehicle_reg}.`}
                     </div>
+                    {cancelConfirm.hasGoods && (
+                      <div style={{ padding:'10px 12px', background:'rgba(245,158,11,0.08)', border:'1px solid rgba(245,158,11,0.25)', borderRadius:7, marginBottom:10, fontSize:12, color:'#f59e0b' }}>
+                        Driver is mid-job with cargo on board. Cancelling will SMS them to return goods to depot. Make sure there is somewhere for them to return to.
+                      </div>
+                    )}
                     <div style={{ fontSize:12, color:'#8a9099', marginBottom:14 }}>Driver app updates within 60 seconds automatically.</div>
 
                     {/* Reassign to dropdown */}
@@ -2154,7 +2172,13 @@ export default function DashboardPage() {
 
                 {/* ── LEFT: TEST CONSOLE ── */}
                 <div>
-                  <div style={{ fontSize:10, color:'#4a5260', fontFamily:'monospace', marginBottom:14 }}>// INTEGRATION TEST CONSOLE — fire real payloads, trigger live AI + SMS chain</div>
+                  <div style={{ marginBottom:16, padding:'12px 14px', background:'rgba(59,130,246,0.06)', border:'1px solid rgba(59,130,246,0.18)', borderRadius:9 }}>
+                    <div style={{ fontSize:12, color:'#3b82f6', fontWeight:600, marginBottom:4 }}>What is this?</div>
+                    <div style={{ fontSize:12, color:'#8a9099', lineHeight:1.6 }}>
+                      This is a <strong style={{color:'#e8eaed'}}>setup and testing tool</strong> for connecting DisruptionHub to your existing systems — things like your TMS (e.g. Mandata), vehicle tracking (e.g. Webfleet, Samsara), or warehouse systems. When those systems send an alert, DisruptionHub picks it up, analyses it with AI, and notifies ops automatically. Use the console below to test that each connection is working correctly. Your drivers don't see this.
+                    </div>
+                  </div>
+                  <div style={{ fontSize:10, color:'#4a5260', fontFamily:'monospace', marginBottom:14 }}>// TEST CONSOLE — simulate a system event and trigger the full AI + SMS chain</div>
 
                   {/* System selector */}
                   <div style={{ marginBottom:14 }}>

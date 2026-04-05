@@ -113,6 +113,7 @@ export default function DriverApp() {
   const undoTimer      = useRef(null)
   const countdownTimer = useRef(null)
   const shiftStartTime = useRef(null)
+  const notifiedCancellations = useRef(new Set()) // track which cancelled refs we've already shown banners for
 
   const [preShiftChecks, setPreShiftChecks]     = useState({})
   const [shiftStarted, setShiftStarted]         = useState(false)
@@ -213,39 +214,62 @@ export default function DriverApp() {
         const data = await res.json()
         const remote = data.progress || []
 
-        // Detect cancelled jobs — ops removed from this driver's schedule
-        const cancelled = remote.filter(p => p.status === 'cancelled')
-        if (cancelled.length > 0) {
-          const cancelledRefs = cancelled.map(c => c.ref)
+        // Detect cancelled jobs — only act on refs we haven't already processed
+        const allCancelled = remote.filter(p => p.status === 'cancelled')
+        const newlyCancelled = allCancelled.filter(p => !notifiedCancellations.current.has(p.ref))
+
+        if (newlyCancelled.length > 0) {
+          const cancelledRefs = newlyCancelled.map(c => c.ref)
+
+          // Mark as handled immediately so repeat polls don't re-trigger
+          cancelledRefs.forEach(ref => notifiedCancellations.current.add(ref))
+
+          // Only update state if driver actually had these jobs
+          let hadJobs = false
           setJobs(prev => {
-            const hadAny = prev.some(j => cancelledRefs.includes(j.ref))
-            if (!hadAny) return prev
+            const affected = prev.filter(j => cancelledRefs.includes(j.ref))
+            if (affected.length === 0) return prev
+            hadJobs = true
             const updated = prev.filter(j => !cancelledRefs.includes(j.ref))
             saveJobProgress(updated)
             return updated
           })
           setActiveJob(prev => prev && cancelledRefs.includes(prev.ref) ? null : prev)
-          const refs = cancelledRefs.join(', ')
-          setOpsJobUpdate(`Ops has removed job${cancelled.length > 1 ? 's' : ''} ${refs} from your schedule`)
-          setTimeout(() => setOpsJobUpdate(null), 12000)
+
+          // Only show banner if we actually removed jobs from this driver's list
+          // Use a small delay to let setJobs settle before checking hadJobs
+          setTimeout(() => {
+            setJobs(prev => {
+              const wasPresent = prev.some(j => cancelledRefs.includes(j.ref)) ||
+                                 hadJobs
+              if (wasPresent || hadJobs) {
+                const refs = cancelledRefs.join(', ')
+                setOpsJobUpdate(`📋 Ops has removed job${cancelledRefs.length > 1 ? 's' : ''} ${refs} from your schedule`)
+                setTimeout(() => setOpsJobUpdate(null), 10000)
+              }
+              return prev
+            })
+          }, 100)
         }
 
-        // Detect newly assigned jobs — ops pushed a new ref to this vehicle
+        // Detect newly assigned jobs — refs with 'on-track' and 'Assigned by ops' alert
         const newAssignments = remote.filter(p =>
           p.status === 'on-track' &&
-          p.alert?.includes('Assigned by ops')
+          p.alert?.includes('Assigned by ops') &&
+          !notifiedCancellations.current.has('assigned_' + p.ref)
         )
         if (newAssignments.length > 0) {
+          newAssignments.forEach(a => notifiedCancellations.current.add('assigned_' + a.ref))
           setJobs(prev => {
-            const existingRefs = prev.map(j => j.ref)
-            const trulyNew = newAssignments.filter(a => !existingRefs.includes(a.ref))
+            const existingRefs = new Set(prev.map(j => j.ref))
+            const trulyNew = newAssignments.filter(a => !existingRefs.has(a.ref))
             if (trulyNew.length === 0) return prev
-            // Reload all jobs to get full details for newly assigned refs
+            // Reload all jobs to get full details
             loadJobs(driverInfo)
             const refs = trulyNew.map(a => a.ref).join(', ')
-            setOpsJobUpdate(`New job${trulyNew.length > 1 ? 's' : ''} ${refs} added to your schedule by ops`)
-            setTimeout(() => setOpsJobUpdate(null), 12000)
-            return prev // loadJobs will update state
+            setOpsJobUpdate(`📋 New job${trulyNew.length > 1 ? 's' : ''} ${refs} added to your schedule`)
+            setTimeout(() => setOpsJobUpdate(null), 10000)
+            return prev
           })
         }
       } catch {}
