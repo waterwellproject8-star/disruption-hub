@@ -773,11 +773,27 @@ export default function DriverApp() {
       )}
 
       {view==='run'&&(
-        <div style={{padding:'10px 0'}}>
+        <div>
 
-          {/* Last alert banner */}
+          {/* ── DATE + RUN COUNT STRIP ── */}
+          <div style={{padding:'8px 16px',borderBottom:'1px solid rgba(255,255,255,0.04)',display:'flex',alignItems:'center',justifyContent:'space-between',background:'#0d1014'}}>
+            <div style={{fontSize:11,color:'#4a5260',fontFamily:'monospace',letterSpacing:'0.06em'}}>
+              {new Date().toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'}).toUpperCase()}
+            </div>
+            <div style={{display:'flex',alignItems:'center',gap:10'}}>
+              {loading
+                ? <div style={{fontSize:11,color:'#4a5260',fontFamily:'monospace'}}>Loading...</div>
+                : <div style={{fontSize:11,fontFamily:'monospace',color:'#4a5260'}}>
+                    <span style={{color:'#00e5b0',fontWeight:700}}>{jobs.filter(j=>j.status==='completed').length}</span>
+                    <span style={{color:'#4a5260'}}> / {jobs.length} runs</span>
+                  </div>
+              }
+            </div>
+          </div>
+
+          {/* ── LAST ALERT BANNER ── */}
           {lastAlert&&(
-            <div onClick={reopenLastAlert} style={{margin:'0 12px 10px',padding:'12px 14px',borderRadius:10,cursor:'pointer',border:`1px solid ${SEV[lastAlert.severity]?.border||'rgba(245,158,11,0.35)'}`,background:SEV[lastAlert.severity]?.bg}}>
+            <div onClick={reopenLastAlert} style={{margin:'8px 12px 0',padding:'12px 14px',borderRadius:10,cursor:'pointer',border:`1px solid ${SEV[lastAlert.severity]?.border||'rgba(245,158,11,0.35)'}`,background:SEV[lastAlert.severity]?.bg}}>
               <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start'}}>
                 <div style={{display:'flex',gap:9,flex:1}}>
                   <span style={{fontSize:18,flexShrink:0}}>{SEV[lastAlert.severity]?.icon||'⚠️'}</span>
@@ -792,50 +808,39 @@ export default function DriverApp() {
             </div>
           )}
 
-          {/* Run count header */}
-          <div style={{padding:'3px 16px 10px'}}>
-            <div style={{fontSize:17,fontWeight:500}}>{loading?'Loading runs...':`${jobs.length} run${jobs.length!==1?'s':''} today`}</div>
-          </div>
-
-          {/* Job cards */}
-          <div style={{padding:'0 12px 6px'}}>
-            {sortedJobs.map(job=>{
-              const sc = STATUS_COLORS[job.status]||STATUS_COLORS['on-track']
-              const isDone = job.status==='completed'
-              const isActive = activeJob?.ref===job.ref
-              const isAtRisk = job.status==='at_risk'
-              return (
-                <div key={job.ref} onClick={()=>{if(!isDone)setActiveJob(job)}}
-                  style={{padding:'12px',background:isActive?sc.bg:'#111418',border:`1px solid ${isActive?sc.border:'rgba(255,255,255,0.06)'}`,borderRadius:10,marginBottom:8,cursor:isDone?'default':'pointer',transition:'all 0.15s',opacity:isDone?0.55:1}}>
-                  <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:3}}>
-                    <span style={{fontFamily:'monospace',fontSize:14,fontWeight:700}}>{job.ref}</span>
-                    <div style={{display:'flex',alignItems:'center',gap:5}}><div style={{width:6,height:6,borderRadius:'50%',background:sc.dot}}/><span style={{fontFamily:'monospace',fontSize:10,color:sc.dot}}>{sc.label}</span></div>
-                  </div>
-                  <div style={{fontSize:13,color:'#8a9099'}}>{job.route}</div>
-                  {!isDone&&<div style={{display:'flex',gap:10,fontSize:11,color:'#4a5260',marginTop:3,flexWrap:'wrap'}}>{job.eta&&<span>ETA {job.eta}</span>}{job.sla_window&&<span>Slot {job.sla_window}</span>}{job.cargo_type&&<span>{cargoIcon(job.cargo_type)} {job.cargo_type}</span>}</div>}
-                </div>
-              )
-            })}
-          </div>
-
-          {/* Active job progress */}
-          {activeJob && activeJob.status!=='completed' && (()=>{
+          {/* ── ACTIVE JOB — PROMINENT ── */}
+          {activeJob && activeJob.status!=='completed' ? (()=>{
             const isAtRisk = activeJob.status==='at_risk'
+            const sc = STATUS_COLORS[activeJob.status]||STATUS_COLORS['on-track']
             const currentStepIndex = PROGRESS_STEPS.findIndex(s=>s.status===activeJob.status)
             return (
-              <div style={{margin:'0 12px 12px',background:'#111418',border:'1px solid rgba(255,255,255,0.07)',borderRadius:12,overflow:'hidden'}}>
-                <div style={{padding:'10px 14px',borderBottom:'1px solid rgba(255,255,255,0.05)',display:'flex',alignItems:'center',gap:8}}>
-                  <span style={{fontFamily:'monospace',fontSize:12,color:'#00e5b0',fontWeight:600}}>{activeJob.ref}</span>
-                  <span style={{fontSize:12,color:'#4a5260'}}>·</span>
-                  <span style={{fontSize:12,color:'#8a9099',flex:1,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{activeJob.route}</span>
+              <div style={{margin:'10px 12px 0',background:'#111418',border:`1px solid ${sc.border}`,borderRadius:14,overflow:'hidden'}}>
+                {/* Active job header */}
+                <div style={{padding:'12px 14px',borderBottom:'1px solid rgba(255,255,255,0.05)',background:sc.bg}}>
+                  <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:4}}>
+                    <span style={{fontFamily:'monospace',fontSize:13,color:sc.dot,fontWeight:700}}>{activeJob.ref}</span>
+                    <div style={{display:'flex',alignItems:'center',gap:5}}>
+                      <div style={{width:7,height:7,borderRadius:'50%',background:sc.dot,animation:isAtRisk?'pulse 1.5s infinite':'none'}}/>
+                      <span style={{fontFamily:'monospace',fontSize:10,color:sc.dot}}>{sc.label}</span>
+                    </div>
+                  </div>
+                  <div style={{fontSize:15,color:'#e8eaed',fontWeight:600,marginBottom:4}}>{activeJob.route}</div>
+                  <div style={{display:'flex',gap:12,fontSize:11,color:'#4a5260',flexWrap:'wrap'}}>
+                    {activeJob.eta&&<span>ETA {activeJob.eta}</span>}
+                    {activeJob.sla_window&&<span style={{color:activeJob.status==='at_risk'?'#ef4444':'#f59e0b'}}>⏱ Slot {activeJob.sla_window}</span>}
+                    {activeJob.cargo_type&&<span>{cargoIcon(activeJob.cargo_type)} {activeJob.cargo_type}</span>}
+                    {activeJob.penalty_if_breached>0&&<span style={{color:'#ef4444'}}>£{activeJob.penalty_if_breached.toLocaleString()} if late</span>}
+                  </div>
                 </div>
+
+                {/* Progress steps */}
                 {!isAtRisk&&(
-                  <div style={{padding:'10px 14px 4px'}}>
+                  <div style={{padding:'10px 14px 6px'}}>
                     {PROGRESS_STEPS.map((step,i)=>{
-                      const isDoneStep = currentStepIndex > i || (currentStepIndex === -1 && activeJob.status==='loaded' && i===1)
+                      const isDoneStep = currentStepIndex > i
                       const isCurrent = step.status===activeJob.status || (activeJob.status==='on-track'&&i===0) || (activeJob.status==='pending'&&i===0)
                       return (
-                        <button key={step.id} onClick={()=>{if(isCurrent||!isDoneStep)logProgress(step)}} disabled={isDoneStep}
+                        <button key={step.id} onClick={()=>{if(!isDoneStep)logProgress(step)}} disabled={isDoneStep}
                           style={{width:'100%',marginBottom:7,padding:'13px',background:isDoneStep?'rgba(0,229,176,0.03)':isCurrent?'rgba(0,229,176,0.06)':'rgba(255,255,255,0.02)',border:`1px solid ${isDoneStep?'rgba(0,229,176,0.12)':isCurrent?'rgba(0,229,176,0.3)':'rgba(255,255,255,0.06)'}`,borderRadius:10,cursor:isDoneStep?'default':'pointer',display:'flex',alignItems:'center',gap:12,opacity:isDoneStep?0.5:1}}>
                           <span style={{fontSize:20,flexShrink:0}}>{isDoneStep?'✓':step.icon}</span>
                           <span style={{fontSize:15,color:isDoneStep?'#4a5260':isCurrent?step.color:'#e8eaed',fontWeight:isCurrent?600:400}}>{step.label}</span>
@@ -844,23 +849,25 @@ export default function DriverApp() {
                       )
                     })}
                     <button onClick={initiateDelivered}
-                      style={{width:'100%',padding:'15px',borderRadius:10,border:'2px solid rgba(0,229,176,0.4)',background:'rgba(0,229,176,0.07)',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:10,marginBottom:8}}>
+                      style={{width:'100%',padding:'15px',borderRadius:10,border:'2px solid rgba(0,229,176,0.4)',background:'rgba(0,229,176,0.07)',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:10,marginBottom:6}}>
                       <span style={{fontSize:22}}>📦</span>
                       <span style={{fontSize:16,color:'#00e5b0',fontWeight:700}}>Mark as Delivered</span>
                     </button>
                   </div>
                 )}
+
+                {/* AT RISK state */}
                 {isAtRisk&&(
                   <div style={{padding:'13px 16px'}}>
                     <div style={{padding:'11px 13px',background:'rgba(239,68,68,0.05)',border:'1px solid rgba(239,68,68,0.18)',borderRadius:8,marginBottom:9,fontSize:13,color:'#ef4444'}}>
-                      Progress locked — job handed to ops.
+                      🛑 Progress locked — job handed to ops.
                     </div>
                     <button onClick={()=>{
                       setJobs(prev=>{const u=prev.map(j=>j.status==='at_risk'?{...j,status:'on-track',alert:null}:j);saveJobProgress(u);u.filter(j=>j.status==='on-track').forEach(j=>pushProgressToSupabase(j.ref,'on-track',null));return u})
                       setActiveJob(prev=>({...prev,status:'on-track',alert:null}))
                       showToast('Job resumed — ops notified')
                       fetch('/api/driver/alert',{method:'POST',headers:{'Content-Type':'application/json'},
-                        body:JSON.stringify({client_id:driverInfo.clientId,driver_name:driverInfo.name,driver_phone:driverInfo.phone||null,vehicle_reg:driverInfo.vehicleReg,issue_description:`DRIVER RESUMED. ${driverInfo.name} (${driverInfo.vehicleReg}) has self-resolved and resumed their run. Jobs back to on-track.`,human_description:`${driverInfo.name} resumed — situation resolved`,location_description:gpsDescription||'location not confirmed',force_alert:false})
+                        body:JSON.stringify({client_id:driverInfo.clientId,driver_name:driverInfo.name,driver_phone:driverInfo.phone||null,vehicle_reg:driverInfo.vehicleReg,issue_description:`DRIVER RESUMED. ${driverInfo.name} (${driverInfo.vehicleReg}) has self-resolved and resumed their run.`,human_description:`${driverInfo.name} resumed — situation resolved`,location_description:gpsDescription||'location not confirmed',force_alert:false})
                       }).catch(()=>{})
                     }} style={{width:'100%',padding:'12px',borderRadius:9,border:'1px solid rgba(0,229,176,0.28)',background:'rgba(0,229,176,0.04)',color:'#00e5b0',fontSize:14,fontWeight:500,cursor:'pointer'}}>
                       ✓ Situation resolved — I can continue
@@ -869,11 +876,75 @@ export default function DriverApp() {
                 )}
               </div>
             )
-          })()}
+          })() : null}
 
-          {/* Issue groups */}
-          {jobs.some(j=>j.status!=='completed')?(
-            <>
+          {/* ── ALL RUNS COMPLETE ── */}
+          {!loading && jobs.length > 0 && jobs.every(j=>j.status==='completed') && (
+            <div style={{margin:'10px 12px 0',padding:'22px 18px',borderRadius:12,background:'rgba(0,229,176,0.04)',border:'1px solid rgba(0,229,176,0.18)',textAlign:'center'}}>
+              <div style={{fontSize:36,marginBottom:8}}>🎉</div>
+              <div style={{fontSize:19,fontWeight:700,color:'#00e5b0',marginBottom:5}}>All runs complete</div>
+              <div style={{fontSize:13,color:'#8a9099',marginBottom:20}}>{jobs.length} run{jobs.length!==1?'s':''} delivered today.</div>
+              <button onClick={endShift} style={{width:'100%',padding:'15px',background:'#00e5b0',border:'none',borderRadius:10,color:'#000',fontWeight:700,fontSize:16,cursor:'pointer',marginBottom:10}}>✓ End shift</button>
+              <div style={{fontSize:11,color:'#4a5260'}}>Vehicle return check and shift summary</div>
+            </div>
+          )}
+
+          {/* ── REMAINING RUNS ── */}
+          {jobs.filter(j=>j.status!=='completed'&&j.ref!==activeJob?.ref).length > 0 && (
+            <div style={{margin:'12px 12px 0'}}>
+              <div style={{fontSize:9,color:'#4a5260',fontFamily:'monospace',letterSpacing:'0.08em',marginBottom:6,paddingLeft:2}}>
+                REMAINING RUNS — {jobs.filter(j=>j.status!=='completed'&&j.ref!==activeJob?.ref).length} to go
+              </div>
+              {jobs.filter(j=>j.status!=='completed'&&j.ref!==activeJob?.ref).map(job=>{
+                const sc = STATUS_COLORS[job.status]||STATUS_COLORS['on-track']
+                const isAtRisk = job.status==='at_risk'||job.status==='part_delivered'
+                return (
+                  <div key={job.ref} onClick={()=>setActiveJob(job)}
+                    style={{padding:'10px 12px',background:'#111418',border:`1px solid ${isAtRisk?sc.border:'rgba(255,255,255,0.06)'}`,borderRadius:10,marginBottom:6,cursor:'pointer',display:'flex',alignItems:'center',gap:10,transition:'all 0.15s'}}>
+                    <div style={{width:6,height:6,borderRadius:'50%',background:sc.dot,flexShrink:0}}/>
+                    <div style={{flex:1,minWidth:0}}>
+                      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:2}}>
+                        <span style={{fontFamily:'monospace',fontSize:12,fontWeight:700,color:'#e8eaed'}}>{job.ref}</span>
+                        <span style={{fontFamily:'monospace',fontSize:9,color:sc.dot}}>{sc.label}</span>
+                      </div>
+                      <div style={{fontSize:12,color:'#8a9099',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{job.route}</div>
+                      <div style={{display:'flex',gap:8,fontSize:10,color:'#4a5260',marginTop:2,flexWrap:'wrap'}}>
+                        {job.eta&&<span>ETA {job.eta}</span>}
+                        {job.sla_window&&<span style={{color:isAtRisk?'#ef4444':'#f59e0b'}}>Slot {job.sla_window}</span>}
+                        {job.cargo_type&&<span>{cargoIcon(job.cargo_type)} {job.cargo_type}</span>}
+                        {job.penalty_if_breached>0&&isAtRisk&&<span style={{color:'#ef4444'}}>£{job.penalty_if_breached.toLocaleString()} at risk</span>}
+                      </div>
+                    </div>
+                    <span style={{fontSize:12,color:'#4a5260',flexShrink:0}}>→</span>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+
+          {/* ── COMPLETED RUNS ── */}
+          {jobs.filter(j=>j.status==='completed').length > 0 && (
+            <div style={{margin:'10px 12px 0'}}>
+              <div style={{fontSize:9,color:'#4a5260',fontFamily:'monospace',letterSpacing:'0.08em',marginBottom:6,paddingLeft:2}}>
+                COMPLETED — {jobs.filter(j=>j.status==='completed').length} done
+              </div>
+              {jobs.filter(j=>j.status==='completed').map(job=>(
+                <div key={job.ref} style={{padding:'8px 12px',background:'rgba(255,255,255,0.02)',border:'1px solid rgba(255,255,255,0.04)',borderRadius:8,marginBottom:4,display:'flex',alignItems:'center',gap:10,opacity:0.5}}>
+                  <div style={{width:6,height:6,borderRadius:'50%',background:'#4a5260',flexShrink:0}}/>
+                  <div style={{flex:1,minWidth:0}}>
+                    <span style={{fontFamily:'monospace',fontSize:11,color:'#4a5260',fontWeight:600,marginRight:8}}>{job.ref}</span>
+                    <span style={{fontSize:11,color:'#4a5260',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{job.route}</span>
+                  </div>
+                  <span style={{fontSize:10,color:'#4a5260',fontFamily:'monospace'}}>✓ DONE</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* ── ISSUE GROUPS ── */}
+          {jobs.some(j=>j.status!=='completed')&&(
+            <div style={{marginTop:16}}>
+              <div style={{padding:'0 16px 8px',fontSize:9,color:'#4a5260',fontFamily:'monospace',letterSpacing:'0.08em'}}>REPORT AN ISSUE</div>
               {ISSUE_GROUPS.map(group=>(
                 <div key={group.id} style={{marginBottom:4}}>
                   <div style={{padding:'5px 16px',fontSize:9,color:group.color,fontFamily:'monospace',fontWeight:700,letterSpacing:'0.1em'}}>{group.label}</div>
@@ -888,28 +959,20 @@ export default function DriverApp() {
                   </div>
                 </div>
               ))}
-            </>
-          ):(
-            <div style={{margin:'6px 12px 14px',padding:'22px 18px',borderRadius:12,background:'rgba(0,229,176,0.04)',border:'1px solid rgba(0,229,176,0.18)',textAlign:'center'}}>
-              <div style={{fontSize:36,marginBottom:8}}>🎉</div>
-              <div style={{fontSize:19,fontWeight:700,color:'#00e5b0',marginBottom:5}}>All runs complete</div>
-              <div style={{fontSize:13,color:'#8a9099',marginBottom:20}}>{jobs.length} run{jobs.length!==1?'s':''} delivered today.</div>
-              <button onClick={endShift} style={{width:'100%',padding:'15px',background:'#00e5b0',border:'none',borderRadius:10,color:'#000',fontWeight:700,fontSize:16,cursor:'pointer',marginBottom:10}}>✓ End shift</button>
-              <div style={{fontSize:11,color:'#4a5260'}}>Vehicle return check and shift summary</div>
             </div>
           )}
 
-          <div style={{padding:'2px 12px 14px'}}>
-            <button onClick={()=>setView('preshift')} style={{width:'100%',padding:'11px',background:'transparent',border:'1px solid rgba(255,255,255,0.06)',borderRadius:8,color:'#4a5260',fontSize:12,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:7}}>
-              🔍 Run vehicle check
+          {/* ── BOTTOM UTILITIES ── */}
+          <div style={{padding:'6px 12px 12px',marginTop:8,display:'flex',gap:8}}>
+            <button onClick={()=>setView('preshift')} style={{flex:1,padding:'10px',background:'transparent',border:'1px solid rgba(255,255,255,0.06)',borderRadius:8,color:'#4a5260',fontSize:12,cursor:'pointer'}}>
+              🔍 Vehicle check
+            </button>
+            <button onClick={()=>{['dh_driver_info','dh_shift_started','dh_shift_started_at','dh_last_alert','dh_job_progress','dh_ops_messages'].forEach(k=>localStorage.removeItem(k));setSetupDone(false);setShiftStarted(false);setJobs([]);setActiveJob(null)}}
+              style={{flex:1,padding:'10px',background:'transparent',border:'1px solid rgba(255,255,255,0.06)',borderRadius:8,color:'#4a5260',fontSize:12,cursor:'pointer'}}>
+              Change driver
             </button>
           </div>
 
-          {/* Change driver button */}
-          <div style={{padding:'0 12px 6px'}}>
-            <button onClick={()=>{['dh_driver_info','dh_shift_started','dh_shift_started_at','dh_last_alert','dh_job_progress','dh_ops_messages'].forEach(k=>localStorage.removeItem(k));setSetupDone(false);setShiftStarted(false);setJobs([]);setActiveJob(null)}}
-              style={{width:'100%',padding:11,background:'transparent',border:'1px solid rgba(255,255,255,0.06)',borderRadius:8,color:'#4a5260',fontSize:12,cursor:'pointer',marginTop:6}}>Change driver / vehicle</button>
-          </div>
         </div>
       )}
 
