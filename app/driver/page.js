@@ -130,7 +130,9 @@ export default function DriverApp() {
   const [opsAcknowledged, setOpsAcknowledged]   = useState(false)
   const [escalationTimer, setEscalationTimer]   = useState(null)
   const [resumeConfirm, setResumeConfirm]       = useState(false)
-  const [opsJobUpdate, setOpsJobUpdate]         = useState(null) // banner when ops cancels jobs
+  const [opsJobUpdate, setOpsJobUpdate]         = useState(null)
+  const [driverHistory, setDriverHistory]       = useState({ name:'', phone:'', clientId:'', regs:[] })
+  const [regInputMode, setRegInputMode]         = useState('dropdown') // 'dropdown' | 'manual' // banner when ops cancels jobs
 
   const [panelOpen, setPanelOpen]       = useState(false)
   const [panelIssue, setPanelIssue]     = useState(null)
@@ -146,6 +148,27 @@ export default function DriverApp() {
   const [gpsStatus, setGpsStatus]           = useState(null)
 
   useEffect(() => {
+    // Load driver history for pre-filling setup screen
+    try {
+      const hist = localStorage.getItem('dh_driver_history')
+      if (hist) {
+        const h = JSON.parse(hist)
+        setDriverHistory(h)
+        // Pre-fill form fields from history if no active session
+        const activeSession = localStorage.getItem('dh_driver_info')
+        if (!activeSession) {
+          const lastReg = h.regs?.[0]
+          setDriverInfo({
+            name: h.name || '',
+            phone: h.phone || '',
+            clientId: h.clientId || '',
+            vehicleReg: lastReg?.reg || '',
+            vehicleType: lastReg?.type || ''
+          })
+        }
+      }
+    } catch {}
+
     const saved = localStorage.getItem('dh_driver_info')
     if (saved) {
       const info = JSON.parse(saved)
@@ -501,6 +524,20 @@ export default function DriverApp() {
     } catch {setPanelState('sent')}
   }
 
+  // Save driver history for pre-filling future setup screens
+  function saveDriverHistory(info) {
+    try {
+      const existing = (() => { try { return JSON.parse(localStorage.getItem('dh_driver_history')||'{}') } catch { return {} } })()
+      const regs = existing.regs || []
+      // Add current reg+type to front of list, remove duplicates, cap at 5
+      const newReg = { reg: info.vehicleReg.toUpperCase(), type: info.vehicleType }
+      const filtered = regs.filter(r => r.reg !== newReg.reg)
+      const updated = { name: info.name, phone: info.phone, clientId: info.clientId, regs: [newReg, ...filtered].slice(0, 5) }
+      localStorage.setItem('dh_driver_history', JSON.stringify(updated))
+      setDriverHistory(updated)
+    } catch {}
+  }
+
   function normalisePhone(raw) {
     if (!raw) return ''
     const d = raw.replace(/\s|-|\(|\)/g,'')
@@ -511,10 +548,13 @@ export default function DriverApp() {
   }
 
   function saveDriverInfo() {
-    if (!driverInfo.name||!driverInfo.clientId||!driverInfo.phone||!driverInfo.vehicleType) return
-    const n = {...driverInfo, phone:normalisePhone(driverInfo.phone)}
+    if (!driverInfo.name||!driverInfo.clientId||!driverInfo.phone||!driverInfo.vehicleType||!driverInfo.vehicleReg) return
+    const n = {...driverInfo, vehicleReg: driverInfo.vehicleReg.toUpperCase().trim(), phone:normalisePhone(driverInfo.phone)}
     localStorage.setItem('dh_driver_info',JSON.stringify(n))
-    setDriverInfo(n); setSetupDone(true); loadJobs(n)
+    setDriverInfo(n)
+    saveDriverHistory(n)
+    setSetupDone(true)
+    loadJobs(n)
   }
 
   function startShift() {
@@ -583,23 +623,100 @@ export default function DriverApp() {
   const cargoIcon = t=>!t?'📦':t.includes('pharma')?'💊':t.includes('frozen')?'🧊':t.includes('chilled')?'❄':'📦'
 
   // ── SETUP ─────────────────────────────────────────────────────────────────
-  if (!setupDone) return (
+  if (!setupDone) {
+    const hasHistory = driverHistory.regs && driverHistory.regs.length > 0
+    const isReturning = !!(driverHistory.name || driverHistory.phone)
+    const ready = driverInfo.name && driverInfo.phone && driverInfo.vehicleType && driverInfo.clientId && driverInfo.vehicleReg
+
+    return (
     <div style={{minHeight:'100vh',background:'#0a0c0e',color:'#e8eaed',fontFamily:'IBM Plex Sans,sans-serif',display:'flex',alignItems:'center',justifyContent:'center',padding:24}}>
       <div style={{width:'100%',maxWidth:380}}>
-        <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:32}}>
+        <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:24}}>
           <div style={{width:36,height:36,background:'#00e5b0',borderRadius:7,display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,fontWeight:700,color:'#000',fontFamily:'monospace'}}>DH</div>
-          <div><div style={{fontSize:17,fontWeight:600}}>DisruptionHub</div><div style={{fontSize:12,color:'#4a5260'}}>Driver App</div></div>
-        </div>
-        <div style={{fontSize:11,color:'#4a5260',fontFamily:'monospace',letterSpacing:'0.08em',marginBottom:18}}>FIRST TIME SETUP</div>
-        {[{label:'Your full name',key:'name',placeholder:'e.g. Carl Hughes'},{label:'Vehicle registration',key:'vehicleReg',placeholder:'e.g. BK21 XYZ'},{label:'Your mobile number *',key:'phone',placeholder:'e.g. 07810 499983 (required)'}].map(f=>(
-          <div key={f.key} style={{marginBottom:14}}>
-            <div style={{fontSize:13,color:'#8a9099',marginBottom:5}}>{f.label}</div>
-            <input value={driverInfo[f.key]} onChange={e=>setDriverInfo(p=>({...p,[f.key]:e.target.value}))} placeholder={f.placeholder}
-              style={{width:'100%',padding:'13px',background:'#111418',border:'1px solid rgba(255,255,255,0.1)',borderRadius:8,color:'#e8eaed',fontSize:16,outline:'none',boxSizing:'border-box'}}/>
+          <div>
+            <div style={{fontSize:17,fontWeight:600}}>DisruptionHub</div>
+            <div style={{fontSize:12,color:'#4a5260'}}>Driver App</div>
           </div>
-        ))}
+        </div>
+
+        <div style={{fontSize:11,color:'#4a5260',fontFamily:'monospace',letterSpacing:'0.08em',marginBottom:20}}>
+          {isReturning ? 'CONFIRM YOUR DETAILS' : 'FIRST TIME SETUP'}
+        </div>
+
+        {/* Name — pre-filled from history */}
         <div style={{marginBottom:14}}>
-          <div style={{fontSize:13,color:'#8a9099',marginBottom:8}}>Vehicle type *</div>
+          <div style={{fontSize:13,color:'#8a9099',marginBottom:5}}>Your full name</div>
+          <input
+            value={driverInfo.name}
+            onChange={e=>setDriverInfo(p=>({...p,name:e.target.value}))}
+            placeholder='e.g. Carl Hughes'
+            style={{width:'100%',padding:'13px',background:'#111418',border:'1px solid rgba(255,255,255,0.1)',borderRadius:8,color:'#e8eaed',fontSize:16,outline:'none',boxSizing:'border-box'}}/>
+        </div>
+
+        {/* Phone — pre-filled from history */}
+        <div style={{marginBottom:14}}>
+          <div style={{fontSize:13,color:'#8a9099',marginBottom:5}}>Your mobile number</div>
+          <input
+            value={driverInfo.phone}
+            onChange={e=>setDriverInfo(p=>({...p,phone:e.target.value}))}
+            placeholder='e.g. 07810 499983'
+            inputMode='tel'
+            style={{width:'100%',padding:'13px',background:'#111418',border:'1px solid rgba(255,255,255,0.1)',borderRadius:8,color:'#e8eaed',fontSize:16,outline:'none',boxSizing:'border-box'}}/>
+        </div>
+
+        {/* Vehicle reg — dropdown if history exists, plain input if not */}
+        <div style={{marginBottom:14}}>
+          <div style={{fontSize:13,color:'#8a9099',marginBottom:5}}>Vehicle registration</div>
+          {hasHistory && regInputMode === 'dropdown' ? (
+            <div>
+              <select
+                value={driverInfo.vehicleReg}
+                onChange={e=>{
+                  const val = e.target.value
+                  if (val === '__new__') {
+                    setRegInputMode('manual')
+                    setDriverInfo(p=>({...p,vehicleReg:'',vehicleType:''}))
+                  } else {
+                    const found = driverHistory.regs.find(r=>r.reg===val)
+                    setDriverInfo(p=>({...p,vehicleReg:val,vehicleType:found?.type||p.vehicleType}))
+                  }
+                }}
+                style={{width:'100%',padding:'13px',background:'#111418',border:'1px solid rgba(255,255,255,0.1)',borderRadius:8,color:driverInfo.vehicleReg?'#e8eaed':'#4a5260',fontSize:16,outline:'none',boxSizing:'border-box',cursor:'pointer'}}>
+                <option value=''>Select vehicle...</option>
+                {driverHistory.regs.map(r=>(
+                  <option key={r.reg} value={r.reg}>
+                    {r.reg} — {VEHICLE_TYPES.find(v=>v.id===r.type)?.label||r.type}
+                  </option>
+                ))}
+                <option value='__new__'>＋ Different registration...</option>
+              </select>
+              {driverInfo.vehicleReg && (
+                <div style={{fontSize:11,color:'#00e5b0',marginTop:5,fontFamily:'monospace'}}>
+                  ✓ Vehicle type auto-selected — check below and change if needed
+                </div>
+              )}
+            </div>
+          ) : (
+            <div>
+              <input
+                value={driverInfo.vehicleReg}
+                onChange={e=>setDriverInfo(p=>({...p,vehicleReg:e.target.value.toUpperCase()}))}
+                placeholder='e.g. BK21 XYZ'
+                autoCapitalize='characters'
+                style={{width:'100%',padding:'13px',background:'#111418',border:'1px solid rgba(0,229,176,0.3)',borderRadius:8,color:'#e8eaed',fontSize:16,outline:'none',boxSizing:'border-box'}}/>
+              {hasHistory && (
+                <button onClick={()=>{setRegInputMode('dropdown');setDriverInfo(p=>({...p,vehicleReg:''}))}}
+                  style={{marginTop:6,background:'none',border:'none',color:'#4a5260',fontSize:12,cursor:'pointer',padding:0}}>
+                  ← Back to saved vehicles
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Vehicle type — auto-selected when reg picked from dropdown */}
+        <div style={{marginBottom:14}}>
+          <div style={{fontSize:13,color:'#8a9099',marginBottom:8}}>Vehicle type</div>
           <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:7}}>
             {VEHICLE_TYPES.map(v=>(
               <button key={v.id} onClick={()=>setDriverInfo(p=>({...p,vehicleType:v.id}))}
@@ -610,19 +727,25 @@ export default function DriverApp() {
             ))}
           </div>
         </div>
-        <div style={{marginBottom:16}}>
+
+        {/* Company code — pre-filled from history */}
+        <div style={{marginBottom:20}}>
           <div style={{fontSize:13,color:'#8a9099',marginBottom:5}}>Company access code</div>
-          <input value={driverInfo.clientId} onChange={e=>setDriverInfo(p=>({...p,clientId:e.target.value}))} placeholder='Given by your manager'
+          <input
+            value={driverInfo.clientId}
+            onChange={e=>setDriverInfo(p=>({...p,clientId:e.target.value}))}
+            placeholder='Given by your manager'
             style={{width:'100%',padding:'13px',background:'#111418',border:'1px solid rgba(255,255,255,0.1)',borderRadius:8,color:'#e8eaed',fontSize:16,outline:'none',boxSizing:'border-box'}}/>
         </div>
-        {(!driverInfo.name||!driverInfo.phone||!driverInfo.vehicleType||!driverInfo.clientId)&&<div style={{fontSize:12,color:'#4a5260',textAlign:'center',marginBottom:10}}>All fields required to continue</div>}
-        <button onClick={saveDriverInfo} disabled={!driverInfo.name||!driverInfo.phone||!driverInfo.vehicleType||!driverInfo.clientId}
-          style={{width:'100%',padding:15,background:(!driverInfo.name||!driverInfo.phone||!driverInfo.vehicleType||!driverInfo.clientId)?'rgba(0,229,176,0.3)':'#00e5b0',border:'none',borderRadius:10,color:'#000',fontWeight:700,fontSize:16,cursor:'pointer'}}>
-          Get started →
+
+        {!ready && <div style={{fontSize:12,color:'#4a5260',textAlign:'center',marginBottom:10}}>All fields required to continue</div>}
+        <button onClick={saveDriverInfo} disabled={!ready}
+          style={{width:'100%',padding:15,background:ready?'#00e5b0':'rgba(0,229,176,0.3)',border:'none',borderRadius:10,color:'#000',fontWeight:700,fontSize:16,cursor:ready?'pointer':'default'}}>
+          {isReturning ? 'Start shift →' : 'Get started →'}
         </button>
       </div>
     </div>
-  )
+  )}
 
   // ── STALE SESSION ─────────────────────────────────────────────────────────
   if (setupDone && staleSession) return (
