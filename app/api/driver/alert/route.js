@@ -143,11 +143,16 @@ export async function POST(request) {
       ref,
       force_alert,
       force_financial_zero,
+      issue_type,
     } = body
 
     if (!issue_description) {
       return Response.json({ error: 'issue_description is required' }, { status: 400 })
     }
+
+    // Safety scenarios always warrant at minimum HIGH — AI can underrate these
+    const alwaysHighIssues = ['vehicle_theft', 'theft_threat', 'accident', 'medical', 'breakdown']
+    const forceHighSeverity = issue_type && alwaysHighIssues.includes(issue_type)
 
     const locationStr = (latitude && longitude)
       ? `GPS: ${latitude.toFixed(5)}, ${longitude.toFixed(5)}. Area: ${location_description || 'verify via maps'}`
@@ -193,66 +198,78 @@ Provide immediate disruption analysis and action plan.`
     const fullResponse = response.content[0]?.text || ''
 
     const sevMatch = fullResponse.match(/\b(CRITICAL|HIGH|MEDIUM|LOW)\b/)
-    const severity = sevMatch?.[1] || 'HIGH'
+    let severity = sevMatch?.[1] || 'HIGH'
+    // Safety scenarios: never allow AI to rate below HIGH
+    if (forceHighSeverity && (severity === 'MEDIUM' || severity === 'LOW')) {
+      severity = 'HIGH'
+    }
+
     const moneyMatch = fullResponse.match(/£([\d,]+)/)
     const financialImpact = moneyMatch ? parseInt(moneyMatch[1].replace(/,/g, '')) : 0
 
     const firstAction = extractFirstAction(fullResponse)
 
-    // Detect action type — use issue context for accuracy, not just AI text matching
-    const issueContext = human_description || ''
+    // Use issue_type (passed from driver app) for precise action detection
+    // Fall back to human_description text matching
+    const issueContext = issue_type || human_description || ''
     const detectedType = detectActionType(issueContext, firstAction)
 
     if (db) {
       // Log incident
-      await db.from('incidents').insert({
-        client_id,
-        user_input: analysisPrompt,
-        ai_response: fullResponse,
-        severity,
-        financial_impact: financialImpact,
-        ref: ref || 'DRIVER-ALERT'
-      }).catch(e => console.error('incident insert:', e.message))
+      try {
+        await db.from('incidents').insert({
+          client_id,
+          user_input: analysisPrompt,
+          ai_response: fullResponse,
+          severity,
+          financial_impact: financialImpact,
+          ref: ref || 'DRIVER-ALERT'
+        })
+      } catch(e) { console.error('incident insert:', e.message) }
 
       // Create approval for HIGH/CRITICAL
       if (firstAction && (severity === 'CRITICAL' || severity === 'HIGH' || force_alert)) {
-        await db.from('approvals').insert({
-          client_id,
-          action_type: detectedType,
-          action_label: firstAction.substring(0, 200),
-          action_details: {
-            vehicle_reg,
-            ref: ref || 'DRIVER-ALERT',
-            driver_name: driver_name || null,
-            driver_phone: driver_phone || null,
-            carrier_name: extractCarrierName(fullResponse),
-            carrier_phone: extractCarrierPhone(systemPrompt),
-            script: firstAction,
-            source: 'driver_alert',
-            issue_context: issueContext.substring(0, 100)
-          },
-          financial_value: force_financial_zero ? 0 : financialImpact,
-          status: 'pending'
-        }).catch(e => console.error('approval insert:', e.message))
+        try {
+          await db.from('approvals').insert({
+            client_id,
+            action_type: detectedType,
+            action_label: firstAction.substring(0, 200),
+            action_details: {
+              vehicle_reg,
+              ref: ref || 'DRIVER-ALERT',
+              driver_name: driver_name || null,
+              driver_phone: driver_phone || null,
+              carrier_name: extractCarrierName(fullResponse),
+              carrier_phone: extractCarrierPhone(systemPrompt),
+              script: firstAction,
+              source: 'driver_alert',
+              issue_context: issueContext.substring(0, 100)
+            },
+            financial_value: force_financial_zero ? 0 : financialImpact,
+            status: 'pending'
+          })
+        } catch(e) { console.error('approval insert:', e.message) }
       }
 
       // Pre-shift defect — action_type is 'sms' so YES sends instruction to driver
       if (force_alert && force_financial_zero) {
-        await db.from('approvals').insert({
-          client_id,
-          action_type: 'sms',
-          action_label: `Pre-shift defect: ${human_description?.replace('Pre-shift fail: ', '') || 'vehicle issue'} — ${driver_name || 'driver'} (${vehicle_reg}) awaiting ops decision`,
-          action_details: {
-            vehicle_reg,
-            ref: 'PRE-SHIFT',
-            driver_name: driver_name || null,
-            driver_phone: driver_phone || null,
-            script: `OPS DECISION: Pre-shift defects flagged on ${vehicle_reg}. Either confirm safe to depart or arrange inspection before dispatch.`,
-            source: 'preshift_check'
-          },
-          financial_value: 0,
-          status: 'pending'
-        }).catch(e => console.error('preshift approval insert:', e.message))
+        try {
+          await db.from('approvals').insert({
+            client_id,
+            action_type: 'sms',
+            action_label: `Pre-shift defect: ${human_description?.replace('Pre-shift fail: ', '') || 'vehicle issue'} — ${driver_name || 'driver'} (${vehicle_reg}) awaiting ops decision`,
+            action_details: {
+              vehicle_reg,
+              ref: 'PRE-SHIFT',
+              driver_name: driver_name || null,
+              driver_phone: driver_phone || null,
+              script: `OPS DECISION: Pre-shift defects flagged on ${vehicle_reg}. Either confirm safe to depart or arrange inspection before dispatch.`,
+              source: 'preshift_check'
+            },
+            financial_value: 0,
+            status: 'pending'
+          })
+        } catch(e) { console.error('preshift approval insert:', e.message) }
       }
     }
 
