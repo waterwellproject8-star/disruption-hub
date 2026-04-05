@@ -20,45 +20,45 @@ const ISSUE_GROUPS = [
   {
     id:'road', label:'ON THE ROAD', color:'#f59e0b',
     issues:[
-      { id:'delayed',         label:'Running Late',           icon:'⏰', needsText:true,  placeholder:'What is causing the delay?' },
-      { id:'temp_alarm',      label:'Temp Alarm',             icon:'🌡', needsText:true,  placeholder:'Probe reading? e.g. 8°C — not the unit display' },
-      { id:'load_movement',   label:'Load Movement',          icon:'📦', needsText:false, note:'Pull over safely before continuing.' },
-      { id:'road_closure',    label:'Road Closure / Weather', icon:'🌧', needsText:true,  placeholder:'e.g. M62 closed, flooding at J25' },
-      { id:'low_bridge',      label:'Low Bridge / Restriction',icon:'🚧',needsText:true,  placeholder:'e.g. 14ft 6in bridge, my vehicle is 14ft 9in' },
-      { id:'diversion',       label:'Wrong Route / Lost',     icon:'🗺', needsText:true,  placeholder:'Where are you and where are you trying to get to?' },
-      { id:'tacho_fault',     label:'Tacho Fault',            icon:'📟', needsText:true,  placeholder:'What is the tacho showing? e.g. card error, mode fault' },
-      { id:'accident',        label:'Accident',               icon:'💥', needsText:true,  placeholder:'What happened? Any injuries? Third party involved?' },
+      { id:'delayed',         label:'Running Late',            icon:'⏰', needsText:true,  placeholder:'What is causing the delay?' },
+      { id:'temp_alarm',      label:'Temp Alarm',              icon:'🌡', needsText:true,  placeholder:'Probe reading? e.g. 8°C — not the unit display' },
+      { id:'load_movement',   label:'Load Movement',           icon:'📦', needsText:false, note:'Pull over safely before continuing.' },
+      { id:'road_closure',    label:'Road Closure / Weather',  icon:'🌧', needsText:true,  placeholder:'e.g. M62 closed, flooding at J25' },
+      { id:'low_bridge',      label:'Low Bridge / Restriction',icon:'🚧', needsText:true,  placeholder:'e.g. 14ft 6in bridge, my vehicle is 14ft 9in' },
+      { id:'diversion',       label:'Wrong Route / Lost',      icon:'🗺', needsText:true,  placeholder:'Where are you and where are you trying to get to?' },
+      { id:'tacho_fault',     label:'Tacho Fault',             icon:'📟', needsText:true,  placeholder:'What is the tacho showing? e.g. card error, mode fault' },
+      { id:'accident',        label:'Accident',                icon:'💥', needsText:true,  placeholder:'What happened? Any injuries? Third party involved?' },
     ]
   },
   {
     id:'stop', label:'AT A STOP', color:'#3b82f6',
     issues:[
-      { id:'customer_not_ready', label:'Customer Not Ready',    icon:'⏳', needsText:true,  placeholder:'How long have you been waiting?' },
-      { id:'goods_refused',      label:'Goods Refused',         icon:'❌', needsText:true,  placeholder:'Why refused? Damage, wrong spec, temp breach?' },
-      { id:'pod_problem',        label:'POD / Signature Issue', icon:'✍', needsText:true,  placeholder:'What is the problem?' },
-      { id:'access_problem',     label:'Can\'t Access Site',    icon:'🚪', needsText:true,  placeholder:'e.g. Height barrier, locked gate, no loading bay' },
-      { id:'short_load',         label:'Wrong / Short Load',    icon:'📋', needsText:true,  placeholder:'What is missing or wrong?' },
-      { id:'manifest_mismatch',  label:'Goods Don\'t Match Manifest',icon:'📝',needsText:true, placeholder:'What was on the manifest vs what was loaded?' },
-      { id:'loading_damage',     label:'Damage Found',          icon:'⚠️', needsText:true,  placeholder:'Describe damage and when noticed' },
-      { id:'overweight',         label:'Overweight',            icon:'⚖️', needsText:true,  placeholder:'What did the weigh bridge show?' },
-      { id:'part_delivery',      label:'Part Delivery Only',    icon:'🔢', needsText:true,  placeholder:'What can you deliver and what can\'t you?' },
-      { id:'customer_hostile',   label:'Difficult Customer',    icon:'😤', needsText:true,  placeholder:'What is happening? Are you safe?' },
+      { id:'customer_not_ready', label:'Customer Not Ready',     icon:'⏳', needsText:true,  placeholder:'How long have you been waiting?' },
+      { id:'goods_refused',      label:'Goods Refused',          icon:'❌', needsText:true,  placeholder:'Why refused? Damage, wrong spec, temp breach?' },
+      { id:'pod_problem',        label:'POD / Signature Issue',  icon:'✍', needsText:true,  placeholder:'What is the problem?' },
+      { id:'access_problem',     label:"Can't Access Site",      icon:'🚪', needsText:true,  placeholder:'e.g. Height barrier, locked gate, no loading bay' },
+      { id:'short_load',         label:'Wrong / Short Load',     icon:'📋', needsText:true,  placeholder:'What is missing or wrong?' },
+      { id:'manifest_mismatch',  label:'Manifest Mismatch',      icon:'📄', needsText:true,  placeholder:'What does not match?' },
+      { id:'damage_found',       label:'Damage Found',           icon:'⚠️', needsText:true,  placeholder:'What is damaged? When did you notice?' },
+      { id:'overweight',         label:'Overweight',             icon:'⚖️', needsText:true,  placeholder:'What does the weighbridge show?' },
+      { id:'part_delivery',      label:'Part Delivery',          icon:'📦', needsText:true,  placeholder:'What could not be delivered and why?' },
+      { id:'difficult_customer', label:'Difficult Customer',     icon:'😤', needsText:true,  placeholder:'What is happening?' },
     ]
   },
   {
     id:'driver', label:'DRIVER', color:'#a855f7',
     issues:[
-      { id:'driver_unwell',    label:'Feeling Unwell',        icon:'🤒', needsText:true,  placeholder:'How are you feeling? Can you drive safely?' },
-      { id:'theft_threat',     label:'Suspicious / Threat',   icon:'🦺', needsText:true,  placeholder:'Describe what you can see — stay in your cab' },
-      { id:'vehicle_theft',    label:'Vehicle Stolen',        icon:'🚨', needsText:true,  placeholder:'Where were you when you last saw it? How long ago?' },
+      { id:'driver_unwell',    label:'Feeling Unwell',        icon:'🤒', needsText:true,  placeholder:'What symptoms? Can you safely pull over?' },
+      { id:'theft_threat',     label:'Suspicious / Threat',   icon:'🦺', needsText:true,  placeholder:'Describe what you have seen or what is happening.' },
+      { id:'vehicle_theft',    label:'Vehicle Stolen',        icon:'🚨', needsText:true,  placeholder:'Where was it last? How long ago?' },
       { id:'hours_running_out',label:'Hours Running Out',     icon:'⏱', needsText:false, note:'System will calculate your remaining legal hours.' },
       { id:'adrhazmat',        label:'ADR / Hazmat Issue',    icon:'☢️', needsText:true,  placeholder:'What is the issue with the dangerous goods documentation?' },
-      { id:'cant_complete',    label:'Can\'t Complete Runs',  icon:'⛔', needsText:true,  placeholder:'Reason — e.g. hours almost up, delay on first run' },
+      { id:'cant_complete',    label:"Can't Complete Runs",   icon:'⛔', needsText:true,  placeholder:'Reason — e.g. hours almost up, delay on first run' },
+      { id:'rest',             label:'Need Rest Break',       icon:'🛌', needsText:false, note:'System will find nearest safe truck park.' },
     ]
-  }
+  },
 ]
 
-// Pre-shift checklist — fridge item toggled by vehicle type
 const PRESHIFT_CHECKS_BASE = [
   { id:'lights',  label:'Lights & indicators',        icon:'💡' },
   { id:'tyres',   label:'Tyres — no damage or flats', icon:'⚫' },
@@ -70,13 +70,12 @@ const PRESHIFT_CHECKS_BASE = [
 ]
 const PRESHIFT_FRIDGE = { id:'fridge', label:'Fridge unit — at temp', icon:'❄' }
 
-// Post-shift return check
 const POSTSHIFT_CHECKS = [
-  { id:'body_damage',   label:'No new body damage',          icon:'🔍' },
-  { id:'tyres_post',    label:'Tyres still OK',              icon:'⚫' },
-  { id:'lights_post',   label:'Lights still working',        icon:'💡' },
-  { id:'cab_clean',     label:'Cab left clean',              icon:'🧹' },
-  { id:'fuel_logged',   label:'Fuel level noted',            icon:'⛽' },
+  { id:'body_damage',  label:'No new body damage',   icon:'🔍' },
+  { id:'tyres_post',   label:'Tyres still OK',       icon:'⚫' },
+  { id:'lights_post',  label:'Lights still working', icon:'💡' },
+  { id:'cab_clean',    label:'Cab left clean',       icon:'🧹' },
+  { id:'fuel_logged',  label:'Fuel level noted',     icon:'⛽' },
 ]
 
 const STATUS_COLORS = {
@@ -86,10 +85,10 @@ const STATUS_COLORS = {
   'at_customer':    { dot:'#3b82f6', label:'AT CUSTOMER',    border:'rgba(59,130,246,0.2)', bg:'rgba(59,130,246,0.03)' },
   'part_delivered': { dot:'#f59e0b', label:'PART DELIVERED', border:'rgba(245,158,11,0.25)',bg:'rgba(245,158,11,0.04)' },
   'at_risk':        { dot:'#ef4444', label:'AT RISK',        border:'rgba(239,68,68,0.3)',  bg:'rgba(239,68,68,0.04)' },
-  disrupted:        { dot:'#ef4444', label:'DISRUPTED',      border:'rgba(239,68,68,0.3)',  bg:'rgba(239,68,68,0.04)' },
-  delayed:          { dot:'#f59e0b', label:'DELAYED',        border:'rgba(245,158,11,0.25)',bg:'rgba(245,158,11,0.04)' },
-  pending:          { dot:'#3b82f6', label:'PENDING',        border:'rgba(59,130,246,0.2)', bg:'rgba(59,130,246,0.03)' },
-  completed:        { dot:'#4a5260', label:'DONE',           border:'rgba(74,82,96,0.15)',  bg:'rgba(74,82,96,0.02)' },
+  'disrupted':      { dot:'#ef4444', label:'DISRUPTED',      border:'rgba(239,68,68,0.3)',  bg:'rgba(239,68,68,0.04)' },
+  'delayed':        { dot:'#f59e0b', label:'DELAYED',        border:'rgba(245,158,11,0.25)',bg:'rgba(245,158,11,0.04)' },
+  'pending':        { dot:'#3b82f6', label:'PENDING',        border:'rgba(59,130,246,0.2)', bg:'rgba(59,130,246,0.03)' },
+  'completed':      { dot:'#4a5260', label:'DONE',           border:'rgba(74,82,96,0.15)',  bg:'rgba(74,82,96,0.02)' },
 }
 
 const SEV = {
@@ -111,24 +110,25 @@ export default function DriverApp() {
   const [toast, setToast]               = useState(null)
   const [pendingUndo, setPendingUndo]   = useState(null)
   const [undoCountdown, setUndoCountdown] = useState(0)
-  const undoTimer    = useRef(null)
+  const undoTimer      = useRef(null)
   const countdownTimer = useRef(null)
   const shiftStartTime = useRef(null)
 
-  const [preShiftChecks, setPreShiftChecks] = useState({})
-  const [shiftStarted, setShiftStarted]     = useState(false)
-  const [shiftEnded, setShiftEnded]         = useState(false)
-  const [shiftSummary, setShiftSummary]     = useState(null)
-  const [staleSession, setStaleSession]     = useState(null)
-  const [opsMessages, setOpsMessages]       = useState([]) // inbound messages from ops
-  const [shiftNotes, setShiftNotes]         = useState('')
-  const [shiftMileage, setShiftMileage]     = useState('')
-  const [postShiftChecks, setPostShiftChecks] = useState({})
-  const [showPostShift, setShowPostShift]   = useState(false)
-  const [podFlow, setPodFlow]               = useState(null) // { jobRef } when confirming POD
-  const [defectBlocked, setDefectBlocked]   = useState(false) // block departure until ops confirms
-  const [opsAcknowledged, setOpsAcknowledged] = useState(false)
-  const [escalationTimer, setEscalationTimer] = useState(null)
+  const [preShiftChecks, setPreShiftChecks]     = useState({})
+  const [shiftStarted, setShiftStarted]         = useState(false)
+  const [shiftEnded, setShiftEnded]             = useState(false)
+  const [shiftSummary, setShiftSummary]         = useState(null)
+  const [staleSession, setStaleSession]         = useState(null)
+  const [opsMessages, setOpsMessages]           = useState([])
+  const [shiftNotes, setShiftNotes]             = useState('')
+  const [shiftMileage, setShiftMileage]         = useState('')
+  const [mileageError, setMileageError]         = useState(false)
+  const [postShiftChecks, setPostShiftChecks]   = useState({})
+  const [showPostShift, setShowPostShift]       = useState(false)
+  const [podFlow, setPodFlow]                   = useState(null)
+  const [defectBlocked, setDefectBlocked]       = useState(false)
+  const [opsAcknowledged, setOpsAcknowledged]   = useState(false)
+  const [escalationTimer, setEscalationTimer]   = useState(null)
 
   const [panelOpen, setPanelOpen]       = useState(false)
   const [panelIssue, setPanelIssue]     = useState(null)
@@ -151,9 +151,9 @@ export default function DriverApp() {
       setSetupDone(true)
 
       const shiftStartedAt = localStorage.getItem('dh_shift_started_at')
-      const shiftDone = localStorage.getItem('dh_shift_started')
-      const savedAlert = localStorage.getItem('dh_last_alert')
-      const savedMessages = localStorage.getItem('dh_ops_messages')
+      const shiftDone      = localStorage.getItem('dh_shift_started')
+      const savedAlert     = localStorage.getItem('dh_last_alert')
+      const savedMessages  = localStorage.getItem('dh_ops_messages')
       if (savedMessages) { try { setOpsMessages(JSON.parse(savedMessages)) } catch {} }
 
       if (shiftDone && shiftStartedAt) {
@@ -169,6 +169,8 @@ export default function DriverApp() {
       if (shiftDone) setShiftStarted(true)
       if (savedAlert) { try { setLastAlert(JSON.parse(savedAlert)) } catch {} }
       loadJobs(info).then(loaded => {
+        // FIX: only auto-clear if all jobs completed AND we have actual jobs
+        // Don't clear on new shift — localStorage progress will be empty so no false positives
         if (loaded && loaded.length > 0 && loaded.every(j => j.status === 'completed')) clearSession()
       })
     } else { setLoading(false) }
@@ -177,17 +179,18 @@ export default function DriverApp() {
 
   const showToast = (msg, type='ok') => { setToast({msg,type}); setTimeout(()=>setToast(null),3500) }
 
-  // ── JOB PROGRESS PERSISTENCE ──────────────────────────────────────────────
   function saveJobProgress(updatedJobs) {
     const progress = {}
     updatedJobs.forEach(j => { progress[j.ref] = { status:j.status, alert:j.alert||null } })
     localStorage.setItem('dh_job_progress', JSON.stringify(progress))
   }
 
+  // FIX: if localStorage has no progress entries (new shift), ignore Supabase remote data
   function mergeJobProgress(jobs, remote) {
     const local = (() => { try { return JSON.parse(localStorage.getItem('dh_job_progress')||'{}') } catch { return {} } })()
+    const isNewShift = Object.keys(local).length === 0
     const rem = {}
-    if (remote) remote.forEach(r => { rem[r.ref] = { status:r.status, alert:r.alert } })
+    if (!isNewShift && remote) remote.forEach(r => { rem[r.ref] = { status:r.status, alert:r.alert } })
     return jobs.map(j => rem[j.ref] ? {...j,...rem[j.ref]} : local[j.ref] ? {...j,...local[j.ref]} : j)
   }
 
@@ -245,11 +248,9 @@ export default function DriverApp() {
     )
   }
 
-  // ── PROGRESS LOG ──────────────────────────────────────────────────────────
   function logProgress(step) {
     const job = activeJob
     if (!job) return
-    const prevStatus = job.status
     setJobs(prev=>{
       const updated = prev.map(j=>j.ref===job.ref?{...j,status:step.status,alert:null}:j)
       saveJobProgress(updated)
@@ -260,7 +261,6 @@ export default function DriverApp() {
     showToast(`✓ ${step.label}`)
   }
 
-  // ── DELIVERED — requires POD confirmation ─────────────────────────────────
   function initiateDelivered() {
     setPodFlow({ jobRef: activeJob?.ref })
   }
@@ -270,7 +270,6 @@ export default function DriverApp() {
     if (!job) return
     const prevStatus = job.status
     setPodFlow(null)
-
     setJobs(prev=>{
       const updated = prev.map(j=>j.ref===job.ref?{...j,status:'completed',alert:null,pod:podOption}:j)
       const reordered = [...updated.filter(j=>j.status!=='completed'),...updated.filter(j=>j.status==='completed')]
@@ -278,7 +277,6 @@ export default function DriverApp() {
       return reordered
     })
     setActiveJob(prev=>({...prev,status:'completed',alert:null}))
-
     setJobs(prev=>{
       const next = prev.find(j=>j.status!=='completed'&&j.ref!==job.ref)
       if (next) setActiveJob(next)
@@ -286,8 +284,6 @@ export default function DriverApp() {
     })
     if (lastAlert) { setLastAlert(null); localStorage.removeItem('dh_last_alert') }
     pushProgressToSupabase(job.ref, 'completed', null)
-
-    // Undo window
     clearTimeout(undoTimer.current); clearInterval(countdownTimer.current)
     setPendingUndo({job,prevStatus})
     setUndoCountdown(5)
@@ -306,7 +302,6 @@ export default function DriverApp() {
     showToast('Delivery undone')
   }
 
-  // ── ISSUE PANEL ───────────────────────────────────────────────────────────
   function openIssue(issue) {
     setPanelIssue(issue); setPanelOpen(true); setPanelState('idle')
     setInputText(''); setParsedResult(null); setShowDetail(false); setResolvedEta('')
@@ -349,37 +344,36 @@ export default function DriverApp() {
     const severity = text.match(/SEVERITY:\s*(CRITICAL|HIGH|MEDIUM|LOW|OK)/i)?.[1]?.toUpperCase()||'MEDIUM'
     const actions=[]; for(const m of text.matchAll(/ACTION\s*\d+:\s*(.+)/gi)){const a=m[1].trim();if(a)actions.push(a)}
     const detail = text.match(/DETAIL:\s*([\s\S]+)/i)?.[1]?.trim()||''
-    return {headline,severity,actions,detail}
+    return { headline, severity, actions, detail }
   }
 
   function buildPrompt(issueId) {
-    const loc = gpsDescription||'location not confirmed'
     const job = activeJob
-    const vtype = VEHICLE_TYPES.find(v=>v.id===driverInfo.vehicleType)?.label||'HGV'
-    const cargo = `${job?.cargo_type||'unknown'}, value £${job?.cargo_value?.toLocaleString()||'unknown'}`
-    const remaining = jobs.filter(j=>j.status!=='completed'&&j.ref!==job?.ref)
-    const remainingList = remaining.map(j=>`${j.ref}: ${j.route} (SLA:${j.sla_window||'?'}, penalty:£${j.penalty_if_breached?.toLocaleString()||'?'})`).join('; ')
-    const input = inputText||'no additional detail'
-
+    const loc = gpsDescription||'location not confirmed'
+    const cargo = job?.cargo_type||'general freight'
+    const vtype = VEHICLE_TYPES.find(v=>v.id===driverInfo.vehicleType)?.label||driverInfo.vehicleType||'HGV'
+    const input = inputText.trim()
+    const remainingList = jobs.filter(j=>j.status!=='completed'&&j.ref!==job?.ref).map(j=>j.route).join(', ')
     const p = {
-      delayed:          `Driver ${driverInfo.name} (${driverInfo.vehicleReg}, ${vtype}) running late. Location:${loc}. Job:${job?.route||'?'}. SLA:${job?.sla_window||'?'}. Penalty:£${job?.penalty_if_breached?.toLocaleString()||'?'}. Reason:${input}`,
-      temp_alarm:       `TEMPERATURE ALARM. Driver ${driverInfo.name} (${driverInfo.vehicleReg}). Location:${loc}. Cargo:${cargo}. Reading:${input}. Assess breach vs cargo thresholds. Can delivery proceed?`,
-      load_movement:    `LOAD MOVEMENT. Driver ${driverInfo.name} (${driverInfo.vehicleReg}, ${vtype}). Location:${loc}. Cargo:${cargo}. Pulled over. Advise safe inspection and whether load can continue.`,
-      road_closure:     `ROAD CLOSURE/WEATHER. Driver ${driverInfo.name} (${driverInfo.vehicleReg}, ${vtype}). Location:${loc}. Job:${job?.route||'?'}. SLA:${job?.sla_window||'?'}. Detail:${input}. Specific reroute using UK road names. Apply 1.5x buffer.`,
-      low_bridge:       `LOW BRIDGE/RESTRICTION. Driver ${driverInfo.name} (${driverInfo.vehicleReg}, ${vtype}). Location:${loc}. Issue:${input}. Legal requirement and alternative route.`,
-      diversion:        `DRIVER LOST. ${driverInfo.vehicleReg} (${vtype}). Location:${loc}. Job:${job?.route||'?'}. Issue:${input}. Give routing by road numbers and junctions.`,
-      tacho_fault:      `TACHOGRAPH FAULT. Driver ${driverInfo.name} (${driverInfo.vehicleReg}). Location:${loc}. Fault:${input}. What are the legal requirements? Can driver continue? What must be documented?`,
-      accident:         `ROAD ACCIDENT. Driver ${driverInfo.name} (${driverInfo.vehicleReg}, ${vtype}). Location:${loc}. Description:${input}. Cargo:${cargo}. Safety first, then legal obligations — police, insurance, witness details. What must the driver do immediately?`,
-      customer_not_ready:`CUSTOMER NOT READY. Driver ${driverInfo.name} (${driverInfo.vehicleReg}). Location:${loc}. Job:${job?.route||'?'}. SLA:${job?.sla_window||'?'}. Waiting:${input}. How long to wait? What to communicate?`,
-      goods_refused:    `GOODS REFUSED. Driver ${driverInfo.name} (${driverInfo.vehicleReg}). Location:${loc}. Job:${job?.route||'?'}. Cargo:${cargo}. Reason:${input}. What to do with goods? Who to call?`,
-      pod_problem:      `POD PROBLEM. Driver ${driverInfo.name} (${driverInfo.vehicleReg}). Location:${loc}. Issue:${input}. What alternatives are acceptable? Who has authority?`,
-      access_problem:   `SITE ACCESS PROBLEM. Driver ${driverInfo.name} (${driverInfo.vehicleReg}, ${vtype}). Location:${loc}. Job:${job?.route||'?'}. SLA:${job?.sla_window||'?'}. Issue:${input}. How long to wait and who to call?`,
-      short_load:       `SHORT/WRONG LOAD. Driver ${driverInfo.name} (${driverInfo.vehicleReg}). Location:${loc}. Job:${job?.route||'?'}. Issue:${input}. Depart partial or wait? Who needs to know?`,
-      manifest_mismatch:`GOODS DON'T MATCH MANIFEST. Driver ${driverInfo.name} (${driverInfo.vehicleReg}). Location:${loc}. Job:${job?.route||'?'}. Issue:${input}. Can driver legally accept these goods? What documentation is needed?`,
-      loading_damage:   `DAMAGE FOUND. Driver ${driverInfo.name} (${driverInfo.vehicleReg}). Location:${loc}. Cargo:${cargo}. Damage:${input}. Can goods be delivered? What evidence to collect?`,
-      overweight:       `OVERWEIGHT. Driver ${driverInfo.name} (${driverInfo.vehicleReg}, ${vtype}). Location:${loc}. Reading:${input}. Legal limits and action before proceeding?`,
-      part_delivery:    `PART DELIVERY. Driver ${driverInfo.name} (${driverInfo.vehicleReg}). Location:${loc}. Job:${job?.route||'?'}. Detail:${input}. Paperwork needed? What happens to remaining goods?`,
-      customer_hostile: `DIFFICULT CUSTOMER. Driver ${driverInfo.name} (${driverInfo.vehicleReg}). Location:${loc}. Situation:${input}. Is driver safe? What should they do?`,
+      delayed:          `DRIVER RUNNING LATE. ${driverInfo.name} (${driverInfo.vehicleReg}). Location:${loc}. Job:${job?.route||'?'}. SLA window:${job?.sla_window||'?'}. Reason:${input}. Penalty if breached:£${job?.penalty_if_breached||0}. Best action?`,
+      temp_alarm:       `TEMPERATURE ALARM. ${driverInfo.vehicleReg} fridge/reefer. Location:${loc}. Cargo:${cargo}. Reading:${input}. Cold chain breach risk. What to do?`,
+      load_movement:    `LOAD MOVEMENT REPORTED. ${driverInfo.vehicleReg}. Location:${loc}. Cargo:${cargo}. Driver has pulled over safely. Next steps for safe load re-securing?`,
+      road_closure:     `ROAD CLOSURE / WEATHER. ${driverInfo.name} (${driverInfo.vehicleReg}). Location:${loc}. Issue:${input}. Job:${job?.route||'?'}. Best reroute avoiding affected roads?`,
+      low_bridge:       `LOW BRIDGE / RESTRICTION. ${driverInfo.vehicleReg} (${vtype}). Location:${loc}. ${input}. Safe alternative route?`,
+      diversion:        `WRONG ROUTE / LOST. ${driverInfo.name} (${driverInfo.vehicleReg}). Location:${loc}. Job:${job?.route||'?'}. ${input}. Correct route guidance?`,
+      tacho_fault:      `TACHO FAULT. Driver ${driverInfo.name} (${driverInfo.vehicleReg}). Location:${loc}. Fault:${input}. Legal requirements. Can driver continue?`,
+      accident:         `ACCIDENT. ${driverInfo.vehicleReg}, ${driverInfo.name}. Location:${loc}. ${input}. Injuries? Third party? Insurance steps. 999 needed?`,
+      customer_not_ready:`CUSTOMER NOT READY. ${driverInfo.name} at ${job?.route?.split('→')[1]||'delivery point'}. Waiting ${input}. SLA window:${job?.sla_window||'?'}. Options?`,
+      goods_refused:    `GOODS REFUSED. ${driverInfo.vehicleReg}. Location:${loc}. Cargo:${cargo}. Reason:${input}. What to do with the load?`,
+      pod_problem:      `POD PROBLEM. ${driverInfo.name} (${driverInfo.vehicleReg}). Location:${loc}. Issue:${input}. How to proceed legally?`,
+      access_problem:   `CANNOT ACCESS SITE. ${driverInfo.vehicleReg}. Location:${loc}. ${input}. Alternative delivery options?`,
+      short_load:       `WRONG / SHORT LOAD. ${driverInfo.vehicleReg}. Location:${loc}. Issue:${input}. Delivery value:£${job?.cargo_value||0}. Next steps?`,
+      manifest_mismatch:`MANIFEST MISMATCH. ${driverInfo.vehicleReg}. Location:${loc}. ${input}. Do not sign. What should driver do?`,
+      damage_found:     `DAMAGE FOUND. ${driverInfo.vehicleReg}. Location:${loc}. ${input}. CCTV nearby? Evidence steps. Insurance process?`,
+      overweight:       `OVERWEIGHT LOAD. ${driverInfo.vehicleReg} (${vtype}). Location:${loc}. ${input}. Legal weight limits. Can vehicle move?`,
+      part_delivery:    `PART DELIVERY. ${driverInfo.name} (${driverInfo.vehicleReg}). Location:${loc}. ${input}. What to do with remainder?`,
+      difficult_customer:`DIFFICULT CUSTOMER. ${driverInfo.name}. Location:${loc}. ${input}. How to handle professionally and protect driver?`,
+      rest:             `REST BREAK NEEDED. ${driverInfo.name} (${driverInfo.vehicleReg}, ${vtype}). Location:${loc}. Remaining jobs:${remainingList||'none'}. Find nearest safe, accredited truck park. Avoid seven banned services for cargo above £5k.`,
       driver_unwell:    `DRIVER UNWELL. ${driverInfo.name} (${driverInfo.vehicleReg}). Location:${loc}. Cargo:${cargo}. Symptoms:${input}. Safe to continue? Who takes over?`,
       theft_threat:     `SECURITY THREAT. Driver ${driverInfo.name} (${driverInfo.vehicleReg}). Location:${loc}. Cargo:${cargo}. Description:${input}. Immediate safety actions. Call 999?`,
       vehicle_theft:    `VEHICLE STOLEN. Driver ${driverInfo.name}. Vehicle:${driverInfo.vehicleReg}. Last seen:${input}. Location:${loc}. Cargo:${cargo}. Immediate actions — 999, insurance, cargo owner, depot.`,
@@ -387,8 +381,9 @@ export default function DriverApp() {
       adrhazmat:        `ADR/HAZMAT ISSUE. Driver ${driverInfo.name} (${driverInfo.vehicleReg}). Location:${loc}. Cargo:${cargo}. Issue:${input}. Legal requirements. Can driver continue?`,
       cant_complete:    `CANNOT COMPLETE ALL RUNS. Driver ${driverInfo.name} (${driverInfo.vehicleReg}). Location:${loc}. Current job:${job?.route||'?'}. Reason:${input}. Remaining:${remainingList||'none'}. Prioritise which to attempt. Customer notifications. Relief vehicle needed?`,
       breakdown:        `BREAKDOWN EMERGENCY. ${driverInfo.vehicleReg} (${vtype}), ${driverInfo.name}. Location:${loc}. ${input?'Issue:'+input:'Vehicle broken down.'}. Job:${job?.route||'?'}. Cargo:${cargo}. Safety first, then recovery, then SLA.`,
+      medical:          `MEDICAL EMERGENCY. Driver ${driverInfo.name} (${driverInfo.vehicleReg}). Location:${loc}. Situation:${input||'medical emergency reported'}. Is driver safe? What should they do?`,
     }
-    return p[issueId]||`Driver ${driverInfo.name} reports: ${input}. Location:${loc}. Job:${job?.route||'?'}.`
+    return p[issueId]||`Driver ${driverInfo.name} reports: ${input||issueId}. Location:${loc}. Job:${job?.route||'?'}.`
   }
 
   async function sendAlert() {
@@ -401,7 +396,6 @@ export default function DriverApp() {
     const prompt = buildPrompt(panelIssue?.id)
     const job = activeJob
 
-    // Save placeholder alert immediately for emergencies
     if (emergencyIds.includes(panelIssue?.id)) {
       const placeholder = { headline:`${panelIssue.label} — ops alerted`, severity:'HIGH', actions:['Ops manager has been notified — awaiting instructions'], detail:'', issueId:panelIssue.id, issueLabel:panelIssue.label, time:new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}) }
       setLastAlert(placeholder); localStorage.setItem('dh_last_alert',JSON.stringify(placeholder))
@@ -427,7 +421,6 @@ export default function DriverApp() {
       body:JSON.stringify({client_id:driverInfo.clientId,driver_name:driverInfo.name,driver_phone:driverInfo.phone||null,vehicle_reg:driverInfo.vehicleReg,ref:job?.ref,issue_description:prompt,human_description:inputText||panelIssue?.label,location_description:gpsDescription,latitude:gpsCoords?.latitude,longitude:gpsCoords?.longitude})
     }).catch(()=>{})
 
-    // Start 15-minute escalation timer for emergencies
     if (emergencyIds.includes(panelIssue?.id)) {
       const timer = setTimeout(()=>{
         setOpsAcknowledged(prev => {
@@ -476,7 +469,9 @@ export default function DriverApp() {
         body:JSON.stringify({client_id:driverInfo.clientId,driver_name:driverInfo.name,driver_phone:driverInfo.phone||null,vehicle_reg:driverInfo.vehicleReg,issue_description:`PRE-SHIFT VEHICLE DEFECT. Driver ${driverInfo.name} (${driverInfo.vehicleReg}) flagged issues: ${failedLabels.join(', ')}. Vehicle may not be roadworthy.`,human_description:`⚠ Vehicle defects: ${failedLabels.join(', ')}`,location_description:'At depot — pre-departure',force_alert:true,force_financial_zero:true})
       }).catch(()=>{})
     } else {
+      // FIX: reload jobs fresh on new shift start so empty state is never shown
       setShiftStarted(true); setView('run')
+      loadJobs(driverInfo)
     }
   }
 
@@ -491,11 +486,16 @@ export default function DriverApp() {
     loadJobs(info)
   }
 
-  function endShift() {
-    setShowPostShift(true)
-  }
+  function endShift() { setShowPostShift(true) }
 
+  // FIX: mileage is now mandatory
   function submitEndShift() {
+    if (!shiftMileage.trim()) {
+      setMileageError(true)
+      showToast('Mileage is required before ending shift', 'error')
+      setTimeout(()=>setMileageError(false), 3000)
+      return
+    }
     const completed = jobs.filter(j=>j.status==='completed').length
     const total = jobs.length
     const start = shiftStartTime.current
@@ -506,7 +506,6 @@ export default function DriverApp() {
     ;['dh_shift_started','dh_shift_started_at','dh_last_alert','dh_job_progress'].forEach(k=>localStorage.removeItem(k))
   }
 
-  // Pre-shift checks filtered by vehicle type
   function preShift() {
     const checks = [...PRESHIFT_CHECKS_BASE]
     if (driverInfo.vehicleType==='fridge') checks.push(PRESHIFT_FRIDGE)
@@ -551,7 +550,7 @@ export default function DriverApp() {
         </div>
         {(!driverInfo.name||!driverInfo.phone||!driverInfo.vehicleType||!driverInfo.clientId)&&<div style={{fontSize:12,color:'#4a5260',textAlign:'center',marginBottom:10}}>All fields required to continue</div>}
         <button onClick={saveDriverInfo} disabled={!driverInfo.name||!driverInfo.phone||!driverInfo.vehicleType||!driverInfo.clientId}
-          style={{width:'100%',padding:15,background:(!driverInfo.name||!driverInfo.phone||!driverInfo.vehicleType||!driverInfo.clientId)?'rgba(0,229,176,0.3)':'#00e5b0',border:'none',borderRadius:8,color:'#000',fontWeight:700,fontSize:16,cursor:'pointer'}}>
+          style={{width:'100%',padding:15,background:(!driverInfo.name||!driverInfo.phone||!driverInfo.vehicleType||!driverInfo.clientId)?'rgba(0,229,176,0.3)':'#00e5b0',border:'none',borderRadius:10,color:'#000',fontWeight:700,fontSize:16,cursor:'pointer'}}>
           Get started →
         </button>
       </div>
@@ -610,16 +609,16 @@ export default function DriverApp() {
               </div>
             )
           })}
-          {hasFails&&!defectBlocked&&(
-            <div style={{padding:'12px 14px',background:'rgba(239,68,68,0.08)',border:'1px solid rgba(239,68,68,0.3)',borderRadius:8,marginTop:8,marginBottom:14,fontSize:13,color:'#ef4444',fontWeight:500}}>
-              ⚠ Defects flagged — ops will be notified. Wait for their reply before departing.
+          {hasFails&&(
+            <div style={{padding:'12px 14px',background:'rgba(239,68,68,0.06)',border:'1px solid rgba(239,68,68,0.2)',borderRadius:9,marginTop:6,marginBottom:8,fontSize:13,color:'#ef4444'}}>
+              ⚠ Defects flagged — ops will be alerted. Wait for their reply before departing.
             </div>
           )}
           {defectBlocked&&(
             <div style={{padding:'14px',background:'rgba(239,68,68,0.08)',border:'1px solid rgba(239,68,68,0.35)',borderRadius:9,marginTop:8,marginBottom:14}}>
               <div style={{fontSize:14,color:'#ef4444',fontWeight:600,marginBottom:4}}>🛑 Departure blocked — defects flagged</div>
               <div style={{fontSize:13,color:'#8a9099',marginBottom:10}}>Ops has been alerted. Wait for confirmation before departing.</div>
-              <button onClick={()=>{setDefectBlocked(false);setShiftStarted(true);setView('run')}}
+              <button onClick={()=>{setDefectBlocked(false);setShiftStarted(true);setView('run');loadJobs(driverInfo)}}
                 style={{width:'100%',padding:11,background:'transparent',border:'1px solid rgba(239,68,68,0.3)',borderRadius:7,color:'#ef4444',fontSize:13,cursor:'pointer'}}>
                 Ops confirmed — depart anyway
               </button>
@@ -658,9 +657,11 @@ export default function DriverApp() {
           )
         })}
         <div style={{marginTop:16}}>
-          <div style={{fontSize:13,color:'#8a9099',marginBottom:6}}>Mileage at end of shift</div>
-          <input value={shiftMileage} onChange={e=>setShiftMileage(e.target.value)} placeholder='e.g. 48,320' inputMode='numeric'
-            style={{width:'100%',padding:'12px',background:'#111418',border:'1px solid rgba(255,255,255,0.1)',borderRadius:8,color:'#e8eaed',fontSize:15,outline:'none',boxSizing:'border-box',marginBottom:14}}/>
+          <div style={{fontSize:13,color:mileageError?'#ef4444':'#8a9099',marginBottom:6,fontWeight:mileageError?600:400}}>
+            Mileage at end of shift {mileageError&&'— required ⚠'}
+          </div>
+          <input value={shiftMileage} onChange={e=>{setShiftMileage(e.target.value);setMileageError(false)}} placeholder='e.g. 48,320' inputMode='numeric'
+            style={{width:'100%',padding:'12px',background:'#111418',border:`1px solid ${mileageError?'rgba(239,68,68,0.6)':'rgba(255,255,255,0.1)'}`,borderRadius:8,color:'#e8eaed',fontSize:15,outline:'none',boxSizing:'border-box',marginBottom:14,transition:'border 0.2s'}}/>
           <div style={{fontSize:13,color:'#8a9099',marginBottom:6}}>Shift notes (optional)</div>
           <textarea value={shiftNotes} onChange={e=>setShiftNotes(e.target.value)} rows={3} placeholder='Any notes for ops — customer issues, delays, anything to flag...'
             style={{width:'100%',padding:'12px',background:'#111418',border:'1px solid rgba(255,255,255,0.1)',borderRadius:8,color:'#e8eaed',fontSize:14,outline:'none',resize:'none',boxSizing:'border-box',lineHeight:1.6}}/>
@@ -686,9 +687,9 @@ export default function DriverApp() {
         </div>
         <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8,marginBottom:10}}>
           {[
-            {val:shiftSummary.completed,  sub:'Delivered',      color:'#00e5b0', bg:'rgba(0,229,176,0.06)',   border:'rgba(0,229,176,0.2)'},
-            {val:shiftSummary.total,       sub:'Total runs',    color:'#3b82f6', bg:'rgba(59,130,246,0.06)',  border:'rgba(59,130,246,0.2)'},
-            {val:shiftSummary.incidents,   sub:'Incidents',     color:shiftSummary.incidents>0?'#f59e0b':'#00e5b0', bg:'#111418', border:'rgba(255,255,255,0.06)'},
+            {val:shiftSummary.completed,  sub:'Delivered',   color:'#00e5b0', bg:'rgba(0,229,176,0.06)',  border:'rgba(0,229,176,0.2)'},
+            {val:shiftSummary.total,      sub:'Total runs',  color:'#3b82f6', bg:'rgba(59,130,246,0.06)', border:'rgba(59,130,246,0.2)'},
+            {val:shiftSummary.incidents,  sub:'Incidents',   color:shiftSummary.incidents>0?'#f59e0b':'#00e5b0', bg:'#111418', border:'rgba(255,255,255,0.06)'},
             {val:shiftSummary.duration?`${shiftSummary.duration}m`:'—', sub:'Duration', color:'#e8eaed', bg:'#111418', border:'rgba(255,255,255,0.06)'},
           ].map((s,i)=>(
             <div key={i} style={{padding:'16px',background:s.bg,border:`1px solid ${s.border}`,borderRadius:10,textAlign:'center'}}>
@@ -709,91 +710,72 @@ export default function DriverApp() {
     </div>
   )
 
-  // ── POD CONFIRMATION FLOW ─────────────────────────────────────────────────
+  // ── POD CONFIRMATION ──────────────────────────────────────────────────────
   if (podFlow) return (
     <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.9)',zIndex:300,display:'flex',alignItems:'center',justifyContent:'center',padding:24}}>
       <div style={{width:'100%',maxWidth:360,background:'#111418',borderRadius:14,padding:24,border:'1px solid rgba(255,255,255,0.08)'}}>
         <div style={{fontSize:18,fontWeight:700,color:'#e8eaed',marginBottom:6}}>Delivery confirmation</div>
-        <div style={{fontSize:14,color:'#8a9099',marginBottom:22}}>Was a signature or proof of delivery obtained?</div>
+        <div style={{fontSize:13,color:'#8a9099',marginBottom:20}}>How was the delivery confirmed?</div>
         {[
-          { id:'signed',     label:'✅ Signature obtained',  sub:'POD signed by customer' },
-          { id:'photo',      label:'📸 Photo POD taken',     sub:'Goods left — photo taken' },
-          { id:'refused',    label:'❌ Customer refused to sign', sub:'Delivered but no POD' },
-          { id:'no_contact', label:'🚪 No contact / safe place', sub:'Left in safe location' },
+          {id:'signature',label:'✍ Signature obtained',     sub:'Consignee signed POD'},
+          {id:'photo',    label:'📸 Photo evidence taken',   sub:'Photographed at delivery point'},
+          {id:'refused',  label:'❌ Delivery refused',        sub:'Consignee refused — reason logged'},
+          {id:'safe_place',label:'📦 Safe place delivery',   sub:'Left in agreed safe location'},
         ].map(opt=>(
           <button key={opt.id} onClick={()=>confirmDelivered(opt.id)}
-            style={{width:'100%',marginBottom:8,padding:'13px 14px',background:'rgba(0,229,176,0.04)',border:'1px solid rgba(0,229,176,0.12)',borderRadius:9,cursor:'pointer',textAlign:'left',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-            <div><div style={{fontSize:15,color:'#e8eaed',fontWeight:500}}>{opt.label}</div><div style={{fontSize:11,color:'#4a5260',marginTop:2}}>{opt.sub}</div></div>
-            <span style={{color:'#00e5b0',fontSize:16}}>→</span>
+            style={{width:'100%',marginBottom:8,padding:'13px',background:'rgba(0,229,176,0.04)',border:'1px solid rgba(0,229,176,0.12)',borderRadius:10,cursor:'pointer',textAlign:'left',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+            <div><div style={{fontSize:14,color:'#e8eaed',fontWeight:500}}>{opt.label}</div><div style={{fontSize:11,color:'#4a5260',marginTop:2}}>{opt.sub}</div></div>
+            <span style={{color:'#00e5b0',fontSize:15}}>→</span>
           </button>
         ))}
-        <button onClick={()=>setPodFlow(null)} style={{width:'100%',padding:10,background:'transparent',border:'none',color:'#4a5260',fontSize:13,cursor:'pointer',marginTop:4}}>Cancel</button>
+        <button onClick={()=>setPodFlow(null)} style={{width:'100%',padding:10,background:'transparent',border:'none',color:'#4a5260',fontSize:12,cursor:'pointer',marginTop:4}}>← Cancel</button>
       </div>
     </div>
   )
 
-  // ── MAIN APP ──────────────────────────────────────────────────────────────
+  // ── MAIN RUN VIEW ─────────────────────────────────────────────────────────
   return (
-    <div style={{minHeight:'100vh',background:'#0a0c0e',color:'#e8eaed',fontFamily:'IBM Plex Sans,sans-serif',paddingBottom:96}}>
+    <div style={{minHeight:'100vh',background:'#0a0c0e',color:'#e8eaed',fontFamily:'IBM Plex Sans,sans-serif',paddingBottom:90}}>
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}`}</style>
 
-      {toast&&<div style={{position:'fixed',top:16,left:'50%',transform:'translateX(-50%)',zIndex:999,padding:'10px 22px',borderRadius:8,background:'#111418',border:'1px solid rgba(0,229,176,0.35)',color:'#00e5b0',fontSize:14,fontWeight:500,whiteSpace:'nowrap',boxShadow:'0 4px 24px rgba(0,0,0,0.6)',pointerEvents:'none'}}>{toast.msg}</div>}
+      {/* Toast */}
+      {toast&&(
+        <div style={{position:'fixed',top:16,left:'50%',transform:'translateX(-50%)',zIndex:500,padding:'10px 18px',borderRadius:10,background:toast.type==='error'?'rgba(239,68,68,0.95)':'rgba(0,229,176,0.95)',color:toast.type==='error'?'#fff':'#000',fontWeight:600,fontSize:13,boxShadow:'0 4px 20px rgba(0,0,0,0.4)',whiteSpace:'nowrap'}}>
+          {toast.msg}
+        </div>
+      )}
 
+      {/* Undo bar */}
       {pendingUndo&&(
-        <div style={{position:'fixed',top:0,left:0,right:0,zIndex:998,padding:'13px 16px',background:'#1a2218',borderBottom:'2px solid #00e5b0',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
-          <div><div style={{fontSize:14,color:'#e8eaed',fontWeight:600}}>📦 {pendingUndo.job.ref} marked as delivered</div><div style={{fontSize:11,color:'#4a5260',marginTop:2}}>Undoing in {undoCountdown}s...</div></div>
-          <button onClick={undoDelivered} style={{padding:'8px 18px',background:'rgba(239,68,68,0.15)',border:'1px solid rgba(239,68,68,0.5)',borderRadius:8,color:'#ef4444',fontWeight:700,fontSize:14,cursor:'pointer'}}>UNDO</button>
+        <div style={{position:'fixed',top:0,left:0,right:0,zIndex:400,padding:'12px 16px',background:'rgba(245,158,11,0.95)',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+          <span style={{fontSize:13,color:'#000',fontWeight:600}}>Marked as delivered</span>
+          <button onClick={undoDelivered} style={{padding:'6px 14px',background:'#000',border:'none',borderRadius:6,color:'#f59e0b',fontWeight:700,fontSize:12,cursor:'pointer'}}>UNDO ({undoCountdown}s)</button>
         </div>
       )}
 
-      {/* OPS MESSAGES BANNER */}
-      {opsMessages.length>0&&(
-        <div style={{background:'rgba(0,229,176,0.06)',borderBottom:'1px solid rgba(0,229,176,0.2)',padding:'10px 16px'}}>
-          <div style={{fontSize:10,color:'#00e5b0',fontFamily:'monospace',fontWeight:700,letterSpacing:'0.06em',marginBottom:4}}>MESSAGE FROM OPS</div>
-          {opsMessages.slice(0,1).map((m,i)=>(
-            <div key={i} style={{fontSize:13,color:'#e8eaed',lineHeight:1.5}}>{m.text}</div>
-          ))}
-          {opsMessages.length>1&&<div style={{fontSize:11,color:'#4a5260',marginTop:4}}>{opsMessages.length-1} more message{opsMessages.length>2?'s':''}</div>}
-          <button onClick={()=>{setOpsMessages([]);localStorage.removeItem('dh_ops_messages')}} style={{marginTop:6,padding:'4px 10px',background:'transparent',border:'1px solid rgba(0,229,176,0.2)',borderRadius:5,color:'#4a5260',fontSize:11,cursor:'pointer'}}>Dismiss</button>
-        </div>
-      )}
-
-      {/* NAV */}
-      <div style={{padding:'11px 16px',display:'flex',alignItems:'center',justifyContent:'space-between',borderBottom:'1px solid rgba(255,255,255,0.06)',background:'rgba(10,12,14,0.98)',position:'sticky',top:pendingUndo?56:0,zIndex:50,transition:'top 0.2s'}}>
-        <div style={{display:'flex',alignItems:'center',gap:9}}>
-          <div style={{width:26,height:26,background:'#00e5b0',borderRadius:5,display:'flex',alignItems:'center',justifyContent:'center',fontSize:9,fontWeight:700,color:'#000',fontFamily:'monospace'}}>DH</div>
-          <div><div style={{fontSize:13,fontWeight:600}}>{driverInfo.name}</div><div style={{fontSize:9,color:'#4a5260',fontFamily:'monospace'}}>{driverInfo.vehicleReg} · {VEHICLE_TYPES.find(v=>v.id===driverInfo.vehicleType)?.label||''}</div></div>
+      {/* Header */}
+      <div style={{padding:'12px 16px',borderBottom:'1px solid rgba(255,255,255,0.06)',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+        <div style={{display:'flex',alignItems:'center',gap:10}}>
+          <div style={{width:28,height:28,background:'#00e5b0',borderRadius:5,display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,fontWeight:700,color:'#000',fontFamily:'monospace'}}>DH</div>
+          <div><div style={{fontSize:13,fontWeight:500}}>{driverInfo.name}</div><div style={{fontSize:10,color:'#4a5260',fontFamily:'monospace'}}>{driverInfo.vehicleReg}</div></div>
         </div>
         <div style={{display:'flex',gap:8,alignItems:'center'}}>
-          <button onClick={()=>setView(view==='allruns'?'run':'allruns')} style={{padding:'5px 10px',background:view==='allruns'?'rgba(0,229,176,0.1)':'transparent',border:`1px solid ${view==='allruns'?'rgba(0,229,176,0.3)':'rgba(255,255,255,0.08)'}`,borderRadius:6,color:view==='allruns'?'#00e5b0':'#4a5260',fontSize:10,cursor:'pointer',fontFamily:'monospace'}}>ALL RUNS</button>
-          <div style={{fontSize:10,color:'#4a5260',fontFamily:'monospace'}}>{new Date().toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'}).toUpperCase()}</div>
+          {loading&&<div style={{width:16,height:16,border:'2px solid rgba(0,229,176,0.2)',borderTop:'2px solid #00e5b0',borderRadius:'50%',animation:'spin 0.8s linear infinite'}}/>}
         </div>
       </div>
 
-      {view==='allruns'&&(
-        <div style={{padding:16}}>
-          <div style={{fontSize:17,fontWeight:600,marginBottom:14}}>{jobs.length} runs today</div>
-          {sortedJobs.map(job=>{
-            const sc=STATUS_COLORS[job.status]||STATUS_COLORS['on-track']; const isDone=job.status==='completed'
-            return(
-              <div key={job.ref} onClick={()=>{if(!isDone){setActiveJob(job);setView('run')}}}
-                style={{padding:'13px',borderRadius:10,marginBottom:8,border:`1px solid ${sc.border}`,background:sc.bg,opacity:isDone?0.4:1,cursor:isDone?'default':'pointer'}}>
-                <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:3}}>
-                  <span style={{fontFamily:'monospace',fontSize:14,fontWeight:700}}>{job.ref}</span>
-                  <div style={{display:'flex',alignItems:'center',gap:5}}><div style={{width:6,height:6,borderRadius:'50%',background:sc.dot}}/><span style={{fontFamily:'monospace',fontSize:10,color:sc.dot}}>{sc.label}</span></div>
-                </div>
-                <div style={{fontSize:13,color:'#8a9099'}}>{job.route}</div>
-                {!isDone&&<div style={{display:'flex',gap:10,fontSize:11,color:'#4a5260',marginTop:3,flexWrap:'wrap'}}>{job.eta&&<span>ETA {job.eta}</span>}{job.sla_window&&<span>Slot {job.sla_window}</span>}{job.cargo_type&&<span>{cargoIcon(job.cargo_type)} {job.cargo_type}</span>}</div>}
-              </div>
-            )
-          })}
-          <button onClick={()=>{['dh_driver_info','dh_shift_started','dh_shift_started_at','dh_last_alert','dh_job_progress','dh_ops_messages'].forEach(k=>localStorage.removeItem(k));setSetupDone(false);setShiftStarted(false);setJobs([]);setActiveJob(null)}}
-            style={{width:'100%',padding:11,background:'transparent',border:'1px solid rgba(255,255,255,0.06)',borderRadius:8,color:'#4a5260',fontSize:12,cursor:'pointer',marginTop:6}}>Change driver / vehicle</button>
+      {/* Ops messages banner */}
+      {opsMessages.length>0&&(
+        <div style={{margin:'8px 12px 0',padding:'10px 13px',background:'rgba(59,130,246,0.08)',border:'1px solid rgba(59,130,246,0.25)',borderRadius:9}}>
+          <div style={{fontSize:9,color:'#3b82f6',fontFamily:'monospace',fontWeight:700,letterSpacing:'0.08em',marginBottom:4}}>OPS MESSAGE</div>
+          <div style={{fontSize:13,color:'#e8eaed'}}>{opsMessages[opsMessages.length-1]}</div>
         </div>
       )}
 
       {view==='run'&&(
         <div style={{padding:'10px 0'}}>
 
+          {/* Last alert banner */}
           {lastAlert&&(
             <div onClick={reopenLastAlert} style={{margin:'0 12px 10px',padding:'12px 14px',borderRadius:10,cursor:'pointer',border:`1px solid ${SEV[lastAlert.severity]?.border||'rgba(245,158,11,0.35)'}`,background:SEV[lastAlert.severity]?.bg}}>
               <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start'}}>
@@ -810,70 +792,64 @@ export default function DriverApp() {
             </div>
           )}
 
+          {/* Run count header */}
           <div style={{padding:'3px 16px 10px'}}>
-            <div style={{fontSize:17,fontWeight:500}}>{loading?'Loading...':`${jobs.length} run${jobs.length!==1?'s':''} today`}</div>
+            <div style={{fontSize:17,fontWeight:500}}>{loading?'Loading runs...':`${jobs.length} run${jobs.length!==1?'s':''} today`}</div>
           </div>
 
-          {/* ACTIVE JOB */}
-          {activeJob&&(()=>{
-            const sc = STATUS_COLORS[activeJob.status]||STATUS_COLORS['on-track']
-            const isDone = activeJob.status==='completed'
-            const isAtRisk = activeJob.status==='at_risk'
-            const isPartial = activeJob.status==='part_delivered'
-            const currentStepIdx = PROGRESS_STEPS.findIndex(s=>s.status===activeJob.status)
-            return (
-              <div style={{margin:'0 12px 14px',borderRadius:12,border:`1px solid ${sc.border}`,background:sc.bg,overflow:'hidden'}}>
-                <div style={{padding:'15px 16px 12px',borderBottom:'1px solid rgba(255,255,255,0.06)'}}>
-                  <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:5}}>
-                    <span style={{fontFamily:'monospace',fontSize:20,fontWeight:700,color:'#e8eaed'}}>{activeJob.ref}</span>
-                    <div style={{display:'flex',alignItems:'center',gap:5}}><div style={{width:8,height:8,borderRadius:'50%',background:sc.dot}}/><span style={{fontFamily:'monospace',fontSize:11,fontWeight:600,color:sc.dot}}>{sc.label}</span></div>
+          {/* Job cards */}
+          <div style={{padding:'0 12px 6px'}}>
+            {sortedJobs.map(job=>{
+              const sc = STATUS_COLORS[job.status]||STATUS_COLORS['on-track']
+              const isDone = job.status==='completed'
+              const isActive = activeJob?.ref===job.ref
+              const isAtRisk = job.status==='at_risk'
+              return (
+                <div key={job.ref} onClick={()=>{if(!isDone)setActiveJob(job)}}
+                  style={{padding:'12px',background:isActive?sc.bg:'#111418',border:`1px solid ${isActive?sc.border:'rgba(255,255,255,0.06)'}`,borderRadius:10,marginBottom:8,cursor:isDone?'default':'pointer',transition:'all 0.15s',opacity:isDone?0.55:1}}>
+                  <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:3}}>
+                    <span style={{fontFamily:'monospace',fontSize:14,fontWeight:700}}>{job.ref}</span>
+                    <div style={{display:'flex',alignItems:'center',gap:5}}><div style={{width:6,height:6,borderRadius:'50%',background:sc.dot}}/><span style={{fontFamily:'monospace',fontSize:10,color:sc.dot}}>{sc.label}</span></div>
                   </div>
-                  <div style={{fontSize:17,color:'#e8eaed',fontWeight:500,marginBottom:7}}>{activeJob.route}</div>
-                  {activeJob.drops&&activeJob.drops.length>0&&(
-                    <div style={{marginBottom:7}}>
-                      <div style={{fontSize:10,color:'#4a5260',fontFamily:'monospace',marginBottom:4}}>DROPS</div>
-                      {activeJob.drops.map((d,i)=>(
-                        <div key={i} style={{fontSize:12,color:'#8a9099',marginBottom:2}}>Drop {i+1}: {d.location} {d.sla_window?`· Slot ${d.sla_window}`:''}</div>
-                      ))}
-                    </div>
-                  )}
-                  <div style={{display:'flex',gap:10,fontSize:12,color:'#8a9099',flexWrap:'wrap'}}>
-                    {activeJob.eta&&<span>ETA {activeJob.eta}</span>}
-                    {activeJob.sla_window&&<span>Slot {activeJob.sla_window}</span>}
-                    {activeJob.carrier&&<span>{activeJob.carrier}</span>}
-                  </div>
-                  {activeJob.cargo_type&&<div style={{marginTop:7,fontSize:13,color:'#3b82f6',fontWeight:500}}>{cargoIcon(activeJob.cargo_type)} {activeJob.cargo_type}</div>}
-                  {activeJob.alert&&<div style={{marginTop:7,padding:'6px 9px',background:'rgba(245,158,11,0.07)',border:'1px solid rgba(245,158,11,0.2)',borderRadius:6,fontSize:12,color:'#f59e0b'}}>⚠ {activeJob.alert}</div>}
-                  {isAtRisk&&<div style={{marginTop:7,padding:'7px 10px',background:'rgba(239,68,68,0.07)',border:'1px solid rgba(239,68,68,0.25)',borderRadius:6,fontSize:12,color:'#ef4444',fontWeight:500}}>⚠ Reassignment required — ops notified</div>}
-                  {isPartial&&<div style={{marginTop:7,padding:'7px 10px',background:'rgba(245,158,11,0.07)',border:'1px solid rgba(245,158,11,0.25)',borderRadius:6,fontSize:12,color:'#f59e0b',fontWeight:500}}>⚠ Part delivery — ops notified</div>}
+                  <div style={{fontSize:13,color:'#8a9099'}}>{job.route}</div>
+                  {!isDone&&<div style={{display:'flex',gap:10,fontSize:11,color:'#4a5260',marginTop:3,flexWrap:'wrap'}}>{job.eta&&<span>ETA {job.eta}</span>}{job.sla_window&&<span>Slot {job.sla_window}</span>}{job.cargo_type&&<span>{cargoIcon(job.cargo_type)} {job.cargo_type}</span>}</div>}
                 </div>
+              )
+            })}
+          </div>
 
-                {/* Progress steps */}
-                {!isDone&&!isAtRisk&&(
-                  <div style={{padding:'13px 16px'}}>
-                    <div style={{fontSize:9,color:'#4a5260',fontFamily:'monospace',letterSpacing:'0.08em',marginBottom:10}}>LOG YOUR PROGRESS</div>
-                    <div style={{display:'flex',flexDirection:'column',gap:8,marginBottom:9}}>
-                      {PROGRESS_STEPS.map((step,i)=>{
-                        const isDoneStep=currentStepIdx>i; const isCurrent=currentStepIdx===i
-                        return(
-                          <button key={step.id} onClick={()=>logProgress(step)}
-                            style={{width:'100%',padding:'13px 15px',borderRadius:9,border:`1px solid ${isDoneStep?'rgba(74,82,96,0.3)':isCurrent?step.color+'44':'rgba(255,255,255,0.06)'}`,background:isDoneStep?'rgba(74,82,96,0.08)':isCurrent?step.color+'15':'transparent',cursor:isDoneStep?'default':'pointer',display:'flex',alignItems:'center',gap:12,opacity:isDoneStep?0.5:1}}>
-                            <span style={{fontSize:20,flexShrink:0}}>{isDoneStep?'✓':step.icon}</span>
-                            <span style={{fontSize:15,color:isDoneStep?'#4a5260':isCurrent?step.color:'#e8eaed',fontWeight:isCurrent?600:400}}>{step.label}</span>
-                            {isCurrent&&<span style={{marginLeft:'auto',fontSize:11,color:step.color,fontFamily:'monospace'}}>TAP →</span>}
-                          </button>
-                        )
-                      })}
-                    </div>
+          {/* Active job progress */}
+          {activeJob && activeJob.status!=='completed' && (()=>{
+            const isAtRisk = activeJob.status==='at_risk'
+            const currentStepIndex = PROGRESS_STEPS.findIndex(s=>s.status===activeJob.status)
+            return (
+              <div style={{margin:'0 12px 12px',background:'#111418',border:'1px solid rgba(255,255,255,0.07)',borderRadius:12,overflow:'hidden'}}>
+                <div style={{padding:'10px 14px',borderBottom:'1px solid rgba(255,255,255,0.05)',display:'flex',alignItems:'center',gap:8}}>
+                  <span style={{fontFamily:'monospace',fontSize:12,color:'#00e5b0',fontWeight:600}}>{activeJob.ref}</span>
+                  <span style={{fontSize:12,color:'#4a5260'}}>·</span>
+                  <span style={{fontSize:12,color:'#8a9099',flex:1,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{activeJob.route}</span>
+                </div>
+                {!isAtRisk&&(
+                  <div style={{padding:'10px 14px 4px'}}>
+                    {PROGRESS_STEPS.map((step,i)=>{
+                      const isDoneStep = currentStepIndex > i || (currentStepIndex === -1 && activeJob.status==='loaded' && i===1)
+                      const isCurrent = step.status===activeJob.status || (activeJob.status==='on-track'&&i===0) || (activeJob.status==='pending'&&i===0)
+                      return (
+                        <button key={step.id} onClick={()=>{if(isCurrent||!isDoneStep)logProgress(step)}} disabled={isDoneStep}
+                          style={{width:'100%',marginBottom:7,padding:'13px',background:isDoneStep?'rgba(0,229,176,0.03)':isCurrent?'rgba(0,229,176,0.06)':'rgba(255,255,255,0.02)',border:`1px solid ${isDoneStep?'rgba(0,229,176,0.12)':isCurrent?'rgba(0,229,176,0.3)':'rgba(255,255,255,0.06)'}`,borderRadius:10,cursor:isDoneStep?'default':'pointer',display:'flex',alignItems:'center',gap:12,opacity:isDoneStep?0.5:1}}>
+                          <span style={{fontSize:20,flexShrink:0}}>{isDoneStep?'✓':step.icon}</span>
+                          <span style={{fontSize:15,color:isDoneStep?'#4a5260':isCurrent?step.color:'#e8eaed',fontWeight:isCurrent?600:400}}>{step.label}</span>
+                          {isCurrent&&<span style={{marginLeft:'auto',fontSize:11,color:step.color,fontFamily:'monospace'}}>TAP →</span>}
+                        </button>
+                      )
+                    })}
                     <button onClick={initiateDelivered}
-                      style={{width:'100%',padding:'15px',borderRadius:10,border:'2px solid rgba(0,229,176,0.4)',background:'rgba(0,229,176,0.07)',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:10}}>
+                      style={{width:'100%',padding:'15px',borderRadius:10,border:'2px solid rgba(0,229,176,0.4)',background:'rgba(0,229,176,0.07)',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:10,marginBottom:8}}>
                       <span style={{fontSize:22}}>📦</span>
                       <span style={{fontSize:16,color:'#00e5b0',fontWeight:700}}>Mark as Delivered</span>
                     </button>
                   </div>
                 )}
-
-                {/* AT RISK locked state */}
                 {isAtRisk&&(
                   <div style={{padding:'13px 16px'}}>
                     <div style={{padding:'11px 13px',background:'rgba(239,68,68,0.05)',border:'1px solid rgba(239,68,68,0.18)',borderRadius:8,marginBottom:9,fontSize:13,color:'#ef4444'}}>
@@ -895,7 +871,7 @@ export default function DriverApp() {
             )
           })()}
 
-          {/* ISSUE GROUPS */}
+          {/* Issue groups */}
           {jobs.some(j=>j.status!=='completed')?(
             <>
               {ISSUE_GROUPS.map(group=>(
@@ -928,6 +904,12 @@ export default function DriverApp() {
               🔍 Run vehicle check
             </button>
           </div>
+
+          {/* Change driver button */}
+          <div style={{padding:'0 12px 6px'}}>
+            <button onClick={()=>{['dh_driver_info','dh_shift_started','dh_shift_started_at','dh_last_alert','dh_job_progress','dh_ops_messages'].forEach(k=>localStorage.removeItem(k));setSetupDone(false);setShiftStarted(false);setJobs([]);setActiveJob(null)}}
+              style={{width:'100%',padding:11,background:'transparent',border:'1px solid rgba(255,255,255,0.06)',borderRadius:8,color:'#4a5260',fontSize:12,cursor:'pointer',marginTop:6}}>Change driver / vehicle</button>
+          </div>
         </div>
       )}
 
@@ -941,192 +923,184 @@ export default function DriverApp() {
           style={{padding:'13px',background:'rgba(239,68,68,0.1)',border:'1px solid rgba(239,68,68,0.3)',borderRadius:10,color:'#ef4444',fontWeight:600,fontSize:11,cursor:'pointer',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:2}}>
           <span style={{fontSize:18}}>🚑</span><span>Medical</span>
         </button>
-        <button onClick={()=>openIssue({id:'cant_complete',label:"Can't Complete",icon:'⛔',needsText:true,placeholder:'Reason — e.g. hours almost up'})}
-          style={{padding:'13px',background:'rgba(239,68,68,0.06)',border:'1px solid rgba(239,68,68,0.2)',borderRadius:10,color:'#ef4444',fontWeight:500,fontSize:11,cursor:'pointer',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:2}}>
+        <button onClick={()=>openIssue({id:'cant_complete',label:"Can't Complete",icon:'⛔',needsText:true,placeholder:"Reason — e.g. hours up"})}
+          style={{padding:'13px',background:'rgba(239,68,68,0.06)',border:'1px solid rgba(239,68,68,0.2)',borderRadius:10,color:'#ef4444',fontWeight:600,fontSize:11,cursor:'pointer',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:2}}>
           <span style={{fontSize:18}}>⛔</span><span>Can't Complete</span>
         </button>
       </div>
 
       {/* ISSUE PANEL */}
       {panelOpen&&(
-        <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.88)',zIndex:200,display:'flex',flexDirection:'column',justifyContent:'flex-end'}} onClick={e=>{if(e.target===e.currentTarget)closePanel()}}>
-          <div style={{background:'#111418',borderRadius:'18px 18px 0 0',maxHeight:'92vh',display:'flex',flexDirection:'column',borderTop:'2px solid rgba(255,255,255,0.08)'}}>
-
-            <div style={{padding:'17px 20px 13px',display:'flex',alignItems:'center',justifyContent:'space-between',flexShrink:0}}>
-              <div style={{display:'flex',alignItems:'center',gap:10}}>
-                <span style={{fontSize:22}}>{panelIssue?.icon}</span>
-                <span style={{fontSize:16,fontWeight:700,color:'#e8eaed'}}>{panelIssue?.label}</span>
+        <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.85)',zIndex:200,display:'flex',alignItems:'flex-end'}}>
+          <div style={{width:'100%',background:'#0d1014',borderRadius:'16px 16px 0 0',maxHeight:'90vh',overflowY:'auto',padding:'20px 16px 36px'}}>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:16}}>
+              <div>
+                <div style={{fontSize:9,color:'#4a5260',fontFamily:'monospace',letterSpacing:'0.08em',marginBottom:3}}>ISSUE REPORT</div>
+                <div style={{fontSize:18,fontWeight:700,color:'#e8eaed'}}>{panelIssue?.icon} {panelIssue?.label}</div>
               </div>
-              <button onClick={closePanel} style={{background:'rgba(255,255,255,0.06)',border:'none',color:'#8a9099',fontSize:15,cursor:'pointer',width:30,height:30,borderRadius:15,display:'flex',alignItems:'center',justifyContent:'center'}}>✕</button>
+              <button onClick={closePanel} style={{width:34,height:34,borderRadius:8,background:'rgba(255,255,255,0.06)',border:'none',color:'#8a9099',fontSize:18,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>✕</button>
             </div>
 
-            <div style={{overflowY:'auto',flex:1,padding:'0 20px 32px',WebkitOverflowScrolling:'touch'}}>
+            {/* GPS status */}
+            {gpsStatus==='getting'&&<div style={{fontSize:11,color:'#3b82f6',fontFamily:'monospace',marginBottom:10}}>📍 Getting location...</div>}
+            {gpsStatus==='got'&&gpsDescription&&<div style={{fontSize:11,color:'#00e5b0',fontFamily:'monospace',marginBottom:10}}>📍 {gpsDescription}</div>}
+            {gpsStatus==='failed'&&<div style={{fontSize:11,color:'#f59e0b',fontFamily:'monospace',marginBottom:10}}>📍 Location not available</div>}
 
-              {/* GPS */}
-              <div style={{padding:'9px 11px',background:'#0d1014',borderRadius:8,display:'flex',alignItems:'center',gap:9,marginBottom:14}}>
-                <div style={{width:7,height:7,borderRadius:'50%',flexShrink:0,background:gpsStatus==='got'?'#00e5b0':gpsStatus==='getting'?'#f59e0b':'#4a5260'}}/>
-                <div style={{flex:1}}>
-                  <div style={{fontSize:9,color:'#4a5260',fontFamily:'monospace',marginBottom:1}}>YOUR LOCATION</div>
-                  <div style={{fontSize:12,color:gpsStatus==='got'?'#e8eaed':'#8a9099'}}>{gpsStatus==='getting'?'Getting location...':gpsStatus==='got'?gpsDescription:'GPS unavailable — describe below'}</div>
-                </div>
-                {gpsStatus!=='got'&&gpsStatus!=='getting'&&<button onClick={getGPS} style={{padding:'4px 10px',background:'rgba(0,229,176,0.08)',border:'1px solid rgba(0,229,176,0.2)',borderRadius:5,color:'#00e5b0',fontSize:11,cursor:'pointer',flexShrink:0}}>Get GPS</button>}
-              </div>
+            {/* Contextual warnings */}
+            {panelIssue?.id==='theft_threat'&&<div style={{padding:'11px 13px',background:'rgba(239,68,68,0.07)',border:'1px solid rgba(239,68,68,0.25)',borderRadius:9,marginBottom:13,fontSize:13,color:'#ef4444'}}>🚨 If in immediate danger — call 999 first. Note any CCTV nearby.</div>}
+            {panelIssue?.id==='tacho_fault'&&<div style={{padding:'11px 13px',background:'rgba(59,130,246,0.07)',border:'1px solid rgba(59,130,246,0.25)',borderRadius:9,marginBottom:13,fontSize:13,color:'#3b82f6'}}>⚖️ A tacho fault must be recorded. Do not continue without guidance.</div>}
+            {panelIssue?.id==='temp_alarm'&&<div style={{padding:'11px 13px',background:'rgba(6,182,212,0.07)',border:'1px solid rgba(6,182,212,0.25)',borderRadius:9,marginBottom:13,fontSize:13,color:'#06b6d4'}}>Enter probe reading — not the unit display. They can differ.</div>}
+            {panelIssue?.id==='cant_complete'&&<div style={{padding:'11px 13px',background:'rgba(239,68,68,0.07)',border:'1px solid rgba(239,68,68,0.25)',borderRadius:9,marginBottom:13,fontSize:12,color:'#ef4444'}}>Remaining jobs will be flagged AT RISK. Ops notified immediately.</div>}
+            {panelIssue?.id==='manifest_mismatch'&&<div style={{padding:'11px 13px',background:'rgba(245,158,11,0.07)',border:'1px solid rgba(245,158,11,0.25)',borderRadius:9,marginBottom:13,fontSize:13,color:'#f59e0b'}}>⚖️ Do not sign for goods that don't match the manifest. Wait for guidance.</div>}
+            {panelIssue?.note&&<div style={{padding:'11px 13px',background:'rgba(59,130,246,0.07)',border:'1px solid rgba(59,130,246,0.25)',borderRadius:9,marginBottom:13,fontSize:13,color:'#3b82f6'}}>{panelIssue.note}</div>}
 
-              {/* Contextual notices */}
-              {panelIssue?.id==='breakdown'&&<div style={{padding:'11px 13px',background:'rgba(239,68,68,0.07)',border:'1px solid rgba(239,68,68,0.25)',borderRadius:9,marginBottom:13,fontSize:14,color:'#ef4444',fontWeight:600}}>🚑 If anyone is injured — call 999 first</div>}
-              {panelIssue?.id==='accident'&&<div style={{padding:'11px 13px',background:'rgba(239,68,68,0.07)',border:'1px solid rgba(239,68,68,0.25)',borderRadius:9,marginBottom:13,fontSize:13,color:'#ef4444',fontWeight:600}}>🚑 Injuries? Call 999 immediately. Do not move vehicles until police arrive.</div>}
-              {panelIssue?.id==='medical'&&<div style={{padding:'11px 13px',background:'rgba(239,68,68,0.07)',border:'1px solid rgba(239,68,68,0.25)',borderRadius:9,marginBottom:13,fontSize:14,color:'#ef4444',fontWeight:600}}>🚑 Life-threatening? Call 999 first.</div>}
-              {panelIssue?.id==='theft_threat'&&<div style={{padding:'11px 13px',background:'rgba(239,68,68,0.07)',border:'1px solid rgba(239,68,68,0.25)',borderRadius:9,marginBottom:13,fontSize:14,color:'#ef4444',fontWeight:600}}>🔒 Stay in cab. Lock doors. Do not confront.</div>}
-              {panelIssue?.id==='vehicle_theft'&&<div style={{padding:'11px 13px',background:'rgba(239,68,68,0.07)',border:'1px solid rgba(239,68,68,0.25)',borderRadius:9,marginBottom:13,fontSize:13,color:'#ef4444',fontWeight:600}}>📞 Call 999 first to report theft. Note any CCTV nearby.</div>}
-              {panelIssue?.id==='tacho_fault'&&<div style={{padding:'11px 13px',background:'rgba(59,130,246,0.07)',border:'1px solid rgba(59,130,246,0.25)',borderRadius:9,marginBottom:13,fontSize:13,color:'#3b82f6'}}>⚖️ A tacho fault must be recorded. Do not continue without guidance.</div>}
-              {panelIssue?.id==='temp_alarm'&&<div style={{padding:'11px 13px',background:'rgba(6,182,212,0.07)',border:'1px solid rgba(6,182,212,0.25)',borderRadius:9,marginBottom:13,fontSize:13,color:'#06b6d4'}}>Enter probe reading — not the unit display. They can differ.</div>}
-              {panelIssue?.id==='cant_complete'&&<div style={{padding:'11px 13px',background:'rgba(239,68,68,0.07)',border:'1px solid rgba(239,68,68,0.25)',borderRadius:9,marginBottom:13,fontSize:12,color:'#ef4444'}}>Remaining jobs will be flagged AT RISK. Ops notified immediately.</div>}
-              {panelIssue?.id==='manifest_mismatch'&&<div style={{padding:'11px 13px',background:'rgba(245,158,11,0.07)',border:'1px solid rgba(245,158,11,0.25)',borderRadius:9,marginBottom:13,fontSize:13,color:'#f59e0b'}}>⚖️ Do not sign for goods that don't match the manifest. Wait for guidance.</div>}
-              {panelIssue?.note&&<div style={{padding:'11px 13px',background:'rgba(59,130,246,0.07)',border:'1px solid rgba(59,130,246,0.25)',borderRadius:9,marginBottom:13,fontSize:13,color:'#3b82f6'}}>{panelIssue.note}</div>}
-
-              {/* RESULT */}
-              {panelState==='result'&&parsedResult&&(()=>{
-                const s=SEV[parsedResult.severity]||SEV.MEDIUM
-                return (
-                  <div>
-                    <div style={{padding:'15px',background:s.bg,border:`1px solid ${s.border}`,borderRadius:12,marginBottom:15,display:'flex',gap:11,alignItems:'flex-start'}}>
-                      <span style={{fontSize:26,flexShrink:0}}>{s.icon}</span>
-                      <div>
-                        <div style={{fontSize:10,color:s.color,fontFamily:'monospace',fontWeight:700,letterSpacing:'0.08em',marginBottom:4}}>{parsedResult.severity}</div>
-                        <div style={{fontSize:17,fontWeight:700,color:'#e8eaed',lineHeight:1.4}}>{parsedResult.headline}</div>
-                      </div>
-                    </div>
-                    {parsedResult.actions.length>0&&(
-                      <div style={{marginBottom:15}}>
-                        <div style={{fontSize:9,color:'#4a5260',fontFamily:'monospace',letterSpacing:'0.08em',marginBottom:8}}>WHAT TO DO</div>
-                        {parsedResult.actions.map((action,i)=>(
-                          <div key={i} style={{display:'flex',gap:11,marginBottom:9,padding:'13px',background:'rgba(0,0,0,0.3)',border:'1px solid rgba(255,255,255,0.07)',borderRadius:10,alignItems:'flex-start'}}>
-                            <div style={{width:26,height:26,borderRadius:'50%',background:i===0?s.color:'rgba(255,255,255,0.08)',color:i===0?'#000':'#8a9099',display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,fontWeight:700,flexShrink:0}}>{i+1}</div>
-                            <div style={{fontSize:15,color:'#e8eaed',lineHeight:1.5,fontWeight:i===0?600:400}}>{action}</div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                    {parsedResult.detail&&(
-                      <div style={{marginBottom:15}}>
-                        <button onClick={()=>setShowDetail(v=>!v)} style={{width:'100%',padding:'10px 13px',background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:9,color:'#4a5260',fontSize:12,cursor:'pointer',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-                          <span>Full ops analysis</span><span>{showDetail?'▲':'▼'}</span>
-                        </button>
-                        {showDetail&&<div style={{padding:'12px 13px',background:'rgba(255,255,255,0.02)',border:'1px solid rgba(255,255,255,0.06)',borderRadius:'0 0 9px 9px',borderTop:'none'}}>
-                          {parsedResult.detail.split('\n').map((line,i)=>{
-                            if(!line.trim())return <div key={i} style={{height:5}}/>
-                            const cl=line.replace(/\*\*/g,'').replace(/^[#\-]\s*/,'').trim()
-                            const bold=line.match(/^[A-Z\s\/]+:$/)
-                            return <div key={i} style={{fontSize:12,color:bold?'#e8eaed':'#8a9099',lineHeight:1.7,fontWeight:bold?500:400,marginBottom:1}}>{cl}</div>
-                          })}
-                        </div>}
-                      </div>
-                    )}
-                    <button onClick={closePanel} style={{width:'100%',padding:15,background:'#00e5b0',border:'none',borderRadius:10,color:'#000',fontWeight:700,fontSize:16,cursor:'pointer',marginBottom:9}}>Got it — close</button>
-                    {!['cant_complete','hours_running_out','medical','vehicle_theft'].includes(panelIssue?.id)&&(
-                      <button onClick={()=>setPanelState('resolving')} style={{width:'100%',padding:13,background:'transparent',border:'1px solid rgba(0,229,176,0.28)',borderRadius:10,color:'#00e5b0',fontWeight:500,fontSize:14,cursor:'pointer'}}>
-                        ✅ Issue resolved — back on track
-                      </button>
-                    )}
-                  </div>
-                )
-              })()}
-
-              {/* RESOLVING */}
-              {panelState==='resolving'&&(
+            {/* RESULT state */}
+            {panelState==='result'&&parsedResult&&(()=>{
+              const s=SEV[parsedResult.severity]||SEV.MEDIUM
+              return (
                 <div>
-                  <div style={{fontSize:17,fontWeight:700,color:'#e8eaed',marginBottom:5}}>What happened?</div>
-                  <div style={{fontSize:13,color:'#4a5260',marginBottom:14}}>Ops will be notified. Job updates to on-track.</div>
-                  {[
-                    {id:'breakdown_recovered',label:'🔧 Breakdown recovered',sub:'Vehicle moving again'},
-                    {id:'delay_cleared',label:'🟢 Delay cleared',sub:'Back on schedule'},
-                    {id:'temp_back_in_range',label:'❄ Temp back in range',sub:'Cold chain restored'},
-                    {id:'rerouted_clear',label:'🛣 Rerouted — clear now',sub:'New route confirmed'},
-                    {id:'access_resolved',label:'🚪 Access resolved',sub:'Now at site'},
-                    {id:'delivery_accepted',label:'📦 Delivery accepted',sub:'POD signed'},
-                    {id:'tacho_cleared',label:'📟 Tacho cleared',sub:'Issue resolved by depot'},
-                    {id:'other_resolved',label:'✅ Other — resolved',sub:'Issue no longer active'},
-                  ].map(opt=>(
-                    <button key={opt.id} onClick={()=>resolveIssue(opt.label)}
-                      style={{width:'100%',marginBottom:8,padding:'13px',background:'rgba(0,229,176,0.04)',border:'1px solid rgba(0,229,176,0.12)',borderRadius:10,cursor:'pointer',textAlign:'left',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-                      <div><div style={{fontSize:14,color:'#e8eaed',fontWeight:500}}>{opt.label}</div><div style={{fontSize:11,color:'#4a5260',marginTop:2}}>{opt.sub}</div></div>
-                      <span style={{color:'#00e5b0',fontSize:15}}>→</span>
-                    </button>
-                  ))}
-                  <button onClick={()=>setPanelState('result')} style={{width:'100%',padding:9,background:'transparent',border:'none',color:'#4a5260',fontSize:12,cursor:'pointer',marginTop:3}}>← Back</button>
-                </div>
-              )}
-
-              {panelState==='resolving_loading'&&<div style={{textAlign:'center',padding:'44px 0'}}><div style={{width:38,height:38,border:'3px solid rgba(0,229,176,0.15)',borderTop:'3px solid #00e5b0',borderRadius:'50%',margin:'0 auto 14px',animation:'spin 1s linear infinite'}}/><div style={{fontSize:13,color:'#00e5b0',fontFamily:'monospace'}}>NOTIFYING OPS...</div><style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style></div>}
-
-              {panelState==='resolved'&&(
-                <div style={{textAlign:'center',padding:'22px 0'}}>
-                  <div style={{fontSize:46,marginBottom:10}}>✅</div>
-                  <div style={{fontSize:19,color:'#00e5b0',fontWeight:700,marginBottom:5}}>Back on track</div>
-                  <div style={{fontSize:13,color:'#8a9099',marginBottom:resolvedEta?12:22}}>Ops notified. Job updated.</div>
-                  {resolvedEta&&<div style={{padding:'10px 14px',background:'rgba(0,229,176,0.05)',border:'1px solid rgba(0,229,176,0.2)',borderRadius:9,marginBottom:22,fontSize:13,color:'#e8eaed',lineHeight:1.6,textAlign:'left'}}>{resolvedEta}</div>}
-                  <button onClick={closePanel} style={{padding:'13px 44px',background:'#00e5b0',border:'none',borderRadius:10,color:'#000',fontWeight:700,fontSize:15,cursor:'pointer'}}>Close</button>
-                </div>
-              )}
-
-              {panelState==='sent'&&(
-                <div style={{textAlign:'center',padding:'30px 0'}}>
-                  <div style={{fontSize:42,marginBottom:10}}>✅</div>
-                  <div style={{fontSize:17,color:'#00e5b0',fontWeight:700,marginBottom:5}}>Ops notified</div>
-                  <div style={{fontSize:13,color:'#4a5260',marginBottom:22}}>Your manager has been alerted.</div>
-                  <button onClick={closePanel} style={{padding:'12px 38px',background:'#00e5b0',border:'none',borderRadius:10,color:'#000',fontWeight:700,fontSize:14,cursor:'pointer'}}>Close</button>
-                </div>
-              )}
-
-              {panelState==='no_active_job'&&(
-                <div style={{textAlign:'center',padding:'30px 0'}}>
-                  <div style={{fontSize:42,marginBottom:10}}>✅</div>
-                  <div style={{fontSize:17,color:'#00e5b0',fontWeight:700,marginBottom:7}}>All runs are complete</div>
-                  <div style={{fontSize:13,color:'#8a9099',marginBottom:7,lineHeight:1.6}}>No active delivery to raise this against.</div>
-                  <div style={{fontSize:12,color:'#4a5260',marginBottom:22}}>For vehicle or medical emergencies use Breakdown or Medical.</div>
-                  <button onClick={closePanel} style={{padding:'12px 38px',background:'rgba(255,255,255,0.06)',border:'1px solid rgba(255,255,255,0.1)',borderRadius:10,color:'#8a9099',fontWeight:500,fontSize:13,cursor:'pointer'}}>Close</button>
-                </div>
-              )}
-
-              {panelState==='loading'&&(
-                <div style={{textAlign:'center',padding:'44px 0'}}>
-                  <div style={{width:42,height:42,border:'3px solid rgba(0,229,176,0.12)',borderTop:'3px solid #00e5b0',borderRadius:'50%',margin:'0 auto 14px',animation:'spin 1s linear infinite'}}/>
-                  <div style={{fontSize:13,color:'#00e5b0',fontFamily:'monospace',marginBottom:5}}>GETTING INSTRUCTIONS...</div>
-                  <div style={{fontSize:12,color:'#4a5260'}}>Ops manager alerted</div>
-                </div>
-              )}
-
-              {panelState==='idle'&&(
-                <>
-                  {panelIssue?.needsText&&(
-                    <textarea value={inputText} onChange={e=>setInputText(e.target.value)} rows={4}
-                      onFocus={e=>{setTimeout(()=>e.target.scrollIntoView({behavior:'smooth',block:'center'}),350)}}
-                      placeholder={panelIssue.placeholder||'Describe what has happened...'}
-                      style={{width:'100%',padding:'13px',background:'#1a1f26',border:'2px solid rgba(255,255,255,0.16)',borderRadius:10,color:'#e8eaed',fontSize:16,lineHeight:1.6,outline:'none',resize:'none',boxSizing:'border-box',marginBottom:13,WebkitAppearance:'none'}}/>
-                  )}
-                  {activeJob&&(
-                    <div style={{padding:'8px 11px',background:'rgba(0,229,176,0.03)',border:'1px solid rgba(0,229,176,0.1)',borderRadius:7,fontSize:12,color:'#8a9099',marginBottom:14}}>
-                      Job: <span style={{color:'#00e5b0',fontWeight:500}}>{activeJob.ref}</span> · {activeJob.route}
+                  <div style={{padding:'15px',background:s.bg,border:`1px solid ${s.border}`,borderRadius:12,marginBottom:15,display:'flex',gap:11,alignItems:'flex-start'}}>
+                    <span style={{fontSize:26,flexShrink:0}}>{s.icon}</span>
+                    <div>
+                      <div style={{fontSize:10,color:s.color,fontFamily:'monospace',fontWeight:700,letterSpacing:'0.08em',marginBottom:4}}>{parsedResult.severity}</div>
+                      <div style={{fontSize:17,fontWeight:700,color:'#e8eaed',lineHeight:1.4}}>{parsedResult.headline}</div>
+                    </div>
+                  </div>
+                  {parsedResult.actions.length>0&&(
+                    <div style={{marginBottom:15}}>
+                      <div style={{fontSize:9,color:'#4a5260',fontFamily:'monospace',letterSpacing:'0.08em',marginBottom:8}}>WHAT TO DO</div>
+                      {parsedResult.actions.map((action,i)=>(
+                        <div key={i} style={{display:'flex',gap:11,marginBottom:9,padding:'13px',background:'rgba(0,0,0,0.3)',border:'1px solid rgba(255,255,255,0.07)',borderRadius:10,alignItems:'flex-start'}}>
+                          <div style={{width:26,height:26,borderRadius:'50%',background:i===0?s.color:'rgba(255,255,255,0.08)',color:i===0?'#000':'#8a9099',display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,fontWeight:700,flexShrink:0}}>{i+1}</div>
+                          <div style={{fontSize:15,color:'#e8eaed',lineHeight:1.5,fontWeight:i===0?600:400}}>{action}</div>
+                        </div>
+                      ))}
                     </div>
                   )}
-                  <button onClick={sendAlert}
-                    style={{width:'100%',padding:15,background:['breakdown','cant_complete','theft_threat','driver_unwell','medical','accident','vehicle_theft'].includes(panelIssue?.id)?'#ef4444':'#00e5b0',border:'none',borderRadius:10,color:['breakdown','cant_complete','theft_threat','driver_unwell','medical','accident','vehicle_theft'].includes(panelIssue?.id)?'#fff':'#000',fontWeight:700,fontSize:16,cursor:'pointer',marginBottom:9}}>
-                    {panelIssue?.id==='breakdown'?'🚨 Alert ops now':
-                     panelIssue?.id==='accident'?'💥 Alert ops — accident':
-                     panelIssue?.id==='medical'?'🚑 Alert ops — medical':
-                     panelIssue?.id==='theft_threat'?'🦺 Alert ops — security':
-                     panelIssue?.id==='vehicle_theft'?'🚨 Alert ops — vehicle stolen':
-                     panelIssue?.id==='cant_complete'?'⛔ Flag and alert ops':
-                     panelIssue?.id==='rest'?'🛌 Find safe parking →':
-                     panelIssue?.id==='temp_alarm'?'🌡 Log and check →':
-                     '⚠ Get instructions →'}
+                  {parsedResult.detail&&(
+                    <div style={{marginBottom:15}}>
+                      <button onClick={()=>setShowDetail(v=>!v)} style={{width:'100%',padding:'10px 13px',background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:9,color:'#4a5260',fontSize:12,cursor:'pointer',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+                        <span>Full ops analysis</span><span>{showDetail?'▲':'▼'}</span>
+                      </button>
+                      {showDetail&&<div style={{padding:'12px 13px',background:'rgba(255,255,255,0.02)',border:'1px solid rgba(255,255,255,0.06)',borderRadius:'0 0 9px 9px',borderTop:'none'}}>
+                        {parsedResult.detail.split('\n').map((line,i)=>{
+                          if(!line.trim())return <div key={i} style={{height:5}}/>
+                          const cl=line.replace(/\*\*/g,'').replace(/^[#\-]\s*/,'').trim()
+                          const bold=line.match(/^[A-Z\s\/]+:$/)
+                          return <div key={i} style={{fontSize:12,color:bold?'#e8eaed':'#8a9099',lineHeight:1.7,fontWeight:bold?500:400,marginBottom:1}}>{cl}</div>
+                        })}
+                      </div>}
+                    </div>
+                  )}
+                  <button onClick={closePanel} style={{width:'100%',padding:15,background:'#00e5b0',border:'none',borderRadius:10,color:'#000',fontWeight:700,fontSize:16,cursor:'pointer',marginBottom:9}}>Got it — close</button>
+                  {!['cant_complete','hours_running_out','medical','vehicle_theft'].includes(panelIssue?.id)&&(
+                    <button onClick={()=>setPanelState('resolving')} style={{width:'100%',padding:13,background:'transparent',border:'1px solid rgba(0,229,176,0.28)',borderRadius:10,color:'#00e5b0',fontWeight:500,fontSize:14,cursor:'pointer'}}>
+                      ✅ Issue resolved — back on track
+                    </button>
+                  )}
+                </div>
+              )
+            })()}
+
+            {/* RESOLVING state */}
+            {panelState==='resolving'&&(
+              <div>
+                <div style={{fontSize:17,fontWeight:700,color:'#e8eaed',marginBottom:5}}>What happened?</div>
+                <div style={{fontSize:13,color:'#4a5260',marginBottom:14}}>Ops will be notified. Job updates to on-track.</div>
+                {[
+                  {id:'breakdown_recovered',label:'🔧 Breakdown recovered',sub:'Vehicle moving again'},
+                  {id:'delay_cleared',label:'🟢 Delay cleared',sub:'Back on schedule'},
+                  {id:'temp_back_in_range',label:'❄ Temp back in range',sub:'Cold chain restored'},
+                  {id:'rerouted_clear',label:'🛣 Rerouted — clear now',sub:'New route confirmed'},
+                  {id:'access_resolved',label:'🚪 Access resolved',sub:'Now at site'},
+                  {id:'delivery_accepted',label:'📦 Delivery accepted',sub:'POD signed'},
+                  {id:'tacho_cleared',label:'📟 Tacho cleared',sub:'Issue resolved by depot'},
+                  {id:'other_resolved',label:'✅ Other — resolved',sub:'Issue no longer active'},
+                ].map(opt=>(
+                  <button key={opt.id} onClick={()=>resolveIssue(opt.label)}
+                    style={{width:'100%',marginBottom:8,padding:'13px',background:'rgba(0,229,176,0.04)',border:'1px solid rgba(0,229,176,0.12)',borderRadius:10,cursor:'pointer',textAlign:'left',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+                    <div><div style={{fontSize:14,color:'#e8eaed',fontWeight:500}}>{opt.label}</div><div style={{fontSize:11,color:'#4a5260',marginTop:2}}>{opt.sub}</div></div>
+                    <span style={{color:'#00e5b0',fontSize:15}}>→</span>
                   </button>
-                  <div style={{fontSize:11,color:'#4a5260',textAlign:'center',lineHeight:1.5}}>
-                    {['breakdown','delayed','defect','temp_alarm','cant_complete','driver_unwell','theft_threat','medical','accident','vehicle_theft','tacho_fault','hours_running_out'].includes(panelIssue?.id)?'Ops manager notified immediately':'AI instructions in seconds'}
+                ))}
+                <button onClick={()=>setPanelState('result')} style={{width:'100%',padding:9,background:'transparent',border:'none',color:'#4a5260',fontSize:12,cursor:'pointer',marginTop:3}}>← Back</button>
+              </div>
+            )}
+
+            {panelState==='resolving_loading'&&<div style={{textAlign:'center',padding:'44px 0'}}><div style={{width:38,height:38,border:'3px solid rgba(0,229,176,0.15)',borderTop:'3px solid #00e5b0',borderRadius:'50%',margin:'0 auto 14px',animation:'spin 1s linear infinite'}}/><div style={{fontSize:13,color:'#00e5b0',fontFamily:'monospace'}}>NOTIFYING OPS...</div></div>}
+
+            {/* RESOLVED state */}
+            {panelState==='resolved'&&(
+              <div style={{textAlign:'center',padding:'22px 0'}}>
+                <div style={{fontSize:46,marginBottom:10}}>✅</div>
+                <div style={{fontSize:19,color:'#00e5b0',fontWeight:700,marginBottom:5}}>Back on track</div>
+                <div style={{fontSize:13,color:'#8a9099',marginBottom:resolvedEta?12:22}}>Ops notified. Job updated.</div>
+                {resolvedEta&&<div style={{padding:'10px 14px',background:'rgba(0,229,176,0.05)',border:'1px solid rgba(0,229,176,0.2)',borderRadius:9,marginBottom:22,fontSize:13,color:'#e8eaed',lineHeight:1.6,textAlign:'left'}}>{resolvedEta}</div>}
+                <button onClick={closePanel} style={{padding:'13px 44px',background:'#00e5b0',border:'none',borderRadius:10,color:'#000',fontWeight:700,fontSize:15,cursor:'pointer'}}>Close</button>
+              </div>
+            )}
+
+            {/* SENT state */}
+            {panelState==='sent'&&(
+              <div style={{textAlign:'center',padding:'30px 0'}}>
+                <div style={{fontSize:42,marginBottom:10}}>✅</div>
+                <div style={{fontSize:17,color:'#00e5b0',fontWeight:700,marginBottom:5}}>Ops notified</div>
+                <div style={{fontSize:13,color:'#4a5260',marginBottom:22}}>Your manager has been alerted.</div>
+                <button onClick={closePanel} style={{padding:'12px 38px',background:'#00e5b0',border:'none',borderRadius:10,color:'#000',fontWeight:700,fontSize:14,cursor:'pointer'}}>Close</button>
+              </div>
+            )}
+
+            {/* NO ACTIVE JOB state */}
+            {panelState==='no_active_job'&&(
+              <div style={{textAlign:'center',padding:'30px 0'}}>
+                <div style={{fontSize:42,marginBottom:10}}>✅</div>
+                <div style={{fontSize:17,color:'#00e5b0',fontWeight:700,marginBottom:7}}>All runs are complete</div>
+                <div style={{fontSize:13,color:'#8a9099',marginBottom:7,lineHeight:1.6}}>No active delivery to raise this against.</div>
+                <div style={{fontSize:12,color:'#4a5260',marginBottom:22}}>For vehicle or medical emergencies use Breakdown or Medical.</div>
+                <button onClick={closePanel} style={{padding:'12px 38px',background:'rgba(255,255,255,0.06)',border:'1px solid rgba(255,255,255,0.1)',borderRadius:10,color:'#8a9099',fontWeight:500,fontSize:13,cursor:'pointer'}}>Close</button>
+              </div>
+            )}
+
+            {/* LOADING state */}
+            {panelState==='loading'&&(
+              <div style={{textAlign:'center',padding:'44px 0'}}>
+                <div style={{width:42,height:42,border:'3px solid rgba(0,229,176,0.12)',borderTop:'3px solid #00e5b0',borderRadius:'50%',margin:'0 auto 14px',animation:'spin 1s linear infinite'}}/>
+                <div style={{fontSize:13,color:'#00e5b0',fontFamily:'monospace',marginBottom:5}}>GETTING INSTRUCTIONS...</div>
+                <div style={{fontSize:12,color:'#4a5260'}}>Ops manager alerted</div>
+              </div>
+            )}
+
+            {/* IDLE state — input form */}
+            {panelState==='idle'&&(
+              <>
+                {panelIssue?.needsText&&(
+                  <textarea value={inputText} onChange={e=>setInputText(e.target.value)} rows={4}
+                    onFocus={e=>{setTimeout(()=>e.target.scrollIntoView({behavior:'smooth',block:'center'}),350)}}
+                    placeholder={panelIssue.placeholder||'Describe what has happened...'}
+                    style={{width:'100%',padding:'13px',background:'#1a1f26',border:'2px solid rgba(255,255,255,0.16)',borderRadius:10,color:'#e8eaed',fontSize:16,lineHeight:1.6,outline:'none',resize:'none',boxSizing:'border-box',marginBottom:13,WebkitAppearance:'none'}}/>
+                )}
+                {activeJob&&(
+                  <div style={{padding:'8px 11px',background:'rgba(0,229,176,0.03)',border:'1px solid rgba(0,229,176,0.1)',borderRadius:7,fontSize:12,color:'#8a9099',marginBottom:14}}>
+                    Job: <span style={{color:'#00e5b0',fontWeight:500}}>{activeJob.ref}</span> · {activeJob.route}
                   </div>
-                </>
-              )}
-            </div>
+                )}
+                <button onClick={sendAlert}
+                  style={{width:'100%',padding:15,background:['breakdown','cant_complete','theft_threat','driver_unwell','medical','accident','vehicle_theft'].includes(panelIssue?.id)?'#ef4444':'#00e5b0',border:'none',borderRadius:10,color:['breakdown','cant_complete','theft_threat','driver_unwell','medical','accident','vehicle_theft'].includes(panelIssue?.id)?'#fff':'#000',fontWeight:700,fontSize:16,cursor:'pointer',marginBottom:9}}>
+                  {panelIssue?.id==='breakdown'?'🚨 Alert ops now':
+                   panelIssue?.id==='accident'?'💥 Alert ops — accident':
+                   panelIssue?.id==='medical'?'🚑 Alert ops — medical':
+                   panelIssue?.id==='theft_threat'?'🦺 Alert ops — security':
+                   panelIssue?.id==='vehicle_theft'?'🚨 Alert ops — vehicle stolen':
+                   panelIssue?.id==='cant_complete'?'⛔ Flag and alert ops':
+                   panelIssue?.id==='rest'?'🛌 Find safe parking →':
+                   panelIssue?.id==='temp_alarm'?'🌡 Log and check →':
+                   '⚠ Get instructions →'}
+                </button>
+                <div style={{fontSize:11,color:'#4a5260',textAlign:'center',lineHeight:1.5}}>
+                  {['breakdown','delayed','defect','temp_alarm','cant_complete','driver_unwell','theft_threat','medical','accident','vehicle_theft','tacho_fault','hours_running_out'].includes(panelIssue?.id)?'Ops manager notified immediately':'AI instructions in seconds'}
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}
