@@ -1,6 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { createClient } from '@supabase/supabase-js'
-import { sendSMS } from '../../../../lib/twilio.js'
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
@@ -9,6 +8,34 @@ function getDB() {
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY
   if (!url || !key || url.includes('placeholder')) return null
   return createClient(url, key)
+}
+
+// Inlined SMS — no lib import needed
+async function sendSMS(to, body) {
+  const sid   = process.env.TWILIO_ACCOUNT_SID
+  const token = process.env.TWILIO_AUTH_TOKEN
+  const from  = process.env.TWILIO_PHONE_NUMBER
+  if (!sid || !token || !from || sid.includes('placeholder') || sid.startsWith('AC_')) {
+    console.log('[Twilio SMS - not configured] To:', to, '| Body:', body)
+    return { success: false, simulated: true }
+  }
+  try {
+    const res = await fetch(
+      `https://api.twilio.com/2010-04-01/Accounts/${sid}/Messages.json`,
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Basic ' + Buffer.from(`${sid}:${token}`).toString('base64'),
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: new URLSearchParams({ To: to, From: from, Body: body })
+      }
+    )
+    const data = await res.json()
+    return { success: res.ok, sid: data.sid, error: data.message }
+  } catch (e) {
+    return { success: false, error: e.message }
+  }
 }
 
 const DRIVER_ALERT_SYSTEM = `You are a Senior Logistics Crisis Director. You are direct and prioritise by financial impact and urgency.
@@ -35,7 +62,7 @@ When given a driver alert, respond with this exact structure:
 Rules:
 1. Never invent location names — if uncertain say "verify via Google Maps before dispatching"
 2. Apply 1.5x buffer to all UK road time estimates
-3. If driver is injured — 999 is the first call
+3. If driver is injured — 999 is the first call, not the ops manager
 4. If location is driver-reported, Action 1 must be: confirm exact vehicle location with driver
 
 Temperature rules:
@@ -45,9 +72,6 @@ Temperature rules:
 
 function extractFirstAction(text) {
   const lines = text.split('\n')
-  const skipPatterns = /confirm.*location|exact.*vehicle.*location|verify.*position|location.*unconfirmed/i
-  
-  // Try to get action 2 or 3 if action 1 is just the location-confirm boilerplate
   const actions = []
   for (const line of lines) {
     const match = line.match(/^([123])\.?\s+(.{15,120})/)
@@ -56,13 +80,11 @@ function extractFirstAction(text) {
       actions.push(action)
     }
   }
-  
-  // Return first non-boilerplate action
+  // Skip location-confirm boilerplate for action label, use first substantive action
+  const locationBoilerplate = /confirm.*location|exact.*vehicle.*location|verify.*position/i
   for (const action of actions) {
-    if (!skipPatterns.test(action)) return action
+    if (!locationBoilerplate.test(action)) return action
   }
-  
-  // Fall back to first action even if boilerplate
   return actions[0] || null
 }
 
@@ -73,8 +95,36 @@ function extractCarrierPhone(systemPrompt) {
 }
 
 function extractCarrierName(responseText) {
-  const match = responseText.match(/(?:call|contact|notify)\s+([A-Z][A-Za-z\s]+(?:UK|Express|Logistics|Freight|Transport))/i)
+  const match = responseText.match(/(?:call|contact|notify)\s+([A-Z][A-Za-z\s]+(?:UK|Express|Logistics|Freight|Transport|Recovery|Breakdown))/i)
   return match?.[1]?.trim() || null
+}
+
+// Determine action type from issue context + AI response
+// This is the key function — must be correct for each scenario
+function detectActionType(issueType, firstAction) {
+  // Emergency/safety issues always need dispatch confirmation to driver
+  const dispatchIssues = ['breakdown', 'medical', 'accident', 'vehicle_theft', 'theft_threat']
+  if (issueType && dispatchIssues.some(d => issueType.toLowerCase().includes(d))) {
+    return 'dispatch'
+  }
+
+  // Driver hours/cant_complete → SMS instruction to driver
+  const smsIssues = ['hours', 'cant_complete', 'delayed', 'reroute', 'diversion', 'road_closure']
+  if (issueType && smsIssues.some(s => issueType.toLowerCase().includes(s))) {
+    return 'sms'
+  }
+
+  // Fall back to pattern matching on AI response text
+  if (!firstAction) return 'sms'
+
+  if (/999|police|ambulance|emergency.service/i.test(firstAction)) return 'emergency'
+  if (/dispatch|relief.vehicle|recovery.vehicle|breakdown.cover|send.recovery/i.test(firstAction)) return 'dispatch'
+  if (/reroute|re-route|divert|exit.junction|alternative.route/i.test(firstAction)) return 'reroute'
+  if (/send.sms|text.driver|message.driver|notify.driver|instruction.to.driver/i.test(firstAction)) return 'sms'
+  // "call carrier" = Phase 3 voice call — only valid if a carrier phone exists in system prompt
+  if (/call.{0,30}(carrier|recovery|breakdown|haulage|express|freight)/i.test(firstAction)) return 'call'
+  // Default: SMS to driver
+  return 'sms'
 }
 
 export async function POST(request) {
@@ -122,7 +172,6 @@ Provide immediate disruption analysis and action plan.`
         .select('system_prompt, contact_phone, contact_name')
         .eq('id', client_id)
         .single()
-
       if (data) {
         systemPrompt = data.system_prompt
         contactPhone = data.contact_phone
@@ -148,10 +197,14 @@ Provide immediate disruption analysis and action plan.`
     const moneyMatch = fullResponse.match(/£([\d,]+)/)
     const financialImpact = moneyMatch ? parseInt(moneyMatch[1].replace(/,/g, '')) : 0
 
-    // Extract first action BEFORE db block — fixes temporal dead zone bug
     const firstAction = extractFirstAction(fullResponse)
 
+    // Detect action type — use issue context for accuracy, not just AI text matching
+    const issueContext = human_description || ''
+    const detectedType = detectActionType(issueContext, firstAction)
+
     if (db) {
+      // Log incident
       await db.from('incidents').insert({
         client_id,
         user_input: analysisPrompt,
@@ -159,22 +212,10 @@ Provide immediate disruption analysis and action plan.`
         severity,
         financial_impact: financialImpact,
         ref: ref || 'DRIVER-ALERT'
-      })
+      }).catch(e => console.error('incident insert:', e.message))
 
-      if (firstAction && (severity === 'CRITICAL' || severity === 'HIGH')) {
-        const actionTypeMap = {
-          call: /call|phone|contact|ring/i,
-          sms: /send|message|text|whatsapp|notify driver/i,
-          reroute: /reroute|re-route|divert|exit|junction/i,
-          dispatch: /dispatch|relief|vehicle|swap/i,
-          emergency: /999|police|ambulance|emergency service/i,
-        }
-
-        let detectedType = 'call'
-        for (const [type, pattern] of Object.entries(actionTypeMap)) {
-          if (pattern.test(firstAction)) { detectedType = type; break }
-        }
-
+      // Create approval for HIGH/CRITICAL
+      if (firstAction && (severity === 'CRITICAL' || severity === 'HIGH' || force_alert)) {
         await db.from('approvals').insert({
           client_id,
           action_type: detectedType,
@@ -182,36 +223,40 @@ Provide immediate disruption analysis and action plan.`
           action_details: {
             vehicle_reg,
             ref: ref || 'DRIVER-ALERT',
+            driver_name: driver_name || null,
+            driver_phone: driver_phone || null,
             carrier_name: extractCarrierName(fullResponse),
             carrier_phone: extractCarrierPhone(systemPrompt),
-            driver_phone: driver_phone || null,
             script: firstAction,
-            source: 'driver_alert'
+            source: 'driver_alert',
+            issue_context: issueContext.substring(0, 100)
           },
-          financial_value: financialImpact,
+          financial_value: force_financial_zero ? 0 : financialImpact,
           status: 'pending'
-        })
+        }).catch(e => console.error('approval insert:', e.message))
       }
 
-      // Pre-shift defect — always create a pending approval so YES reply works
+      // Pre-shift defect — action_type is 'sms' so YES sends instruction to driver
       if (force_alert && force_financial_zero) {
         await db.from('approvals').insert({
           client_id,
-          action_type: 'call',
-          action_label: `Call ${driver_name || 'driver'} before departure — vehicle defects flagged: ${human_description?.replace('Pre-shift fail: ', '') || 'see dashboard'}`,
+          action_type: 'sms',
+          action_label: `Pre-shift defect: ${human_description?.replace('Pre-shift fail: ', '') || 'vehicle issue'} — ${driver_name || 'driver'} (${vehicle_reg}) awaiting ops decision`,
           action_details: {
             vehicle_reg,
             ref: 'PRE-SHIFT',
+            driver_name: driver_name || null,
             driver_phone: driver_phone || null,
-            script: `Call ${driver_name} on ${vehicle_reg}. They flagged: ${human_description?.replace('Pre-shift fail: ', '') || 'vehicle defects'}. Assess whether vehicle is safe to depart.`,
+            script: `OPS DECISION: Pre-shift defects flagged on ${vehicle_reg}. Either confirm safe to depart or arrange inspection before dispatch.`,
             source: 'preshift_check'
           },
           financial_value: 0,
           status: 'pending'
-        })
+        }).catch(e => console.error('preshift approval insert:', e.message))
       }
     }
 
+    // SMS ops manager
     let smsSent = false
     if ((force_alert || severity === 'CRITICAL' || severity === 'HIGH') && contactPhone) {
       const shortDesc = (human_description || location_description || 'Driver alert')
@@ -219,7 +264,8 @@ Provide immediate disruption analysis and action plan.`
         .replace(/\n/g, ' ')
       const actionLine = firstAction ? firstAction.substring(0, 60) : 'See dashboard'
       const displayFinancial = force_financial_zero ? 0 : financialImpact
-      const smsBody = `DH ${force_alert && severity==='MEDIUM'?'HIGH':severity} ${vehicle_reg || ''}\n${shortDesc}\n${displayFinancial > 0 ? `£${displayFinancial.toLocaleString()} ` : ''}${actionLine}\nYES/NO/OPEN`
+
+      const smsBody = `DH ${force_alert && severity === 'MEDIUM' ? 'HIGH' : severity} ${vehicle_reg || ''}\n${shortDesc}\n${displayFinancial > 0 ? `£${displayFinancial.toLocaleString()} ` : ''}${actionLine}\nYES/NO/OPEN`
       const result = await sendSMS(contactPhone, smsBody)
       smsSent = result.success || false
     }
@@ -229,7 +275,8 @@ Provide immediate disruption analysis and action plan.`
       severity,
       financial_impact: financialImpact,
       analysis: fullResponse,
-      sms_sent: smsSent
+      sms_sent: smsSent,
+      action_type: detectedType
     })
 
   } catch (error) {

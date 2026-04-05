@@ -481,8 +481,14 @@ export default function DriverApp() {
   }
 
   function resumeSession() {
-    const info = driverInfo; setStaleSession(null); setShiftStarted(true)
-    const s = localStorage.getItem('dh_last_alert'); if(s){try{setLastAlert(JSON.parse(s))}catch{}}
+    const info = driverInfo
+    setStaleSession(null)
+    setShiftStarted(true)
+    // Restore shift start time so duration calculates correctly in summary
+    const savedAt = localStorage.getItem('dh_shift_started_at')
+    if (savedAt) shiftStartTime.current = new Date(parseInt(savedAt))
+    const s = localStorage.getItem('dh_last_alert')
+    if (s) { try { setLastAlert(JSON.parse(s)) } catch {} }
     loadJobs(info)
   }
 
@@ -513,7 +519,6 @@ export default function DriverApp() {
   }
 
   const cargoIcon = t=>!t?'📦':t.includes('pharma')?'💊':t.includes('frozen')?'🧊':t.includes('chilled')?'❄':'📦'
-  const sortedJobs = [...jobs.filter(j=>j.status!=='completed'),...jobs.filter(j=>j.status==='completed')]
 
   // ── SETUP ─────────────────────────────────────────────────────────────────
   if (!setupDone) return (

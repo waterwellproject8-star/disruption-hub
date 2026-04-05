@@ -5,16 +5,16 @@ import Link from 'next/link'
 const DASHBOARD_PIN = 'DH2026'
 
 const ACTIVE_SHIPMENTS = [
-  { ref: 'REF-4421', route: 'Manchester → Bristol', status: 'on-track', eta: '14:22', carrier: 'DHL Express', alert: null },
-  { ref: 'REF-8832', route: 'Glasgow → London', status: 'disrupted', eta: '???', carrier: 'FastFreight UK', alert: 'M74 closure — agent analysis ready' },
-  { ref: 'REF-9103', route: 'Birmingham → Edinburgh', status: 'delayed', eta: '17:45', carrier: 'Yodel', alert: 'Weather delay — 45min behind' },
-  { ref: 'REF-5517', route: 'Leeds → Cardiff', status: 'on-track', eta: '16:00', carrier: 'XPO Logistics', alert: null },
+  { ref: 'PH-4421', route: 'Leeds → Bradford (Tesco DC)', status: 'on-track', eta: '08:45', carrier: 'Pearson Haulage', alert: null },
+  { ref: 'PH-8832', route: 'Leeds → London (M1)', status: 'disrupted', eta: '???', carrier: 'Pearson Haulage', alert: 'M1 breakdown — recovery dispatched' },
+  { ref: 'PH-5517', route: 'Leeds → Sheffield (NHS Supply Chain)', status: 'delayed', eta: '18:15', carrier: 'Pearson Haulage', alert: 'Delayed — cascade from London disruption' },
+  { ref: 'PH-9103', route: 'Leeds → Edinburgh (A1)', status: 'delayed', eta: '21:30', carrier: 'Pearson Haulage', alert: 'Cold chain at risk — slot 20:00-22:00' },
 ]
 
 const INCIDENT_LOG = [
-  { date: 'Today 07:35', ref: 'REF-8832', type: 'Weather', severity: 'CRITICAL', saved: '£7,450' },
-  { date: 'Yesterday', ref: 'REF-7741', type: 'Invoice Recovery', severity: 'HIGH', saved: '£4,280' },
-  { date: '3 days ago', ref: 'REF-6602', type: 'Driver Hours', severity: 'MEDIUM', saved: '£900' },
+  { date: 'Today 22:03', ref: 'PH-8832', type: 'Breakdown', severity: 'CRITICAL', saved: '£2,400' },
+  { date: 'Yesterday', ref: 'PH-7741', type: 'Invoice Recovery', severity: 'HIGH', saved: '£4,280' },
+  { date: '3 days ago', ref: 'PH-6602', type: 'Driver Hours', severity: 'MEDIUM', saved: '£900' },
 ]
 
 const STATUS_COLORS = { 'on-track': '#00e5b0', 'disrupted': '#ef4444', 'delayed': '#f59e0b' }
@@ -57,9 +57,9 @@ const WEBHOOK_SYSTEMS = {
   mandata: {
     label: 'Mandata TMS', icon: '🚛', color: '#3b82f6',
     events: {
-      job_delayed:   { label: 'Job Delayed',       fields: { vehicle_reg: 'BN21 XKT', delay_minutes: 45, reason: 'M62 congestion near J26', sla_deadline: '15:30', consignee: 'Tesco DC Donington', job_id: 'MAN-44821' } },
-      job_cancelled: { label: 'Job Cancelled',     fields: { vehicle_reg: 'BN21 XKT', job_id: 'MAN-44822', reason: 'Customer cancelled 2h before collection', value_gbp: 2400, collection: 'Leeds DC', consignee: 'Asda Lutterworth' } },
-      pod_problem:   { label: 'POD Not Received',  fields: { vehicle_reg: 'BN21 XKT', job_id: 'MAN-44823', consignee: 'NHS Supply Chain Redditch', hours_overdue: 3, value_gbp: 6800 } },
+      job_delayed:   { label: 'Job Delayed',       fields: { vehicle_reg: 'BN21 XKT', delay_minutes: 45, reason: 'M62 congestion near J26', sla_deadline: '15:30', consignee: 'Tesco DC Donington', job_id: 'MAN-44821', consignee_phone: '' } },
+      job_cancelled: { label: 'Job Cancelled',     fields: { vehicle_reg: 'BN21 XKT', job_id: 'MAN-44822', reason: 'Customer cancelled 2h before collection', value_gbp: 2400, collection: 'Leeds DC', consignee: 'Asda Lutterworth', consignee_phone: '' } },
+      pod_problem:   { label: 'POD Not Received',  fields: { vehicle_reg: 'BN21 XKT', job_id: 'MAN-44823', consignee: 'NHS Supply Chain Redditch', hours_overdue: 3, value_gbp: 6800, consignee_phone: '' } },
     }
   },
   webfleet: {
@@ -89,17 +89,17 @@ const WEBHOOK_SYSTEMS = {
   wms: {
     label: 'Warehouse WMS', icon: '🏭', color: '#f59e0b',
     events: {
-      short_pick: { label: 'Short Pick',      fields: { order_id: 'ORD-88321', warehouse: 'Leeds DC', ordered_qty: 24, available_qty: 18, product_code: 'FRZN-MIX-001', consignee: 'Asda DC Lutterworth', despatch_deadline: '13:00' } },
-      hold:       { label: 'Despatch Hold',   fields: { order_id: 'ORD-88322', warehouse: 'Birmingham DC', hold_reason: 'customs documentation incomplete', consignee: 'NHS Supply Chain', value_gbp: 8500 } },
-      overweight: { label: 'Overweight Load', fields: { vehicle_reg: 'BN21 XKT', loaded_weight_kg: 44800, legal_max_kg: 44000, depot: 'Manchester DC', consignee: 'B&Q Swindon' } },
+      short_pick: { label: 'Short Pick',      fields: { order_id: 'ORD-88321', warehouse: 'Leeds DC', ordered_qty: 24, available_qty: 18, product_code: 'FRZN-MIX-001', consignee: 'Asda DC Lutterworth', despatch_deadline: '13:00', consignee_phone: '' } },
+      hold:       { label: 'Despatch Hold',   fields: { order_id: 'ORD-88322', warehouse: 'Birmingham DC', hold_reason: 'customs documentation incomplete', consignee: 'NHS Supply Chain', value_gbp: 8500, consignee_phone: '' } },
+      overweight: { label: 'Overweight Load', fields: { vehicle_reg: 'BN21 XKT', loaded_weight_kg: 44800, legal_max_kg: 44000, depot: 'Manchester DC', consignee: 'B&Q Swindon', consignee_phone: '' } },
     }
   },
   customer: {
     label: 'Customer Portal', icon: '👤', color: '#8b5cf6',
     events: {
-      cancellation:   { label: 'Booking Cancellation',      fields: { booking_ref: 'BKG-55221', collection: 'Birmingham DC', delivery: 'NHS Supply Chain Redditch', pallets: 12, value_gbp: 3400, reason: 'production delay', driver_already_dispatched: false } },
-      sla_dispute:    { label: 'SLA Dispute Raised',        fields: { booking_ref: 'BKG-55222', consignee: 'Tesco DC Donington', claimed_late_mins: 47, penalty_claimed: 1200, disputed_ref: 'REF-9103' } },
-      change_request: { label: 'Collection Time Change',    fields: { booking_ref: 'BKG-55223', original_time: '08:00', new_time: '11:30', collection: 'Sheffield DC', driver_already_dispatched: true } },
+      cancellation:   { label: 'Booking Cancellation',      fields: { booking_ref: 'BKG-55221', collection: 'Birmingham DC', delivery: 'NHS Supply Chain Redditch', pallets: 12, value_gbp: 3400, reason: 'production delay', driver_already_dispatched: false, consignee_phone: '' } },
+      sla_dispute:    { label: 'SLA Dispute Raised',        fields: { booking_ref: 'BKG-55222', consignee: 'Tesco DC Donington', claimed_late_mins: 47, penalty_claimed: 1200, disputed_ref: 'REF-9103', consignee_phone: '' } },
+      change_request: { label: 'Collection Time Change',    fields: { booking_ref: 'BKG-55223', original_time: '08:00', new_time: '11:30', collection: 'Sheffield DC', driver_already_dispatched: true, consignee_phone: '' } },
     }
   }
 }
@@ -1436,7 +1436,7 @@ export default function DashboardPage() {
               </button>
             )
           })()}
-          <span className="dh-client-name">Acme Logistics Ltd</span>
+          <span className="dh-client-name">Pearson Haulage</span>
         </div>
       </nav>
 
