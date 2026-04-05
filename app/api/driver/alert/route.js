@@ -40,6 +40,8 @@ async function sendSMS(to, body) {
 
 const DRIVER_ALERT_SYSTEM = `You are a Senior Logistics Crisis Director. You are direct and prioritise by financial impact and urgency.
 
+IMPORTANT: The ops manager is already being alerted — they are receiving this analysis right now. Do NOT make "notify the ops manager" or "contact the ops manager" your Action 1. They are already aware. Action 1 should be the operational response they need to take immediately.
+
 When given a driver alert, respond with this exact structure:
 
 ## DISRUPTION ASSESSMENT
@@ -49,9 +51,9 @@ When given a driver alert, respond with this exact structure:
 - Time to Resolution: [X hours]
 
 ## IMMEDIATE ACTIONS (Do these NOW)
-1. [Specific action — named owner — specific deadline]
-2. [Specific action — named owner — specific deadline]
-3. [Specific action — named owner — specific deadline]
+1. [Specific operational action — named owner — specific deadline]
+2. [Specific operational action — named owner — deadline]
+3. [Specific operational action — named owner — deadline]
 
 ## WHO TO CONTACT
 [Carrier / customer — with exact message to send]
@@ -64,6 +66,7 @@ Rules:
 2. Apply 1.5x buffer to all UK road time estimates
 3. If driver is injured — 999 is the first call, not the ops manager
 4. If location is driver-reported, Action 1 must be: confirm exact vehicle location with driver
+5. Never put the ops manager's own contact details in Action 1 — they are already reading this
 
 Temperature rules:
 - Chilled (0–5°C): alarm above 5°C = cold chain risk
@@ -80,12 +83,31 @@ function extractFirstAction(text) {
       actions.push(action)
     }
   }
-  // Skip location-confirm boilerplate for action label, use first substantive action
-  const locationBoilerplate = /confirm.*location|exact.*vehicle.*location|verify.*position/i
+  // Skip boilerplate that shouldn't appear in the SMS action line
+  const boilerplate = /confirm.*location|exact.*vehicle.*location|verify.*position|notify.*ops|contact.*ops|inform.*ops|alert.*ops|ops.*manager.*already/i
   for (const action of actions) {
-    if (!locationBoilerplate.test(action)) return action
+    if (!boilerplate.test(action)) return action
   }
   return actions[0] || null
+}
+
+// Build a clean ops SMS — what happened, exposure, what YES does
+// Never dump raw AI action text — ops needs to scan in 2 seconds
+function buildOpsSMS({ severity, vehicle_reg, human_description, financialImpact, detectedType, force_alert, force_financial_zero }) {
+  const sev = force_alert && severity === 'MEDIUM' ? 'HIGH' : severity
+  const situation = (human_description || 'Driver alert').substring(0, 55).replace(/\n/g, ' ')
+  const money = (!force_financial_zero && financialImpact > 0) ? `£${financialImpact.toLocaleString()} ` : ''
+
+  // Tell ops exactly what YES will trigger
+  const yesLabel = {
+    dispatch:  'YES=dispatch recovery',
+    sms:       'YES=send driver instruction',
+    reroute:   'YES=reroute driver',
+    call:      'YES=call carrier',
+    emergency: 'YES=emergency confirmed',
+  }[detectedType] || 'YES'
+
+  return `DH ${sev} ${vehicle_reg || ''}\n${situation}\n${money}${yesLabel} / NO / OPEN`
 }
 
 function extractCarrierPhone(systemPrompt) {
@@ -276,13 +298,15 @@ Provide immediate disruption analysis and action plan.`
     // SMS ops manager
     let smsSent = false
     if ((force_alert || severity === 'CRITICAL' || severity === 'HIGH') && contactPhone) {
-      const shortDesc = (human_description || location_description || 'Driver alert')
-        .substring(0, 50)
-        .replace(/\n/g, ' ')
-      const actionLine = firstAction ? firstAction.substring(0, 60) : 'See dashboard'
-      const displayFinancial = force_financial_zero ? 0 : financialImpact
-
-      const smsBody = `DH ${force_alert && severity === 'MEDIUM' ? 'HIGH' : severity} ${vehicle_reg || ''}\n${shortDesc}\n${displayFinancial > 0 ? `£${displayFinancial.toLocaleString()} ` : ''}${actionLine}\nYES/NO/OPEN`
+      const smsBody = buildOpsSMS({
+        severity,
+        vehicle_reg,
+        human_description,
+        financialImpact,
+        detectedType,
+        force_alert,
+        force_financial_zero
+      })
       const result = await sendSMS(contactPhone, smsBody)
       smsSent = result.success || false
     }
