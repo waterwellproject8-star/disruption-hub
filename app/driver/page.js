@@ -94,7 +94,7 @@ export default function DriverApp() {
   const [jobs, setJobs]           = useState([])
   const [loading, setLoading]     = useState(true)
   const [activeJob, setActiveJob] = useState(null)
-  const [driverInfo, setDriverInfo] = useState({ name:'', clientId:'', vehicleReg:'' })
+  const [driverInfo, setDriverInfo] = useState({ name:'', clientId:'', vehicleReg:'', phone:'' })
   const [setupDone, setSetupDone]   = useState(false)
   const [view, setView]             = useState('run') // run | preshift | issues | allruns
 
@@ -337,7 +337,7 @@ export default function DriverApp() {
 
     fetch('/api/driver/alert',{
       method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({client_id:driverInfo.clientId,driver_name:driverInfo.name,vehicle_reg:driverInfo.vehicleReg,ref:job?.ref,issue_description:prompt,human_description:inputText||panelIssue?.label,location_description:gpsDescription,latitude:gpsCoords?.latitude,longitude:gpsCoords?.longitude})
+      body:JSON.stringify({client_id:driverInfo.clientId,driver_name:driverInfo.name,driver_phone:driverInfo.phone||null,vehicle_reg:driverInfo.vehicleReg,ref:job?.ref,issue_description:prompt,human_description:inputText||panelIssue?.label,location_description:gpsDescription,latitude:gpsCoords?.latitude,longitude:gpsCoords?.longitude})
     }).catch(()=>{})
 
     try {
@@ -369,6 +369,7 @@ export default function DriverApp() {
         body: JSON.stringify({
           client_id: driverInfo.clientId,
           driver_name: driverInfo.name,
+          driver_phone: driverInfo.phone || null,
           vehicle_reg: driverInfo.vehicleReg,
           issue_description: `PRE-SHIFT VEHICLE DEFECT. Driver ${driverInfo.name} (${driverInfo.vehicleReg}) flagged issues before starting shift: ${failed.map(f => f.replace(' — no issues','').replace(' — checked','').replace(' — at temp','').replace(' — clean & adjusted','').replace(' — secured properly','').replace(' — no damage or flats','')).join(', ')}. Vehicle may not be roadworthy. Ops manager must assess before driver departs.`,
           human_description: `⚠ Vehicle defects flagged: ${failed.map(f => f.split(' — ')[0]).join(', ')}`,
@@ -405,7 +406,7 @@ export default function DriverApp() {
           <div><div style={{fontSize:18,fontWeight:600}}>DisruptionHub</div><div style={{fontSize:12,color:'#4a5260'}}>Driver App</div></div>
         </div>
         <div style={{fontSize:12,color:'#4a5260',fontFamily:'monospace',letterSpacing:'0.08em',marginBottom:20}}>FIRST TIME SETUP</div>
-        {[{label:'Your full name',key:'name',placeholder:'e.g. Carl Hughes'},{label:'Vehicle registration',key:'vehicleReg',placeholder:'e.g. BK21 XYZ'},{label:'Company access code',key:'clientId',placeholder:'Given by your manager'}].map(f=>(
+        {[{label:'Your full name',key:'name',placeholder:'e.g. Carl Hughes'},{label:'Vehicle registration',key:'vehicleReg',placeholder:'e.g. BK21 XYZ'},{label:'Your mobile number',key:'phone',placeholder:'e.g. 07810 499983'},{label:'Company access code',key:'clientId',placeholder:'Given by your manager'}].map(f=>(
           <div key={f.key} style={{marginBottom:16}}>
             <div style={{fontSize:14,color:'#8a9099',marginBottom:6}}>{f.label}</div>
             <input value={driverInfo[f.key]} onChange={e=>setDriverInfo(p=>({...p,[f.key]:e.target.value}))} placeholder={f.placeholder}

@@ -83,6 +83,7 @@ export async function POST(request) {
     const {
       client_id,
       driver_name,
+      driver_phone,
       vehicle_reg,
       issue_description,
       human_description,
@@ -183,7 +184,7 @@ Provide immediate disruption analysis and action plan.`
             ref: ref || 'DRIVER-ALERT',
             carrier_name: extractCarrierName(fullResponse),
             carrier_phone: extractCarrierPhone(systemPrompt),
-            driver_phone: null,
+            driver_phone: driver_phone || null,
             script: firstAction,
             source: 'driver_alert'
           },
@@ -201,7 +202,7 @@ Provide immediate disruption analysis and action plan.`
           action_details: {
             vehicle_reg,
             ref: 'PRE-SHIFT',
-            driver_phone: null,
+            driver_phone: driver_phone || null,
             script: `Call ${driver_name} on ${vehicle_reg}. They flagged: ${human_description?.replace('Pre-shift fail: ', '') || 'vehicle defects'}. Assess whether vehicle is safe to depart.`,
             source: 'preshift_check'
           },
