@@ -47,6 +47,14 @@ export async function POST(request) {
       }
 
       const approval = approvals[0]
+
+      // Expire approvals older than 4 hours
+      const ageHours = (Date.now() - new Date(approval.created_at).getTime()) / 3600000
+      if (ageHours > 4) {
+        await db.from('approvals').update({ status:'expired' }).eq('id', approval.id)
+        return twimlReply('DH: Action expired (>4hrs old). Check dashboard.')
+      }
+
       const actionType = approval.action_type || ''
       const actionLabel = approval.action_label || ''
       const details = approval.action_details || {}

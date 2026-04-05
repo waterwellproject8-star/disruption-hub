@@ -350,10 +350,22 @@ export default function DriverApp() {
     } catch {setPanelState('sent')}
   }
 
+  function normalisePhone(raw) {
+    if (!raw) return ''
+    const digits = raw.replace(/\s|-|\(|\)/g, '')
+    if (digits.startsWith('+44')) return digits
+    if (digits.startsWith('44')) return '+' + digits
+    if (digits.startsWith('0')) return '+44' + digits.slice(1)
+    return digits
+  }
+
   function saveDriverInfo() {
     if (!driverInfo.name||!driverInfo.clientId) return
-    localStorage.setItem('dh_driver_info',JSON.stringify(driverInfo))
-    setSetupDone(true); loadJobs(driverInfo)
+    const normalised = { ...driverInfo, phone: normalisePhone(driverInfo.phone) }
+    localStorage.setItem('dh_driver_info', JSON.stringify(normalised))
+    setDriverInfo(normalised)
+    setSetupDone(true)
+    loadJobs(normalised)
   }
 
   function startShift() {
@@ -636,8 +648,8 @@ export default function DriverApp() {
                   {activeJob.status==='at_risk'&&<div style={{marginTop:8,padding:'8px 10px',background:'rgba(239,68,68,0.08)',border:'1px solid rgba(239,68,68,0.25)',borderRadius:6,fontSize:12,color:'#ef4444',fontWeight:500}}>⚠ Reassignment required — ops notified</div>}
                 </div>
 
-                {/* Progress buttons */}
-                {!isDone&&(
+                {/* Progress buttons — hidden when AT RISK */}
+                {!isDone && activeJob.status !== 'at_risk' && (
                   <div style={{padding:'14px 16px'}}>
                     <div style={{fontSize:10,color:'#4a5260',fontFamily:'monospace',letterSpacing:'0.08em',marginBottom:10}}>LOG YOUR PROGRESS</div>
 
@@ -663,6 +675,37 @@ export default function DriverApp() {
                       style={{width:'100%',padding:'16px',borderRadius:10,border:'2px solid rgba(0,229,176,0.4)',background:'rgba(0,229,176,0.08)',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:10}}>
                       <span style={{fontSize:22}}>📦</span>
                       <span style={{fontSize:16,color:'#00e5b0',fontWeight:700}}>Mark as Delivered</span>
+                    </button>
+                  </div>
+                )}
+
+                {/* AT RISK — show resume button instead of progress */}
+                {!isDone && activeJob.status === 'at_risk' && (
+                  <div style={{padding:'14px 16px'}}>
+                    <div style={{padding:'12px 14px',background:'rgba(239,68,68,0.06)',border:'1px solid rgba(239,68,68,0.2)',borderRadius:9,marginBottom:10,fontSize:13,color:'#ef4444'}}>
+                      Progress locked — job handed to ops for reassignment.
+                    </div>
+                    <button onClick={()=>{
+                      setJobs(prev=>prev.map(j=>j.status==='at_risk'?{...j,status:'on-track',alert:null}:j))
+                      setActiveJob(prev=>({...prev,status:'on-track',alert:null}))
+                      showToast('Job resumed — ops notified')
+                      // Notify ops silently
+                      fetch('/api/driver/alert', {
+                        method:'POST', headers:{'Content-Type':'application/json'},
+                        body: JSON.stringify({
+                          client_id: driverInfo.clientId,
+                          driver_name: driverInfo.name,
+                          driver_phone: driverInfo.phone||null,
+                          vehicle_reg: driverInfo.vehicleReg,
+                          issue_description: `DRIVER RESUMED. ${driverInfo.name} (${driverInfo.vehicleReg}) has self-resolved the situation and resumed their run. All jobs back to on-track. No further action required unless ops disagrees.`,
+                          human_description: `${driverInfo.name} resumed — situation resolved`,
+                          location_description: gpsDescription||'location not confirmed',
+                          force_alert: false,
+                        })
+                      }).catch(()=>{})
+                    }}
+                      style={{width:'100%',padding:'13px',borderRadius:9,border:'1px solid rgba(0,229,176,0.3)',background:'rgba(0,229,176,0.05)',color:'#00e5b0',fontSize:14,fontWeight:500,cursor:'pointer'}}>
+                      ✓ Situation resolved — I can continue
                     </button>
                   </div>
                 )}
