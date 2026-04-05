@@ -179,38 +179,56 @@ export default function DriverApp() {
     return () => { clearTimeout(undoTimer.current); clearInterval(countdownTimer.current) }
   }, [])
 
-  // ── OPS-INITIATED JOB POLL — checks every 60s for cancelled jobs ──────────
+  // ── OPS-INITIATED JOB POLL — checks every 60s for cancelled or newly assigned jobs ──
   useEffect(() => {
     if (!shiftStarted || !driverInfo.clientId || !driverInfo.vehicleReg) return
 
-    const checkForCancelledJobs = async () => {
+    const checkForOpsChanges = async () => {
       try {
         const res = await fetch(`/api/driver/progress?client_id=${driverInfo.clientId}&vehicle_reg=${encodeURIComponent(driverInfo.vehicleReg)}`)
         if (!res.ok) return
         const data = await res.json()
-        const cancelled = (data.progress || []).filter(p => p.status === 'cancelled')
+        const remote = data.progress || []
 
+        // Detect cancelled jobs — ops removed from this driver's schedule
+        const cancelled = remote.filter(p => p.status === 'cancelled')
         if (cancelled.length > 0) {
-          // Remove cancelled jobs from state
+          const cancelledRefs = cancelled.map(c => c.ref)
           setJobs(prev => {
-            const updated = prev.filter(j => !cancelled.find(c => c.ref === j.ref))
+            const hadAny = prev.some(j => cancelledRefs.includes(j.ref))
+            if (!hadAny) return prev
+            const updated = prev.filter(j => !cancelledRefs.includes(j.ref))
             saveJobProgress(updated)
-            // If active job was cancelled, move to next
             return updated
           })
-          setActiveJob(prev => {
-            if (prev && cancelled.find(c => c.ref === prev.ref)) return null
-            return prev
-          })
-          // Show ops notification banner
-          const refs = cancelled.map(c => c.ref).join(', ')
-          setOpsJobUpdate(`Ops has reassigned ${cancelled.length > 1 ? 'jobs' : 'job'} ${refs} from your schedule`)
+          setActiveJob(prev => prev && cancelledRefs.includes(prev.ref) ? null : prev)
+          const refs = cancelledRefs.join(', ')
+          setOpsJobUpdate(`Ops has removed job${cancelled.length > 1 ? 's' : ''} ${refs} from your schedule`)
           setTimeout(() => setOpsJobUpdate(null), 12000)
+        }
+
+        // Detect newly assigned jobs — ops pushed a new ref to this vehicle
+        const newAssignments = remote.filter(p =>
+          p.status === 'on-track' &&
+          p.alert?.includes('Assigned by ops')
+        )
+        if (newAssignments.length > 0) {
+          setJobs(prev => {
+            const existingRefs = prev.map(j => j.ref)
+            const trulyNew = newAssignments.filter(a => !existingRefs.includes(a.ref))
+            if (trulyNew.length === 0) return prev
+            // Reload all jobs to get full details for newly assigned refs
+            loadJobs(driverInfo)
+            const refs = trulyNew.map(a => a.ref).join(', ')
+            setOpsJobUpdate(`New job${trulyNew.length > 1 ? 's' : ''} ${refs} added to your schedule by ops`)
+            setTimeout(() => setOpsJobUpdate(null), 12000)
+            return prev // loadJobs will update state
+          })
         }
       } catch {}
     }
 
-    const interval = setInterval(checkForCancelledJobs, 60000)
+    const interval = setInterval(checkForOpsChanges, 60000)
     return () => clearInterval(interval)
   }, [shiftStarted, driverInfo.clientId, driverInfo.vehicleReg])
 

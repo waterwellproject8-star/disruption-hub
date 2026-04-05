@@ -970,6 +970,7 @@ export default function DashboardPage() {
   const [cancellingJob, setCancellingJob] = useState(null)
   const [cancelReason, setCancelReason] = useState('')
   const [cancelConfirm, setCancelConfirm] = useState(null) // { vehicle_reg, ref, cancel_all }
+  const [reassignTo, setReassignTo] = useState('')
 
   async function assessCancelAction(approvalId, sentAt) {
     const now = Date.now()
@@ -1384,11 +1385,13 @@ export default function DashboardPage() {
           ref: ref || undefined,
           cancel_all: cancel_all || false,
           reason: cancelReason || 'Reassigned by ops',
+          reassign_to: reassignTo || undefined,
           approved_by: 'ops_manager'
         })
       })
       setCancelConfirm(null)
       setCancelReason('')
+      setReassignTo('')
       await loadFleet()
       await loadApprovals()
     } catch {}
@@ -1938,25 +1941,49 @@ export default function DashboardPage() {
                     </div>
                     <div style={{ fontSize:13, color:'#e8eaed', marginBottom:6 }}>
                       {cancelConfirm.cancel_all
-                        ? `Remove all active jobs from ${cancelConfirm.vehicle_reg}. Driver will be SMS'd to end shift.`
-                        : `Remove ${cancelConfirm.ref} from ${cancelConfirm.vehicle_reg}. Driver will be SMS'd to drop this job.`}
+                        ? `Remove all active jobs from ${cancelConfirm.vehicle_reg}.`
+                        : `Remove ${cancelConfirm.ref} from ${cancelConfirm.vehicle_reg}.`}
                     </div>
-                    <div style={{ fontSize:12, color:'#8a9099', marginBottom:14 }}>Driver app will update within 60 seconds automatically.</div>
+                    <div style={{ fontSize:12, color:'#8a9099', marginBottom:14 }}>Driver app updates within 60 seconds automatically.</div>
+
+                    {/* Reassign to dropdown */}
+                    {fleet.filter(v => v.vehicle_reg !== cancelConfirm.vehicle_reg).length > 0 && (
+                      <div style={{ marginBottom:12 }}>
+                        <div style={{ fontSize:11, color:'#4a5260', fontFamily:'monospace', marginBottom:6 }}>REASSIGN TO ANOTHER DRIVER — optional</div>
+                        <select
+                          value={reassignTo}
+                          onChange={e => setReassignTo(e.target.value)}
+                          style={{ width:'100%', padding:'9px 12px', background:'#0a0c0e', border:'1px solid rgba(255,255,255,0.1)', borderRadius:6, color: reassignTo ? '#e8eaed' : '#4a5260', fontSize:12, outline:'none', fontFamily:'IBM Plex Sans', cursor:'pointer' }}>
+                          <option value=''>No reassignment — just cancel</option>
+                          {fleet.filter(v => v.vehicle_reg !== cancelConfirm.vehicle_reg).map(v => (
+                            <option key={v.vehicle_reg} value={v.vehicle_reg}>
+                              {v.vehicle_reg}{v.driver_name ? ` — ${v.driver_name}` : ''} ({v.jobs.length} active job{v.jobs.length !== 1 ? 's' : ''})
+                            </option>
+                          ))}
+                        </select>
+                        {reassignTo && (
+                          <div style={{ fontSize:11, color:'#00e5b0', marginTop:5 }}>
+                            ✓ Job{cancelConfirm.cancel_all ? 's' : ''} will be pushed to {reassignTo}'s app and they'll receive an SMS
+                          </div>
+                        )}
+                      </div>
+                    )}
+
                     <input
                       value={cancelReason}
                       onChange={e => setCancelReason(e.target.value)}
-                      placeholder='Reason (e.g. Reassigned to BK22 ABC) — optional'
+                      placeholder='Reason — e.g. Driver unwell, reassigned to BK22 ABC (optional)'
                       style={{ width:'100%', padding:'10px 12px', background:'#0a0c0e', border:'1px solid rgba(255,255,255,0.1)', borderRadius:6, color:'#e8eaed', fontSize:12, outline:'none', marginBottom:14, boxSizing:'border-box', fontFamily:'IBM Plex Sans' }}
                     />
                     <div style={{ display:'flex', gap:8 }}>
                       <button
                         onClick={() => cancelJob(cancelConfirm)}
                         disabled={!!cancellingJob}
-                        style={{ flex:1, padding:'10px', background:'#ef4444', border:'none', borderRadius:6, color:'#fff', fontWeight:600, fontSize:12, cursor:'pointer', fontFamily:'monospace' }}>
-                        {cancellingJob ? '...' : 'Confirm cancel'}
+                        style={{ flex:1, padding:'10px', background: reassignTo ? '#00e5b0' : '#ef4444', border:'none', borderRadius:6, color: reassignTo ? '#000' : '#fff', fontWeight:600, fontSize:12, cursor:'pointer', fontFamily:'monospace' }}>
+                        {cancellingJob ? '...' : reassignTo ? `Reassign to ${reassignTo}` : 'Confirm cancel'}
                       </button>
                       <button
-                        onClick={() => { setCancelConfirm(null); setCancelReason('') }}
+                        onClick={() => { setCancelConfirm(null); setCancelReason(''); setReassignTo('') }}
                         style={{ padding:'10px 16px', background:'transparent', border:'1px solid rgba(255,255,255,0.1)', borderRadius:6, color:'#8a9099', fontSize:12, cursor:'pointer', fontFamily:'monospace' }}>
                         Keep job
                       </button>
