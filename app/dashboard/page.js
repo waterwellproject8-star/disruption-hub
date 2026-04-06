@@ -54,55 +54,165 @@ const CAT_COLORS = {
 }
 
 const WEBHOOK_SYSTEMS = {
+
+  // ── TMS — JOB & DESPATCH ──────────────────────────────────────────────────
   mandata: {
     label: 'Mandata TMS', icon: '🚛', color: '#3b82f6',
     events: {
-      job_delayed:   { label: 'Job Delayed',       fields: { vehicle_reg: 'BN21 XKT', delay_minutes: 45, reason: 'M62 congestion near J26', sla_deadline: '15:30', consignee: 'Tesco DC Donington', job_id: 'MAN-44821', consignee_phone: '' } },
-      job_cancelled: { label: 'Job Cancelled',     fields: { vehicle_reg: 'BN21 XKT', job_id: 'MAN-44822', reason: 'Customer cancelled 2h before collection', value_gbp: 2400, collection: 'Leeds DC', consignee: 'Asda Lutterworth', consignee_phone: '' } },
-      pod_problem:   { label: 'POD Not Received',  fields: { vehicle_reg: 'BN21 XKT', job_id: 'MAN-44823', consignee: 'NHS Supply Chain Redditch', hours_overdue: 3, value_gbp: 6800, consignee_phone: '' } },
+      job_delayed:          { label: 'Job Delayed',                    fields: { vehicle_reg:'BN21 XKT', delay_minutes:45, reason:'M62 congestion J26', sla_deadline:'15:30', consignee:'Tesco DC Donington', job_id:'MAN-44821', penalty_gbp:1200, consignee_phone:'' } },
+      job_cancelled:        { label: 'Job Cancelled by Customer',      fields: { vehicle_reg:'BN21 XKT', job_id:'MAN-44822', reason:'Customer cancelled 2h before collection', value_gbp:2400, collection:'Leeds DC', consignee:'Asda Lutterworth', driver_dispatched:true, consignee_phone:'' } },
+      collection_no_show:   { label: 'Collection No-Show',             fields: { vehicle_reg:'BN21 XKT', job_id:'MAN-44823', collection_point:'Sheffield DC', booked_time:'09:00', wait_minutes:55, driver_name:'Dave P', consignee_phone:'' } },
+      failed_delivery:      { label: 'Failed Delivery',                fields: { vehicle_reg:'BN21 XKT', job_id:'MAN-44824', consignee:'NHS Supply Chain Redditch', reason:'Site closed — no staff on loading bay', attempted_time:'14:22', value_gbp:6800, consignee_phone:'' } },
+      pod_overdue:          { label: 'POD Not Received',               fields: { vehicle_reg:'BN21 XKT', job_id:'MAN-44825', consignee:'NHS Supply Chain Redditch', hours_overdue:3, value_gbp:6800, consignee_phone:'' } },
+      route_deviation:      { label: 'Route Deviation',                fields: { vehicle_reg:'BN21 XKT', planned_route:'M62 → M1 south', current_location:'A1(M) northbound J8', deviation_miles:11, job_id:'MAN-44826', driver_name:'Dave P' } },
+      multi_drop_change:    { label: 'Multi-Drop Sequence Change',     fields: { vehicle_reg:'BN21 XKT', job_id:'MAN-44827', original_sequence:'Leeds→Bradford→Wakefield', new_sequence:'Leeds→Wakefield→Bradford', reason:'Bradford customer requested later slot', driver_name:'Dave P' } },
+      driver_change:        { label: 'Driver Change Required',         fields: { vehicle_reg:'BN21 XKT', job_id:'MAN-44828', original_driver:'Dave P', reason:'Driver reported unwell at depot', collection_in_mins:45, consignee:'Tesco DC Donington' } },
+      night_out_required:   { label: 'Night Out Required',             fields: { vehicle_reg:'BN21 XKT', driver_name:'Dave P', location:'Corley Services M6', reason:'Hours exhausted — cannot complete return leg', cargo:'perishable — chilled 0-5C', job_id:'MAN-44829' } },
+      detention_charge:     { label: 'Detention Charge Triggered',     fields: { vehicle_reg:'BN21 XKT', job_id:'MAN-44830', consignee:'Asda Lutterworth', wait_hours:3.5, hourly_rate_gbp:45, total_charge_gbp:157, driver_name:'Dave P' } },
     }
   },
+
+  // ── TELEMATICS — VEHICLE & DRIVER ─────────────────────────────────────────
   webfleet: {
-    label: 'Webfleet Telematics', icon: '🌡', color: '#ef4444',
+    label: 'Webfleet Telematics', icon: '📡', color: '#ef4444',
     events: {
-      temp_alarm:   { label: 'Temperature Alarm',    fields: { vehicle_reg: 'LK72 ABX', temp_reading: 7.2, threshold: 5.0, cargo_type: 'chilled', location: 'M1 southbound J18', driver_name: 'Dave P' } },
-      off_route:    { label: 'Vehicle Off Route',    fields: { vehicle_reg: 'BN21 XKT', deviation_miles: 8, planned_route: 'M62 westbound', current_location: 'A1(M) northbound J8', driver_name: 'Dave P' } },
-      panic_button: { label: 'Panic Button Pressed', fields: { vehicle_reg: 'BN21 XKT', driver_name: 'Dave P', location: 'A638 nr Wakefield', cargo_value: 18000 } },
+      temp_alarm:           { label: 'Temperature Alarm',              fields: { vehicle_reg:'LK72 ABX', temp_reading:7.2, threshold:5.0, cargo_type:'chilled 0-5C', location:'M1 southbound J18', driver_name:'Dave P', reefer_unit:'Carrier Transicold', consignee_phone:'' } },
+      temp_probe_failure:   { label: 'Temperature Probe Failure',      fields: { vehicle_reg:'LK72 ABX', probe_id:'probe_1', location:'A1 northbound J41', cargo:'pharmaceutical chilled', consignee:'NHS Supply Chain', driver_name:'Dave P' } },
+      reefer_fault:         { label: 'Reefer Unit Fault',              fields: { vehicle_reg:'LK72 ABX', fault_code:'E-014', fault_desc:'Compressor overload', location:'M62 westbound J27', cargo_type:'frozen -18C', cargo_value_gbp:14000, driver_name:'Dave P' } },
+      door_open_transit:    { label: 'Cargo Door Open in Transit',     fields: { vehicle_reg:'BN21 XKT', location:'B1234 industrial estate Sheffield', speed_mph:0, time_stopped_mins:18, cargo:'mixed retail', driver_name:'Dave P' } },
+      off_route:            { label: 'Vehicle Off Route',              fields: { vehicle_reg:'BN21 XKT', deviation_miles:8, planned_route:'M62 westbound', current_location:'A1(M) northbound J8', driver_name:'Dave P' } },
+      geofence_breach:      { label: 'Geofence Breach',               fields: { vehicle_reg:'BN21 XKT', zone:'Restricted residential area', location:'Selby town centre', reason:'unknown', driver_name:'Dave P', time:'22:47' } },
+      panic_button:         { label: 'Panic Button Pressed',          fields: { vehicle_reg:'BN21 XKT', driver_name:'Dave P', location:'A638 nr Wakefield', cargo_value_gbp:18000, time:'23:12' } },
+      impact_detected:      { label: 'Impact / Collision Detected',   fields: { vehicle_reg:'BN21 XKT', g_force:1.8, location:'A1 southbound J34', driver_name:'Dave P', speed_at_impact_mph:12, cargo:'fragile electronics', time:'09:34' } },
+      engine_fault:         { label: 'Engine Fault Code',             fields: { vehicle_reg:'BN21 XKT', fault_code:'P0236', fault_desc:'Turbo boost sensor fault', location:'M1 northbound J28', driver_name:'Dave P', mileage:187432 } },
+      fuel_critical:        { label: 'Fuel Level Critical',           fields: { vehicle_reg:'BN21 XKT', fuel_percent:8, estimated_range_miles:28, location:'M62 eastbound J33', driver_name:'Dave P', nearest_forecourt:'Ferrybridge Services 4 miles' } },
+      tyre_pressure:        { label: 'Tyre Pressure Alert',           fields: { vehicle_reg:'BN21 XKT', tyre_position:'nearside front', pressure_bar:5.2, threshold_bar:6.8, location:'M18 J2', driver_name:'Dave P', cargo_weight_kg:18000 } },
+      overspeed:            { label: 'Speed Violation',               fields: { vehicle_reg:'BN21 XKT', speed_mph:68, limit_mph:56, location:'M62 westbound J26', driver_name:'Dave P', duration_secs:34 } },
+      ulez_entry:           { label: 'ULEZ / Clean Air Zone Entry',   fields: { vehicle_reg:'BN21 XKT', zone:'London ULEZ', entry_time:'07:34', vehicle_compliant:false, daily_charge_gbp:100, driver_name:'Dave P' } },
     }
   },
+
+  // ── TELEMATICS — DRIVER BEHAVIOUR & HOURS ────────────────────────────────
   microlise: {
     label: 'Microlise Fleet', icon: '📍', color: '#a855f7',
     events: {
-      speeding:      { label: 'Speed Violation',       fields: { vehicle_reg: 'BN21 XKT', speed_mph: 68, limit_mph: 56, location: 'M62 westbound J26', driver_name: 'Dave P' } },
-      harsh_braking: { label: 'Harsh Braking Event',   fields: { vehicle_reg: 'BN21 XKT', g_force: 0.45, location: 'A1 southbound J34', cargo_type: 'fragile electronics' } },
-      long_stop:     { label: 'Unexpected Long Stop',  fields: { vehicle_reg: 'BN21 XKT', stop_duration_mins: 92, location: 'Toddington Services M1', driver_name: 'Dave P' } },
+      harsh_braking:        { label: 'Harsh Braking Event',           fields: { vehicle_reg:'BN21 XKT', g_force:0.45, location:'A1 southbound J34', cargo_type:'fragile electronics', driver_name:'Dave P', speed_before_mph:52 } },
+      harsh_acceleration:   { label: 'Harsh Acceleration',            fields: { vehicle_reg:'BN21 XKT', g_force:0.38, location:'M1 northbound J29', driver_name:'Dave P', cargo:'chilled foodstuffs', time:'08:17' } },
+      harsh_cornering:      { label: 'Harsh Cornering',               fields: { vehicle_reg:'BN21 XKT', g_force:0.31, location:'A638 roundabout Wakefield', driver_name:'Dave P', cargo:'fragile — stacked pallets' } },
+      wtd_hours_warning:    { label: 'WTD Hours Approaching Limit',   fields: { vehicle_reg:'BN21 XKT', driver_name:'Dave P', hours_driven_this_week:42, weekly_limit:48, hours_remaining:6, remaining_jobs:2 } },
+      wtd_hours_breach:     { label: 'WTD Hours Breached',            fields: { vehicle_reg:'BN21 XKT', driver_name:'Dave P', hours_driven:48.5, location:'M1 J30', remaining_jobs:1, consignee:'NHS Supply Chain', job_id:'MAN-44820' } },
+      tacho_fault:          { label: 'Tachograph Fault',              fields: { vehicle_reg:'BN21 XKT', fault_type:'card read error', driver_name:'Dave P', location:'Leeds DC', kilometres_driven_without_record:14 } },
+      no_driver_card:       { label: 'Driving Without Tacho Card',    fields: { vehicle_reg:'BN21 XKT', driver_name:'Dave P', location:'M62 westbound J28', duration_mins:22, distance_km:18 } },
+      long_stop:            { label: 'Unexpected Long Stop',          fields: { vehicle_reg:'BN21 XKT', stop_duration_mins:92, location:'Toddington Services M1', driver_name:'Dave P', cargo:'temperature sensitive', next_delivery_sla:'16:00' } },
+      excessive_idling:     { label: 'Excessive Idling',              fields: { vehicle_reg:'BN21 XKT', idle_minutes:45, fuel_wasted_litres:6.2, location:'Leeds Distribution Centre', driver_name:'Dave P' } },
+      licence_expiry:       { label: 'Driver Licence Expiry Warning', fields: { driver_name:'Dave P', vehicle_reg:'BN21 XKT', licence_expiry:'2026-05-14', days_remaining:38, licence_category:'C+E' } },
+      cpc_expiry:           { label: 'CPC / DQC Expiry Warning',     fields: { driver_name:'Dave P', dqc_expiry:'2026-06-01', days_remaining:56, vehicle_reg:'BN21 XKT', action_required:'Book CPC periodic training' } },
+      vehicle_service_due:  { label: 'Vehicle Service Overdue',       fields: { vehicle_reg:'BN21 XKT', service_type:'6-week safety inspection', overdue_days:4, mileage:187432, last_service:'2026-02-18', location:'Leeds depot' } },
+      mot_due:              { label: 'MOT / Annual Test Due',         fields: { vehicle_reg:'BN21 XKT', mot_expiry:'2026-04-28', days_remaining:22, vehicle_type:'HGV 44t', test_centre:'Pearson Haulage Leeds' } },
     }
   },
+
+  // ── TELEMATICS — SAMSARA / IOT SENSORS ───────────────────────────────────
   samsara: {
-    label: 'Samsara Telematics', icon: '📡', color: '#00e5b0',
+    label: 'Samsara IoT', icon: '🔬', color: '#00e5b0',
     events: {
-      sensor_alert:  { label: 'Door Sensor Alert',    fields: { vehicle_reg: 'BN21 XKT', event: 'rear_door_open', location: 'B1234 industrial estate Sheffield', time_stopped_mins: 18 } },
-      fatigue_alert: { label: 'Driver Fatigue Alert', fields: { vehicle_reg: 'BN21 XKT', driver_name: 'Dave P', hours_driven: 4.5, next_break_due_mins: 10, location: 'M1 northbound J29' } },
-      idling:        { label: 'Excessive Idling',     fields: { vehicle_reg: 'BN21 XKT', idle_minutes: 45, fuel_wasted_litres: 6.2, location: 'Leeds Distribution Centre' } },
+      cargo_tamper:         { label: 'Cargo Tamper / Theft Alert',    fields: { vehicle_reg:'BN21 XKT', sensor:'cargo_seal_broken', location:'A1 southbound J41 layby', time:'02:34', cargo:'mixed retail', cargo_value_gbp:24000, driver_name:'Dave P' } },
+      trailer_detached:     { label: 'Trailer Detached Unexpectedly', fields: { vehicle_reg:'BN21 XKT', trailer_id:'TRL-0087', location:'M1 J32 slip road', driver_name:'Dave P', cargo_loaded:true, cargo_value_gbp:18000 } },
+      rollover_detected:    { label: 'Rollover / Tip Detected',       fields: { vehicle_reg:'BN21 XKT', g_force:3.4, location:'A638 Wakefield ring road', driver_name:'Dave P', cargo:'fragile', emergency_services_notified:false } },
+      load_movement:        { label: 'Load Movement Detected',        fields: { vehicle_reg:'BN21 XKT', sensor:'load_shift', location:'M62 J27 roundabout', driver_name:'Dave P', cargo:'unstable pallets — mixed weight', action:'driver alerted to pull over' } },
+      fuel_card_anomaly:    { label: 'Fuel Card Anomaly',             fields: { vehicle_reg:'BN21 XKT', driver_name:'Dave P', expected_location:'Leeds to Sheffield route', transaction_location:'Peterborough A1', volume_litres:320, vehicle_tank_capacity_litres:280 } },
+      wrong_fuel:           { label: 'Wrong Fuel Type',               fields: { vehicle_reg:'BN21 XKT', driver_name:'Dave P', fuel_put_in:'AdBlue tank — wrong cap', location:'Ferrybridge Services M62', litres_added:40 } },
+      tail_lift_fault:      { label: 'Tail-Lift Fault',               fields: { vehicle_reg:'BN21 XKT', fault:'hydraulic failure', location:'NHS Supply Chain Redditch', driver_name:'Dave P', delivery_at_risk:true, pallets_to_unload:8 } },
+      fatigue_alert:        { label: 'Driver Fatigue Alert',          fields: { vehicle_reg:'BN21 XKT', driver_name:'Dave P', hours_driven_today:7.5, break_overdue_mins:22, location:'M1 northbound J29', next_delivery:'Sheffield NHS 16:00' } },
+      mileage_discrepancy:  { label: 'Mileage Discrepancy',           fields: { vehicle_reg:'BN21 XKT', recorded_miles:287, gps_actual_miles:341, date:'today', driver_name:'Dave P', note:'54 miles unaccounted' } },
     }
   },
-  wms: {
-    label: 'Warehouse WMS', icon: '🏭', color: '#f59e0b',
+
+  // ── WMS — INBOUND / RECEIVING ─────────────────────────────────────────────
+  wms_inbound: {
+    label: 'WMS — Inbound', icon: '📥', color: '#f59e0b',
     events: {
-      short_pick: { label: 'Short Pick',      fields: { order_id: 'ORD-88321', warehouse: 'Leeds DC', ordered_qty: 24, available_qty: 18, product_code: 'FRZN-MIX-001', consignee: 'Asda DC Lutterworth', despatch_deadline: '13:00', consignee_phone: '' } },
-      hold:       { label: 'Despatch Hold',   fields: { order_id: 'ORD-88322', warehouse: 'Birmingham DC', hold_reason: 'customs documentation incomplete', consignee: 'NHS Supply Chain', value_gbp: 8500, consignee_phone: '' } },
-      overweight: { label: 'Overweight Load', fields: { vehicle_reg: 'BN21 XKT', loaded_weight_kg: 44800, legal_max_kg: 44000, depot: 'Manchester DC', consignee: 'B&Q Swindon', consignee_phone: '' } },
+      inbound_late:         { label: 'Inbound Delivery Late',          fields: { warehouse:'Leeds DC', supplier:'Greenfield Foods Ltd', expected_time:'10:00', delay_mins:95, pallets_booked:24, knock_on_orders:3, consignee:'Tesco DC Donington' } },
+      short_delivery:       { label: 'Short Delivery Received',        fields: { warehouse:'Leeds DC', supplier:'Greenfield Foods Ltd', po_number:'PO-88321', ordered_pallets:24, received_pallets:18, missing_product:'FRZN-MIX-001 x 6 pallets', supplier_phone:'01234 567890' } },
+      over_delivery:        { label: 'Over-Delivery Received',         fields: { warehouse:'Leeds DC', supplier:'ambient-foods', po_number:'PO-88322', ordered_pallets:20, received_pallets:27, extra_product:'AMBT-DRY-004', available_bay_space_pallets:4 } },
+      damaged_inbound:      { label: 'Damaged Goods Inbound',          fields: { warehouse:'Leeds DC', supplier:'Greenfield Foods', po_number:'PO-88323', damaged_pallets:3, product:'chilled ready meals', damage_type:'water damage — roof leak in trailer', rejection_required:true } },
+      wrong_product:        { label: 'Wrong Product Received',         fields: { warehouse:'Leeds DC', supplier:'UK Pharma Wholesale', po_number:'PO-88324', ordered_product:'Paracetamol 500mg 100s', received_product:'Paracetamol 500mg 32s', quantity:2400, value_gbp:4800 } },
+      asn_mismatch:         { label: 'ASN / Paperwork Mismatch',       fields: { warehouse:'Birmingham DC', supplier:'FMCG Supplies Ltd', asn_pallets:16, physical_pallets:19, temperature_variance:'ASN says ambient — goods are chilled', action_required:'quarantine and query supplier' } },
+      goods_on_hold:        { label: 'Goods On Hold — QC Inspection',  fields: { warehouse:'Leeds DC', product:'pharmaceutical — eye drops', quantity_units:12000, value_gbp:28000, hold_reason:'batch recall investigation', supplier:'UK Pharma Wholesale', clearance_required_by:'14:00' } },
+      customs_hold:         { label: 'Customs Hold — Inbound',         fields: { warehouse:'Tilbury DC', shipment_ref:'CUST-88325', origin:'Netherlands', product:'food supplement', hold_reason:'TRACES notification pending', value_gbp:18000, clearance_agent:'Customs Direct Ltd' } },
+      cross_dock_triggered: { label: 'Cross-Dock Event Triggered',     fields: { warehouse:'Leeds DC', inbound_ref:'IN-88326', outbound_job:'MAN-44831', pallets:12, dock_window:'13:00-14:30', consignee:'Tesco DC Donington', driver_arriving:'LK72 ABX at 12:45' } },
     }
   },
+
+  // ── WMS — OUTBOUND / DESPATCH ─────────────────────────────────────────────
+  wms_outbound: {
+    label: 'WMS — Outbound', icon: '📤', color: '#00e5b0',
+    events: {
+      short_pick:           { label: 'Short Pick',                     fields: { order_id:'ORD-88321', warehouse:'Leeds DC', ordered_qty:24, available_qty:18, product_code:'FRZN-MIX-001', consignee:'Asda DC Lutterworth', despatch_deadline:'13:00', sla_penalty_gbp:1800, consignee_phone:'' } },
+      pick_error:           { label: 'Pick Error Detected',            fields: { order_id:'ORD-88322', warehouse:'Leeds DC', picker:'Staff ID 047', wrong_product:'AMBT-DRY-003 picked instead of AMBT-DRY-004', consignee:'Tesco DC Donington', packing_already_complete:false } },
+      substitution_needed:  { label: 'Substitution Required',          fields: { order_id:'ORD-88323', warehouse:'Birmingham DC', out_of_stock:'Whole milk 6-pint x 48', suggested_sub:'Semi-skimmed 6-pint x 48', consignee:'NHS canteen Birmingham', customer_approval_needed:true } },
+      overweight_load:      { label: 'Overweight Load Detected',       fields: { vehicle_reg:'BN21 XKT', loaded_weight_kg:44800, legal_max_kg:44000, depot:'Manchester DC', consignee:'B&Q Swindon', overweight_kg:800, consignee_phone:'' } },
+      hazmat_label_missing: { label: 'Hazmat Label Missing',           fields: { order_id:'ORD-88324', product:'isopropyl alcohol 5L x 20', un_number:'UN1219', consignee:'NHS Supply Chain', driver:'BN21 XKT', despatch_window:'closes in 25 mins' } },
+      manifest_mismatch:    { label: 'Manifest Mismatch',              fields: { vehicle_reg:'BN21 XKT', job_id:'MAN-44832', manifest_pallets:18, loaded_pallets:21, extra_product_code:'FRZN-MIX-002', consignee:'Tesco DC Donington', departure_time:'08:30' } },
+      cutoff_approaching:   { label: 'Despatch Cut-Off Approaching',   fields: { warehouse:'Leeds DC', orders_not_picked:7, orders_total:32, cutoff_time:'17:00', mins_remaining:22, consignee:'Tesco Express stores', sla_penalty_per_order_gbp:500 } },
+      vehicle_not_arrived:  { label: 'Vehicle Not Arrived for Loading', fields: { warehouse:'Leeds DC', vehicle_reg:'LK72 ABX', booked_arrival:'14:00', current_time:'14:38', orders_loaded_waiting:14, consignee:'NHS Supply Chain Redditch', bay:'Bay 3' } },
+      bay_blocked:          { label: 'Loading Bay Unavailable',        fields: { warehouse:'Leeds DC', bay:'Bay 2', blocked_reason:'previous vehicle breakdown on apron', vehicles_queuing:3, earliest_clear_time:'15:30', despatch_impact_pallets:42 } },
+      returns_received:     { label: 'Failed Delivery Returned',       fields: { vehicle_reg:'BN21 XKT', job_id:'MAN-44833', consignee:'Asda Lutterworth', returned_pallets:6, return_reason:'site closed', product:'ambient grocery', rebook_required:true, value_gbp:2400 } },
+    }
+  },
+
+  // ── WMS — INVENTORY & STOCK ───────────────────────────────────────────────
+  wms_inventory: {
+    label: 'WMS — Inventory', icon: '📦', color: '#8b5cf6',
+    events: {
+      reorder_point:        { label: 'Stock Below Reorder Point',      fields: { warehouse:'Leeds DC', product_code:'FRZN-MIX-001', product_desc:'Frozen mixed veg 1kg', current_stock_units:480, reorder_point_units:500, lead_time_days:3, avg_daily_movement:180, supplier:'Greenfield Foods' } },
+      zero_stock:           { label: 'Zero Stock / Stockout',          fields: { warehouse:'Leeds DC', product_code:'AMBT-DRY-004', product_desc:'Baked beans 400g case', current_stock:0, outstanding_orders:3, value_at_risk_gbp:8400, consignees_affected:'Tesco DC x2, Asda x1', supplier:'FMCG Supplies Ltd' } },
+      near_expiry:          { label: 'Near-Expiry Alert',              fields: { warehouse:'Leeds DC', product_code:'CHLL-MEAT-002', product_desc:'Cooked chicken slices 200g', quantity_units:2400, expiry_date:'in 3 days', value_gbp:3600, consignees_available:'Tesco x3 stores within 30mi' } },
+      batch_recall:         { label: 'Product Batch Recall',           fields: { product_code:'PHMA-PARA-500', product_desc:'Paracetamol 500mg 100s', batch_number:'BTH-229341', recall_reason:'tablet dissolution failure', units_in_warehouse:12000, units_dispatched:4800, consignees_notified:false } },
+      stock_discrepancy:    { label: 'Cycle Count Discrepancy',        fields: { warehouse:'Birmingham DC', product_code:'FRZN-PIZZA-003', system_quantity:1440, physical_count:1308, variance:132, variance_value_gbp:792, investigation_triggered:true } },
+      cold_store_breach:    { label: 'Cold Store Temperature Breach',  fields: { warehouse:'Leeds DC', zone:'cold_store_A', temp_reading:7.8, threshold:5.0, products_affected:'chilled ready meals, dairy, cooked meats', total_value_at_risk_gbp:48000, duration_mins:35, engineer_called:false } },
+      quarantine_flagged:   { label: 'Quarantine Stock Alert',         fields: { warehouse:'Leeds DC', product_code:'CHLL-DAIRY-001', reason:'supplier allergen declaration missing', quantity_units:3600, value_gbp:5400, consignee_orders_affected:2 } },
+    }
+  },
+
+  // ── CUSTOMER / CONSIGNEE PORTAL ───────────────────────────────────────────
   customer: {
-    label: 'Customer Portal', icon: '👤', color: '#8b5cf6',
+    label: 'Customer Portal', icon: '👤', color: '#ec4899',
     events: {
-      cancellation:   { label: 'Booking Cancellation',      fields: { booking_ref: 'BKG-55221', collection: 'Birmingham DC', delivery: 'NHS Supply Chain Redditch', pallets: 12, value_gbp: 3400, reason: 'production delay', driver_already_dispatched: false, consignee_phone: '' } },
-      sla_dispute:    { label: 'SLA Dispute Raised',        fields: { booking_ref: 'BKG-55222', consignee: 'Tesco DC Donington', claimed_late_mins: 47, penalty_claimed: 1200, disputed_ref: 'REF-9103', consignee_phone: '' } },
-      change_request: { label: 'Collection Time Change',    fields: { booking_ref: 'BKG-55223', original_time: '08:00', new_time: '11:30', collection: 'Sheffield DC', driver_already_dispatched: true, consignee_phone: '' } },
+      booking_cancellation: { label: 'Booking Cancellation',           fields: { booking_ref:'BKG-55221', collection:'Birmingham DC', delivery:'NHS Supply Chain Redditch', pallets:12, value_gbp:3400, reason:'production delay', driver_dispatched:true, cancellation_fee_applies:true, consignee_phone:'' } },
+      sla_dispute:          { label: 'SLA Dispute Raised',             fields: { booking_ref:'BKG-55222', consignee:'Tesco DC Donington', claimed_late_mins:47, penalty_claimed_gbp:1200, disputed_ref:'PH-8832', evidence:'driver timestamped arrival 14:47, slot was 14:00-15:00', consignee_phone:'' } },
+      delivery_window_change:{ label: 'Delivery Window Change Request', fields: { booking_ref:'BKG-55223', consignee:'NHS Supply Chain', original_window:'08:00-10:00', requested_window:'13:00-15:00', reason:'emergency ward busy until midday', vehicle_already_dispatched:true, driver_name:'Dave P' } },
+      pod_dispute:          { label: 'POD Disputed by Customer',       fields: { booking_ref:'BKG-55224', consignee:'Asda Lutterworth', claim:'12 cases of damaged ambient goods', delivery_date:'yesterday', driver_name:'Dave P', vehicle_reg:'BN21 XKT', claimed_value_gbp:1440, cctv_available:true } },
+      complaint_logged:     { label: 'Customer Complaint',             fields: { booking_ref:'BKG-55225', consignee:'Tesco DC Donington', complaint:'driver rude to goods-in team, refused to stack in correct area', severity:'high', contract_value_monthly_gbp:28000, account_manager_notified:false } },
+      sla_breach_imminent:  { label: 'SLA Breach Imminent',            fields: { booking_ref:'BKG-55226', consignee:'NHS Supply Chain Birmingham', sla_deadline:'15:30', current_eta:'15:22', buffer_mins:8, penalty_if_late_gbp:2400, vehicle_reg:'BN21 XKT', driver_name:'Dave P' } },
+      change_of_address:    { label: 'Delivery Address Changed',       fields: { booking_ref:'BKG-55227', original_delivery:'NHS Supply Chain Redditch B98 0TH', new_delivery:'NHS Trust Birmingham B15 2TH', distance_change_miles:+28, vehicle_already_en_route:true, driver_name:'Dave P' } },
     }
-  }
+  },
+
+  // ── COMPLIANCE & REGULATORY ───────────────────────────────────────────────
+  compliance: {
+    label: 'Compliance System', icon: '⚖️', color: '#ef4444',
+    events: {
+      dvsa_alert:           { label: 'DVSA Roadside Stop',             fields: { vehicle_reg:'BN21 XKT', driver_name:'Dave P', location:'A1 southbound check point Newark', prohibition_issued:false, advisory_issued:true, advisory_detail:'nearside front tyre wear approaching limit', tacho_checked:true } },
+      adr_documentation:    { label: 'ADR Documentation Incomplete',   fields: { vehicle_reg:'BN21 XKT', driver_name:'Dave P', dangerous_goods:'isopropyl alcohol UN1219 class 3', missing_document:'consignor declaration', location:'Leeds DC — pre-departure', collection_in_mins:30 } },
+      overweight_enforcement:{ label: 'Overweight — Enforcement Risk', fields: { vehicle_reg:'BN21 XKT', gross_weight_kg:44900, legal_max_kg:44000, location:'approaching Ferrybridge weigh-in', driver_name:'Dave P', cargo_offload_options:'none — sealed customer delivery' } },
+      low_bridge_risk:      { label: 'Low Bridge / Restriction Ahead', fields: { vehicle_reg:'BN21 XKT', vehicle_height_m:4.2, restriction_height_m:4.1, restriction_location:'Selby A1041 railway bridge', driver_name:'Dave P', current_route:'programmed route', alternative_required:true } },
+      operator_licence:     { label: 'Operator Licence Action Needed', fields: { licence_number:'OK1234567', issue:'annual fee overdue 14 days', revocation_risk:true, action_deadline:'2026-04-20', tc_area:'North East of England' } },
+    }
+  },
+
+  // ── CARRIER / SUBCONTRACTOR ───────────────────────────────────────────────
+  carrier: {
+    label: 'Carrier / Subcontractor', icon: '🤝', color: '#64748b',
+    events: {
+      carrier_no_collect:   { label: 'Carrier Failed to Collect',      fields: { carrier_name:'FastFreight UK', job_ref:'FF-88321', collection:'Leeds DC', booked_time:'07:00', current_time:'08:45', pallets:18, consignee:'Tesco DC Donington', sla_deadline:'14:00', carrier_phone:'0800 123 4567' } },
+      carrier_overcharge:   { label: 'Carrier Invoice Overcharge',     fields: { carrier_name:'XPO Logistics', invoice_ref:'XPO-INV-44821', agreed_rate_gbp:380, invoiced_amount_gbp:492, discrepancy_gbp:112, job_ref:'PH-8832', original_quote_ref:'QT-2234' } },
+      carrier_incident:     { label: 'Carrier Vehicle Incident',       fields: { carrier_name:'FastFreight UK', vehicle_reg:'FF44 XKT', location:'M62 westbound J30', incident_type:'tyre blowout', cargo:'your goods — mixed retail 14 pallets', our_ref:'MAN-44821', value_gbp:18000, recovery_eta_mins:90 } },
+      subcontractor_quality:{ label: 'Subcontractor Quality Failure',  fields: { subcontractor:'JD Transport Leeds', job_ref:'MAN-44825', failure_type:'goods delivered to wrong address — 8 pallets', consignee:'NHS Supply Chain Redditch', actual_delivery:'NHS Birmingham B15', recovery_arranged:false } },
+    }
+  },
 }
+
 
 const TAB_STYLE = (active) => ({
   padding: '6px 16px', borderRadius: 6, fontSize: 11, cursor: 'pointer',
