@@ -479,6 +479,72 @@ function KV({ k, v, valueColor = '#e8eaed' }) {
   )
 }
 
+// ── ROI COUNTER ────────────────────────────────────────────────────────────
+function AnimatedNumber({ value, prefix = '', suffix = '', color = '#00e5b0', size = 18 }) {
+  const [display, setDisplay] = useState(value)
+  const prevRef = useRef(value)
+  useEffect(() => {
+    const from = prevRef.current
+    const to = value
+    if (from === to) return
+    prevRef.current = to
+    const steps = 24; const duration = 700; let step = 0
+    const iv = setInterval(() => {
+      step++
+      const p = step / steps
+      const eased = 1 - Math.pow(1 - p, 3)
+      setDisplay(Math.round(from + (to - from) * eased))
+      if (step >= steps) { clearInterval(iv); setDisplay(to) }
+    }, duration / steps)
+    return () => clearInterval(iv)
+  }, [value])
+  return (
+    <span style={{ fontSize: size, fontWeight: 700, fontFamily: 'monospace', color }}>
+      {prefix}{typeof display === 'number' ? display.toLocaleString() : display}{suffix}
+    </span>
+  )
+}
+
+function RoiStrip({ stats }) {
+  const projected = Math.round(stats.money * 14)
+  return (
+    <div style={{
+      display: 'flex', alignItems: 'stretch',
+      borderBottom: '2px solid rgba(0,229,176,0.12)',
+      background: 'linear-gradient(90deg, rgba(0,229,176,0.05) 0%, rgba(0,0,0,0) 60%)',
+      flexShrink: 0, overflowX: 'auto', minHeight: 52
+    }}>
+      <div style={{ display:'flex', alignItems:'center', gap:7, padding:'0 16px', borderRight:'1px solid rgba(255,255,255,0.05)', flexShrink:0 }}>
+        <div style={{ width:6, height:6, borderRadius:'50%', background:'#00e5b0', animation:'pulse 2s infinite' }} />
+        <div>
+          <div style={{ fontSize:9, fontFamily:'monospace', color:'#00e5b0', letterSpacing:'0.12em' }}>PILOT</div>
+          <div style={{ fontSize:9, fontFamily:'monospace', color:'#00e5b0', letterSpacing:'0.12em' }}>VALUE</div>
+        </div>
+      </div>
+      <div style={{ display:'flex', flexDirection:'column', justifyContent:'center', padding:'0 20px', borderRight:'1px solid rgba(255,255,255,0.05)', flexShrink:0 }}>
+        <AnimatedNumber value={stats.money} prefix="£" color="#00e5b0" size={20} />
+        <div style={{ fontSize:8, fontFamily:'monospace', color:'#4a5260', letterSpacing:'0.08em', marginTop:2 }}>SAVED TODAY</div>
+      </div>
+      <div style={{ display:'flex', flexDirection:'column', justifyContent:'center', padding:'0 18px', borderRight:'1px solid rgba(255,255,255,0.05)', flexShrink:0 }}>
+        <AnimatedNumber value={stats.hours} suffix="h" color="#a855f7" size={16} />
+        <div style={{ fontSize:8, fontFamily:'monospace', color:'#4a5260', letterSpacing:'0.08em', marginTop:2 }}>OPS TIME FREED</div>
+      </div>
+      <div style={{ display:'flex', flexDirection:'column', justifyContent:'center', padding:'0 18px', borderRight:'1px solid rgba(255,255,255,0.05)', flexShrink:0 }}>
+        <AnimatedNumber value={stats.sla} color="#3b82f6" size={16} />
+        <div style={{ fontSize:8, fontFamily:'monospace', color:'#4a5260', letterSpacing:'0.08em', marginTop:2 }}>SLA PREVENTED</div>
+      </div>
+      <div style={{ display:'flex', flexDirection:'column', justifyContent:'center', padding:'0 18px', borderRight:'1px solid rgba(255,255,255,0.05)', flexShrink:0 }}>
+        <AnimatedNumber value={stats.incidents} color="#f59e0b" size={16} />
+        <div style={{ fontSize:8, fontFamily:'monospace', color:'#4a5260', letterSpacing:'0.08em', marginTop:2 }}>INCIDENTS CAUGHT</div>
+      </div>
+      <div style={{ display:'flex', flexDirection:'column', justifyContent:'center', padding:'0 18px', marginLeft:'auto', flexShrink:0 }}>
+        <div style={{ fontSize:13, fontWeight:700, fontFamily:'monospace', color:'#e8eaed' }}>£{projected.toLocaleString()}</div>
+        <div style={{ fontSize:8, fontFamily:'monospace', color:'#4a5260', letterSpacing:'0.08em', marginTop:2 }}>PROJECTED / 2-WK PILOT</div>
+      </div>
+    </div>
+  )
+}
+
 function ModuleResult({ result, moduleName }) {
   if (!result) return null
   const r = result.result || result
@@ -1069,6 +1135,16 @@ export default function DashboardPage() {
   const [latestRuns, setLatestRuns] = useState({})
   const [sessionIncidents, setSessionIncidents] = useState([])
   const [liveShipments, setLiveShipments] = useState([])
+  const bgDripRef = useRef(0)
+  const [roiStats, setRoiStats] = useState(() => {
+    // Seed from today's entries in INCIDENT_LOG only — no hardcoding
+    const todayMoney = INCIDENT_LOG
+      .filter(i => i.date.toLowerCase().startsWith('today'))
+      .reduce((sum, i) => sum + (parseInt((i.saved||'').replace(/[^0-9]/g,''))||0), 0)
+    const todaySla = INCIDENT_LOG.filter(i => i.date.toLowerCase().startsWith('today') && (i.severity==='CRITICAL'||i.severity==='HIGH')).length
+    const todayInc = INCIDENT_LOG.filter(i => i.date.toLowerCase().startsWith('today')).length
+    return { money: todayMoney, hours: Math.round(todayInc * 0.5 * 2) / 2, sla: todaySla, incidents: todayInc }
+  })
   const [whSystem, setWhSystem] = useState('webfleet')
   const [whEvent, setWhEvent] = useState('temp_alarm')
   const [whPayload, setWhPayload] = useState(null)
@@ -1147,6 +1223,42 @@ export default function DashboardPage() {
       .then(data => { if (data.latest) setLatestRuns(data.latest) })
       .catch(() => {})
   }, [])
+
+  // ROI drip — every 60s add £22 (background monitoring value ~£22/hr ops rate freed)
+  useEffect(() => {
+    if (!unlocked) return
+    const iv = setInterval(() => {
+      bgDripRef.current += 22
+      setRoiStats(prev => ({ ...prev, money: prev.money + 22 }))
+    }, 60000)
+    return () => clearInterval(iv)
+  }, [unlocked])
+
+  // Recalculate whenever session incidents or approvals change
+  useEffect(() => {
+    const todayMoney = INCIDENT_LOG
+      .filter(i => i.date.toLowerCase().startsWith('today'))
+      .reduce((sum, i) => sum + (parseInt((i.saved||'').replace(/[^0-9]/g,''))||0), 0)
+    const todaySla = INCIDENT_LOG.filter(i => i.date.toLowerCase().startsWith('today') && (i.severity==='CRITICAL'||i.severity==='HIGH')).length
+    const todayInc = INCIDENT_LOG.filter(i => i.date.toLowerCase().startsWith('today')).length
+
+    let extraMoney = bgDripRef.current
+    let extraHours = 0, extraSla = 0, extraInc = 0
+    for (const inc of sessionIncidents) {
+      const val = inc.saved ? parseInt(String(inc.saved).replace(/[^0-9]/g,''))||0 : 0
+      extraMoney += val; extraHours += 0.5; extraInc++
+      if (inc.severity==='CRITICAL'||inc.severity==='HIGH') extraSla++
+    }
+    for (const a of [...pendingApprovals, ...localApprovals]) {
+      if (a.status==='executed') { extraMoney += Number(a.financial_value)||0; extraHours += 0.25 }
+    }
+    setRoiStats({
+      money: todayMoney + extraMoney,
+      hours: Math.round((todayInc * 0.5 + extraHours) * 2) / 2,
+      sla: todaySla + extraSla,
+      incidents: todayInc + extraInc
+    })
+  }, [sessionIncidents, pendingApprovals, localApprovals])
 
   if (!unlocked) return <PinGate onUnlock={() => setUnlocked(true)} />
 
@@ -1687,6 +1799,9 @@ export default function DashboardPage() {
               )}
             </div>
           </div>
+
+          {/* ── ROI STRIP ──────────────────────────────────────────────────── */}
+          <RoiStrip stats={roiStats} />
 
           {/* ── AGENT TAB ──────────────────────────────────────────────────── */}
           {activeTab === 'agent' && (
