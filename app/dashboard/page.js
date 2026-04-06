@@ -506,7 +506,11 @@ function AnimatedNumber({ value, prefix = '', suffix = '', color = '#00e5b0', si
 }
 
 function RoiStrip({ stats }) {
-  const projected = Math.round(stats.money * 14)
+  const todayBase = INCIDENT_LOG.filter(i => i.date.toLowerCase().startsWith('today')).reduce((sum, i) => sum + (parseInt((i.saved||'').replace(/[^0-9]/g,''))||0), 0)
+  const allLogMoney = INCIDENT_LOG.reduce((sum, i) => sum + (parseInt((i.saved||'').replace(/[^0-9]/g,''))||0), 0)
+  const sessionExtra = Math.max(0, stats.money - todayBase)
+  const dailyAvg = Math.round((allLogMoney + sessionExtra) / 3)
+  const projected = dailyAvg * 14
   return (
     <div style={{
       display: 'flex', alignItems: 'stretch',
