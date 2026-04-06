@@ -5,16 +5,16 @@ import Link from 'next/link'
 const DASHBOARD_PIN = 'DH2026'
 
 const ACTIVE_SHIPMENTS = [
-  { ref: 'REF-4421', route: 'Manchester → Bristol', status: 'on-track', eta: '14:22', carrier: 'DHL Express', alert: null },
-  { ref: 'REF-8832', route: 'Glasgow → London', status: 'disrupted', eta: '???', carrier: 'FastFreight UK', alert: 'M74 closure — agent analysis ready' },
-  { ref: 'REF-9103', route: 'Birmingham → Edinburgh', status: 'delayed', eta: '17:45', carrier: 'Yodel', alert: 'Weather delay — 45min behind' },
-  { ref: 'REF-5517', route: 'Leeds → Cardiff', status: 'on-track', eta: '16:00', carrier: 'XPO Logistics', alert: null },
+  { ref: 'PH-4421', route: 'Leeds → Bradford (Tesco DC)', status: 'on-track', eta: '08:45', carrier: 'Pearson Haulage', alert: null },
+  { ref: 'PH-8832', route: 'Leeds → London (M1)', status: 'disrupted', eta: '???', carrier: 'Pearson Haulage', alert: 'M1 breakdown — recovery dispatched' },
+  { ref: 'PH-5517', route: 'Leeds → Sheffield (NHS Supply Chain)', status: 'delayed', eta: '18:15', carrier: 'Pearson Haulage', alert: 'Delayed — cascade from London disruption' },
+  { ref: 'PH-9103', route: 'Leeds → Edinburgh (A1)', status: 'delayed', eta: '21:30', carrier: 'Pearson Haulage', alert: 'Cold chain at risk — slot 20:00-22:00' },
 ]
 
 const INCIDENT_LOG = [
-  { date: 'Today 07:35', ref: 'REF-8832', type: 'Weather', severity: 'CRITICAL', saved: '£7,450' },
-  { date: 'Yesterday', ref: 'REF-7741', type: 'Invoice Recovery', severity: 'HIGH', saved: '£4,280' },
-  { date: '3 days ago', ref: 'REF-6602', type: 'Driver Hours', severity: 'MEDIUM', saved: '£900' },
+  { date: 'Today 22:03', ref: 'PH-8832', type: 'Breakdown', severity: 'CRITICAL', saved: '£2,400' },
+  { date: 'Yesterday', ref: 'PH-7741', type: 'Invoice Recovery', severity: 'HIGH', saved: '£4,280' },
+  { date: '3 days ago', ref: 'PH-6602', type: 'Driver Hours', severity: 'MEDIUM', saved: '£900' },
 ]
 
 const STATUS_COLORS = { 'on-track': '#00e5b0', 'disrupted': '#ef4444', 'delayed': '#f59e0b' }
@@ -52,6 +52,167 @@ const CAT_COLORS = {
   compliance: { bg: 'rgba(245,158,11,0.08)',  border: 'rgba(245,158,11,0.2)', text: '#f59e0b' },
   growth:     { bg: 'rgba(168,85,247,0.08)',  border: 'rgba(168,85,247,0.2)', text: '#a855f7' },
 }
+
+const WEBHOOK_SYSTEMS = {
+
+  // ── TMS — JOB & DESPATCH ──────────────────────────────────────────────────
+  mandata: {
+    label: 'Mandata TMS', icon: '🚛', color: '#3b82f6',
+    events: {
+      job_delayed:          { label: 'Job Delayed',                    fields: { vehicle_reg:'BN21 XKT', delay_minutes:45, reason:'M62 congestion J26', sla_deadline:'15:30', consignee:'Tesco DC Donington', job_id:'MAN-44821', penalty_gbp:1200, consignee_phone:'' } },
+      job_cancelled:        { label: 'Job Cancelled by Customer',      fields: { vehicle_reg:'BN21 XKT', job_id:'MAN-44822', reason:'Customer cancelled 2h before collection', value_gbp:2400, collection:'Leeds DC', consignee:'Asda Lutterworth', driver_dispatched:true, consignee_phone:'' } },
+      collection_no_show:   { label: 'Collection No-Show',             fields: { vehicle_reg:'BN21 XKT', job_id:'MAN-44823', collection_point:'Sheffield DC', booked_time:'09:00', wait_minutes:55, driver_name:'Dave P', consignee_phone:'' } },
+      failed_delivery:      { label: 'Failed Delivery',                fields: { vehicle_reg:'BN21 XKT', job_id:'MAN-44824', consignee:'NHS Supply Chain Redditch', reason:'Site closed — no staff on loading bay', attempted_time:'14:22', value_gbp:6800, consignee_phone:'' } },
+      pod_overdue:          { label: 'POD Not Received',               fields: { vehicle_reg:'BN21 XKT', job_id:'MAN-44825', consignee:'NHS Supply Chain Redditch', hours_overdue:3, value_gbp:6800, consignee_phone:'' } },
+      route_deviation:      { label: 'Route Deviation',                fields: { vehicle_reg:'BN21 XKT', planned_route:'M62 → M1 south', current_location:'A1(M) northbound J8', deviation_miles:11, job_id:'MAN-44826', driver_name:'Dave P' } },
+      multi_drop_change:    { label: 'Multi-Drop Sequence Change',     fields: { vehicle_reg:'BN21 XKT', job_id:'MAN-44827', original_sequence:'Leeds→Bradford→Wakefield', new_sequence:'Leeds→Wakefield→Bradford', reason:'Bradford customer requested later slot', driver_name:'Dave P' } },
+      driver_change:        { label: 'Driver Change Required',         fields: { vehicle_reg:'BN21 XKT', job_id:'MAN-44828', original_driver:'Dave P', reason:'Driver reported unwell at depot', collection_in_mins:45, consignee:'Tesco DC Donington' } },
+      night_out_required:   { label: 'Night Out Required',             fields: { vehicle_reg:'BN21 XKT', driver_name:'Dave P', location:'Corley Services M6', reason:'Hours exhausted — cannot complete return leg', cargo:'perishable — chilled 0-5C', job_id:'MAN-44829' } },
+      detention_charge:     { label: 'Detention Charge Triggered',     fields: { vehicle_reg:'BN21 XKT', job_id:'MAN-44830', consignee:'Asda Lutterworth', wait_hours:3.5, hourly_rate_gbp:45, total_charge_gbp:157, driver_name:'Dave P' } },
+    }
+  },
+
+  // ── TELEMATICS — VEHICLE & DRIVER ─────────────────────────────────────────
+  webfleet: {
+    label: 'Webfleet Telematics', icon: '📡', color: '#ef4444',
+    events: {
+      temp_alarm:           { label: 'Temperature Alarm',              fields: { vehicle_reg:'LK72 ABX', temp_reading:7.2, threshold:5.0, cargo_type:'chilled 0-5C', location:'M1 southbound J18', driver_name:'Dave P', reefer_unit:'Carrier Transicold', consignee_phone:'' } },
+      temp_probe_failure:   { label: 'Temperature Probe Failure',      fields: { vehicle_reg:'LK72 ABX', probe_id:'probe_1', location:'A1 northbound J41', cargo:'pharmaceutical chilled', consignee:'NHS Supply Chain', driver_name:'Dave P' } },
+      reefer_fault:         { label: 'Reefer Unit Fault',              fields: { vehicle_reg:'LK72 ABX', fault_code:'E-014', fault_desc:'Compressor overload', location:'M62 westbound J27', cargo_type:'frozen -18C', cargo_value_gbp:14000, driver_name:'Dave P' } },
+      door_open_transit:    { label: 'Cargo Door Open in Transit',     fields: { vehicle_reg:'BN21 XKT', location:'B1234 industrial estate Sheffield', speed_mph:0, time_stopped_mins:18, cargo:'mixed retail', driver_name:'Dave P' } },
+      off_route:            { label: 'Vehicle Off Route',              fields: { vehicle_reg:'BN21 XKT', deviation_miles:8, planned_route:'M62 westbound', current_location:'A1(M) northbound J8', driver_name:'Dave P' } },
+      geofence_breach:      { label: 'Geofence Breach',               fields: { vehicle_reg:'BN21 XKT', zone:'Restricted residential area', location:'Selby town centre', reason:'unknown', driver_name:'Dave P', time:'22:47' } },
+      panic_button:         { label: 'Panic Button Pressed',          fields: { vehicle_reg:'BN21 XKT', driver_name:'Dave P', location:'A638 nr Wakefield', cargo_value_gbp:18000, time:'23:12' } },
+      impact_detected:      { label: 'Impact / Collision Detected',   fields: { vehicle_reg:'BN21 XKT', g_force:1.8, location:'A1 southbound J34', driver_name:'Dave P', speed_at_impact_mph:12, cargo:'fragile electronics', time:'09:34' } },
+      engine_fault:         { label: 'Engine Fault Code',             fields: { vehicle_reg:'BN21 XKT', fault_code:'P0236', fault_desc:'Turbo boost sensor fault', location:'M1 northbound J28', driver_name:'Dave P', mileage:187432 } },
+      fuel_critical:        { label: 'Fuel Level Critical',           fields: { vehicle_reg:'BN21 XKT', fuel_percent:8, estimated_range_miles:28, location:'M62 eastbound J33', driver_name:'Dave P', nearest_forecourt:'Ferrybridge Services 4 miles' } },
+      tyre_pressure:        { label: 'Tyre Pressure Alert',           fields: { vehicle_reg:'BN21 XKT', tyre_position:'nearside front', pressure_bar:5.2, threshold_bar:6.8, location:'M18 J2', driver_name:'Dave P', cargo_weight_kg:18000 } },
+      overspeed:            { label: 'Speed Violation',               fields: { vehicle_reg:'BN21 XKT', speed_mph:68, limit_mph:56, location:'M62 westbound J26', driver_name:'Dave P', duration_secs:34 } },
+      ulez_entry:           { label: 'ULEZ / Clean Air Zone Entry',   fields: { vehicle_reg:'BN21 XKT', zone:'London ULEZ', entry_time:'07:34', vehicle_compliant:false, daily_charge_gbp:100, driver_name:'Dave P' } },
+    }
+  },
+
+  // ── TELEMATICS — DRIVER BEHAVIOUR & HOURS ────────────────────────────────
+  microlise: {
+    label: 'Microlise Fleet', icon: '📍', color: '#a855f7',
+    events: {
+      harsh_braking:        { label: 'Harsh Braking Event',           fields: { vehicle_reg:'BN21 XKT', g_force:0.45, location:'A1 southbound J34', cargo_type:'fragile electronics', driver_name:'Dave P', speed_before_mph:52 } },
+      harsh_acceleration:   { label: 'Harsh Acceleration',            fields: { vehicle_reg:'BN21 XKT', g_force:0.38, location:'M1 northbound J29', driver_name:'Dave P', cargo:'chilled foodstuffs', time:'08:17' } },
+      harsh_cornering:      { label: 'Harsh Cornering',               fields: { vehicle_reg:'BN21 XKT', g_force:0.31, location:'A638 roundabout Wakefield', driver_name:'Dave P', cargo:'fragile — stacked pallets' } },
+      wtd_hours_warning:    { label: 'WTD Hours Approaching Limit',   fields: { vehicle_reg:'BN21 XKT', driver_name:'Dave P', hours_driven_this_week:42, weekly_limit:48, hours_remaining:6, remaining_jobs:2 } },
+      wtd_hours_breach:     { label: 'WTD Hours Breached',            fields: { vehicle_reg:'BN21 XKT', driver_name:'Dave P', hours_driven:48.5, location:'M1 J30', remaining_jobs:1, consignee:'NHS Supply Chain', job_id:'MAN-44820' } },
+      tacho_fault:          { label: 'Tachograph Fault',              fields: { vehicle_reg:'BN21 XKT', fault_type:'card read error', driver_name:'Dave P', location:'Leeds DC', kilometres_driven_without_record:14 } },
+      no_driver_card:       { label: 'Driving Without Tacho Card',    fields: { vehicle_reg:'BN21 XKT', driver_name:'Dave P', location:'M62 westbound J28', duration_mins:22, distance_km:18 } },
+      long_stop:            { label: 'Unexpected Long Stop',          fields: { vehicle_reg:'BN21 XKT', stop_duration_mins:92, location:'Toddington Services M1', driver_name:'Dave P', cargo:'temperature sensitive', next_delivery_sla:'16:00' } },
+      excessive_idling:     { label: 'Excessive Idling',              fields: { vehicle_reg:'BN21 XKT', idle_minutes:45, fuel_wasted_litres:6.2, location:'Leeds Distribution Centre', driver_name:'Dave P' } },
+      licence_expiry:       { label: 'Driver Licence Expiry Warning', fields: { driver_name:'Dave P', vehicle_reg:'BN21 XKT', licence_expiry:'2026-05-14', days_remaining:38, licence_category:'C+E' } },
+      cpc_expiry:           { label: 'CPC / DQC Expiry Warning',     fields: { driver_name:'Dave P', dqc_expiry:'2026-06-01', days_remaining:56, vehicle_reg:'BN21 XKT', action_required:'Book CPC periodic training' } },
+      vehicle_service_due:  { label: 'Vehicle Service Overdue',       fields: { vehicle_reg:'BN21 XKT', service_type:'6-week safety inspection', overdue_days:4, mileage:187432, last_service:'2026-02-18', location:'Leeds depot' } },
+      mot_due:              { label: 'MOT / Annual Test Due',         fields: { vehicle_reg:'BN21 XKT', mot_expiry:'2026-04-28', days_remaining:22, vehicle_type:'HGV 44t', test_centre:'Pearson Haulage Leeds' } },
+    }
+  },
+
+  // ── TELEMATICS — SAMSARA / IOT SENSORS ───────────────────────────────────
+  samsara: {
+    label: 'Samsara IoT', icon: '🔬', color: '#00e5b0',
+    events: {
+      cargo_tamper:         { label: 'Cargo Tamper / Theft Alert',    fields: { vehicle_reg:'BN21 XKT', sensor:'cargo_seal_broken', location:'A1 southbound J41 layby', time:'02:34', cargo:'mixed retail', cargo_value_gbp:24000, driver_name:'Dave P' } },
+      trailer_detached:     { label: 'Trailer Detached Unexpectedly', fields: { vehicle_reg:'BN21 XKT', trailer_id:'TRL-0087', location:'M1 J32 slip road', driver_name:'Dave P', cargo_loaded:true, cargo_value_gbp:18000 } },
+      rollover_detected:    { label: 'Rollover / Tip Detected',       fields: { vehicle_reg:'BN21 XKT', g_force:3.4, location:'A638 Wakefield ring road', driver_name:'Dave P', cargo:'fragile', emergency_services_notified:false } },
+      load_movement:        { label: 'Load Movement Detected',        fields: { vehicle_reg:'BN21 XKT', sensor:'load_shift', location:'M62 J27 roundabout', driver_name:'Dave P', cargo:'unstable pallets — mixed weight', action:'driver alerted to pull over' } },
+      fuel_card_anomaly:    { label: 'Fuel Card Anomaly',             fields: { vehicle_reg:'BN21 XKT', driver_name:'Dave P', expected_location:'Leeds to Sheffield route', transaction_location:'Peterborough A1', volume_litres:320, vehicle_tank_capacity_litres:280 } },
+      wrong_fuel:           { label: 'Wrong Fuel Type',               fields: { vehicle_reg:'BN21 XKT', driver_name:'Dave P', fuel_put_in:'AdBlue tank — wrong cap', location:'Ferrybridge Services M62', litres_added:40 } },
+      tail_lift_fault:      { label: 'Tail-Lift Fault',               fields: { vehicle_reg:'BN21 XKT', fault:'hydraulic failure', location:'NHS Supply Chain Redditch', driver_name:'Dave P', delivery_at_risk:true, pallets_to_unload:8 } },
+      fatigue_alert:        { label: 'Driver Fatigue Alert',          fields: { vehicle_reg:'BN21 XKT', driver_name:'Dave P', hours_driven_today:7.5, break_overdue_mins:22, location:'M1 northbound J29', next_delivery:'Sheffield NHS 16:00' } },
+      mileage_discrepancy:  { label: 'Mileage Discrepancy',           fields: { vehicle_reg:'BN21 XKT', recorded_miles:287, gps_actual_miles:341, date:'today', driver_name:'Dave P', note:'54 miles unaccounted' } },
+    }
+  },
+
+  // ── WMS — INBOUND / RECEIVING ─────────────────────────────────────────────
+  wms_inbound: {
+    label: 'WMS — Inbound', icon: '📥', color: '#f59e0b',
+    events: {
+      inbound_late:         { label: 'Inbound Delivery Late',          fields: { warehouse:'Leeds DC', supplier:'Greenfield Foods Ltd', expected_time:'10:00', delay_mins:95, pallets_booked:24, knock_on_orders:3, consignee:'Tesco DC Donington' } },
+      short_delivery:       { label: 'Short Delivery Received',        fields: { warehouse:'Leeds DC', supplier:'Greenfield Foods Ltd', po_number:'PO-88321', ordered_pallets:24, received_pallets:18, missing_product:'FRZN-MIX-001 x 6 pallets', supplier_phone:'01234 567890' } },
+      over_delivery:        { label: 'Over-Delivery Received',         fields: { warehouse:'Leeds DC', supplier:'ambient-foods', po_number:'PO-88322', ordered_pallets:20, received_pallets:27, extra_product:'AMBT-DRY-004', available_bay_space_pallets:4 } },
+      damaged_inbound:      { label: 'Damaged Goods Inbound',          fields: { warehouse:'Leeds DC', supplier:'Greenfield Foods', po_number:'PO-88323', damaged_pallets:3, product:'chilled ready meals', damage_type:'water damage — roof leak in trailer', rejection_required:true } },
+      wrong_product:        { label: 'Wrong Product Received',         fields: { warehouse:'Leeds DC', supplier:'UK Pharma Wholesale', po_number:'PO-88324', ordered_product:'Paracetamol 500mg 100s', received_product:'Paracetamol 500mg 32s', quantity:2400, value_gbp:4800 } },
+      asn_mismatch:         { label: 'ASN / Paperwork Mismatch',       fields: { warehouse:'Birmingham DC', supplier:'FMCG Supplies Ltd', asn_pallets:16, physical_pallets:19, temperature_variance:'ASN says ambient — goods are chilled', action_required:'quarantine and query supplier' } },
+      goods_on_hold:        { label: 'Goods On Hold — QC Inspection',  fields: { warehouse:'Leeds DC', product:'pharmaceutical — eye drops', quantity_units:12000, value_gbp:28000, hold_reason:'batch recall investigation', supplier:'UK Pharma Wholesale', clearance_required_by:'14:00' } },
+      customs_hold:         { label: 'Customs Hold — Inbound',         fields: { warehouse:'Tilbury DC', shipment_ref:'CUST-88325', origin:'Netherlands', product:'food supplement', hold_reason:'TRACES notification pending', value_gbp:18000, clearance_agent:'Customs Direct Ltd' } },
+      cross_dock_triggered: { label: 'Cross-Dock Event Triggered',     fields: { warehouse:'Leeds DC', inbound_ref:'IN-88326', outbound_job:'MAN-44831', pallets:12, dock_window:'13:00-14:30', consignee:'Tesco DC Donington', driver_arriving:'LK72 ABX at 12:45' } },
+    }
+  },
+
+  // ── WMS — OUTBOUND / DESPATCH ─────────────────────────────────────────────
+  wms_outbound: {
+    label: 'WMS — Outbound', icon: '📤', color: '#00e5b0',
+    events: {
+      short_pick:           { label: 'Short Pick',                     fields: { order_id:'ORD-88321', warehouse:'Leeds DC', ordered_qty:24, available_qty:18, product_code:'FRZN-MIX-001', consignee:'Asda DC Lutterworth', despatch_deadline:'13:00', sla_penalty_gbp:1800, consignee_phone:'' } },
+      pick_error:           { label: 'Pick Error Detected',            fields: { order_id:'ORD-88322', warehouse:'Leeds DC', picker:'Staff ID 047', wrong_product:'AMBT-DRY-003 picked instead of AMBT-DRY-004', consignee:'Tesco DC Donington', packing_already_complete:false } },
+      substitution_needed:  { label: 'Substitution Required',          fields: { order_id:'ORD-88323', warehouse:'Birmingham DC', out_of_stock:'Whole milk 6-pint x 48', suggested_sub:'Semi-skimmed 6-pint x 48', consignee:'NHS canteen Birmingham', customer_approval_needed:true } },
+      overweight_load:      { label: 'Overweight Load Detected',       fields: { vehicle_reg:'BN21 XKT', loaded_weight_kg:44800, legal_max_kg:44000, depot:'Manchester DC', consignee:'B&Q Swindon', overweight_kg:800, consignee_phone:'' } },
+      hazmat_label_missing: { label: 'Hazmat Label Missing',           fields: { order_id:'ORD-88324', product:'isopropyl alcohol 5L x 20', un_number:'UN1219', consignee:'NHS Supply Chain', driver:'BN21 XKT', despatch_window:'closes in 25 mins' } },
+      manifest_mismatch:    { label: 'Manifest Mismatch',              fields: { vehicle_reg:'BN21 XKT', job_id:'MAN-44832', manifest_pallets:18, loaded_pallets:21, extra_product_code:'FRZN-MIX-002', consignee:'Tesco DC Donington', departure_time:'08:30' } },
+      cutoff_approaching:   { label: 'Despatch Cut-Off Approaching',   fields: { warehouse:'Leeds DC', orders_not_picked:7, orders_total:32, cutoff_time:'17:00', mins_remaining:22, consignee:'Tesco Express stores', sla_penalty_per_order_gbp:500 } },
+      vehicle_not_arrived:  { label: 'Vehicle Not Arrived for Loading', fields: { warehouse:'Leeds DC', vehicle_reg:'LK72 ABX', booked_arrival:'14:00', current_time:'14:38', orders_loaded_waiting:14, consignee:'NHS Supply Chain Redditch', bay:'Bay 3' } },
+      bay_blocked:          { label: 'Loading Bay Unavailable',        fields: { warehouse:'Leeds DC', bay:'Bay 2', blocked_reason:'previous vehicle breakdown on apron', vehicles_queuing:3, earliest_clear_time:'15:30', despatch_impact_pallets:42 } },
+      returns_received:     { label: 'Failed Delivery Returned',       fields: { vehicle_reg:'BN21 XKT', job_id:'MAN-44833', consignee:'Asda Lutterworth', returned_pallets:6, return_reason:'site closed', product:'ambient grocery', rebook_required:true, value_gbp:2400 } },
+    }
+  },
+
+  // ── WMS — INVENTORY & STOCK ───────────────────────────────────────────────
+  wms_inventory: {
+    label: 'WMS — Inventory', icon: '📦', color: '#8b5cf6',
+    events: {
+      reorder_point:        { label: 'Stock Below Reorder Point',      fields: { warehouse:'Leeds DC', product_code:'FRZN-MIX-001', product_desc:'Frozen mixed veg 1kg', current_stock_units:480, reorder_point_units:500, lead_time_days:3, avg_daily_movement:180, supplier:'Greenfield Foods' } },
+      zero_stock:           { label: 'Zero Stock / Stockout',          fields: { warehouse:'Leeds DC', product_code:'AMBT-DRY-004', product_desc:'Baked beans 400g case', current_stock:0, outstanding_orders:3, value_at_risk_gbp:8400, consignees_affected:'Tesco DC x2, Asda x1', supplier:'FMCG Supplies Ltd' } },
+      near_expiry:          { label: 'Near-Expiry Alert',              fields: { warehouse:'Leeds DC', product_code:'CHLL-MEAT-002', product_desc:'Cooked chicken slices 200g', quantity_units:2400, expiry_date:'in 3 days', value_gbp:3600, consignees_available:'Tesco x3 stores within 30mi' } },
+      batch_recall:         { label: 'Product Batch Recall',           fields: { product_code:'PHMA-PARA-500', product_desc:'Paracetamol 500mg 100s', batch_number:'BTH-229341', recall_reason:'tablet dissolution failure', units_in_warehouse:12000, units_dispatched:4800, consignees_notified:false } },
+      stock_discrepancy:    { label: 'Cycle Count Discrepancy',        fields: { warehouse:'Birmingham DC', product_code:'FRZN-PIZZA-003', system_quantity:1440, physical_count:1308, variance:132, variance_value_gbp:792, investigation_triggered:true } },
+      cold_store_breach:    { label: 'Cold Store Temperature Breach',  fields: { warehouse:'Leeds DC', zone:'cold_store_A', temp_reading:7.8, threshold:5.0, products_affected:'chilled ready meals, dairy, cooked meats', total_value_at_risk_gbp:48000, duration_mins:35, engineer_called:false } },
+      quarantine_flagged:   { label: 'Quarantine Stock Alert',         fields: { warehouse:'Leeds DC', product_code:'CHLL-DAIRY-001', reason:'supplier allergen declaration missing', quantity_units:3600, value_gbp:5400, consignee_orders_affected:2 } },
+    }
+  },
+
+  // ── CUSTOMER / CONSIGNEE PORTAL ───────────────────────────────────────────
+  customer: {
+    label: 'Customer Portal', icon: '👤', color: '#ec4899',
+    events: {
+      booking_cancellation: { label: 'Booking Cancellation',           fields: { booking_ref:'BKG-55221', collection:'Birmingham DC', delivery:'NHS Supply Chain Redditch', pallets:12, value_gbp:3400, reason:'production delay', driver_dispatched:true, cancellation_fee_applies:true, consignee_phone:'' } },
+      sla_dispute:          { label: 'SLA Dispute Raised',             fields: { booking_ref:'BKG-55222', consignee:'Tesco DC Donington', claimed_late_mins:47, penalty_claimed_gbp:1200, disputed_ref:'PH-8832', evidence:'driver timestamped arrival 14:47, slot was 14:00-15:00', consignee_phone:'' } },
+      delivery_window_change:{ label: 'Delivery Window Change Request', fields: { booking_ref:'BKG-55223', consignee:'NHS Supply Chain', original_window:'08:00-10:00', requested_window:'13:00-15:00', reason:'emergency ward busy until midday', vehicle_already_dispatched:true, driver_name:'Dave P' } },
+      pod_dispute:          { label: 'POD Disputed by Customer',       fields: { booking_ref:'BKG-55224', consignee:'Asda Lutterworth', claim:'12 cases of damaged ambient goods', delivery_date:'yesterday', driver_name:'Dave P', vehicle_reg:'BN21 XKT', claimed_value_gbp:1440, cctv_available:true } },
+      complaint_logged:     { label: 'Customer Complaint',             fields: { booking_ref:'BKG-55225', consignee:'Tesco DC Donington', complaint:'driver rude to goods-in team, refused to stack in correct area', severity:'high', contract_value_monthly_gbp:28000, account_manager_notified:false } },
+      sla_breach_imminent:  { label: 'SLA Breach Imminent',            fields: { booking_ref:'BKG-55226', consignee:'NHS Supply Chain Birmingham', sla_deadline:'15:30', current_eta:'15:22', buffer_mins:8, penalty_if_late_gbp:2400, vehicle_reg:'BN21 XKT', driver_name:'Dave P' } },
+      change_of_address:    { label: 'Delivery Address Changed',       fields: { booking_ref:'BKG-55227', original_delivery:'NHS Supply Chain Redditch B98 0TH', new_delivery:'NHS Trust Birmingham B15 2TH', distance_change_miles:+28, vehicle_already_en_route:true, driver_name:'Dave P' } },
+    }
+  },
+
+  // ── COMPLIANCE & REGULATORY ───────────────────────────────────────────────
+  compliance: {
+    label: 'Compliance System', icon: '⚖️', color: '#ef4444',
+    events: {
+      dvsa_alert:           { label: 'DVSA Roadside Stop',             fields: { vehicle_reg:'BN21 XKT', driver_name:'Dave P', location:'A1 southbound check point Newark', prohibition_issued:false, advisory_issued:true, advisory_detail:'nearside front tyre wear approaching limit', tacho_checked:true } },
+      adr_documentation:    { label: 'ADR Documentation Incomplete',   fields: { vehicle_reg:'BN21 XKT', driver_name:'Dave P', dangerous_goods:'isopropyl alcohol UN1219 class 3', missing_document:'consignor declaration', location:'Leeds DC — pre-departure', collection_in_mins:30 } },
+      overweight_enforcement:{ label: 'Overweight — Enforcement Risk', fields: { vehicle_reg:'BN21 XKT', gross_weight_kg:44900, legal_max_kg:44000, location:'approaching Ferrybridge weigh-in', driver_name:'Dave P', cargo_offload_options:'none — sealed customer delivery' } },
+      low_bridge_risk:      { label: 'Low Bridge / Restriction Ahead', fields: { vehicle_reg:'BN21 XKT', vehicle_height_m:4.2, restriction_height_m:4.1, restriction_location:'Selby A1041 railway bridge', driver_name:'Dave P', current_route:'programmed route', alternative_required:true } },
+      operator_licence:     { label: 'Operator Licence Action Needed', fields: { licence_number:'OK1234567', issue:'annual fee overdue 14 days', revocation_risk:true, action_deadline:'2026-04-20', tc_area:'North East of England' } },
+    }
+  },
+
+  // ── CARRIER / SUBCONTRACTOR ───────────────────────────────────────────────
+  carrier: {
+    label: 'Carrier / Subcontractor', icon: '🤝', color: '#64748b',
+    events: {
+      carrier_no_collect:   { label: 'Carrier Failed to Collect',      fields: { carrier_name:'FastFreight UK', job_ref:'FF-88321', collection:'Leeds DC', booked_time:'07:00', current_time:'08:45', pallets:18, consignee:'Tesco DC Donington', sla_deadline:'14:00', carrier_phone:'0800 123 4567' } },
+      carrier_overcharge:   { label: 'Carrier Invoice Overcharge',     fields: { carrier_name:'XPO Logistics', invoice_ref:'XPO-INV-44821', agreed_rate_gbp:380, invoiced_amount_gbp:492, discrepancy_gbp:112, job_ref:'PH-8832', original_quote_ref:'QT-2234' } },
+      carrier_incident:     { label: 'Carrier Vehicle Incident',       fields: { carrier_name:'FastFreight UK', vehicle_reg:'FF44 XKT', location:'M62 westbound J30', incident_type:'tyre blowout', cargo:'your goods — mixed retail 14 pallets', our_ref:'MAN-44821', value_gbp:18000, recovery_eta_mins:90 } },
+      subcontractor_quality:{ label: 'Subcontractor Quality Failure',  fields: { subcontractor:'JD Transport Leeds', job_ref:'MAN-44825', failure_type:'goods delivered to wrong address — 8 pallets', consignee:'NHS Supply Chain Redditch', actual_delivery:'NHS Birmingham B15', recovery_arranged:false } },
+    }
+  },
+}
+
 
 const TAB_STYLE = (active) => ({
   padding: '6px 16px', borderRadius: 6, fontSize: 11, cursor: 'pointer',
@@ -314,86 +475,6 @@ function KV({ k, v, valueColor = '#e8eaed' }) {
     <div style={{ display:'flex', gap:6, marginBottom:3, flexWrap:'wrap' }}>
       <span style={{ fontSize:10, color:'#4a5260', fontFamily:'monospace', flexShrink:0 }}>{k.replace(/_/g,' ').toUpperCase()}:</span>
       <span style={{ fontSize:11, color:valueColor }}>{String(v)}</span>
-    </div>
-  )
-}
-
-// ── ROI COUNTER ────────────────────────────────────────────────────────────
-function AnimatedNumber({ value, prefix = '', suffix = '', color = '#00e5b0', size = 18 }) {
-  const [display, setDisplay] = useState(value)
-  const prevRef = useRef(value)
-  useEffect(() => {
-    const from = prevRef.current
-    const to = value
-    if (from === to) return
-    prevRef.current = to
-    const steps = 24
-    const duration = 700
-    let step = 0
-    const iv = setInterval(() => {
-      step++
-      const p = step / steps
-      const eased = 1 - Math.pow(1 - p, 3)
-      setDisplay(Math.round(from + (to - from) * eased))
-      if (step >= steps) { clearInterval(iv); setDisplay(to) }
-    }, duration / steps)
-    return () => clearInterval(iv)
-  }, [value])
-  return (
-    <span style={{ fontSize: size, fontWeight: 700, fontFamily: 'monospace', color }}>
-      {prefix}{typeof display === 'number' ? display.toLocaleString() : display}{suffix}
-    </span>
-  )
-}
-
-function RoiStrip({ stats }) {
-  const projected = Math.round(stats.money * 14)
-  return (
-    <div style={{
-      display: 'flex', alignItems: 'stretch', borderBottom: '2px solid rgba(0,229,176,0.12)',
-      background: 'linear-gradient(90deg, rgba(0,229,176,0.05) 0%, rgba(0,0,0,0) 60%)',
-      flexShrink: 0, overflowX: 'auto', minHeight: 52
-    }}>
-      {/* LIVE label */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '0 16px', borderRight: '1px solid rgba(255,255,255,0.05)', flexShrink: 0 }}>
-        <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#00e5b0', animation: 'pulse 2s infinite' }} />
-        <div>
-          <div style={{ fontSize: 9, fontFamily: 'monospace', color: '#00e5b0', letterSpacing: '0.12em' }}>PILOT</div>
-          <div style={{ fontSize: 9, fontFamily: 'monospace', color: '#00e5b0', letterSpacing: '0.12em' }}>VALUE</div>
-        </div>
-      </div>
-
-      {/* Money saved */}
-      <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'flex-start', padding: '0 20px', borderRight: '1px solid rgba(255,255,255,0.05)', flexShrink: 0 }}>
-        <AnimatedNumber value={stats.money} prefix="£" color="#00e5b0" size={20} />
-        <div style={{ fontSize: 8, fontFamily: 'monospace', color: '#4a5260', letterSpacing: '0.08em', marginTop: 2 }}>SAVED TODAY</div>
-      </div>
-
-      {/* Ops hours */}
-      <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'flex-start', padding: '0 18px', borderRight: '1px solid rgba(255,255,255,0.05)', flexShrink: 0 }}>
-        <AnimatedNumber value={stats.hours} suffix="h" color="#a855f7" size={16} />
-        <div style={{ fontSize: 8, fontFamily: 'monospace', color: '#4a5260', letterSpacing: '0.08em', marginTop: 2 }}>OPS TIME FREED</div>
-      </div>
-
-      {/* SLA prevented */}
-      <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'flex-start', padding: '0 18px', borderRight: '1px solid rgba(255,255,255,0.05)', flexShrink: 0 }}>
-        <AnimatedNumber value={stats.sla} color="#3b82f6" size={16} />
-        <div style={{ fontSize: 8, fontFamily: 'monospace', color: '#4a5260', letterSpacing: '0.08em', marginTop: 2 }}>SLA PREVENTED</div>
-      </div>
-
-      {/* Incidents */}
-      <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'flex-start', padding: '0 18px', borderRight: '1px solid rgba(255,255,255,0.05)', flexShrink: 0 }}>
-        <AnimatedNumber value={stats.incidents} color="#f59e0b" size={16} />
-        <div style={{ fontSize: 8, fontFamily: 'monospace', color: '#4a5260', letterSpacing: '0.08em', marginTop: 2 }}>INCIDENTS CAUGHT</div>
-      </div>
-
-      {/* Projected */}
-      <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'flex-start', padding: '0 18px', marginLeft: 'auto', flexShrink: 0 }}>
-        <div style={{ fontSize: 13, fontWeight: 700, fontFamily: 'monospace', color: '#e8eaed' }}>
-          £{projected.toLocaleString()}
-        </div>
-        <div style={{ fontSize: 8, fontFamily: 'monospace', color: '#4a5260', letterSpacing: '0.08em', marginTop: 2 }}>PROJECTED / 2-WK PILOT</div>
-      </div>
     </div>
   )
 }
@@ -988,8 +1069,20 @@ export default function DashboardPage() {
   const [latestRuns, setLatestRuns] = useState({})
   const [sessionIncidents, setSessionIncidents] = useState([])
   const [liveShipments, setLiveShipments] = useState([])
-  const [roiStats, setRoiStats] = useState({ money: 12630, hours: 4, sla: 2, incidents: 3 })
-  const bgDripRef = useRef(0)
+  const [whSystem, setWhSystem] = useState('webfleet')
+  const [whEvent, setWhEvent] = useState('temp_alarm')
+  const [whPayload, setWhPayload] = useState(null)
+  const [whFiring, setWhFiring] = useState(false)
+  const [whLog, setWhLog] = useState([])
+  const [whResult, setWhResult] = useState(null)
+  const [whLogLoading, setWhLogLoading] = useState(false)
+  const [fleet, setFleet] = useState([])
+  const [unassigned, setUnassigned] = useState([])
+  const [cancellingJob, setCancellingJob] = useState(null)
+  const [cancelReason, setCancelReason] = useState('')
+  const [cancelConfirm, setCancelConfirm] = useState(null)
+  const [reassignTo, setReassignTo] = useState('')
+  const [reassignJobRef, setReassignJobRef] = useState(null) // ref being reassigned from unassigned queue
 
   async function assessCancelAction(approvalId, sentAt) {
     const now = Date.now()
@@ -1054,35 +1147,6 @@ export default function DashboardPage() {
       .then(data => { if (data.latest) setLatestRuns(data.latest) })
       .catch(() => {})
   }, [])
-
-  // ROI drip — every 60s add £22 (background monitoring value, ~£22/hr ops rate freed)
-  useEffect(() => {
-    if (!unlocked) return
-    const iv = setInterval(() => {
-      bgDripRef.current += 22
-      setRoiStats(prev => ({ ...prev, money: prev.money + 22 }))
-    }, 60000)
-    return () => clearInterval(iv)
-  }, [unlocked])
-
-  // Recalculate ROI whenever incidents or approvals change
-  useEffect(() => {
-    const BASE_MONEY = 12630
-    const BASE_HOURS = 4
-    const BASE_SLA = 2
-    const BASE_INCIDENTS = 3
-    let extraMoney = bgDripRef.current
-    let extraHours = 0, extraSla = 0, extraIncidents = 0
-    for (const inc of sessionIncidents) {
-      const val = inc.saved ? parseInt(String(inc.saved).replace(/[^0-9]/g, '')) || 0 : 0
-      extraMoney += val; extraHours += 0.5; extraIncidents++
-      if (inc.severity === 'CRITICAL' || (inc.type || '').toLowerCase().includes('sla')) extraSla++
-    }
-    for (const a of [...pendingApprovals, ...localApprovals]) {
-      if (a.status === 'executed') { extraMoney += Number(a.financial_value) || 0; extraHours += 0.25 }
-    }
-    setRoiStats({ money: BASE_MONEY + extraMoney, hours: Math.round((BASE_HOURS + extraHours) * 2) / 2, sla: BASE_SLA + extraSla, incidents: BASE_INCIDENTS + extraIncidents })
-  }, [sessionIncidents, pendingApprovals, localApprovals])
 
   if (!unlocked) return <PinGate onUnlock={() => setUnlocked(true)} />
 
@@ -1396,6 +1460,107 @@ export default function DashboardPage() {
     }
   }
 
+  async function loadWebhookLog() {
+    setWhLogLoading(true)
+    try {
+      const res = await fetch('/api/webhooks/inbound?client_id=pearson-haulage&limit=30')
+      if (!res.ok) return
+      const data = await res.json()
+      setWhLog(data.logs || [])
+    } catch {}
+    finally { setWhLogLoading(false) }
+  }
+
+  function getWhPayload() {
+    if (whPayload) return whPayload
+    return WEBHOOK_SYSTEMS[whSystem]?.events[whEvent]?.fields || {}
+  }
+
+  async function loadFleet() {
+    try {
+      const res = await fetch('/api/driver/cancel-job?client_id=pearson-haulage')
+      if (!res.ok) return
+      const data = await res.json()
+      setFleet(data.fleet || [])
+      setUnassigned(data.unassigned || [])
+    } catch {}
+  }
+
+  async function reassignUnassigned(ref, toVehicle, reason) {
+    setCancellingJob(ref)
+    try {
+      await fetch('/api/driver/cancel-job', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          client_id: 'pearson-haulage',
+          ref,
+          reassign_to: toVehicle,
+          reassign_only: true,
+          reason: reason || 'Assigned by ops',
+          approved_by: 'ops_manager'
+        })
+      })
+      setReassignJobRef(null)
+      setReassignTo('')
+      await loadFleet()
+    } catch {}
+    finally { setCancellingJob(null) }
+  }
+
+  async function cancelJob({ vehicle_reg, ref, cancel_all, hasGoods }) {
+    setCancellingJob(ref || vehicle_reg)
+    try {
+      await fetch('/api/driver/cancel-job', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          client_id: 'pearson-haulage',
+          vehicle_reg,
+          ref: ref || undefined,
+          cancel_all: cancel_all || false,
+          reason: cancelReason || (hasGoods ? 'Return goods to depot' : 'Cancelled by ops'),
+          has_goods: hasGoods || false,
+          reassign_to: reassignTo || undefined,
+          approved_by: 'ops_manager'
+        })
+      })
+      setCancelConfirm(null)
+      setCancelReason('')
+      setReassignTo('')
+      await loadFleet()
+      await loadApprovals()
+    } catch {}
+    finally { setCancellingJob(null) }
+  }
+
+  async function fireWebhook() {
+    setWhFiring(true)
+    setWhResult(null)
+    try {
+      const res = await fetch('/api/webhooks/inbound', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          system: whSystem,
+          event_type: whEvent,
+          payload: getWhPayload(),
+          client_id: 'pearson-haulage'
+        })
+      })
+      const data = await res.json()
+      setWhResult(data)
+      // Reload log to show new entry
+      await loadWebhookLog()
+      // If approval created, refresh approvals tab badge
+      if (data.severity === 'CRITICAL' || data.severity === 'HIGH') loadApprovals()
+    } catch (e) {
+      setWhResult({ error: e.message })
+    } finally {
+      setWhFiring(false)
+    }
+  }
+
   return (
     <div style={{ minHeight:'100vh', display:'flex', flexDirection:'column', fontFamily:'IBM Plex Sans, sans-serif', background:'#0a0c0e', color:'#e8eaed' }}>
       <style>{`
@@ -1446,7 +1611,7 @@ export default function DashboardPage() {
               </button>
             )
           })()}
-          <span className="dh-client-name">Acme Logistics Ltd</span>
+          <span className="dh-client-name">Pearson Haulage</span>
         </div>
       </nav>
 
@@ -1509,11 +1674,11 @@ export default function DashboardPage() {
           <div style={{ padding:'10px 20px', borderBottom:'1px solid rgba(255,255,255,0.06)', display:'flex', alignItems:'center', gap:8 }}>
             <button style={TAB_STYLE(activeTab==='agent')} onClick={() => setActiveTab('agent')}>AGENT</button>
             <button style={TAB_STYLE(activeTab==='modules')} onClick={() => setActiveTab('modules')}>MODULES</button>
-            <button style={{ ...TAB_STYLE(activeTab==='approvals'), ...(pendingApprovals.length>0?{borderColor:'rgba(239,68,68,0.4)',color:'#ef4444',background:'rgba(239,68,68,0.08)'}:{}) }} onClick={() => { setActiveTab('approvals'); loadApprovals() }}>
+            <button style={{ ...TAB_STYLE(activeTab==='approvals'), ...((pendingApprovals.length>0||fleet.length>0)?{borderColor:'rgba(239,68,68,0.4)',color:'#ef4444',background:'rgba(239,68,68,0.08)'}:{}) }} onClick={() => { setActiveTab('approvals'); loadApprovals(); loadFleet() }}>
               APPROVALS {pendingApprovals.length > 0 ? `(${pendingApprovals.length})` : ''}
             </button>
             <button style={TAB_STYLE(activeTab==='scenarios')} onClick={() => setActiveTab('scenarios')}>SCENARIOS</button>
-            <button style={TAB_STYLE(activeTab==='setup')} onClick={() => setActiveTab('setup')}>SETUP</button>
+            <button style={TAB_STYLE(activeTab==='integrations')} onClick={() => { setActiveTab('integrations'); loadWebhookLog() }}>SETUP</button>
             <div style={{ marginLeft:'auto', display:'flex', alignItems:'center', gap:8 }}>
               <div style={{ width:7, height:7, borderRadius:'50%', background: loading ? '#f59e0b' : '#00e5b0', animation: loading ? 'pulse 1s infinite' : 'none' }} />
               <span style={{ fontFamily:'monospace', fontSize:10, color:'#4a5260' }}>{loading ? 'ANALYSING...' : 'AGENT READY'}</span>
@@ -1522,9 +1687,6 @@ export default function DashboardPage() {
               )}
             </div>
           </div>
-
-          {/* ── ROI STRIP ──────────────────────────────────────────────────── */}
-          <RoiStrip stats={roiStats} />
 
           {/* ── AGENT TAB ──────────────────────────────────────────────────── */}
           {activeTab === 'agent' && (
@@ -1767,153 +1929,122 @@ export default function DashboardPage() {
             </div>
           )}
 
-          {/* ── SETUP TAB ──────────────────────────────────────────────────── */}
-          {activeTab === 'setup' && (() => {
-            const SYSTEMS = [
-              { name: 'Mandata TMS', cat: 'TMS', color: '#3b82f6', events: [
-                { event: 'job.created', desc: 'New job booked — triggers shipment record creation and driver pre-alert' },
-                { event: 'job.updated', desc: 'Job details changed — ETA, load, or route updated by planner' },
-                { event: 'job.cancelled', desc: 'Job cancelled — ops alerted, driver notified, reassign queue triggered' },
-                { event: 'job.completed', desc: 'POD received — auto-closes incident, logs delivery confirmation' },
-                { event: 'driver.assigned', desc: 'Driver allocated to job — pre-shift check triggered if within 2hrs' },
-                { event: 'driver.unassigned', desc: 'Driver removed from job — unassigned queue flagged on dashboard' },
-                { event: 'eta.updated', desc: 'ETA revised by planner — SLA breach prediction re-run automatically' },
-                { event: 'load.updated', desc: 'Load details changed — ADR / cold chain checks re-triggered if applicable' },
-                { event: 'subcontractor.booked', desc: 'Sub-contractor allocated — trust score check and rate benchmark triggered' },
-                { event: 'invoice.raised', desc: 'Invoice generated — invoice recovery module notified for rate audit' },
-              ]},
-              { name: 'Microlise TMS', cat: 'TMS', color: '#3b82f6', events: [
-                { event: 'trip.started', desc: 'Vehicle departs depot — live tracking begins, driver app pre-fill available' },
-                { event: 'trip.completed', desc: 'Trip ended at depot — driver hours logged, tacho data available' },
-                { event: 'trip.exception', desc: 'Exception flagged (late, wrong route, idle) — agent analysis triggered' },
-                { event: 'vehicle.speeding', desc: 'Speed threshold exceeded — compliance log entry, driver risk score updated' },
-                { event: 'vehicle.idling', desc: 'Excessive idle detected — fuel optimisation module notified' },
-                { event: 'driver.hours.alert', desc: 'WTD hours approaching limit — ops SMS sent, job reassign options generated' },
-                { event: 'geofence.breach', desc: 'Vehicle outside expected zone — disruption analysis triggered' },
-                { event: 'maintenance.due', desc: 'Service interval reached — vehicle health module alerted' },
-                { event: 'defect.reported', desc: 'Pre-shift defect logged — departure blocked until ops confirms clearance' },
-                { event: 'poa.updated', desc: 'POA record updated — WTD compliance recalculated across fleet' },
-              ]},
-              { name: 'Webfleet Telematics', cat: 'Telematics', color: '#00e5b0', events: [
-                { event: 'position.update', desc: 'GPS position report — ETA recalculated with 1.5x UK road buffer applied' },
-                { event: 'harsh.braking', desc: 'Harsh braking event — driver safety score updated, fleet manager notified' },
-                { event: 'harsh.cornering', desc: 'Cornering event flagged — added to driver retention risk profile' },
-                { event: 'temperature.alert', desc: 'Reefer temperature deviation — cold chain module triggered immediately' },
-                { event: 'temperature.restored', desc: 'Temperature back in range — cold chain incident closed, log updated' },
-                { event: 'vehicle.stopped', desc: 'Unscheduled stop detected — disruption check if stop exceeds 15 minutes' },
-                { event: 'driver.login', desc: 'Driver logged into DRIVR terminal — shift start confirmed, hours tracking begins' },
-                { event: 'driver.logout', desc: 'Driver logged out — shift end confirmed, WTD compliance check run' },
-                { event: 'fuel.low', desc: 'Fuel level below threshold — fuel optimisation module flags nearest depot' },
-                { event: 'crash.detected', desc: 'Impact detected — emergency protocol triggered, 999 prompt sent to ops' },
-              ]},
-              { name: 'Samsara Telematics', cat: 'Telematics', color: '#00e5b0', events: [
-                { event: 'alert.speeding', desc: 'Speed alert — compliance log updated, driver risk assessment re-run' },
-                { event: 'alert.seatbelt', desc: 'Seatbelt not worn — safety incident logged, driver notified via app' },
-                { event: 'alert.distraction', desc: 'AI camera distraction flag — safety score impact, ops informed' },
-                { event: 'hos.violation', desc: 'Hours of service violation — WTD breach module triggered, legal log entry' },
-                { event: 'hos.approaching', desc: 'Driver approaching HOS limit — ops warned, next job reassignment suggested' },
-                { event: 'dvir.submitted', desc: 'Pre/post-trip inspection submitted — defect report parsed, ops notified if fail' },
-                { event: 'route.deviation', desc: 'Driver off planned route — agent checks for disruption or unauthorised diversion' },
-                { event: 'cargo.sensor', desc: 'Cargo sensor reading — cold chain or security alert if threshold breached' },
-                { event: 'trailer.disconnect', desc: 'Trailer disconnected unexpectedly — cargo theft prevention module alerted' },
-                { event: 'panic.button', desc: 'Driver panic button pressed — emergency protocol, ops called immediately' },
-              ]},
-              { name: 'WMS', cat: 'WMS', color: '#f59e0b', events: [
-                { event: 'shipment.ready', desc: 'Load confirmed ready for collection — driver dispatched, ETA calculated' },
-                { event: 'shipment.delayed', desc: 'Loading delayed at warehouse — downstream SLA breach risk assessed' },
-                { event: 'goods.received', desc: 'Delivery confirmed received by warehouse — POD auto-generated' },
-                { event: 'goods.rejected', desc: 'Delivery refused or short — incident logged, carrier notified' },
-                { event: 'picking.started', desc: 'Order pick commenced — collection window opens, driver pre-alert sent' },
-                { event: 'picking.completed', desc: 'Order pick complete — vehicle loading slot confirmed' },
-                { event: 'dock.allocated', desc: 'Loading dock assigned — driver directed to correct bay via app' },
-                { event: 'stock.discrepancy', desc: 'Load quantity differs from manifest — compliance check, invoice flagged' },
-                { event: 'hazmat.flagged', desc: 'Hazardous goods on load — ADR module triggered, driver certification checked' },
-                { event: 'temperature.zone', desc: 'Cold zone departure logged — cold chain module records handoff time' },
-              ]},
-              { name: 'Sage / Xero', cat: 'Finance', color: '#a855f7', events: [
-                { event: 'invoice.created', desc: 'New carrier invoice — invoice recovery module queues for rate audit' },
-                { event: 'invoice.approved', desc: 'Invoice approved for payment — audit complete, no discrepancy found' },
-                { event: 'invoice.disputed', desc: 'Invoice disputed — recovery module logs amount, tracks to resolution' },
-                { event: 'payment.overdue', desc: 'Payment past due — cash flow forecast module updated' },
-                { event: 'credit.note.received', desc: 'Credit note from carrier — recovery module closes relevant dispute' },
-                { event: 'purchase.order.raised', desc: 'PO raised for haulage job — rate benchmark check triggered' },
-                { event: 'fuel.card.transaction', desc: 'Fuel card spend logged — fuel optimisation module reconciles vs route' },
-                { event: 'surcharge.applied', desc: 'Carrier surcharge added — benchmarking flags if above market rate' },
-                { event: 'period.close', desc: 'Month-end close — monthly performance report auto-generated' },
-                { event: 'budget.exceeded', desc: 'Transport budget threshold exceeded — cash flow forecast module alerted' },
-              ]},
-              { name: 'NHS / Retail SLA', cat: 'SLA', color: '#ef4444', events: [
-                { event: 'sla.booking.confirmed', desc: 'Delivery slot confirmed — SLA breach prediction begins tracking' },
-                { event: 'sla.window.approaching', desc: 'Delivery window 90 mins away — ETA vs SLA gap calculated, ops warned' },
-                { event: 'sla.window.missed', desc: 'Delivery outside booked window — penalty exposure calculated' },
-                { event: 'sla.penalty.raised', desc: 'Penalty charge issued — claims intelligence module logs and challenges' },
-                { event: 'sla.extension.granted', desc: 'Customer grants extension — SLA breach prediction recalculates' },
-                { event: 'booking.amended', desc: 'Customer changes delivery window — driver rerouted if needed' },
-                { event: 'booking.cancelled', desc: 'Customer cancels — job flagged for reassignment or return to depot' },
-                { event: 'pod.requested', desc: 'Customer requests POD — delivery confirmation pulled from driver app' },
-                { event: 'claims.opened', desc: 'Customer opens damage or shortage claim — claims intelligence activated' },
-                { event: 'performance.reviewed', desc: 'Customer sends monthly scorecard — carrier scorecard module ingests data' },
-              ]},
-              { name: 'DVSA / Compliance', cat: 'Compliance', color: '#f59e0b', events: [
-                { event: 'licence.check', desc: 'DVLA licence check result — driver eligibility confirmed or restriction flagged' },
-                { event: 'licence.expiry.alert', desc: 'Licence approaching expiry — 60-day and 14-day warnings sent to ops' },
-                { event: 'cpc.expiry.alert', desc: 'CPC qualification expiry approaching — training reminder sent' },
-                { event: 'tacho.download.due', desc: 'Tachograph download interval reached — compliance log updated' },
-                { event: 'tacho.infringement', desc: 'Tacho infringement identified — WTD breach module logs, legal exposure calculated' },
-                { event: 'prohibition.issued', desc: 'DVSA prohibition notice — vehicle grounded, fleet rescheduled' },
-                { event: 'mot.expiry.alert', desc: 'MOT expiry within 30 days — vehicle health module schedules service' },
-                { event: 'operator.licence.event', desc: 'Traffic Commissioner event — regulation monitor alerted' },
-                { event: 'roadworthiness.fail', desc: 'Roadworthiness check failed — vehicle removed, job reassigned' },
-                { event: 'annual.test.due', desc: 'Annual HGV test due — maintenance scheduling triggered' },
-              ]},
-              { name: 'Carrier / 3PL APIs', cat: 'Carrier', color: '#8a9099', events: [
-                { event: 'carrier.eta.update', desc: 'Carrier provides revised ETA — SLA breach prediction re-run' },
-                { event: 'carrier.breakdown', desc: 'Carrier reports breakdown — disruption analysis triggered, recovery options generated' },
-                { event: 'carrier.pod.uploaded', desc: 'Carrier uploads POD — delivery confirmed, invoice clearance authorised' },
-                { event: 'carrier.capacity.alert', desc: 'Carrier signals capacity issue — load consolidation module alerted' },
-                { event: 'carrier.rate.change', desc: 'Carrier updates rate card — benchmarking flags vs market rate' },
-                { event: 'carrier.driver.change', desc: 'Sub-contractor swaps driver — compliance re-checked for replacement' },
-                { event: 'carrier.delayed.departure', desc: 'Carrier departs late — ETA impact and SLA exposure calculated' },
-                { event: 'carrier.refused.load', desc: 'Carrier refuses collection — emergency dispatch, incident logged' },
-                { event: 'carrier.scorecard.due', desc: 'Monthly scorecard review — carrier performance data compiled' },
-                { event: 'carrier.invoice.disputed', desc: 'Dispute raised against carrier invoice — recovery module tracks to resolution' },
-              ]},
-            ]
-            const CAT_C = { TMS:'#3b82f6', Telematics:'#00e5b0', WMS:'#f59e0b', Finance:'#a855f7', SLA:'#ef4444', Compliance:'#f59e0b', Carrier:'#8a9099' }
-            return (
-              <div style={{ flex:1, overflowY:'auto', padding:'20px' }}>
-                <div style={{ marginBottom:16 }}>
-                  <div style={{ fontSize:11, fontFamily:'monospace', color:'#00e5b0', letterSpacing:'0.08em', marginBottom:4 }}>WEBHOOK INTEGRATIONS</div>
-                  <div style={{ fontSize:12, color:'#4a5260' }}>90 events across 9 systems. Connect via webhook URL — no new hardware or IT involvement required.</div>
-                </div>
-                <div style={{ display:'flex', flexWrap:'wrap', gap:6, marginBottom:20 }}>
-                  {SYSTEMS.map(s => (
-                    <div key={s.name} style={{ fontSize:10, fontFamily:'monospace', padding:'4px 10px', borderRadius:4, background:`${s.color}10`, border:`1px solid ${s.color}25`, color:s.color }}>
-                      {s.name} <span style={{ color:'#4a5260' }}>({s.events.length})</span>
-                    </div>
-                  ))}
-                </div>
-                {SYSTEMS.map(sys => (
-                  <div key={sys.name} style={{ marginBottom:12, border:'1px solid rgba(255,255,255,0.06)', borderRadius:8, overflow:'hidden' }}>
-                    <div style={{ padding:'10px 14px', background:`${sys.color}08`, borderBottom:'1px solid rgba(255,255,255,0.05)', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-                      <span style={{ fontSize:11, fontFamily:'monospace', color:sys.color, fontWeight:600 }}>{sys.name}</span>
-                      <span style={{ fontSize:9, fontFamily:'monospace', padding:'2px 6px', border:`1px solid ${CAT_C[sys.cat]}30`, borderRadius:3, color:CAT_C[sys.cat] }}>{sys.cat}</span>
-                    </div>
-                    {sys.events.map((ev, i) => (
-                      <div key={ev.event} style={{ padding:'7px 14px', borderBottom: i < sys.events.length-1 ? '1px solid rgba(255,255,255,0.03)' : 'none', display:'flex', gap:12, alignItems:'flex-start' }}>
-                        <code style={{ fontSize:9, fontFamily:'monospace', color:sys.color, background:`${sys.color}10`, padding:'2px 6px', borderRadius:3, flexShrink:0, marginTop:1, whiteSpace:'nowrap' }}>{ev.event}</code>
-                        <span style={{ fontSize:11, color:'#8a9099', lineHeight:1.5 }}>{ev.desc}</span>
-                      </div>
-                    ))}
-                  </div>
-                ))}
-              </div>
-            )
-          })()}
-
           {/* ── APPROVALS TAB ──────────────────────────────────────────────── */}
           {activeTab === 'approvals' && (
             <div style={{ flex:1, overflowY:'auto', padding:'20px' }}>
+
+              {/* ── ACTIVE FLEET — always visible at top ── */}
+              <div style={{ marginBottom:20 }}>
+                <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:10 }}>
+                  <div style={{ fontSize:10, color:'#00e5b0', fontFamily:'monospace', fontWeight:700, letterSpacing:'0.08em' }}>ACTIVE FLEET</div>
+                  <button onClick={loadFleet} style={{ background:'none', border:'none', color:'#4a5260', fontSize:11, cursor:'pointer', fontFamily:'monospace' }}>↻ refresh</button>
+                </div>
+
+                {fleet.length === 0 ? (
+                  <div style={{ padding:'16px', background:'#111418', border:'1px solid rgba(255,255,255,0.06)', borderRadius:10, textAlign:'center' }}>
+                    <div style={{ fontSize:11, color:'#4a5260', marginBottom:4 }}>No drivers currently on shift</div>
+                    <div style={{ fontSize:10, color:'#4a5260', fontFamily:'monospace' }}>Fleet appears here when drivers are active</div>
+                  </div>
+                ) : (
+                  fleet.map(vehicle => (
+                    <div key={vehicle.vehicle_reg} style={{ background:'#111418', border:'1px solid rgba(255,255,255,0.08)', borderRadius:10, marginBottom:10, overflow:'hidden' }}>
+                      <div style={{ padding:'10px 14px', borderBottom:'1px solid rgba(255,255,255,0.05)', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+                        <div>
+                          <span style={{ fontFamily:'monospace', fontSize:13, color:'#e8eaed', fontWeight:700 }}>{vehicle.vehicle_reg}</span>
+                          {vehicle.driver_name && <span style={{ fontSize:12, color:'#8a9099', marginLeft:8 }}>{vehicle.driver_name}</span>}
+                          <span style={{ fontSize:10, color:'#4a5260', marginLeft:8, fontFamily:'monospace' }}>{vehicle.jobs.length} job{vehicle.jobs.length !== 1 ? 's' : ''}</span>
+                        </div>
+                        <button
+                          onClick={() => setCancelConfirm({ vehicle_reg: vehicle.vehicle_reg, cancel_all: true })}
+                          disabled={cancellingJob === vehicle.vehicle_reg}
+                          style={{ padding:'4px 10px', borderRadius:5, border:'1px solid rgba(239,68,68,0.3)', background:'rgba(239,68,68,0.07)', color:'#ef4444', fontSize:10, cursor:'pointer', fontFamily:'monospace' }}>
+                          Cancel all
+                        </button>
+                      </div>
+                      {vehicle.jobs.map(job => {
+                        const sc = { at_risk:'#ef4444', at_collection:'#3b82f6', loaded:'#00e5b0', at_customer:'#3b82f6', delayed:'#f59e0b', disrupted:'#ef4444', 'on-track':'#00e5b0', part_delivered:'#f59e0b' }[job.status] || '#8a9099'
+                        const hasGoods = ['loaded','at_customer','part_delivered'].includes(job.status)
+                        const isCurrent = ['at_collection','loaded','at_customer'].includes(job.status)
+                        return (
+                          <div key={job.ref} style={{ padding:'9px 14px', borderBottom:'1px solid rgba(255,255,255,0.03)', background: isCurrent ? 'rgba(59,130,246,0.03)' : 'transparent' }}>
+                            <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+                              <div style={{ width:6, height:6, borderRadius:'50%', background:sc, flexShrink:0 }}/>
+                              <div style={{ flex:1, minWidth:0 }}>
+                                <span style={{ fontFamily:'monospace', fontSize:12, color:'#e8eaed', fontWeight:600 }}>{job.ref}</span>
+                                <span style={{ fontSize:10, color:sc, fontFamily:'monospace', marginLeft:8 }}>{job.status.replace(/_/g,' ').toUpperCase()}</span>
+                                {isCurrent && <span style={{ fontSize:9, color:'#3b82f6', fontFamily:'monospace', marginLeft:6 }}>ACTIVE</span>}
+                                {job.alert && <div style={{ fontSize:10, color:'#f59e0b', marginTop:2 }}>⚠ {job.alert}</div>}
+                              </div>
+                              <button
+                                onClick={() => setCancelConfirm({ vehicle_reg: vehicle.vehicle_reg, ref: job.ref, cancel_all: false, hasGoods, isCurrent })}
+                                disabled={cancellingJob === job.ref}
+                                style={{ padding:'4px 10px', borderRadius:5, border:`1px solid ${hasGoods ? 'rgba(245,158,11,0.4)' : 'rgba(239,68,68,0.2)'}`, background:'transparent', color: hasGoods ? '#f59e0b' : '#ef4444', fontSize:10, cursor:'pointer', fontFamily:'monospace', flexShrink:0 }}>
+                                {cancellingJob === job.ref ? '...' : 'Cancel'}
+                              </button>
+                            </div>
+                            {hasGoods && (
+                              <div style={{ fontSize:10, color:'#f59e0b', marginTop:4, marginLeft:16 }}>
+                                ⚠ Goods on vehicle — driver will be told to return to depot
+                              </div>
+                            )}
+                          </div>
+                        )
+                      })}
+                    </div>
+                  ))
+                )}
+              </div>
+
+              <div style={{ height:1, background:'rgba(255,255,255,0.06)', marginBottom:20 }}/>
+
+              {/* ── UNASSIGNED JOBS QUEUE ── */}
+              {unassigned.length > 0 && (
+                <div style={{ marginBottom:20 }}>
+                  <div style={{ fontSize:10, color:'#f59e0b', fontFamily:'monospace', fontWeight:700, letterSpacing:'0.08em', marginBottom:10 }}>
+                    UNASSIGNED JOBS — {unassigned.length} waiting to be reassigned
+                  </div>
+                  {unassigned.map(job => (
+                    <div key={job.ref} style={{ background:'rgba(245,158,11,0.05)', border:'1px solid rgba(245,158,11,0.2)', borderRadius:10, marginBottom:8, overflow:'hidden' }}>
+                      <div style={{ padding:'10px 14px', display:'flex', alignItems:'center', gap:10 }}>
+                        <div style={{ flex:1, minWidth:0 }}>
+                          <span style={{ fontFamily:'monospace', fontSize:13, color:'#e8eaed', fontWeight:700 }}>{job.ref}</span>
+                          <span style={{ fontSize:11, color:'#8a9099', marginLeft:8 }}>was {job.original_vehicle}{job.original_driver ? ` · ${job.original_driver}` : ''}</span>
+                          {job.reason && <div style={{ fontSize:10, color:'#f59e0b', marginTop:2 }}>↳ {job.reason}</div>}
+                        </div>
+                        {reassignJobRef === job.ref ? (
+                          <div style={{ display:'flex', gap:6, alignItems:'center' }}>
+                            <select value={reassignTo} onChange={e => setReassignTo(e.target.value)}
+                              style={{ padding:'5px 8px', background:'#0a0c0e', border:'1px solid rgba(255,255,255,0.12)', borderRadius:5, color: reassignTo ? '#e8eaed' : '#4a5260', fontSize:11, outline:'none', cursor:'pointer', fontFamily:'IBM Plex Sans' }}>
+                              <option value=''>Pick driver...</option>
+                              {fleet.map(v => (
+                                <option key={v.vehicle_reg} value={v.vehicle_reg}>
+                                  {v.vehicle_reg}{v.driver_name ? ` — ${v.driver_name}` : ''}
+                                </option>
+                              ))}
+                            </select>
+                            <button
+                              onClick={() => reassignTo && reassignUnassigned(job.ref, reassignTo, job.reason)}
+                              disabled={!reassignTo || cancellingJob === job.ref}
+                              style={{ padding:'5px 10px', borderRadius:5, border:'none', background: reassignTo ? '#00e5b0' : 'rgba(0,229,176,0.2)', color: reassignTo ? '#000' : '#4a5260', fontSize:11, fontWeight:700, cursor: reassignTo ? 'pointer' : 'default', fontFamily:'monospace', whiteSpace:'nowrap' }}>
+                              {cancellingJob === job.ref ? '...' : 'Assign →'}
+                            </button>
+                            <button onClick={() => { setReassignJobRef(null); setReassignTo('') }}
+                              style={{ padding:'5px 8px', borderRadius:5, border:'1px solid rgba(255,255,255,0.08)', background:'transparent', color:'#4a5260', fontSize:11, cursor:'pointer' }}>
+                              ✕
+                            </button>
+                          </div>
+                        ) : (
+                          <button onClick={() => { setReassignJobRef(job.ref); setReassignTo('') }}
+                            style={{ padding:'5px 12px', borderRadius:5, border:'1px solid rgba(0,229,176,0.3)', background:'rgba(0,229,176,0.06)', color:'#00e5b0', fontSize:11, cursor:'pointer', fontFamily:'monospace', whiteSpace:'nowrap' }}>
+                            Assign to driver
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                  <div style={{ height:1, background:'rgba(255,255,255,0.06)', marginBottom:20, marginTop:10 }}/>
+                </div>
+              )}
 
               {/* Session executed actions */}
               {localApprovals.length > 0 && (
@@ -2004,6 +2135,73 @@ export default function DashboardPage() {
                 </div>
               ) : null}
 
+              {/* ── CANCEL JOB CONFIRM MODAL ── */}
+              {cancelConfirm && (
+                <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.75)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:1001 }}>
+                  <div style={{ background:'#111418', border:'1px solid rgba(255,255,255,0.12)', borderRadius:12, padding:'24px', maxWidth:420, width:'90%' }}>
+                    <div style={{ fontFamily:'monospace', fontSize:11, color:'#ef4444', letterSpacing:'0.08em', marginBottom:12 }}>
+                      {cancelConfirm.cancel_all ? 'CANCEL ALL JOBS' : `CANCEL JOB — ${cancelConfirm.ref}`}
+                    </div>
+                    <div style={{ fontSize:13, color:'#e8eaed', marginBottom:6 }}>
+                      {cancelConfirm.cancel_all
+                        ? `Remove all active jobs from ${cancelConfirm.vehicle_reg}.`
+                        : cancelConfirm.hasGoods
+                          ? `⚠ ${cancelConfirm.ref} — driver has goods on vehicle. They will be instructed to return to depot.`
+                          : `Remove ${cancelConfirm.ref} from ${cancelConfirm.vehicle_reg}.`}
+                    </div>
+                    {cancelConfirm.hasGoods && (
+                      <div style={{ padding:'10px 12px', background:'rgba(245,158,11,0.08)', border:'1px solid rgba(245,158,11,0.25)', borderRadius:7, marginBottom:10, fontSize:12, color:'#f59e0b' }}>
+                        Driver is mid-job with cargo on board. Cancelling will SMS them to return goods to depot. Make sure there is somewhere for them to return to.
+                      </div>
+                    )}
+                    <div style={{ fontSize:12, color:'#8a9099', marginBottom:14 }}>Driver app updates within 60 seconds automatically.</div>
+
+                    {/* Reassign to dropdown */}
+                    {fleet.filter(v => v.vehicle_reg !== cancelConfirm.vehicle_reg).length > 0 && (
+                      <div style={{ marginBottom:12 }}>
+                        <div style={{ fontSize:11, color:'#4a5260', fontFamily:'monospace', marginBottom:6 }}>REASSIGN TO ANOTHER DRIVER — optional</div>
+                        <select
+                          value={reassignTo}
+                          onChange={e => setReassignTo(e.target.value)}
+                          style={{ width:'100%', padding:'9px 12px', background:'#0a0c0e', border:'1px solid rgba(255,255,255,0.1)', borderRadius:6, color: reassignTo ? '#e8eaed' : '#4a5260', fontSize:12, outline:'none', fontFamily:'IBM Plex Sans', cursor:'pointer' }}>
+                          <option value=''>No reassignment — just cancel</option>
+                          {fleet.filter(v => v.vehicle_reg !== cancelConfirm.vehicle_reg).map(v => (
+                            <option key={v.vehicle_reg} value={v.vehicle_reg}>
+                              {v.vehicle_reg}{v.driver_name ? ` — ${v.driver_name}` : ''} ({v.jobs.length} active job{v.jobs.length !== 1 ? 's' : ''})
+                            </option>
+                          ))}
+                        </select>
+                        {reassignTo && (
+                          <div style={{ fontSize:11, color:'#00e5b0', marginTop:5 }}>
+                            ✓ Job{cancelConfirm.cancel_all ? 's' : ''} will be pushed to {reassignTo}'s app and they'll receive an SMS
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    <input
+                      value={cancelReason}
+                      onChange={e => setCancelReason(e.target.value)}
+                      placeholder='Reason — e.g. Driver unwell, reassigned to BK22 ABC (optional)'
+                      style={{ width:'100%', padding:'10px 12px', background:'#0a0c0e', border:'1px solid rgba(255,255,255,0.1)', borderRadius:6, color:'#e8eaed', fontSize:12, outline:'none', marginBottom:14, boxSizing:'border-box', fontFamily:'IBM Plex Sans' }}
+                    />
+                    <div style={{ display:'flex', gap:8 }}>
+                      <button
+                        onClick={() => cancelJob(cancelConfirm)}
+                        disabled={!!cancellingJob}
+                        style={{ flex:1, padding:'10px', background: reassignTo ? '#00e5b0' : '#ef4444', border:'none', borderRadius:6, color: reassignTo ? '#000' : '#fff', fontWeight:600, fontSize:12, cursor:'pointer', fontFamily:'monospace' }}>
+                        {cancellingJob ? '...' : reassignTo ? `Reassign to ${reassignTo}` : 'Confirm cancel'}
+                      </button>
+                      <button
+                        onClick={() => { setCancelConfirm(null); setCancelReason(''); setReassignTo('') }}
+                        style={{ padding:'10px 16px', background:'transparent', border:'1px solid rgba(255,255,255,0.1)', borderRadius:6, color:'#8a9099', fontSize:12, cursor:'pointer', fontFamily:'monospace' }}>
+                        Keep job
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* ── CANCEL ASSESSMENT MODAL ── */}
               {cancelAssessment && (
                 <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.7)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:1000 }}>
@@ -2071,6 +2269,192 @@ export default function DashboardPage() {
               )}
             </div>
           )}
+          {/* ── INTEGRATIONS TAB ───────────────────────────────────────────── */}
+          {activeTab === 'integrations' && (() => {
+            const sys = WEBHOOK_SYSTEMS[whSystem]
+            const evtConfig = sys?.events[whEvent]
+            const currentPayload = getWhPayload()
+            const SEV_C = { CRITICAL:'#ef4444', HIGH:'#f59e0b', MEDIUM:'#3b82f6', LOW:'#8a9099' }
+            const SEV_BG2 = { CRITICAL:'rgba(239,68,68,0.12)', HIGH:'rgba(245,158,11,0.12)', MEDIUM:'rgba(59,130,246,0.12)', LOW:'rgba(138,144,153,0.12)' }
+
+            return (
+              <div style={{ flex:1, overflowY:'auto', padding:'20px', display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, alignItems:'start' }}>
+
+                {/* ── LEFT: TEST CONSOLE ── */}
+                <div>
+                  <div style={{ marginBottom:16, padding:'12px 14px', background:'rgba(59,130,246,0.06)', border:'1px solid rgba(59,130,246,0.18)', borderRadius:9 }}>
+                    <div style={{ fontSize:12, color:'#3b82f6', fontWeight:600, marginBottom:4 }}>What is this?</div>
+                    <div style={{ fontSize:12, color:'#8a9099', lineHeight:1.6 }}>
+                      This is a <strong style={{color:'#e8eaed'}}>setup and testing tool</strong> for connecting DisruptionHub to your existing systems — things like your TMS (e.g. Mandata), vehicle tracking (e.g. Webfleet, Samsara), or warehouse systems. When those systems send an alert, DisruptionHub picks it up, analyses it with AI, and notifies ops automatically. Use the console below to test that each connection is working correctly. Your drivers don't see this.
+                    </div>
+                  </div>
+                  <div style={{ fontSize:10, color:'#4a5260', fontFamily:'monospace', marginBottom:14 }}>// TEST CONSOLE — simulate a system event and trigger the full AI + SMS chain</div>
+
+                  {/* System selector */}
+                  <div style={{ marginBottom:14 }}>
+                    <div style={{ fontSize:9, fontFamily:'monospace', color:'#4a5260', letterSpacing:'0.08em', marginBottom:8 }}>SELECT SYSTEM</div>
+                    <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
+                      {Object.entries(WEBHOOK_SYSTEMS).map(([key, s]) => (
+                        <button key={key} onClick={() => {
+                          setWhSystem(key)
+                          const firstEvt = Object.keys(s.events)[0]
+                          setWhEvent(firstEvt)
+                          setWhPayload(null)
+                          setWhResult(null)
+                        }}
+                          style={{ padding:'6px 12px', borderRadius:6, border: whSystem===key ? `1px solid ${s.color}` : '1px solid rgba(255,255,255,0.08)', background: whSystem===key ? `${s.color}15` : 'transparent', color: whSystem===key ? s.color : '#4a5260', fontSize:11, cursor:'pointer', fontFamily:'monospace', transition:'all 0.15s' }}>
+                          {s.icon} {s.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Event selector */}
+                  <div style={{ marginBottom:14 }}>
+                    <div style={{ fontSize:9, fontFamily:'monospace', color:'#4a5260', letterSpacing:'0.08em', marginBottom:8 }}>SELECT EVENT TYPE</div>
+                    <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
+                      {sys && Object.entries(sys.events).map(([key, evt]) => (
+                        <button key={key} onClick={() => { setWhEvent(key); setWhPayload(null); setWhResult(null) }}
+                          style={{ padding:'5px 11px', borderRadius:5, border: whEvent===key ? `1px solid ${sys.color}80` : '1px solid rgba(255,255,255,0.07)', background: whEvent===key ? `${sys.color}12` : '#111418', color: whEvent===key ? sys.color : '#8a9099', fontSize:11, cursor:'pointer', fontFamily:'monospace', transition:'all 0.15s' }}>
+                          {evt.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Payload fields */}
+                  {evtConfig && (
+                    <div style={{ marginBottom:14 }}>
+                      <div style={{ fontSize:9, fontFamily:'monospace', color:'#4a5260', letterSpacing:'0.08em', marginBottom:8 }}>PAYLOAD — edit fields then fire</div>
+                      <div style={{ background:'#111418', border:'1px solid rgba(255,255,255,0.08)', borderRadius:8, overflow:'hidden' }}>
+                        {Object.entries(currentPayload).map(([key, val], i, arr) => (
+                          <div key={key} style={{ display:'flex', alignItems:'center', padding:'8px 12px', borderBottom: i < arr.length-1 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
+                            <span style={{ fontSize:10, fontFamily:'monospace', color:'#4a5260', width:160, flexShrink:0 }}>{key.replace(/_/g,' ')}</span>
+                            <input
+                              defaultValue={String(val)}
+                              onChange={e => {
+                                const updated = { ...getWhPayload(), [key]: isNaN(e.target.value) ? e.target.value : (e.target.value === '' ? '' : Number(e.target.value)) }
+                                setWhPayload(updated)
+                              }}
+                              style={{ flex:1, background:'transparent', border:'none', outline:'none', color:'#e8eaed', fontSize:11, fontFamily:'IBM Plex Mono, monospace' }}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Fire button */}
+                  <button onClick={fireWebhook} disabled={whFiring}
+                    style={{ width:'100%', padding:'12px', background: whFiring ? '#111418' : sys?.color || '#00e5b0', border: whFiring ? `1px solid ${sys?.color||'#00e5b0'}40` : 'none', borderRadius:7, color: whFiring ? (sys?.color||'#00e5b0') : '#000', fontWeight:700, fontSize:13, cursor: whFiring ? 'default' : 'pointer', fontFamily:'monospace', letterSpacing:'0.04em', transition:'all 0.2s', marginBottom:14 }}>
+                    {whFiring ? (
+                      <span style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:8 }}>
+                        <span style={{ width:12, height:12, border:'2px solid currentColor', borderTopColor:'transparent', borderRadius:'50%', display:'inline-block', animation:'spin 0.8s linear infinite' }} />
+                        FIRING WEBHOOK...
+                      </span>
+                    ) : `${sys?.icon || '⚡'} FIRE ${sys?.label?.toUpperCase() || ''} → ${evtConfig?.label?.toUpperCase() || ''}`}
+                  </button>
+
+                  {/* Result */}
+                  {whResult && !whFiring && (
+                    <div style={{ border: whResult.error ? '1px solid rgba(239,68,68,0.25)' : `1px solid ${SEV_C[whResult.severity]||'#00e5b0'}30`, borderRadius:8, overflow:'hidden' }}>
+                      {/* Result header */}
+                      <div style={{ padding:'10px 14px', background: whResult.error ? 'rgba(239,68,68,0.08)' : `${SEV_BG2[whResult.severity]||'rgba(0,229,176,0.06)'}`, display:'flex', alignItems:'center', gap:10, flexWrap:'wrap' }}>
+                        {whResult.error ? (
+                          <span style={{ fontSize:11, fontFamily:'monospace', color:'#ef4444' }}>✗ ERROR — {whResult.error}</span>
+                        ) : (
+                          <>
+                            <span style={{ fontSize:11, fontFamily:'monospace', color: SEV_C[whResult.severity]||'#00e5b0', fontWeight:700, padding:'2px 8px', borderRadius:4, background:`${SEV_C[whResult.severity]||'#00e5b0'}15`, border:`1px solid ${SEV_C[whResult.severity]||'#00e5b0'}30` }}>{whResult.severity}</span>
+                            {whResult.financial_impact > 0 && <span style={{ fontSize:11, fontFamily:'monospace', color:'#00e5b0' }}>£{whResult.financial_impact.toLocaleString()}</span>}
+                            <span style={{ fontSize:10, fontFamily:'monospace', color: whResult.sms_sent ? '#00e5b0' : '#f59e0b' }}>
+                              {whResult.sms_sent ? '✓ SMS FIRED TO OPS' : whResult.simulated ? '◎ SIMULATED — no ops phone' : '✗ SMS FAILED'}
+                            </span>
+                          </>
+                        )}
+                      </div>
+                      {/* AI analysis preview */}
+                      {whResult.analysis && (
+                        <div style={{ padding:'12px 14px', maxHeight:280, overflowY:'auto' }}>
+                          <AgentResponse text={whResult.analysis} />
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* ── RIGHT: WEBHOOK AUDIT LOG ── */}
+                <div>
+                  <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:14 }}>
+                    <div style={{ fontSize:10, color:'#4a5260', fontFamily:'monospace' }}>// WEBHOOK AUDIT LOG</div>
+                    <button onClick={loadWebhookLog} disabled={whLogLoading}
+                      style={{ fontSize:10, color:'#4a5260', background:'none', border:'1px solid rgba(255,255,255,0.06)', borderRadius:4, padding:'3px 8px', cursor:'pointer', fontFamily:'monospace' }}>
+                      {whLogLoading ? '...' : 'REFRESH ↺'}
+                    </button>
+                  </div>
+
+                  {whLog.length === 0 && !whLogLoading && (
+                    <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:'40px 20px', gap:10, opacity:0.3 }}>
+                      <div style={{ fontSize:28, color:'#4a5260' }}>⚡</div>
+                      <div style={{ fontSize:12, color:'#4a5260', textAlign:'center' }}>No webhook events yet</div>
+                      <div style={{ fontSize:11, color:'#4a5260', textAlign:'center', maxWidth:200 }}>Fire a webhook from the console to see the full audit trail here</div>
+                    </div>
+                  )}
+
+                  {whLogLoading && whLog.length === 0 && (
+                    <div style={{ display:'flex', alignItems:'center', gap:8, padding:'16px 0' }}>
+                      <div style={{ width:14, height:14, border:'2px solid #00e5b0', borderTopColor:'transparent', borderRadius:'50%', animation:'spin 0.8s linear infinite' }} />
+                      <span style={{ fontSize:11, color:'#4a5260', fontFamily:'monospace' }}>Loading log...</span>
+                    </div>
+                  )}
+
+                  {whLog.map(entry => {
+                    const sysConfig = WEBHOOK_SYSTEMS[entry.system_name]
+                    const sysColor = sysConfig?.color || '#8a9099'
+                    const sevColor = SEV_C[entry.severity] || '#8a9099'
+                    const timeStr = entry.created_at ? new Date(entry.created_at).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'}) : ''
+                    const dateStr = entry.created_at ? new Date(entry.created_at).toLocaleDateString('en-GB',{day:'numeric',month:'short'}) : ''
+                    return (
+                      <div key={entry.id} style={{ padding:'10px 12px', background:'#111418', borderRadius:7, border:'1px solid rgba(255,255,255,0.06)', marginBottom:6 }}>
+                        <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:5, flexWrap:'wrap' }}>
+                          {/* System badge */}
+                          <span style={{ fontSize:10, fontFamily:'monospace', color:sysColor, background:`${sysColor}12`, border:`1px solid ${sysColor}25`, padding:'2px 7px', borderRadius:4 }}>
+                            {sysConfig?.icon || '⚡'} {entry.system_name?.toUpperCase()}
+                          </span>
+                          {/* Severity badge */}
+                          {entry.severity && (
+                            <span style={{ fontSize:10, fontFamily:'monospace', color:sevColor, background:`${sevColor}12`, border:`1px solid ${sevColor}25`, padding:'2px 7px', borderRadius:4 }}>
+                              {entry.severity}
+                            </span>
+                          )}
+                          {/* Financial impact */}
+                          {entry.financial_impact > 0 && (
+                            <span style={{ fontSize:10, fontFamily:'monospace', color:'#00e5b0' }}>£{Number(entry.financial_impact).toLocaleString()}</span>
+                          )}
+                          {/* SMS status */}
+                          <span style={{ fontSize:9, fontFamily:'monospace', color: entry.sms_fired ? '#00e5b0' : entry.simulated ? '#4a5260' : '#f59e0b', marginLeft:'auto' }}>
+                            {entry.sms_fired ? '✓ SMS SENT' : entry.simulated ? '◎ SIM' : '— SMS NOT SENT'}
+                          </span>
+                        </div>
+                        <div style={{ fontSize:11, color:'#e8eaed', marginBottom:3 }}>
+                          {entry.event_type?.replace(/_/g,' ')}
+                        </div>
+                        {entry.payload && (
+                          <div style={{ fontSize:10, color:'#4a5260', fontFamily:'monospace', marginBottom:3 }}>
+                            {entry.payload.vehicle_reg && `${entry.payload.vehicle_reg} · `}
+                            {entry.payload.location && `${entry.payload.location} · `}
+                            {entry.payload.consignee && entry.payload.consignee}
+                          </div>
+                        )}
+                        <div style={{ fontSize:9, color:'#4a5260', fontFamily:'monospace' }}>{dateStr} {timeStr}</div>
+                      </div>
+                    )
+                  })}
+                </div>
+
+              </div>
+            )
+          })()}
+
         </div>
       </div>
     </div>
