@@ -424,7 +424,7 @@ export default function HomePage() {
         <div style={{ maxWidth: 680, margin: '0 auto', border: '1px solid var(--accent)', borderRadius: 10, padding: '36px', background: 'rgba(0,229,176,0.03)', position: 'relative' }}>
           <div style={{ position: 'absolute', top: -12, left: '50%', transform: 'translateX(-50%)', background: 'var(--accent)', color: '#000', fontSize: 11, fontWeight: 600, padding: '3px 14px', borderRadius: 3, fontFamily: 'var(--font-mono)', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>EVERYTHING INCLUDED</div>
           <div style={{ fontSize: 14, color: 'var(--text2)', marginBottom: 4 }}>DisruptionHub</div>
-          <div style={{ fontSize: 48, fontWeight: 600, fontFamily: 'var(--font-mono)', color: 'var(--text)', marginBottom: 2, letterSpacing: '-0.03em' }}>£399<span style={{ fontSize: 16, color: 'var(--text2)', fontWeight: 400 }}/month</span></div>
+          <div style={{ fontSize: 48, fontWeight: 600, fontFamily: 'var(--font-mono)', color: 'var(--text)', marginBottom: 2, letterSpacing: '-0.03em' }}>£399<span style={{ fontSize: 16, color: 'var(--text2)', fontWeight: 400 }}>/month</span></div>
           <div style={{ fontSize: 13, color: 'var(--text2)', marginBottom: 24, lineHeight: 1.5 }}>One plan. Every feature. No decision to make.</div>
           <div style={{ borderTop: '1px solid var(--border)', paddingTop: 22, marginBottom: 28, columns: 2, columnGap: 32 }}>
                   <div style={{ fontSize: 13, color: 'var(--text2)', padding: '4px 0', display: 'flex', gap: 9, lineHeight: 1.5 }}><span style={{ color: 'var(--accent)', flexShrink: 0 }}>✓</span> Live disruption agent — unlimited analyses</div>
