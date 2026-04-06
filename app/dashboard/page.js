@@ -1513,6 +1513,7 @@ export default function DashboardPage() {
               APPROVALS {pendingApprovals.length > 0 ? `(${pendingApprovals.length})` : ''}
             </button>
             <button style={TAB_STYLE(activeTab==='scenarios')} onClick={() => setActiveTab('scenarios')}>SCENARIOS</button>
+            <button style={TAB_STYLE(activeTab==='setup')} onClick={() => setActiveTab('setup')}>SETUP</button>
             <div style={{ marginLeft:'auto', display:'flex', alignItems:'center', gap:8 }}>
               <div style={{ width:7, height:7, borderRadius:'50%', background: loading ? '#f59e0b' : '#00e5b0', animation: loading ? 'pulse 1s infinite' : 'none' }} />
               <span style={{ fontFamily:'monospace', fontSize:10, color:'#4a5260' }}>{loading ? 'ANALYSING...' : 'AGENT READY'}</span>
@@ -1765,6 +1766,150 @@ export default function DashboardPage() {
               )}
             </div>
           )}
+
+          {/* ── SETUP TAB ──────────────────────────────────────────────────── */}
+          {activeTab === 'setup' && (() => {
+            const SYSTEMS = [
+              { name: 'Mandata TMS', cat: 'TMS', color: '#3b82f6', events: [
+                { event: 'job.created', desc: 'New job booked — triggers shipment record creation and driver pre-alert' },
+                { event: 'job.updated', desc: 'Job details changed — ETA, load, or route updated by planner' },
+                { event: 'job.cancelled', desc: 'Job cancelled — ops alerted, driver notified, reassign queue triggered' },
+                { event: 'job.completed', desc: 'POD received — auto-closes incident, logs delivery confirmation' },
+                { event: 'driver.assigned', desc: 'Driver allocated to job — pre-shift check triggered if within 2hrs' },
+                { event: 'driver.unassigned', desc: 'Driver removed from job — unassigned queue flagged on dashboard' },
+                { event: 'eta.updated', desc: 'ETA revised by planner — SLA breach prediction re-run automatically' },
+                { event: 'load.updated', desc: 'Load details changed — ADR / cold chain checks re-triggered if applicable' },
+                { event: 'subcontractor.booked', desc: 'Sub-contractor allocated — trust score check and rate benchmark triggered' },
+                { event: 'invoice.raised', desc: 'Invoice generated — invoice recovery module notified for rate audit' },
+              ]},
+              { name: 'Microlise TMS', cat: 'TMS', color: '#3b82f6', events: [
+                { event: 'trip.started', desc: 'Vehicle departs depot — live tracking begins, driver app pre-fill available' },
+                { event: 'trip.completed', desc: 'Trip ended at depot — driver hours logged, tacho data available' },
+                { event: 'trip.exception', desc: 'Exception flagged (late, wrong route, idle) — agent analysis triggered' },
+                { event: 'vehicle.speeding', desc: 'Speed threshold exceeded — compliance log entry, driver risk score updated' },
+                { event: 'vehicle.idling', desc: 'Excessive idle detected — fuel optimisation module notified' },
+                { event: 'driver.hours.alert', desc: 'WTD hours approaching limit — ops SMS sent, job reassign options generated' },
+                { event: 'geofence.breach', desc: 'Vehicle outside expected zone — disruption analysis triggered' },
+                { event: 'maintenance.due', desc: 'Service interval reached — vehicle health module alerted' },
+                { event: 'defect.reported', desc: 'Pre-shift defect logged — departure blocked until ops confirms clearance' },
+                { event: 'poa.updated', desc: 'POA record updated — WTD compliance recalculated across fleet' },
+              ]},
+              { name: 'Webfleet Telematics', cat: 'Telematics', color: '#00e5b0', events: [
+                { event: 'position.update', desc: 'GPS position report — ETA recalculated with 1.5x UK road buffer applied' },
+                { event: 'harsh.braking', desc: 'Harsh braking event — driver safety score updated, fleet manager notified' },
+                { event: 'harsh.cornering', desc: 'Cornering event flagged — added to driver retention risk profile' },
+                { event: 'temperature.alert', desc: 'Reefer temperature deviation — cold chain module triggered immediately' },
+                { event: 'temperature.restored', desc: 'Temperature back in range — cold chain incident closed, log updated' },
+                { event: 'vehicle.stopped', desc: 'Unscheduled stop detected — disruption check if stop exceeds 15 minutes' },
+                { event: 'driver.login', desc: 'Driver logged into DRIVR terminal — shift start confirmed, hours tracking begins' },
+                { event: 'driver.logout', desc: 'Driver logged out — shift end confirmed, WTD compliance check run' },
+                { event: 'fuel.low', desc: 'Fuel level below threshold — fuel optimisation module flags nearest depot' },
+                { event: 'crash.detected', desc: 'Impact detected — emergency protocol triggered, 999 prompt sent to ops' },
+              ]},
+              { name: 'Samsara Telematics', cat: 'Telematics', color: '#00e5b0', events: [
+                { event: 'alert.speeding', desc: 'Speed alert — compliance log updated, driver risk assessment re-run' },
+                { event: 'alert.seatbelt', desc: 'Seatbelt not worn — safety incident logged, driver notified via app' },
+                { event: 'alert.distraction', desc: 'AI camera distraction flag — safety score impact, ops informed' },
+                { event: 'hos.violation', desc: 'Hours of service violation — WTD breach module triggered, legal log entry' },
+                { event: 'hos.approaching', desc: 'Driver approaching HOS limit — ops warned, next job reassignment suggested' },
+                { event: 'dvir.submitted', desc: 'Pre/post-trip inspection submitted — defect report parsed, ops notified if fail' },
+                { event: 'route.deviation', desc: 'Driver off planned route — agent checks for disruption or unauthorised diversion' },
+                { event: 'cargo.sensor', desc: 'Cargo sensor reading — cold chain or security alert if threshold breached' },
+                { event: 'trailer.disconnect', desc: 'Trailer disconnected unexpectedly — cargo theft prevention module alerted' },
+                { event: 'panic.button', desc: 'Driver panic button pressed — emergency protocol, ops called immediately' },
+              ]},
+              { name: 'WMS', cat: 'WMS', color: '#f59e0b', events: [
+                { event: 'shipment.ready', desc: 'Load confirmed ready for collection — driver dispatched, ETA calculated' },
+                { event: 'shipment.delayed', desc: 'Loading delayed at warehouse — downstream SLA breach risk assessed' },
+                { event: 'goods.received', desc: 'Delivery confirmed received by warehouse — POD auto-generated' },
+                { event: 'goods.rejected', desc: 'Delivery refused or short — incident logged, carrier notified' },
+                { event: 'picking.started', desc: 'Order pick commenced — collection window opens, driver pre-alert sent' },
+                { event: 'picking.completed', desc: 'Order pick complete — vehicle loading slot confirmed' },
+                { event: 'dock.allocated', desc: 'Loading dock assigned — driver directed to correct bay via app' },
+                { event: 'stock.discrepancy', desc: 'Load quantity differs from manifest — compliance check, invoice flagged' },
+                { event: 'hazmat.flagged', desc: 'Hazardous goods on load — ADR module triggered, driver certification checked' },
+                { event: 'temperature.zone', desc: 'Cold zone departure logged — cold chain module records handoff time' },
+              ]},
+              { name: 'Sage / Xero', cat: 'Finance', color: '#a855f7', events: [
+                { event: 'invoice.created', desc: 'New carrier invoice — invoice recovery module queues for rate audit' },
+                { event: 'invoice.approved', desc: 'Invoice approved for payment — audit complete, no discrepancy found' },
+                { event: 'invoice.disputed', desc: 'Invoice disputed — recovery module logs amount, tracks to resolution' },
+                { event: 'payment.overdue', desc: 'Payment past due — cash flow forecast module updated' },
+                { event: 'credit.note.received', desc: 'Credit note from carrier — recovery module closes relevant dispute' },
+                { event: 'purchase.order.raised', desc: 'PO raised for haulage job — rate benchmark check triggered' },
+                { event: 'fuel.card.transaction', desc: 'Fuel card spend logged — fuel optimisation module reconciles vs route' },
+                { event: 'surcharge.applied', desc: 'Carrier surcharge added — benchmarking flags if above market rate' },
+                { event: 'period.close', desc: 'Month-end close — monthly performance report auto-generated' },
+                { event: 'budget.exceeded', desc: 'Transport budget threshold exceeded — cash flow forecast module alerted' },
+              ]},
+              { name: 'NHS / Retail SLA', cat: 'SLA', color: '#ef4444', events: [
+                { event: 'sla.booking.confirmed', desc: 'Delivery slot confirmed — SLA breach prediction begins tracking' },
+                { event: 'sla.window.approaching', desc: 'Delivery window 90 mins away — ETA vs SLA gap calculated, ops warned' },
+                { event: 'sla.window.missed', desc: 'Delivery outside booked window — penalty exposure calculated' },
+                { event: 'sla.penalty.raised', desc: 'Penalty charge issued — claims intelligence module logs and challenges' },
+                { event: 'sla.extension.granted', desc: 'Customer grants extension — SLA breach prediction recalculates' },
+                { event: 'booking.amended', desc: 'Customer changes delivery window — driver rerouted if needed' },
+                { event: 'booking.cancelled', desc: 'Customer cancels — job flagged for reassignment or return to depot' },
+                { event: 'pod.requested', desc: 'Customer requests POD — delivery confirmation pulled from driver app' },
+                { event: 'claims.opened', desc: 'Customer opens damage or shortage claim — claims intelligence activated' },
+                { event: 'performance.reviewed', desc: 'Customer sends monthly scorecard — carrier scorecard module ingests data' },
+              ]},
+              { name: 'DVSA / Compliance', cat: 'Compliance', color: '#f59e0b', events: [
+                { event: 'licence.check', desc: 'DVLA licence check result — driver eligibility confirmed or restriction flagged' },
+                { event: 'licence.expiry.alert', desc: 'Licence approaching expiry — 60-day and 14-day warnings sent to ops' },
+                { event: 'cpc.expiry.alert', desc: 'CPC qualification expiry approaching — training reminder sent' },
+                { event: 'tacho.download.due', desc: 'Tachograph download interval reached — compliance log updated' },
+                { event: 'tacho.infringement', desc: 'Tacho infringement identified — WTD breach module logs, legal exposure calculated' },
+                { event: 'prohibition.issued', desc: 'DVSA prohibition notice — vehicle grounded, fleet rescheduled' },
+                { event: 'mot.expiry.alert', desc: 'MOT expiry within 30 days — vehicle health module schedules service' },
+                { event: 'operator.licence.event', desc: 'Traffic Commissioner event — regulation monitor alerted' },
+                { event: 'roadworthiness.fail', desc: 'Roadworthiness check failed — vehicle removed, job reassigned' },
+                { event: 'annual.test.due', desc: 'Annual HGV test due — maintenance scheduling triggered' },
+              ]},
+              { name: 'Carrier / 3PL APIs', cat: 'Carrier', color: '#8a9099', events: [
+                { event: 'carrier.eta.update', desc: 'Carrier provides revised ETA — SLA breach prediction re-run' },
+                { event: 'carrier.breakdown', desc: 'Carrier reports breakdown — disruption analysis triggered, recovery options generated' },
+                { event: 'carrier.pod.uploaded', desc: 'Carrier uploads POD — delivery confirmed, invoice clearance authorised' },
+                { event: 'carrier.capacity.alert', desc: 'Carrier signals capacity issue — load consolidation module alerted' },
+                { event: 'carrier.rate.change', desc: 'Carrier updates rate card — benchmarking flags vs market rate' },
+                { event: 'carrier.driver.change', desc: 'Sub-contractor swaps driver — compliance re-checked for replacement' },
+                { event: 'carrier.delayed.departure', desc: 'Carrier departs late — ETA impact and SLA exposure calculated' },
+                { event: 'carrier.refused.load', desc: 'Carrier refuses collection — emergency dispatch, incident logged' },
+                { event: 'carrier.scorecard.due', desc: 'Monthly scorecard review — carrier performance data compiled' },
+                { event: 'carrier.invoice.disputed', desc: 'Dispute raised against carrier invoice — recovery module tracks to resolution' },
+              ]},
+            ]
+            const CAT_C = { TMS:'#3b82f6', Telematics:'#00e5b0', WMS:'#f59e0b', Finance:'#a855f7', SLA:'#ef4444', Compliance:'#f59e0b', Carrier:'#8a9099' }
+            return (
+              <div style={{ flex:1, overflowY:'auto', padding:'20px' }}>
+                <div style={{ marginBottom:16 }}>
+                  <div style={{ fontSize:11, fontFamily:'monospace', color:'#00e5b0', letterSpacing:'0.08em', marginBottom:4 }}>WEBHOOK INTEGRATIONS</div>
+                  <div style={{ fontSize:12, color:'#4a5260' }}>90 events across 9 systems. Connect via webhook URL — no new hardware or IT involvement required.</div>
+                </div>
+                <div style={{ display:'flex', flexWrap:'wrap', gap:6, marginBottom:20 }}>
+                  {SYSTEMS.map(s => (
+                    <div key={s.name} style={{ fontSize:10, fontFamily:'monospace', padding:'4px 10px', borderRadius:4, background:`${s.color}10`, border:`1px solid ${s.color}25`, color:s.color }}>
+                      {s.name} <span style={{ color:'#4a5260' }}>({s.events.length})</span>
+                    </div>
+                  ))}
+                </div>
+                {SYSTEMS.map(sys => (
+                  <div key={sys.name} style={{ marginBottom:12, border:'1px solid rgba(255,255,255,0.06)', borderRadius:8, overflow:'hidden' }}>
+                    <div style={{ padding:'10px 14px', background:`${sys.color}08`, borderBottom:'1px solid rgba(255,255,255,0.05)', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+                      <span style={{ fontSize:11, fontFamily:'monospace', color:sys.color, fontWeight:600 }}>{sys.name}</span>
+                      <span style={{ fontSize:9, fontFamily:'monospace', padding:'2px 6px', border:`1px solid ${CAT_C[sys.cat]}30`, borderRadius:3, color:CAT_C[sys.cat] }}>{sys.cat}</span>
+                    </div>
+                    {sys.events.map((ev, i) => (
+                      <div key={ev.event} style={{ padding:'7px 14px', borderBottom: i < sys.events.length-1 ? '1px solid rgba(255,255,255,0.03)' : 'none', display:'flex', gap:12, alignItems:'flex-start' }}>
+                        <code style={{ fontSize:9, fontFamily:'monospace', color:sys.color, background:`${sys.color}10`, padding:'2px 6px', borderRadius:3, flexShrink:0, marginTop:1, whiteSpace:'nowrap' }}>{ev.event}</code>
+                        <span style={{ fontSize:11, color:'#8a9099', lineHeight:1.5 }}>{ev.desc}</span>
+                      </div>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            )
+          })()}
 
           {/* ── APPROVALS TAB ──────────────────────────────────────────────── */}
           {activeTab === 'approvals' && (
