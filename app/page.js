@@ -415,118 +415,56 @@ export default function HomePage() {
         <div style={{ background: 'rgba(0,229,176,0.06)', border: '1px solid rgba(0,229,176,0.2)', borderRadius: 8, padding: '12px 20px', marginBottom: 32, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
           <div>
             <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--accent)', letterSpacing: '0.08em' }}>FOUNDING CLIENT OFFER — 5 SPOTS ONLY</span>
-            <p style={{ fontSize: 13, color: 'var(--text2)', margin: '4px 0 0' }}>First 5 clients lock in at <strong style={{ color: 'var(--text)' }}>£499/month for life</strong> — save £300/month vs Autonomous, locked forever regardless of what we add. 5 spots only.</p>
+            <p style={{ fontSize: 13, color: 'var(--text2)', margin: '4px 0 0' }}>First 5 clients lock in at <strong style={{ color: 'var(--text)' }}>£299/month for life</strong> — £100 below standard, locked forever regardless of what we add. 3 spots remaining.</p>
           </div>
           <a href="mailto:hello@disruptionhub.ai?subject=Founding client enquiry" style={{ background: 'var(--accent)', color: '#000', padding: '8px 16px', borderRadius: 6, fontWeight: 600, fontSize: 12, textDecoration: 'none', whiteSpace: 'nowrap' }}>Claim your spot →</a>
         </div>
 
-        <div className="dh-pricing-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: 20 }}>
-          {[
-            {
-              name: 'Professional',
-              price: '£399',
-              period: '/month',
-              target: 'You manage it — the system makes you better',
-              badge: null,
-              features: [
-                'Live disruption agent — unlimited analyses',
-                'Structured action plans in 30 seconds',
-                'Colour-coded response cards (assessment, actions, contacts, rerouting, risks, prevention)',
-                'Driver PWA app — job list, delivery confirmation',
-                'Driver issue reporting with GPS location capture',
-                '16 intelligence modules — run manually or on schedule',
-                'Invoice recovery — carrier overcharge detection',
-                'SLA breach prediction — 2–4 hours ahead',
-                'Driver hours monitor — WTD compliance',
-                'Vehicle health alerts — predictive maintenance',
-                'Fuel optimisation — fill-now vs wait decisions',
-                'Carrier performance scoring',
-                'Regulation monitor — DVSA/DfT/HMRC alerts',
-                'Licence and DQC expiry checking',
-                'Full incident history and audit trail',
-                'Custom system prompt — your carriers, routes, SLAs',
-              ],
-              note: '→ Founding clients: £499/mo for life — 5 spots',
-              cta: 'Start £99 pilot',
-              featured: false,
-            },
-            {
-              name: 'Autonomous',
-              price: '£799',
-              period: '/month',
-              target: 'The system manages it — you approve and sleep',
-              badge: 'FULLY AUTONOMOUS',
-              features: [
-                'Everything in Professional',
-                'Auto-triggered analysis — driver alert fires analysis instantly',
-                'GPS location capture — no junction errors',
-                'SMS wakeup — ops manager alerted on HIGH/CRITICAL severity',
-                'Approve by SMS reply — YES fires the action, no app needed',
-                'TMS webhook — Mandata/Microlise triggers automatic analysis',
-                'Auto-reroute instructions pushed to driver app',
-                'Cascade prevention — downstream risks flagged before they hit',
-                'Cold chain breach protocol — temperature thresholds enforced',
-                'NHS pharmaceutical delivery compliance built in',
-                'Tender intelligence — matching opportunities surfaced automatically',
-                'Load consolidation — daily saving opportunities',
-                'Carbon and ESG reporting',
-                'Demand forecasting — capacity planning 4 weeks ahead',
-                'Insurance claim pre-emption — incident documentation',
-                'Rate benchmarking — lane pricing vs market',
-              ],
-              note: '→ Founding clients: £499/mo for life — 5 spots',
-              cta: 'Start £99 pilot',
-              featured: true,
-            },
-          ].map(p => (
-            <div key={p.name} style={{
-              border: p.featured ? '1px solid var(--accent)' : '1px solid var(--border)',
-              borderRadius: 10, padding: '28px',
-              background: p.featured ? 'rgba(0,229,176,0.04)' : 'var(--bg2)',
-              position: 'relative'
-            }}>
-              {p.badge && (
-                <div style={{
-                  position: 'absolute', top: -12, left: '50%', transform: 'translateX(-50%)',
-                  background: 'var(--accent)', color: '#000', fontSize: 11, fontWeight: 600,
-                  padding: '3px 14px', borderRadius: 3, fontFamily: 'var(--font-mono)',
-                  letterSpacing: '0.05em', whiteSpace: 'nowrap'
-                }}>{p.badge}</div>
-              )}
-              <div style={{ fontSize: 14, color: 'var(--text2)', marginBottom: 4 }}>{p.name}</div>
-              <div style={{ fontSize: 38, fontWeight: 500, fontFamily: 'var(--font-mono)', color: 'var(--text)', marginBottom: 2 }}>
-                {p.price}<span style={{ fontSize: 14, color: 'var(--text2)', fontWeight: 400 }}>{p.period}</span>
-              </div>
-              <div style={{ fontSize: 13, color: 'var(--text3)', marginBottom: 6, lineHeight: 1.5 }}>{p.target}</div>
-              {p.note && (
-                <div style={{ fontSize: 12, color: 'var(--accent)', marginBottom: 18, fontWeight: 500 }}>{p.note}</div>
-              )}
-              <div style={{ borderTop: '1px solid var(--border)', paddingTop: 18, marginBottom: 22 }}>
-                {p.features.map(f => (
-                  <div key={f} style={{ fontSize: 13, color: 'var(--text2)', padding: '4px 0', display: 'flex', gap: 9, lineHeight: 1.5 }}>
-                    <span style={{ color: 'var(--accent)', flexShrink: 0 }}>✓</span> {f}
-                  </div>
-                ))}
-              </div>
-              <a href={`mailto:hello@disruptionhub.ai?subject=${p.name} pilot request`} style={{
-                display: 'block', textAlign: 'center',
-                background: p.featured ? 'var(--accent)' : 'transparent',
-                color: p.featured ? '#000' : 'var(--text)',
-                border: p.featured ? 'none' : '1px solid var(--border2)',
-                padding: '11px', borderRadius: 6, fontWeight: 600,
-                fontSize: 13, textDecoration: 'none'
-              }}>{p.cta} →</a>
-              <div style={{ textAlign: 'center', fontSize: 11, color: 'var(--text3)', marginTop: 10 }}>
-                £99 pilot · 2 weeks · cancel anytime
-              </div>
-            </div>
-          ))}
+        {/* Single plan card */}
+        <div style={{ maxWidth: 680, margin: '0 auto', border: '1px solid var(--accent)', borderRadius: 10, padding: '36px', background: 'rgba(0,229,176,0.03)', position: 'relative' }}>
+          <div style={{ position: 'absolute', top: -12, left: '50%', transform: 'translateX(-50%)', background: 'var(--accent)', color: '#000', fontSize: 11, fontWeight: 600, padding: '3px 14px', borderRadius: 3, fontFamily: 'var(--font-mono)', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>EVERYTHING INCLUDED</div>
+          <div style={{ fontSize: 14, color: 'var(--text2)', marginBottom: 4 }}>DisruptionHub</div>
+          <div style={{ fontSize: 48, fontWeight: 600, fontFamily: 'var(--font-mono)', color: 'var(--text)', marginBottom: 2, letterSpacing: '-0.03em' }}>£399<span style={{ fontSize: 16, color: 'var(--text2)', fontWeight: 400 }}/month</span></div>
+          <div style={{ fontSize: 13, color: 'var(--text2)', marginBottom: 24, lineHeight: 1.5 }}>One plan. Every feature. No decision to make.</div>
+          <div style={{ borderTop: '1px solid var(--border)', paddingTop: 22, marginBottom: 28, columns: 2, columnGap: 32 }}>
+                  <div style={{ fontSize: 13, color: 'var(--text2)', padding: '4px 0', display: 'flex', gap: 9, lineHeight: 1.5 }}><span style={{ color: 'var(--accent)', flexShrink: 0 }}>✓</span> Live disruption agent — unlimited analyses</div>
+                  <div style={{ fontSize: 13, color: 'var(--text2)', padding: '4px 0', display: 'flex', gap: 9, lineHeight: 1.5 }}><span style={{ color: 'var(--accent)', flexShrink: 0 }}>✓</span> Structured action plans in 30 seconds</div>
+                  <div style={{ fontSize: 13, color: 'var(--text2)', padding: '4px 0', display: 'flex', gap: 9, lineHeight: 1.5 }}><span style={{ color: 'var(--accent)', flexShrink: 0 }}>✓</span> Colour-coded response cards — assessment, actions, contacts, rerouting, risks, prevention</div>
+                  <div style={{ fontSize: 13, color: 'var(--text2)', padding: '4px 0', display: 'flex', gap: 9, lineHeight: 1.5 }}><span style={{ color: 'var(--accent)', flexShrink: 0 }}>✓</span> Driver app — job list, pre-shift check, GPS alerts, POD confirmation</div>
+                  <div style={{ fontSize: 13, color: 'var(--text2)', padding: '4px 0', display: 'flex', gap: 9, lineHeight: 1.5 }}><span style={{ color: 'var(--accent)', flexShrink: 0 }}>✓</span> Driver issue reporting — 32 scenarios, GPS location captured automatically</div>
+                  <div style={{ fontSize: 13, color: 'var(--text2)', padding: '4px 0', display: 'flex', gap: 9, lineHeight: 1.5 }}><span style={{ color: 'var(--accent)', flexShrink: 0 }}>✓</span> 22 intelligence modules — run manually or on schedule</div>
+                  <div style={{ fontSize: 13, color: 'var(--text2)', padding: '4px 0', display: 'flex', gap: 9, lineHeight: 1.5 }}><span style={{ color: 'var(--accent)', flexShrink: 0 }}>✓</span> Invoice recovery — carrier overcharge detection</div>
+                  <div style={{ fontSize: 13, color: 'var(--text2)', padding: '4px 0', display: 'flex', gap: 9, lineHeight: 1.5 }}><span style={{ color: 'var(--accent)', flexShrink: 0 }}>✓</span> SLA breach prediction — 2–4 hours ahead</div>
+                  <div style={{ fontSize: 13, color: 'var(--text2)', padding: '4px 0', display: 'flex', gap: 9, lineHeight: 1.5 }}><span style={{ color: 'var(--accent)', flexShrink: 0 }}>✓</span> Driver hours monitor — WTD compliance</div>
+                  <div style={{ fontSize: 13, color: 'var(--text2)', padding: '4px 0', display: 'flex', gap: 9, lineHeight: 1.5 }}><span style={{ color: 'var(--accent)', flexShrink: 0 }}>✓</span> Vehicle health alerts — predictive maintenance</div>
+                  <div style={{ fontSize: 13, color: 'var(--text2)', padding: '4px 0', display: 'flex', gap: 9, lineHeight: 1.5 }}><span style={{ color: 'var(--accent)', flexShrink: 0 }}>✓</span> Fuel optimisation — fill-now vs wait decisions</div>
+                  <div style={{ fontSize: 13, color: 'var(--text2)', padding: '4px 0', display: 'flex', gap: 9, lineHeight: 1.5 }}><span style={{ color: 'var(--accent)', flexShrink: 0 }}>✓</span> Carrier performance scoring</div>
+                  <div style={{ fontSize: 13, color: 'var(--text2)', padding: '4px 0', display: 'flex', gap: 9, lineHeight: 1.5 }}><span style={{ color: 'var(--accent)', flexShrink: 0 }}>✓</span> Regulation monitor — DVSA/DfT/HMRC alerts</div>
+                  <div style={{ fontSize: 13, color: 'var(--text2)', padding: '4px 0', display: 'flex', gap: 9, lineHeight: 1.5 }}><span style={{ color: 'var(--accent)', flexShrink: 0 }}>✓</span> Licence and DQC expiry checking</div>
+                  <div style={{ fontSize: 13, color: 'var(--text2)', padding: '4px 0', display: 'flex', gap: 9, lineHeight: 1.5 }}><span style={{ color: 'var(--accent)', flexShrink: 0 }}>✓</span> Auto-triggered analysis — driver alert fires analysis instantly</div>
+                  <div style={{ fontSize: 13, color: 'var(--text2)', padding: '4px 0', display: 'flex', gap: 9, lineHeight: 1.5 }}><span style={{ color: 'var(--accent)', flexShrink: 0 }}>✓</span> SMS wakeup — ops manager alerted on HIGH/CRITICAL severity</div>
+                  <div style={{ fontSize: 13, color: 'var(--text2)', padding: '4px 0', display: 'flex', gap: 9, lineHeight: 1.5 }}><span style={{ color: 'var(--accent)', flexShrink: 0 }}>✓</span> Approve by SMS reply — YES fires the action, no app needed</div>
+                  <div style={{ fontSize: 13, color: 'var(--text2)', padding: '4px 0', display: 'flex', gap: 9, lineHeight: 1.5 }}><span style={{ color: 'var(--accent)', flexShrink: 0 }}>✓</span> TMS webhook — Mandata/Microlise/Webfleet triggers automatic analysis</div>
+                  <div style={{ fontSize: 13, color: 'var(--text2)', padding: '4px 0', display: 'flex', gap: 9, lineHeight: 1.5 }}><span style={{ color: 'var(--accent)', flexShrink: 0 }}>✓</span> Auto-reroute instructions pushed to driver app</div>
+                  <div style={{ fontSize: 13, color: 'var(--text2)', padding: '4px 0', display: 'flex', gap: 9, lineHeight: 1.5 }}><span style={{ color: 'var(--accent)', flexShrink: 0 }}>✓</span> Cascade prevention — downstream risks flagged before they hit</div>
+                  <div style={{ fontSize: 13, color: 'var(--text2)', padding: '4px 0', display: 'flex', gap: 9, lineHeight: 1.5 }}><span style={{ color: 'var(--accent)', flexShrink: 0 }}>✓</span> Cold chain breach protocol — temperature thresholds enforced</div>
+                  <div style={{ fontSize: 13, color: 'var(--text2)', padding: '4px 0', display: 'flex', gap: 9, lineHeight: 1.5 }}><span style={{ color: 'var(--accent)', flexShrink: 0 }}>✓</span> NHS pharmaceutical delivery compliance built in</div>
+                  <div style={{ fontSize: 13, color: 'var(--text2)', padding: '4px 0', display: 'flex', gap: 9, lineHeight: 1.5 }}><span style={{ color: 'var(--accent)', flexShrink: 0 }}>✓</span> Load consolidation — daily saving opportunities</div>
+                  <div style={{ fontSize: 13, color: 'var(--text2)', padding: '4px 0', display: 'flex', gap: 9, lineHeight: 1.5 }}><span style={{ color: 'var(--accent)', flexShrink: 0 }}>✓</span> Carbon and ESG reporting</div>
+                  <div style={{ fontSize: 13, color: 'var(--text2)', padding: '4px 0', display: 'flex', gap: 9, lineHeight: 1.5 }}><span style={{ color: 'var(--accent)', flexShrink: 0 }}>✓</span> Demand forecasting — capacity planning 4 weeks ahead</div>
+                  <div style={{ fontSize: 13, color: 'var(--text2)', padding: '4px 0', display: 'flex', gap: 9, lineHeight: 1.5 }}><span style={{ color: 'var(--accent)', flexShrink: 0 }}>✓</span> Insurance claim pre-emption — incident documentation</div>
+                  <div style={{ fontSize: 13, color: 'var(--text2)', padding: '4px 0', display: 'flex', gap: 9, lineHeight: 1.5 }}><span style={{ color: 'var(--accent)', flexShrink: 0 }}>✓</span> Rate benchmarking — lane pricing vs market</div>
+                  <div style={{ fontSize: 13, color: 'var(--text2)', padding: '4px 0', display: 'flex', gap: 9, lineHeight: 1.5 }}><span style={{ color: 'var(--accent)', flexShrink: 0 }}>✓</span> Full incident history and audit trail</div>
+                  <div style={{ fontSize: 13, color: 'var(--text2)', padding: '4px 0', display: 'flex', gap: 9, lineHeight: 1.5 }}><span style={{ color: 'var(--accent)', flexShrink: 0 }}>✓</span> Custom system prompt — your carriers, routes, SLAs</div>
+          </div>
+          <a href="mailto:hello@disruptionhub.ai?subject=DisruptionHub pilot request" style={{ display: 'block', textAlign: 'center', background: 'var(--accent)', color: '#000', padding: '13px', borderRadius: 6, fontWeight: 600, fontSize: 14, textDecoration: 'none' }}>Start £99 pilot →</a>
+          <div style={{ textAlign: 'center', fontSize: 12, color: 'var(--text3)', marginTop: 10 }}>2-week pilot · £99 one-time · cancel anytime after</div>
         </div>
 
         {/* Pilot explanation */}
-        <div style={{ marginTop: 24, padding: '16px 20px', background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: 8 }}>
+        <div style={{ marginTop: 24, padding: '16px 20px', background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: 8, maxWidth: 680, margin: '24px auto 0' }}>
           <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text3)', letterSpacing: '0.08em', marginBottom: 6 }}>HOW THE PILOT WORKS</div>
-          <p style={{ fontSize: 13, color: 'var(--text2)', margin: 0 }}>Pay £99. We customise the system with your actual carriers, routes, clients, and SLA thresholds. Run it for two weeks on real disruptions. If you want to continue, you choose your tier. If not, walk away. The £99 is non-refundable once your onboarding call has taken place.</p>
+          <p style={{ fontSize: 13, color: 'var(--text2)', margin: 0 }}>Pay £99. We customise the system with your actual carriers, routes, clients, and SLA thresholds. Run it for two weeks on real disruptions. If you continue, it's £399/month — or £299/month if you're one of the 3 remaining founding clients. The £99 is non-refundable once your onboarding call has taken place.</p>
         </div>      </section>
 
       {/* CTA */}
