@@ -66,6 +66,27 @@ export default function HomePage() {
     inputRef.current?.focus()
   }
 
+  const handleMailto = (e) => {
+    const href = e.currentTarget.getAttribute('href')
+    // Try mailto — if no mail client is configured on desktop the browser
+    // loads a blank page. We detect that by checking if the page is still
+    // visible after a short delay and open Gmail compose as fallback.
+    let left = true
+    const onBlur = () => { left = false }
+    window.addEventListener('blur', onBlur, { once: true })
+    setTimeout(() => {
+      window.removeEventListener('blur', onBlur)
+      if (left) return // mail client opened, all good
+      // No mail client — build Gmail compose URL from the mailto href
+      const url = new URL(href)
+      const to = url.pathname
+      const subject = url.searchParams.get('subject') || ''
+      const body = url.searchParams.get('body') || ''
+      const gmail = `https://mail.google.com/mail/?view=cm&to=${encodeURIComponent(to)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
+      window.open(gmail, '_blank')
+    }, 500)
+  }
+
   const runAnalysis = async (text) => {
     if (!text.trim() || loading) return
 
@@ -230,7 +251,7 @@ export default function HomePage() {
             background: 'var(--accent)', color: '#000', padding: '12px 28px',
             borderRadius: 8, fontWeight: 600, fontSize: 15, textDecoration: 'none'
           }}>Try it live below ↓</a>
-          <a href="mailto:hello@disruptionhub.ai" style={{
+          <a onClick={handleMailto} href="mailto:hello@disruptionhub.ai" style={{
             border: '1px solid var(--border2)', color: 'var(--text)', padding: '12px 28px',
             borderRadius: 8, fontSize: 15, textDecoration: 'none'
           }}>Book a demo</a>
@@ -417,7 +438,7 @@ export default function HomePage() {
             <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--accent)', letterSpacing: '0.08em' }}>FOUNDING CLIENT OFFER — 5 SPOTS ONLY</span>
             <p style={{ fontSize: 13, color: 'var(--text2)', margin: '4px 0 0' }}>First 5 clients lock in at <strong style={{ color: 'var(--text)' }}>£299/month for life</strong> — £100 below standard, locked forever regardless of what we add. 3 spots remaining.</p>
           </div>
-          <a href="mailto:hello@disruptionhub.ai?subject=Founding client enquiry" style={{ background: 'var(--accent)', color: '#000', padding: '8px 16px', borderRadius: 6, fontWeight: 600, fontSize: 12, textDecoration: 'none', whiteSpace: 'nowrap' }}>Claim your spot →</a>
+          <a onClick={handleMailto} href="mailto:hello@disruptionhub.ai?subject=Founding client enquiry" style={{ background: 'var(--accent)', color: '#000', padding: '8px 16px', borderRadius: 6, fontWeight: 600, fontSize: 12, textDecoration: 'none', whiteSpace: 'nowrap' }}>Claim your spot →</a>
         </div>
 
         {/* Single plan card */}
@@ -457,7 +478,7 @@ export default function HomePage() {
                   <div style={{ fontSize: 13, color: 'var(--text2)', padding: '4px 0', display: 'flex', gap: 9, lineHeight: 1.5 }}><span style={{ color: 'var(--accent)', flexShrink: 0 }}>✓</span> Full incident history and audit trail</div>
                   <div style={{ fontSize: 13, color: 'var(--text2)', padding: '4px 0', display: 'flex', gap: 9, lineHeight: 1.5 }}><span style={{ color: 'var(--accent)', flexShrink: 0 }}>✓</span> Custom system prompt — your carriers, routes, SLAs</div>
           </div>
-          <a href="mailto:hello@disruptionhub.ai?subject=DisruptionHub pilot request" style={{ display: 'block', textAlign: 'center', background: 'var(--accent)', color: '#000', padding: '13px', borderRadius: 6, fontWeight: 600, fontSize: 14, textDecoration: 'none' }}>Start £99 pilot →</a>
+          <a onClick={handleMailto} href="mailto:hello@disruptionhub.ai?subject=DisruptionHub pilot request" style={{ display: 'block', textAlign: 'center', background: 'var(--accent)', color: '#000', padding: '13px', borderRadius: 6, fontWeight: 600, fontSize: 14, textDecoration: 'none' }}>Start £99 pilot →</a>
           <div style={{ textAlign: 'center', fontSize: 12, color: 'var(--text3)', marginTop: 10 }}>2-week pilot · £99 one-time · cancel anytime after</div>
         </div>
 
@@ -479,7 +500,7 @@ export default function HomePage() {
         <p style={{ color: 'var(--text2)', fontSize: 14, marginBottom: 28 }}>
           Tell us your worst disruption in the last 6 months. We'll run a live analysis and show you exactly what DisruptionHub would have done. No commitment.
         </p>
-        <a href="mailto:hello@disruptionhub.ai?subject=Demo request — live disruption analysis" style={{
+        <a onClick={handleMailto} href="mailto:hello@disruptionhub.ai?subject=Demo request — live disruption analysis" style={{
           background: 'var(--accent)', color: '#000', padding: '14px 32px',
           borderRadius: 8, fontWeight: 600, fontSize: 15, textDecoration: 'none',
           display: 'inline-block'
@@ -514,8 +535,8 @@ export default function HomePage() {
             <div>
               <div style={{ fontSize: 11, color: 'var(--text3)', fontFamily: 'var(--font-mono)', letterSpacing: '0.06em', marginBottom: 10 }}>CONTACT</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <a href="mailto:hello@disruptionhub.ai" style={{ fontSize: 12, color: 'var(--text2)', textDecoration: 'none' }}>hello@disruptionhub.ai</a>
-                <a href="mailto:hello@disruptionhub.ai?subject=Pilot request" style={{ fontSize: 12, color: 'var(--accent)', textDecoration: 'none' }}>Start £99 pilot →</a>
+                <a onClick={handleMailto} href="mailto:hello@disruptionhub.ai" style={{ fontSize: 12, color: 'var(--text2)', textDecoration: 'none' }}>hello@disruptionhub.ai</a>
+                <a onClick={handleMailto} href="mailto:hello@disruptionhub.ai?subject=Pilot request" style={{ fontSize: 12, color: 'var(--accent)', textDecoration: 'none' }}>Start £99 pilot →</a>
               </div>
             </div>
           </div>
