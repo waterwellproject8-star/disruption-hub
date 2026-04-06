@@ -415,7 +415,7 @@ export default function HomePage() {
         <div style={{ background: 'rgba(0,229,176,0.06)', border: '1px solid rgba(0,229,176,0.2)', borderRadius: 8, padding: '12px 20px', marginBottom: 32, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
           <div>
             <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--accent)', letterSpacing: '0.08em' }}>FOUNDING CLIENT OFFER — 5 SPOTS ONLY</span>
-            <p style={{ fontSize: 13, color: 'var(--text2)', margin: '4px 0 0' }}>First 5 clients lock in at <strong style={{ color: 'var(--text)' }}>£499/month for life</strong> — half price, never increases, regardless of what we add. 5 spots only.</p>
+            <p style={{ fontSize: 13, color: 'var(--text2)', margin: '4px 0 0' }}>First 5 clients lock in at <strong style={{ color: 'var(--text)' }}>£499/month for life</strong> — save £300/month vs Autonomous, locked forever regardless of what we add. 5 spots only.</p>
           </div>
           <a href="mailto:hello@disruptionhub.ai?subject=Founding client enquiry" style={{ background: 'var(--accent)', color: '#000', padding: '8px 16px', borderRadius: 6, fontWeight: 600, fontSize: 12, textDecoration: 'none', whiteSpace: 'nowrap' }}>Claim your spot →</a>
         </div>
@@ -424,7 +424,7 @@ export default function HomePage() {
           {[
             {
               name: 'Professional',
-              price: '£699',
+              price: '£399',
               period: '/month',
               target: 'You manage it — the system makes you better',
               badge: null,
@@ -452,7 +452,7 @@ export default function HomePage() {
             },
             {
               name: 'Autonomous',
-              price: '£999',
+              price: '£799',
               period: '/month',
               target: 'The system manages it — you approve and sleep',
               badge: 'FULLY AUTONOMOUS',

@@ -31,16 +31,44 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,600;0,700;0,800;0,900;1,700;1,800&family=Barlow:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+          rel="stylesheet"
+        />
         <style>{`
-          /* Prevent iOS zoom on input focus — minimum 16px on all inputs */
+          :root {
+            --bg:      #06080d;
+            --bg2:     #0d1118;
+            --bg3:     #0f1420;
+            --accent:  #00e5a8;
+            --blue:    #00b8ff;
+            --amber:   #ffb627;
+            --red:     #ff4545;
+            --text:    #eef1f6;
+            --text2:   #8a95a8;
+            --text3:   #3a4555;
+            --border:  rgba(255,255,255,0.07);
+            --border2: rgba(255,255,255,0.14);
+            --font-sans: 'Barlow', -apple-system, sans-serif;
+            --font-disp: 'Barlow Condensed', 'Barlow', sans-serif;
+            --font-mono: 'IBM Plex Mono', 'Courier New', monospace;
+          }
+          body {
+            font-family: var(--font-sans);
+            -webkit-font-smoothing: antialiased;
+            background: var(--bg);
+            color: var(--text);
+          }
+          h1, h2, h3 {
+            font-family: var(--font-disp);
+          }
           input, textarea, select {
             font-size: 16px !important;
           }
-          /* Prevent double-tap zoom on buttons */
           button, a {
             touch-action: manipulation;
           }
-          /* Lock scroll bounce on iOS */
           html {
             overflow: hidden;
             height: 100%;
