@@ -28,15 +28,21 @@ export async function POST(request) {
 
     const db = getDB()
     let contactPhone = null
+    let contactName = 'Ops Manager'
 
     // Get client contact for SMS
+    // For demo client — fall back to pearson-haulage contact so SMS always fires
     if (db && client_id) {
+      const lookupId = client_id === 'demo' ? 'pearson-haulage' : client_id
       const { data } = await db
         .from('clients')
         .select('contact_phone, contact_name')
-        .eq('id', client_id)
+        .eq('id', lookupId)
         .single()
-      if (data) contactPhone = data.contact_phone
+      if (data) {
+        contactPhone = data.contact_phone
+        contactName = data.contact_name || 'Ops Manager'
+      }
     }
 
     // Quick Haiku analysis — revised ETA and SLA status
@@ -61,7 +67,7 @@ In one sentence: give a revised ETA with 1.5x buffer applied, and state in plain
 
     // Update incident in Supabase as resolved
     if (db) {
-      // Log resolution event
+      // Log resolution event to incidents
       await db.from('incidents').insert({
         client_id,
         user_input: `RESOLVED: ${resolution} — ${driver_name} (${vehicle_reg}) — ${location_description || ''}`,
@@ -79,6 +85,18 @@ In one sentence: give a revised ETA with 1.5x buffer applied, and state in plain
           .eq('status', 'pending')
           .like('action_details->>ref', ref)
       }
+
+      // Insert a visible resolve record into approvals so ops dashboard shows it
+      await db.from('approvals').insert({
+        client_id,
+        action_type: 'notify',
+        action_label: `✅ ${vehicle_reg} — ${driver_name} back on track · ${resolution}${revisedEta ? ' · ' + revisedEta.substring(0, 100) : ''}`,
+        action_details: { source: 'driver_resolved', vehicle_reg, driver_name, ref, resolution, revised_eta: revisedEta },
+        financial_value: 0,
+        status: 'executed',
+        approved_by: 'driver',
+        executed_at: new Date().toISOString()
+      })
     }
 
     // SMS ops manager

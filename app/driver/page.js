@@ -284,7 +284,7 @@ export default function DriverApp() {
   useEffect(() => {
     if (!demoMode || !shiftStarted || !driverInfo.clientId) return
     const interval = setInterval(() => {
-      loadJobs(driverInfo)
+      loadJobs(driverInfo, true) // silent — no loading flash
     }, 5000)
     return () => clearInterval(interval)
   }, [demoMode, shiftStarted, driverInfo.clientId])
@@ -314,9 +314,9 @@ export default function DriverApp() {
     }).catch(()=>{})
   }
 
-  async function loadJobs(info) {
+  async function loadJobs(info, silent = false) {
     if (!info?.clientId) return []
-    setLoading(true)
+    if (!silent) setLoading(true)
     try {
       const [jobsRes, progressRes] = await Promise.all([
         fetch(`/api/shipments?client_id=${info.clientId}`),
