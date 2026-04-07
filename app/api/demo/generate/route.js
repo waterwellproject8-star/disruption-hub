@@ -136,8 +136,8 @@ No markdown. JSON only.`
     const db = getSupabase()
     if (db) {
       await db.from('shipments').delete().eq('client_id', sessionId)
-      await db.from('shipments').insert(
-        data.deliveries.map((d, i) => ({
+      const { error: insertError } = await db.from('shipments').insert(
+        data.deliveries.map((d) => ({
           client_id:           sessionId,
           ref:                 d.ref,
           route:               d.route,
@@ -149,10 +149,13 @@ No markdown. JSON only.`
           cargo_value:         d.cargo_value  || 0,
           penalty_if_breached: d.penalty_if_breached || 0,
           alert:               d.alert || null,
-          drops:               d.drops || 1,
-          sequence:            i + 1
+          drops:               d.drops || 1
         }))
       )
+      if (insertError) {
+        console.error('Shipments insert error:', insertError.message)
+        return Response.json({ success: false, insert_error: insertError.message, scenario: data, session_id: sessionId, driver_code: sessionId })
+      }
     }
 
     return Response.json({
@@ -177,7 +180,7 @@ No markdown. JSON only.`
             sla_window: d.sla_window, cargo_type: d.cargo_type,
             cargo_value: d.cargo_value || 0,
             penalty_if_breached: d.penalty_if_breached || 0,
-            alert: d.alert || null, drops: d.drops || 1, sequence: i + 1
+            alert: d.alert || null, drops: d.drops || 1
           }))
         )
       } catch {}
