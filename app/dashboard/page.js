@@ -1053,17 +1053,6 @@ export default function DashboardPage() {
   const [response, setResponse] = useState('')
   const [activeShipment, setActiveShipment] = useState(null)
   const [activeTab, setActiveTab] = useState('agent')
-  // ── PREMIUM TAB STATE ─────────────────────────────────────────────────────
-  const [insuranceResult, setInsuranceResult]     = useState(null)
-  const [insuranceLoading, setInsuranceLoading]   = useState(false)
-  const [complianceResult, setComplianceResult]   = useState(null)
-  const [complianceLoading, setComplianceLoading] = useState(false)
-  const [threatsResult, setThreatsResult]         = useState(null)
-  const [threatsLoading, setThreatsLoading]       = useState(false)
-  const [cascadeResult, setCascadeResult]         = useState(null)
-  const [cascadeLoading, setCascadeLoading]       = useState(false)
-  const [coldchainResult, setColdchainResult]     = useState(null)
-  const [coldchainLoading, setColdchainLoading]   = useState(false)
   const [pendingApprovals, setPendingApprovals] = useState([])
   const [moduleRunning, setModuleRunning] = useState(null)
   const [moduleResult, setModuleResult] = useState(null)
@@ -1316,13 +1305,10 @@ export default function DashboardPage() {
       const numMatch = line.match(/^\s*(\d+)\.?\s+(.{10,180})/)
       if (!numMatch) continue
       const clean = numMatch[2].replace(/\*\*/g,'').trim()
-
       for (const { pattern, type, icon, label: forcedLabel } of actionPatterns) {
         if (pattern.test(clean)) {
           const label = forcedLabel || clean.split('—')[0].split('·')[0].split('.')[0].trim().substring(0, 70)
-          if (!actions.find(a => a.label === label)) {
-            actions.push({ label, type, icon, full: clean })
-          }
+          if (!actions.find(a => a.label === label)) actions.push({ label, type, icon, full: clean })
           break
         }
       }
@@ -1691,11 +1677,6 @@ export default function DashboardPage() {
             </button>
             <button style={TAB_STYLE(activeTab==='scenarios')} onClick={() => setActiveTab('scenarios')}>SCENARIOS</button>
             <button style={TAB_STYLE(activeTab==='integrations')} onClick={() => { setActiveTab('integrations'); loadWebhookLog() }}>SETUP</button>
-            <button style={{ ...TAB_STYLE(activeTab==='insurance'), color: activeTab==='insurance' ? '#00e5b0' : '#4a5260' }} onClick={() => setActiveTab('insurance')}>🛡 INSURANCE</button>
-            <button style={{ ...TAB_STYLE(activeTab==='compliance'), color: activeTab==='compliance' ? '#f59e0b' : '#4a5260' }} onClick={() => setActiveTab('compliance')}>👤 COMPLIANCE</button>
-            <button style={{ ...TAB_STYLE(activeTab==='threats'), color: activeTab==='threats' ? '#ef4444' : '#4a5260' }} onClick={() => setActiveTab('threats')}>🔒 THREATS</button>
-            <button style={{ ...TAB_STYLE(activeTab==='cascade'), color: activeTab==='cascade' ? '#f59e0b' : '#4a5260' }} onClick={() => setActiveTab('cascade')}>🌊 CASCADE</button>
-            <button style={{ ...TAB_STYLE(activeTab==='coldchain'), color: activeTab==='coldchain' ? '#3b82f6' : '#4a5260' }} onClick={() => setActiveTab('coldchain')}>🌡 COLD CHAIN</button>
             <div style={{ marginLeft:'auto', display:'flex', alignItems:'center', gap:8 }}>
               <div style={{ width:7, height:7, borderRadius:'50%', background: loading ? '#f59e0b' : '#00e5b0', animation: loading ? 'pulse 1s infinite' : 'none' }} />
               <span style={{ fontFamily:'monospace', fontSize:10, color:'#4a5260' }}>{loading ? 'ANALYSING...' : 'AGENT READY'}</span>
@@ -2471,199 +2452,6 @@ export default function DashboardPage() {
               </div>
             )
           })()}
-
-          {/* ── INSURANCE TAB ──────────────────────────────────────────────── */}
-          {activeTab === 'insurance' && (
-            <div style={{ flex:1, overflowY:'auto', padding:'20px' }}>
-              <div style={{ fontSize:10, color:'#4a5260', fontFamily:'monospace', marginBottom:4 }}>// INSURANCE & CLAIMS INTELLIGENCE — fight or settle analysis</div>
-              <div style={{ fontSize:13, color:'#8a9099', marginBottom:20, lineHeight:1.6 }}>
-                Upload a claim or describe a disputed invoice. AI analyses liability, evidence strength, and recommended action.
-              </div>
-              <div style={{ display:'flex', flexDirection:'column', gap:12, marginBottom:16 }}>
-                {[
-                  { label:'Cargo damage claim — £4,200 disputed', sub:'Customer claims damage in transit. Driver denies. No CCTV.' },
-                  { label:'SLA penalty dispute — £1,800', sub:'NHS trust claiming late delivery. Slot was 14:00-16:00, POD signed 16:08.' },
-                  { label:'Third party RTC — liability unclear', sub:'Minor collision at depot. Both parties disputing fault.' },
-                ].map((s,i) => (
-                  <button key={i} onClick={async () => {
-                    setInsuranceLoading(true); setInsuranceResult(null)
-                    try {
-                      const res = await fetch('/api/insurance', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ scenario: s.label, detail: s.sub, client_id: 'pearson-haulage' }) })
-                      const d = await res.json()
-                      setInsuranceResult(d)
-                    } catch(e) { setInsuranceResult({ error: e.message }) }
-                    finally { setInsuranceLoading(false) }
-                  }} style={{ padding:'14px', background:'#111418', border:'1px solid rgba(255,255,255,0.08)', borderRadius:9, cursor:'pointer', textAlign:'left' }}>
-                    <div style={{ fontSize:13, color:'#e8eaed', fontWeight:500, marginBottom:4 }}>🛡 {s.label}</div>
-                    <div style={{ fontSize:11, color:'#4a5260' }}>{s.sub}</div>
-                  </button>
-                ))}
-              </div>
-              {insuranceLoading && <div style={{ fontSize:12, color:'#00e5b0', fontFamily:'monospace' }}>Analysing claim...</div>}
-              {insuranceResult && !insuranceResult.error && (
-                <div style={{ background:'#111418', border:'1px solid rgba(0,229,176,0.2)', borderRadius:10, padding:'16px' }}>
-                  <div style={{ fontFamily:'monospace', fontSize:10, color:'#00e5b0', marginBottom:10, letterSpacing:'0.08em' }}>CLAIM ANALYSIS</div>
-                  <div style={{ fontSize:13, color:'#e8eaed', lineHeight:1.7, whiteSpace:'pre-wrap' }}>{insuranceResult.analysis}</div>
-                </div>
-              )}
-              {insuranceResult?.error && <div style={{ fontSize:12, color:'#ef4444', fontFamily:'monospace' }}>Error: {insuranceResult.error}</div>}
-            </div>
-          )}
-
-          {/* ── COMPLIANCE TAB ─────────────────────────────────────────────── */}
-          {activeTab === 'compliance' && (
-            <div style={{ flex:1, overflowY:'auto', padding:'20px' }}>
-              <div style={{ fontSize:10, color:'#4a5260', fontFamily:'monospace', marginBottom:4 }}>// COMPLIANCE MONITOR — WTD hours, DQC, licence, DVSA</div>
-              <div style={{ fontSize:13, color:'#8a9099', marginBottom:20, lineHeight:1.6 }}>
-                Real-time compliance checks across your fleet. Flag hours violations, expiring licences, and CPC gaps before DVSA does.
-              </div>
-              <div style={{ display:'flex', flexDirection:'column', gap:12, marginBottom:16 }}>
-                {[
-                  { label:'Driver hours check — Dave Pearson', sub:'8hr 40min drive today. Two more drops remaining. Legal?' },
-                  { label:'CPC/DQC expiry scan — full fleet', sub:'Check all driver qualifications against expiry dates.' },
-                  { label:'DVSA inspection prep — vehicle BK21 XYZ', sub:'Annual test due in 6 weeks. Pre-inspection risk assessment.' },
-                ].map((s,i) => (
-                  <button key={i} onClick={async () => {
-                    setComplianceLoading(true); setComplianceResult(null)
-                    try {
-                      const res = await fetch('/api/compliance', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ scenario: s.label, detail: s.sub, client_id: 'pearson-haulage' }) })
-                      const d = await res.json()
-                      setComplianceResult(d)
-                    } catch(e) { setComplianceResult({ error: e.message }) }
-                    finally { setComplianceLoading(false) }
-                  }} style={{ padding:'14px', background:'#111418', border:'1px solid rgba(255,255,255,0.08)', borderRadius:9, cursor:'pointer', textAlign:'left' }}>
-                    <div style={{ fontSize:13, color:'#e8eaed', fontWeight:500, marginBottom:4 }}>👤 {s.label}</div>
-                    <div style={{ fontSize:11, color:'#4a5260' }}>{s.sub}</div>
-                  </button>
-                ))}
-              </div>
-              {complianceLoading && <div style={{ fontSize:12, color:'#f59e0b', fontFamily:'monospace' }}>Running compliance check...</div>}
-              {complianceResult && !complianceResult.error && (
-                <div style={{ background:'#111418', border:'1px solid rgba(245,158,11,0.2)', borderRadius:10, padding:'16px' }}>
-                  <div style={{ fontFamily:'monospace', fontSize:10, color:'#f59e0b', marginBottom:10, letterSpacing:'0.08em' }}>COMPLIANCE REPORT</div>
-                  <div style={{ fontSize:13, color:'#e8eaed', lineHeight:1.7, whiteSpace:'pre-wrap' }}>{complianceResult.analysis}</div>
-                </div>
-              )}
-              {complianceResult?.error && <div style={{ fontSize:12, color:'#ef4444', fontFamily:'monospace' }}>Error: {complianceResult.error}</div>}
-            </div>
-          )}
-
-          {/* ── THREATS TAB ────────────────────────────────────────────────── */}
-          {activeTab === 'threats' && (
-            <div style={{ flex:1, overflowY:'auto', padding:'20px' }}>
-              <div style={{ fontSize:10, color:'#4a5260', fontFamily:'monospace', marginBottom:4 }}>// THREAT INTELLIGENCE — cargo theft, ghost freight, parking risk</div>
-              <div style={{ fontSize:13, color:'#8a9099', marginBottom:20, lineHeight:1.6 }}>
-                Proactive threat assessment for active routes. Flag high-risk rest stops, known theft corridors, and ghost freight patterns.
-              </div>
-              <div style={{ display:'flex', flexDirection:'column', gap:12, marginBottom:16 }}>
-                {[
-                  { label:'Cargo theft risk — M1 southbound overnight', sub:'High-value retail load. Driver needs to stop. Safest options?' },
-                  { label:'Ghost freight check — new subcontractor', sub:'First booking with Crown Express Ltd. No history. Verify?' },
-                  { label:'Parking risk assessment — Leeds to London run', sub:'12hr journey. Legal stops required. Avoid banned 7?' },
-                ].map((s,i) => (
-                  <button key={i} onClick={async () => {
-                    setThreatsLoading(true); setThreatsResult(null)
-                    try {
-                      const res = await fetch('/api/threats', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ scenario: s.label, detail: s.sub, client_id: 'pearson-haulage' }) })
-                      const d = await res.json()
-                      setThreatsResult(d)
-                    } catch(e) { setThreatsResult({ error: e.message }) }
-                    finally { setThreatsLoading(false) }
-                  }} style={{ padding:'14px', background:'#111418', border:'1px solid rgba(255,255,255,0.08)', borderRadius:9, cursor:'pointer', textAlign:'left' }}>
-                    <div style={{ fontSize:13, color:'#e8eaed', fontWeight:500, marginBottom:4 }}>🔒 {s.label}</div>
-                    <div style={{ fontSize:11, color:'#4a5260' }}>{s.sub}</div>
-                  </button>
-                ))}
-              </div>
-              {threatsLoading && <div style={{ fontSize:12, color:'#ef4444', fontFamily:'monospace' }}>Assessing threats...</div>}
-              {threatsResult && !threatsResult.error && (
-                <div style={{ background:'#111418', border:'1px solid rgba(239,68,68,0.2)', borderRadius:10, padding:'16px' }}>
-                  <div style={{ fontFamily:'monospace', fontSize:10, color:'#ef4444', marginBottom:10, letterSpacing:'0.08em' }}>THREAT ASSESSMENT</div>
-                  <div style={{ fontSize:13, color:'#e8eaed', lineHeight:1.7, whiteSpace:'pre-wrap' }}>{threatsResult.analysis}</div>
-                </div>
-              )}
-              {threatsResult?.error && <div style={{ fontSize:12, color:'#ef4444', fontFamily:'monospace' }}>Error: {threatsResult.error}</div>}
-            </div>
-          )}
-
-          {/* ── CASCADE TAB ────────────────────────────────────────────────── */}
-          {activeTab === 'cascade' && (
-            <div style={{ flex:1, overflowY:'auto', padding:'20px' }}>
-              <div style={{ fontSize:10, color:'#4a5260', fontFamily:'monospace', marginBottom:4 }}>// CASCADE EXPOSURE — live £ counter across all active runs</div>
-              <div style={{ fontSize:13, color:'#8a9099', marginBottom:20, lineHeight:1.6 }}>
-                One disruption creates a cascade. This calculates total financial exposure across all affected jobs in real time.
-              </div>
-              <div style={{ display:'flex', flexDirection:'column', gap:12, marginBottom:16 }}>
-                {[
-                  { label:'M1 breakdown cascade — 3 jobs affected', sub:'PH-8832 down. PH-5517 and PH-9103 now at risk. Total exposure?' },
-                  { label:'Driver hours exhausted — 4 drops incomplete', sub:'Driver ran out of hours at J31. All remaining drops cascade.' },
-                  { label:'Tesco DC refusing late deliveries today', sub:'Site closed to lates after 16:00. 2 runs due 15:45 and 16:10.' },
-                ].map((s,i) => (
-                  <button key={i} onClick={async () => {
-                    setCascadeLoading(true); setCascadeResult(null)
-                    try {
-                      const res = await fetch('/api/cascade', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ scenario: s.label, detail: s.sub, client_id: 'pearson-haulage', shipments: ACTIVE_SHIPMENTS }) })
-                      const d = await res.json()
-                      setCascadeResult(d)
-                    } catch(e) { setCascadeResult({ error: e.message }) }
-                    finally { setCascadeLoading(false) }
-                  }} style={{ padding:'14px', background:'#111418', border:'1px solid rgba(255,255,255,0.08)', borderRadius:9, cursor:'pointer', textAlign:'left' }}>
-                    <div style={{ fontSize:13, color:'#e8eaed', fontWeight:500, marginBottom:4 }}>🌊 {s.label}</div>
-                    <div style={{ fontSize:11, color:'#4a5260' }}>{s.sub}</div>
-                  </button>
-                ))}
-              </div>
-              {cascadeLoading && <div style={{ fontSize:12, color:'#f59e0b', fontFamily:'monospace' }}>Calculating cascade exposure...</div>}
-              {cascadeResult && !cascadeResult.error && (
-                <div style={{ background:'#111418', border:'1px solid rgba(245,158,11,0.2)', borderRadius:10, padding:'16px' }}>
-                  <div style={{ display:'flex', alignItems:'baseline', gap:12, marginBottom:12 }}>
-                    <div style={{ fontFamily:'monospace', fontSize:10, color:'#f59e0b', letterSpacing:'0.08em' }}>TOTAL EXPOSURE</div>
-                    {cascadeResult.total_exposure > 0 && <div style={{ fontFamily:'monospace', fontSize:24, color:'#ef4444', fontWeight:700 }}>£{cascadeResult.total_exposure?.toLocaleString()}</div>}
-                  </div>
-                  <div style={{ fontSize:13, color:'#e8eaed', lineHeight:1.7, whiteSpace:'pre-wrap' }}>{cascadeResult.analysis}</div>
-                </div>
-              )}
-              {cascadeResult?.error && <div style={{ fontSize:12, color:'#ef4444', fontFamily:'monospace' }}>Error: {cascadeResult.error}</div>}
-            </div>
-          )}
-
-          {/* ── COLD CHAIN TAB ─────────────────────────────────────────────── */}
-          {activeTab === 'coldchain' && (
-            <div style={{ flex:1, overflowY:'auto', padding:'20px' }}>
-              <div style={{ fontSize:10, color:'#4a5260', fontFamily:'monospace', marginBottom:4 }}>// COLD CHAIN MONITOR — pharma breach protocol, temp compliance</div>
-              <div style={{ fontSize:13, color:'#8a9099', marginBottom:20, lineHeight:1.6 }}>
-                Temperature excursion management for pharmaceutical and chilled loads. Breach assessment, regulatory requirements, and customer notification.
-              </div>
-              <div style={{ display:'flex', flexDirection:'column', gap:12, marginBottom:16 }}>
-                {[
-                  { label:'Pharma temp excursion — 7.2°C recorded', sub:'NHS insulin load. Threshold 5°C. Excursion for 22 minutes. Compliant?' },
-                  { label:'Reefer unit failure — chilled load at risk', sub:'Unit fault at M6 J15. Ambient temp rising. Cargo value £18,000.' },
-                  { label:'Cold chain documentation — NHS delivery', sub:'NHS trust requesting full temperature log for audit. Generate report.' },
-                ].map((s,i) => (
-                  <button key={i} onClick={async () => {
-                    setColdchainLoading(true); setColdchainResult(null)
-                    try {
-                      const res = await fetch('/api/coldchain', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ scenario: s.label, detail: s.sub, client_id: 'pearson-haulage' }) })
-                      const d = await res.json()
-                      setColdchainResult(d)
-                    } catch(e) { setColdchainResult({ error: e.message }) }
-                    finally { setColdchainLoading(false) }
-                  }} style={{ padding:'14px', background:'#111418', border:'1px solid rgba(255,255,255,0.08)', borderRadius:9, cursor:'pointer', textAlign:'left' }}>
-                    <div style={{ fontSize:13, color:'#e8eaed', fontWeight:500, marginBottom:4 }}>🌡 {s.label}</div>
-                    <div style={{ fontSize:11, color:'#4a5260' }}>{s.sub}</div>
-                  </button>
-                ))}
-              </div>
-              {coldchainLoading && <div style={{ fontSize:12, color:'#3b82f6', fontFamily:'monospace' }}>Running cold chain assessment...</div>}
-              {coldchainResult && !coldchainResult.error && (
-                <div style={{ background:'#111418', border:'1px solid rgba(59,130,246,0.2)', borderRadius:10, padding:'16px' }}>
-                  <div style={{ fontFamily:'monospace', fontSize:10, color:'#3b82f6', marginBottom:10, letterSpacing:'0.08em' }}>COLD CHAIN REPORT</div>
-                  <div style={{ fontSize:13, color:'#e8eaed', lineHeight:1.7, whiteSpace:'pre-wrap' }}>{coldchainResult.analysis}</div>
-                </div>
-              )}
-              {coldchainResult?.error && <div style={{ fontSize:12, color:'#ef4444', fontFamily:'monospace' }}>Error: {coldchainResult.error}</div>}
-            </div>
-          )}
 
         </div>
       </div>
