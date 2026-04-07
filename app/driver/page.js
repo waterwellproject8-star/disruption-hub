@@ -134,6 +134,7 @@ export default function DriverApp() {
   const [opsJobUpdate, setOpsJobUpdate]         = useState(null)
   const [driverHistory, setDriverHistory]       = useState({ name:'', phone:'', clientId:'', regs:[] })
   const [regInputMode, setRegInputMode]         = useState('dropdown') // 'dropdown' | 'manual' // banner when ops cancels jobs
+  const [demoMode, setDemoMode]                 = useState(false) // demo toggle on setup screen
 
   const [panelOpen, setPanelOpen]       = useState(false)
   const [panelIssue, setPanelIssue]     = useState(null)
@@ -278,6 +279,16 @@ export default function DriverApp() {
     const interval = setInterval(checkForOpsChanges, 60000)
     return () => clearInterval(interval)
   }, [shiftStarted, driverInfo.clientId, driverInfo.vehicleReg])
+
+  // ── DEMO MODE POLL — checks every 5s for jobs when in demo mode and jobs list is empty ──
+  useEffect(() => {
+    if (!demoMode || !shiftStarted || !driverInfo.clientId) return
+    if (jobs.length > 0) return // jobs already loaded, stop polling
+    const interval = setInterval(() => {
+      loadJobs(driverInfo)
+    }, 5000)
+    return () => clearInterval(interval)
+  }, [demoMode, shiftStarted, driverInfo.clientId, jobs.length])
 
   const showToast = (msg, type='ok') => { setToast({msg,type}); setTimeout(()=>setToast(null),3500) }
 
@@ -667,6 +678,28 @@ export default function DriverApp() {
           {isReturning ? 'CONFIRM YOUR DETAILS' : 'FIRST TIME SETUP'}
         </div>
 
+        {/* ── DEMO MODE TOGGLE ── */}
+        <div onClick={() => {
+          const next = !demoMode
+          setDemoMode(next)
+          if (next) {
+            // Pre-fill clientId with 'demo' — driver just enters their name and reg
+            setDriverInfo(p => ({ ...p, clientId: 'demo' }))
+          } else {
+            setDriverInfo(p => ({ ...p, clientId: p.clientId === 'demo' ? '' : p.clientId }))
+          }
+        }} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'14px', background: demoMode ? 'rgba(0,229,176,0.07)' : '#111418', border:`1px solid ${demoMode ? 'rgba(0,229,176,0.3)' : 'rgba(255,255,255,0.08)'}`, borderRadius:10, marginBottom:20, cursor:'pointer', transition:'all 0.2s' }}>
+          <div>
+            <div style={{ fontSize:14, fontWeight:600, color: demoMode ? '#00e5b0' : '#e8eaed' }}>Demo Mode</div>
+            <div style={{ fontSize:12, color:'#4a5260', marginTop:2 }}>
+              {demoMode ? 'Waiting for ops to build scenario...' : 'For live demonstrations only'}
+            </div>
+          </div>
+          <div style={{ width:44, height:26, borderRadius:13, background: demoMode ? '#00e5b0' : 'rgba(255,255,255,0.1)', position:'relative', transition:'background 0.2s', flexShrink:0 }}>
+            <div style={{ width:20, height:20, borderRadius:'50%', background:'#fff', position:'absolute', top:3, left: demoMode ? 21 : 3, transition:'left 0.2s', boxShadow:'0 1px 3px rgba(0,0,0,0.3)' }} />
+          </div>
+        </div>
+
         {/* Name — pre-filled from history */}
         <div style={{marginBottom:14}}>
           <div style={{fontSize:13,color:'#8a9099',marginBottom:5}}>Your full name</div>
@@ -752,20 +785,29 @@ export default function DriverApp() {
           </div>
         </div>
 
-        {/* Company code — pre-filled from history */}
-        <div style={{marginBottom:20}}>
-          <div style={{fontSize:13,color:'#8a9099',marginBottom:5}}>Company access code</div>
-          <input
-            value={driverInfo.clientId}
-            onChange={e=>setDriverInfo(p=>({...p,clientId:e.target.value}))}
-            placeholder='Given by your manager'
-            style={{width:'100%',padding:'13px',background:'#111418',border:'1px solid rgba(255,255,255,0.1)',borderRadius:8,color:'#e8eaed',fontSize:16,outline:'none',boxSizing:'border-box'}}/>
-        </div>
+        {/* Company code — hidden in demo mode (auto-set to 'demo') */}
+        {!demoMode && (
+          <div style={{marginBottom:20}}>
+            <div style={{fontSize:13,color:'#8a9099',marginBottom:5}}>Company access code</div>
+            <input
+              value={driverInfo.clientId}
+              onChange={e=>setDriverInfo(p=>({...p,clientId:e.target.value}))}
+              placeholder='Given by your manager'
+              style={{width:'100%',padding:'13px',background:'#111418',border:'1px solid rgba(255,255,255,0.1)',borderRadius:8,color:'#e8eaed',fontSize:16,outline:'none',boxSizing:'border-box'}}/>
+          </div>
+        )}
+
+        {demoMode && (
+          <div style={{ padding:'10px 14px', background:'rgba(0,229,176,0.05)', border:'1px solid rgba(0,229,176,0.15)', borderRadius:8, marginBottom:20 }}>
+            <div style={{ fontSize:12, color:'#00e5b0', fontFamily:'monospace', marginBottom:2 }}>DEMO — company code set automatically</div>
+            <div style={{ fontSize:11, color:'#4a5260' }}>Once ops builds a scenario, your jobs will appear instantly</div>
+          </div>
+        )}
 
         {!ready && <div style={{fontSize:12,color:'#4a5260',textAlign:'center',marginBottom:10}}>All fields required to continue</div>}
         <button onClick={saveDriverInfo} disabled={!ready}
           style={{width:'100%',padding:15,background:ready?'#00e5b0':'rgba(0,229,176,0.3)',border:'none',borderRadius:10,color:'#000',fontWeight:700,fontSize:16,cursor:ready?'pointer':'default'}}>
-          {isReturning ? 'Start shift →' : 'Get started →'}
+          {demoMode ? 'Ready — waiting for ops →' : (isReturning ? 'Start shift →' : 'Get started →')}
         </button>
       </div>
     </div>
@@ -1030,6 +1072,20 @@ export default function DriverApp() {
                   </div>
                 </div>
                 <div style={{fontSize:10,color:'#4a5260',flexShrink:0,marginLeft:8}}>Tap →</div>
+              </div>
+            </div>
+          )}
+
+          {/* ── DEMO WAITING STATE ── */}
+          {demoMode && !loading && jobs.length === 0 && (
+            <div style={{ margin:'20px 14px', padding:'24px 16px', background:'rgba(0,229,176,0.04)', border:'1px solid rgba(0,229,176,0.2)', borderRadius:12, textAlign:'center' }}>
+              <div style={{ marginBottom:14 }}>
+                <div style={{ width:36, height:36, border:'3px solid rgba(0,229,176,0.3)', borderTopColor:'#00e5b0', borderRadius:'50%', animation:'spin 1s linear infinite', margin:'0 auto 14px' }} />
+                <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+              </div>
+              <div style={{ fontFamily:'monospace', fontSize:11, color:'#00e5b0', letterSpacing:'0.1em', marginBottom:6 }}>DEMO MODE — WAITING FOR OPS</div>
+              <div style={{ fontSize:13, color:'#8a9099', lineHeight:1.6 }}>
+                Your jobs will appear here automatically once ops builds the scenario on the dashboard
               </div>
             </div>
           )}

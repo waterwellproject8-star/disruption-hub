@@ -33,7 +33,7 @@ export async function POST(request) {
   const now = current_time ? new Date(current_time) : new Date()
   const timeStr = fmt(now)
   const dateStr = now.toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long' })
-  const sessionId = 'demo-' + Math.random().toString(36).slice(2, 7)
+  const sessionId = 'demo'
 
   const systemPrompt = `You are a UK logistics scenario builder. Your job is to turn a natural language incident description into a complete, fully-populated logistics scenario.
 

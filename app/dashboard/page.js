@@ -479,76 +479,6 @@ function KV({ k, v, valueColor = '#e8eaed' }) {
   )
 }
 
-// ── ROI COUNTER ────────────────────────────────────────────────────────────
-function AnimatedNumber({ value, prefix = '', suffix = '', color = '#00e5b0', size = 18 }) {
-  const [display, setDisplay] = useState(value)
-  const prevRef = useRef(value)
-  useEffect(() => {
-    const from = prevRef.current
-    const to = value
-    if (from === to) return
-    prevRef.current = to
-    const steps = 24; const duration = 700; let step = 0
-    const iv = setInterval(() => {
-      step++
-      const p = step / steps
-      const eased = 1 - Math.pow(1 - p, 3)
-      setDisplay(Math.round(from + (to - from) * eased))
-      if (step >= steps) { clearInterval(iv); setDisplay(to) }
-    }, duration / steps)
-    return () => clearInterval(iv)
-  }, [value])
-  return (
-    <span style={{ fontSize: size, fontWeight: 700, fontFamily: 'monospace', color }}>
-      {prefix}{typeof display === 'number' ? display.toLocaleString() : display}{suffix}
-    </span>
-  )
-}
-
-function RoiStrip({ stats }) {
-  const todayBase = INCIDENT_LOG.filter(i => i.date.toLowerCase().startsWith('today')).reduce((sum, i) => sum + (parseInt((i.saved||'').replace(/[^0-9]/g,''))||0), 0)
-  const allLogMoney = INCIDENT_LOG.reduce((sum, i) => sum + (parseInt((i.saved||'').replace(/[^0-9]/g,''))||0), 0)
-  const sessionExtra = Math.max(0, stats.money - todayBase)
-  const dailyAvg = Math.round((allLogMoney + sessionExtra) / 3)
-  const projected = dailyAvg * 14
-  return (
-    <div style={{
-      display: 'flex', alignItems: 'stretch',
-      borderBottom: '2px solid rgba(0,229,176,0.12)',
-      background: 'linear-gradient(90deg, rgba(0,229,176,0.05) 0%, rgba(0,0,0,0) 60%)',
-      flexShrink: 0, overflowX: 'auto', minHeight: 52
-    }}>
-      <div style={{ display:'flex', alignItems:'center', gap:7, padding:'0 16px', borderRight:'1px solid rgba(255,255,255,0.05)', flexShrink:0 }}>
-        <div style={{ width:6, height:6, borderRadius:'50%', background:'#00e5b0', animation:'pulse 2s infinite' }} />
-        <div>
-          <div style={{ fontSize:9, fontFamily:'monospace', color:'#00e5b0', letterSpacing:'0.12em' }}>PILOT</div>
-          <div style={{ fontSize:9, fontFamily:'monospace', color:'#00e5b0', letterSpacing:'0.12em' }}>VALUE</div>
-        </div>
-      </div>
-      <div style={{ display:'flex', flexDirection:'column', justifyContent:'center', padding:'0 20px', borderRight:'1px solid rgba(255,255,255,0.05)', flexShrink:0 }}>
-        <AnimatedNumber value={stats.money} prefix="£" color="#00e5b0" size={20} />
-        <div style={{ fontSize:8, fontFamily:'monospace', color:'#4a5260', letterSpacing:'0.08em', marginTop:2 }}>SAVED TODAY</div>
-      </div>
-      <div style={{ display:'flex', flexDirection:'column', justifyContent:'center', padding:'0 18px', borderRight:'1px solid rgba(255,255,255,0.05)', flexShrink:0 }}>
-        <AnimatedNumber value={stats.hours} suffix="h" color="#a855f7" size={16} />
-        <div style={{ fontSize:8, fontFamily:'monospace', color:'#4a5260', letterSpacing:'0.08em', marginTop:2 }}>OPS TIME FREED</div>
-      </div>
-      <div style={{ display:'flex', flexDirection:'column', justifyContent:'center', padding:'0 18px', borderRight:'1px solid rgba(255,255,255,0.05)', flexShrink:0 }}>
-        <AnimatedNumber value={stats.sla} color="#3b82f6" size={16} />
-        <div style={{ fontSize:8, fontFamily:'monospace', color:'#4a5260', letterSpacing:'0.08em', marginTop:2 }}>SLA PREVENTED</div>
-      </div>
-      <div style={{ display:'flex', flexDirection:'column', justifyContent:'center', padding:'0 18px', borderRight:'1px solid rgba(255,255,255,0.05)', flexShrink:0 }}>
-        <AnimatedNumber value={stats.incidents} color="#f59e0b" size={16} />
-        <div style={{ fontSize:8, fontFamily:'monospace', color:'#4a5260', letterSpacing:'0.08em', marginTop:2 }}>INCIDENTS CAUGHT</div>
-      </div>
-      <div style={{ display:'flex', flexDirection:'column', justifyContent:'center', padding:'0 18px', marginLeft:'auto', flexShrink:0 }}>
-        <div style={{ fontSize:13, fontWeight:700, fontFamily:'monospace', color:'#e8eaed' }}>£{projected.toLocaleString()}</div>
-        <div style={{ fontSize:8, fontFamily:'monospace', color:'#4a5260', letterSpacing:'0.08em', marginTop:2 }}>PROJECTED / 2-WK PILOT</div>
-      </div>
-    </div>
-  )
-}
-
 function ModuleResult({ result, moduleName }) {
   if (!result) return null
   const r = result.result || result
@@ -1139,16 +1069,6 @@ export default function DashboardPage() {
   const [latestRuns, setLatestRuns] = useState({})
   const [sessionIncidents, setSessionIncidents] = useState([])
   const [liveShipments, setLiveShipments] = useState([])
-  const bgDripRef = useRef(0)
-  const [roiStats, setRoiStats] = useState(() => {
-    // Seed from today's entries in INCIDENT_LOG only — no hardcoding
-    const todayMoney = INCIDENT_LOG
-      .filter(i => i.date.toLowerCase().startsWith('today'))
-      .reduce((sum, i) => sum + (parseInt((i.saved||'').replace(/[^0-9]/g,''))||0), 0)
-    const todaySla = INCIDENT_LOG.filter(i => i.date.toLowerCase().startsWith('today') && (i.severity==='CRITICAL'||i.severity==='HIGH')).length
-    const todayInc = INCIDENT_LOG.filter(i => i.date.toLowerCase().startsWith('today')).length
-    return { money: todayMoney, hours: Math.round(todayInc * 0.5 * 2) / 2, sla: todaySla, incidents: todayInc }
-  })
   const [whSystem, setWhSystem] = useState('webfleet')
   const [whEvent, setWhEvent] = useState('temp_alarm')
   const [whPayload, setWhPayload] = useState(null)
@@ -1156,6 +1076,12 @@ export default function DashboardPage() {
   const [whLog, setWhLog] = useState([])
   const [whResult, setWhResult] = useState(null)
   const [whLogLoading, setWhLogLoading] = useState(false)
+  // ── DEMO MODE ────────────────────────────────────────────────────────────
+  const [demoMode, setDemoMode]           = useState(false)
+  const [demoInput, setDemoInput]         = useState('')
+  const [demoBuilding, setDemoBuilding]   = useState(false)
+  const [demoStarted, setDemoStarted]     = useState(false)
+  const [demoDriverCode, setDemoDriverCode] = useState('')
   const [fleet, setFleet] = useState([])
   const [unassigned, setUnassigned] = useState([])
   const [cancellingJob, setCancellingJob] = useState(null)
@@ -1227,42 +1153,6 @@ export default function DashboardPage() {
       .then(data => { if (data.latest) setLatestRuns(data.latest) })
       .catch(() => {})
   }, [])
-
-  // ROI drip — every 60s add £22 (background monitoring value ~£22/hr ops rate freed)
-  useEffect(() => {
-    if (!unlocked) return
-    const iv = setInterval(() => {
-      bgDripRef.current += 22
-      setRoiStats(prev => ({ ...prev, money: prev.money + 22 }))
-    }, 60000)
-    return () => clearInterval(iv)
-  }, [unlocked])
-
-  // Recalculate whenever session incidents or approvals change
-  useEffect(() => {
-    const todayMoney = INCIDENT_LOG
-      .filter(i => i.date.toLowerCase().startsWith('today'))
-      .reduce((sum, i) => sum + (parseInt((i.saved||'').replace(/[^0-9]/g,''))||0), 0)
-    const todaySla = INCIDENT_LOG.filter(i => i.date.toLowerCase().startsWith('today') && (i.severity==='CRITICAL'||i.severity==='HIGH')).length
-    const todayInc = INCIDENT_LOG.filter(i => i.date.toLowerCase().startsWith('today')).length
-
-    let extraMoney = bgDripRef.current
-    let extraHours = 0, extraSla = 0, extraInc = 0
-    for (const inc of sessionIncidents) {
-      const val = inc.saved ? parseInt(String(inc.saved).replace(/[^0-9]/g,''))||0 : 0
-      extraMoney += val; extraHours += 0.5; extraInc++
-      if (inc.severity==='CRITICAL'||inc.severity==='HIGH') extraSla++
-    }
-    for (const a of [...pendingApprovals, ...localApprovals]) {
-      if (a.status==='executed') { extraMoney += Number(a.financial_value)||0; extraHours += 0.25 }
-    }
-    setRoiStats({
-      money: todayMoney + extraMoney,
-      hours: Math.round((todayInc * 0.5 + extraHours) * 2) / 2,
-      sla: todaySla + extraSla,
-      incidents: todayInc + extraInc
-    })
-  }, [sessionIncidents, pendingApprovals, localApprovals])
 
   if (!unlocked) return <PinGate onUnlock={() => setUnlocked(true)} />
 
@@ -1677,6 +1567,56 @@ export default function DashboardPage() {
     }
   }
 
+  // ── DEMO MODE FUNCTIONS ──────────────────────────────────────────────────
+  async function generateDemoScenario() {
+    if (!demoInput.trim() || demoBuilding) return
+    setDemoBuilding(true)
+    setMessages([])
+    setResponse('')
+    setAgentActions([])
+    setSessionIncidents([])
+    setLiveShipments([])
+    try {
+      const res = await fetch('/api/demo/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: demoInput, current_time: new Date().toISOString() })
+      })
+      const data = await res.json()
+      if (data.scenario) {
+        setLiveShipments(data.scenario.deliveries || [])
+        setSessionIncidents(data.scenario.history || [])
+        setDemoDriverCode(data.driver_code || '')
+        setDemoStarted(true)
+        setDemoInput('')
+        await runAnalysis(data.scenario.agent_prompt)
+      }
+    } catch (e) {
+      console.error('Demo generate error:', e)
+    } finally {
+      setDemoBuilding(false)
+    }
+  }
+
+  function resetDemo() {
+    setMessages([])
+    setResponse('')
+    setAgentActions([])
+    setModuleActions([])
+    setActionStates({})
+    setLocalApprovals([])
+    setSessionIncidents([])
+    setLiveShipments([])
+    setModuleResult(null)
+    setScenarioResult(null)
+    setWhResult(null)
+    setWhLog([])
+    setActiveTab('agent')
+    setDemoStarted(false)
+    setDemoInput('')
+    setDemoDriverCode('')
+  }
+
   return (
     <div style={{ minHeight:'100vh', display:'flex', flexDirection:'column', fontFamily:'IBM Plex Sans, sans-serif', background:'#0a0c0e', color:'#e8eaed' }}>
       <style>{`
@@ -1728,6 +1668,16 @@ export default function DashboardPage() {
             )
           })()}
           <span className="dh-client-name">Pearson Haulage</span>
+          {demoMode && demoStarted && (
+            <button onClick={resetDemo}
+              style={{ padding:'4px 10px', borderRadius:5, fontSize:10, cursor:'pointer', fontFamily:'monospace', border:'1px solid rgba(239,68,68,0.3)', background:'transparent', color:'#ef4444' }}>
+              ↺ RESET
+            </button>
+          )}
+          <button onClick={() => { setDemoMode(d => !d); if (demoMode) resetDemo() }}
+            style={{ padding:'4px 10px', borderRadius:5, fontSize:10, cursor:'pointer', fontFamily:'monospace', border: demoMode ? '1px solid #00e5b0' : '1px solid rgba(255,255,255,0.1)', background: demoMode ? 'rgba(0,229,176,0.1)' : 'transparent', color: demoMode ? '#00e5b0' : '#4a5260' }}>
+            {demoMode ? '● DEMO ON' : 'DEMO MODE'}
+          </button>
         </div>
       </nav>
 
@@ -1804,9 +1754,6 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* ── ROI STRIP ──────────────────────────────────────────────────── */}
-          <RoiStrip stats={roiStats} />
-
           {/* ── AGENT TAB ──────────────────────────────────────────────────── */}
           {activeTab === 'agent' && (
             <>
@@ -1873,20 +1820,59 @@ export default function DashboardPage() {
                 )}
               </div>
               <div style={{ borderTop:'1px solid rgba(255,255,255,0.06)', padding:'12px 20px', background:'#0d1014' }}>
-                <div style={{ display:'flex', gap:8 }}>
-                  <input value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => { if(e.key==='Enter') runAnalysis(input) }} placeholder="Type a disruption or follow-up question..."
-                    style={{ flex:1, background:'#111418', border:'1px solid rgba(255,255,255,0.08)', borderRadius:6, padding:'10px 13px', color:'#e8eaed', fontFamily:'IBM Plex Sans', fontSize:12, outline:'none' }} />
-                  <button onClick={() => runAnalysis(input)} disabled={!input.trim()||loading}
-                    style={{ background:loading?'#111418':'#00e5b0', color:'#000', border:'none', padding:'10px 18px', borderRadius:6, fontWeight:600, fontSize:12, cursor:loading?'default':'pointer', whiteSpace:'nowrap' }}>
-                    {loading ? '...' : 'Analyse →'}
-                  </button>
-                </div>
-                <div style={{ marginTop:8, display:'flex', gap:6, flexWrap:'wrap' }}>
-                  {['Draft client email','Cheapest reroute','What\'s our liability?','Reorder recommendations'].map(q => (
-                    <button key={q} onClick={() => { setInput(q); runAnalysis(q) }}
-                      style={{ fontSize:10, color:'#4a5260', background:'none', border:'1px solid rgba(255,255,255,0.06)', borderRadius:4, padding:'3px 8px', cursor:'pointer', fontFamily:'IBM Plex Sans' }}>{q}</button>
-                  ))}
-                </div>
+
+                {/* Demo mode — scenario not yet built */}
+                {demoMode && !demoStarted ? (
+                  <div>
+                    <div style={{ fontFamily:'monospace', fontSize:9, color:'#00e5b0', letterSpacing:'0.1em', marginBottom:6 }}>⚡ DEMO MODE — describe their scenario in plain English</div>
+                    <div style={{ display:'flex', gap:8, marginBottom:8 }}>
+                      <textarea
+                        value={demoInput}
+                        onChange={e => setDemoInput(e.target.value)}
+                        onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); generateDemoScenario() } }}
+                        placeholder="e.g. John is broken down on M62 northbound heading to Manchester, pharma stock on board, temperature dropping, 3 deliveries pending"
+                        rows={3}
+                        style={{ flex:1, background:'#111418', border:'1px solid rgba(0,229,176,0.25)', borderRadius:6, padding:'10px 13px', color:'#e8eaed', fontFamily:'IBM Plex Sans', fontSize:12, outline:'none', resize:'none', lineHeight:1.5 }}
+                      />
+                      <button onClick={generateDemoScenario} disabled={!demoInput.trim() || demoBuilding}
+                        style={{ background: demoBuilding ? '#111418' : '#00e5b0', color: demoBuilding ? '#00e5b0' : '#000', border: demoBuilding ? '1px solid rgba(0,229,176,0.3)' : 'none', padding:'10px 16px', borderRadius:6, fontWeight:700, fontSize:12, cursor: demoBuilding ? 'default' : 'pointer', whiteSpace:'nowrap', alignSelf:'flex-end', fontFamily:'monospace', minWidth:80 }}>
+                        {demoBuilding ? (
+                          <span style={{ display:'flex', alignItems:'center', gap:6 }}>
+                            <span style={{ width:10, height:10, border:'2px solid #00e5b0', borderTopColor:'transparent', borderRadius:'50%', display:'inline-block', animation:'spin 0.8s linear infinite' }} />
+                            BUILD
+                          </span>
+                        ) : 'BUILD →'}
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  /* Normal input — always present when not in demo pre-build state */
+                  <div>
+                    <div style={{ display:'flex', gap:8 }}>
+                      <input value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => { if(e.key==='Enter') runAnalysis(input) }} placeholder={demoMode && demoStarted ? "Ask a follow-up — 'draft client email', 'cheapest option', 'what's our liability'..." : "Type a disruption or follow-up question..."}
+                        style={{ flex:1, background:'#111418', border:'1px solid rgba(255,255,255,0.08)', borderRadius:6, padding:'10px 13px', color:'#e8eaed', fontFamily:'IBM Plex Sans', fontSize:12, outline:'none' }} />
+                      <button onClick={() => runAnalysis(input)} disabled={!input.trim()||loading}
+                        style={{ background:loading?'#111418':'#00e5b0', color:'#000', border:'none', padding:'10px 18px', borderRadius:6, fontWeight:600, fontSize:12, cursor:loading?'default':'pointer', whiteSpace:'nowrap' }}>
+                        {loading ? '...' : 'Analyse →'}
+                      </button>
+                    </div>
+                    {demoMode && demoStarted && demoDriverCode && (
+                      <div style={{ marginTop:8, padding:'7px 10px', background:'rgba(0,229,176,0.05)', border:'1px solid rgba(0,229,176,0.15)', borderRadius:5, display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+                        <span style={{ fontSize:10, color:'#4a5260', fontFamily:'monospace' }}>Driver app code:</span>
+                        <span style={{ fontFamily:'monospace', fontSize:12, color:'#00e5b0', fontWeight:700 }}>{demoDriverCode}</span>
+                        <button onClick={resetDemo} style={{ fontSize:10, color:'#ef4444', background:'none', border:'1px solid rgba(239,68,68,0.2)', borderRadius:4, padding:'2px 8px', cursor:'pointer', fontFamily:'monospace' }}>NEW SCENARIO</button>
+                      </div>
+                    )}
+                    {!demoMode && (
+                      <div style={{ marginTop:8, display:'flex', gap:6, flexWrap:'wrap' }}>
+                        {['Draft client email','Cheapest reroute','What\'s our liability?','Reorder recommendations'].map(q => (
+                          <button key={q} onClick={() => { setInput(q); runAnalysis(q) }}
+                            style={{ fontSize:10, color:'#4a5260', background:'none', border:'1px solid rgba(255,255,255,0.06)', borderRadius:4, padding:'3px 8px', cursor:'pointer', fontFamily:'IBM Plex Sans' }}>{q}</button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </>
           )}
