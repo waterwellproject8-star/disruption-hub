@@ -1076,12 +1076,6 @@ export default function DashboardPage() {
   const [whLog, setWhLog] = useState([])
   const [whResult, setWhResult] = useState(null)
   const [whLogLoading, setWhLogLoading] = useState(false)
-  // ── DEMO MODE ────────────────────────────────────────────────────────────
-  const [demoMode, setDemoMode]           = useState(false)
-  const [demoInput, setDemoInput]         = useState('')
-  const [demoBuilding, setDemoBuilding]   = useState(false)
-  const [demoStarted, setDemoStarted]     = useState(false)
-  const [demoDriverCode, setDemoDriverCode] = useState('')
   const [fleet, setFleet] = useState([])
   const [unassigned, setUnassigned] = useState([])
   const [cancellingJob, setCancellingJob] = useState(null)
@@ -1290,31 +1284,29 @@ export default function DashboardPage() {
     const actions = []
     const lines = text.split('\n')
 
+    // Match any numbered action line (1., 2., etc.)
     const actionPatterns = [
       { pattern: /999|emergency.service|ambulance|police/i, type: 'emergency', icon: '🚨', label: 'Call 999 — emergency services' },
-      { pattern: /call.{0,80}(recovery|breakdown|rac|aa|green.flag|rescue|engineer)/i, type: 'call', icon: '📞' },
-      { pattern: /call.{0,60}(driver|depot|carrier|ops|manager|controller|haulage|express|freight|yodel|dhl|xpo|consignee|pharmacist|pharmacy|hospital|nhs|customer|client|dc)/i, type: 'call', icon: '📞' },
+      { pattern: /call.{0,60}(driver|carl|james|mark|paul|depot|carrier|ops|manager|controller|haulage|express|freight|yodel|dhl|xpo)/i, type: 'call', icon: '📞' },
       { pattern: /telematics|webfleet|samsara|gps.{0,20}(pull|check|confirm)/i, type: 'call', icon: '📍', label: 'Pull telematics — confirm vehicle position' },
       { pattern: /send.{0,40}(sms|text|message|whatsapp|instruction|alert)/i, type: 'sms', icon: '💬' },
+      { pattern: /send|email|notify|notification/i, type: 'email', icon: '✉' },
       { pattern: /dispatch.{0,40}(relief|vehicle|driver|replace)/i, type: 'dispatch', icon: '🚛' },
       { pattern: /relief.{0,20}vehicle|relief.{0,20}driver|dispatch.{0,20}vehicle/i, type: 'dispatch', icon: '🚛' },
       { pattern: /reroute|re-route|divert|alternative.{0,20}route/i, type: 'reroute', icon: '🗺' },
       { pattern: /highways.england|0300|motorway/i, type: 'call', icon: '🛣' },
-      { pattern: /notify|notif|inform|alert.{0,40}(tesco|nhs|dc|customer|client|consignee|pharmacist|pharmacy|hospital|asda|sainsbury|morrisons|boots|delivery|ops)/i, type: 'notify', icon: '📣' },
-      { pattern: /contact|speak.{0,40}(tesco|nhs|dc|customer|client|consignee|pharmacist|pharmacy|hospital|delivery|manager)/i, type: 'notify', icon: '📣' },
-      { pattern: /update.{0,40}(customer|client|consignee|tesco|nhs|dc|slot|delivery|eta)/i, type: 'notify', icon: '📣' },
-      { pattern: /email|send.{0,20}(report|document|confirmation)/i, type: 'email', icon: '✉' },
-      { pattern: /temperature|cold.chain|reefer|probe|cooling/i, type: 'notify', icon: '🌡' },
+      { pattern: /contact|speak|inform|update|alert.{0,20}(tesco|nhs|dc|customer|client|consignee)/i, type: 'notify', icon: '📣' },
     ]
 
     for (const line of lines) {
-      const numMatch = line.match(/^\s*(\d+)\.?\s+(.{10,180})/)
+      // Only process numbered action lines
+      const numMatch = line.match(/^(\d+)\.?\s+(.{15,180})/)
       if (!numMatch) continue
       const clean = numMatch[2].replace(/\*\*/g,'').trim()
 
       for (const { pattern, type, icon, label: forcedLabel } of actionPatterns) {
         if (pattern.test(clean)) {
-          const label = forcedLabel || clean.split('—')[0].split('·')[0].split('.')[0].trim().substring(0, 70)
+          const label = forcedLabel || clean.split('—')[0].split('·')[0].split('.')[0].trim().substring(0, 65)
           if (!actions.find(a => a.label === label)) {
             actions.push({ label, type, icon, full: clean })
           }
@@ -1323,16 +1315,16 @@ export default function DashboardPage() {
       }
     }
 
-    // Fallback — grab any action-like line if nothing matched
+    // If no numbered matches found, try key phrase scan across all lines
     if (actions.length === 0) {
       for (const line of lines) {
-        const clean = line.replace(/^[-—*\s\d.]+/,'').replace(/\*\*/g,'').trim()
+        const clean = line.replace(/^[-—*\d.]+\s*/,'').replace(/\*\*/g,'').trim()
         if (clean.length < 15 || clean.length > 180) continue
-        if (/\b(call|contact|notify|inform|dispatch|send|alert|update|arrange|book|confirm)\b/i.test(clean)) {
-          const label = clean.split('—')[0].trim().substring(0, 70)
+        if (/call 999|call.{0,30}(driver|ops|carrier)|dispatch.{0,20}(vehicle|relief)|send.{0,20}(sms|message)/i.test(clean)) {
+          const label = clean.split('—')[0].trim().substring(0,65)
           if (!actions.find(a => a.label === label)) {
-            const type = /999|emergency/.test(clean) ? 'emergency' : /call|phone|ring/.test(clean) ? 'call' : /dispatch|vehicle|relief/.test(clean) ? 'dispatch' : /reroute|route/.test(clean) ? 'reroute' : 'notify'
-            const icon = /999/.test(clean) ? '🚨' : /call|phone/.test(clean) ? '📞' : /dispatch/.test(clean) ? '🚛' : /reroute/.test(clean) ? '🗺' : '📣'
+            const type = /999/.test(clean) ? 'emergency' : /call/.test(clean) ? 'call' : /dispatch/.test(clean) ? 'dispatch' : 'sms'
+            const icon = /999/.test(clean) ? '🚨' : /call/.test(clean) ? '📞' : /dispatch/.test(clean) ? '🚛' : '💬'
             actions.push({ label, type, icon, full: clean })
           }
         }
@@ -1569,56 +1561,6 @@ export default function DashboardPage() {
     }
   }
 
-  // ── DEMO MODE FUNCTIONS ──────────────────────────────────────────────────
-  async function generateDemoScenario() {
-    if (!demoInput.trim() || demoBuilding) return
-    setDemoBuilding(true)
-    setMessages([])
-    setResponse('')
-    setAgentActions([])
-    setSessionIncidents([])
-    setLiveShipments([])
-    try {
-      const res = await fetch('/api/demo/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: demoInput, current_time: new Date().toISOString() })
-      })
-      const data = await res.json()
-      if (data.scenario) {
-        setLiveShipments(data.scenario.deliveries || [])
-        setSessionIncidents(data.scenario.history || [])
-        setDemoDriverCode(data.driver_code || '')
-        setDemoStarted(true)
-        setDemoInput('')
-        await runAnalysis(data.scenario.agent_prompt)
-      }
-    } catch (e) {
-      console.error('Demo generate error:', e)
-    } finally {
-      setDemoBuilding(false)
-    }
-  }
-
-  function resetDemo() {
-    setMessages([])
-    setResponse('')
-    setAgentActions([])
-    setModuleActions([])
-    setActionStates({})
-    setLocalApprovals([])
-    setSessionIncidents([])
-    setLiveShipments([])
-    setModuleResult(null)
-    setScenarioResult(null)
-    setWhResult(null)
-    setWhLog([])
-    setActiveTab('agent')
-    setDemoStarted(false)
-    setDemoInput('')
-    setDemoDriverCode('')
-  }
-
   return (
     <div style={{ minHeight:'100vh', display:'flex', flexDirection:'column', fontFamily:'IBM Plex Sans, sans-serif', background:'#0a0c0e', color:'#e8eaed' }}>
       <style>{`
@@ -1670,16 +1612,6 @@ export default function DashboardPage() {
             )
           })()}
           <span className="dh-client-name">Pearson Haulage</span>
-          {demoMode && demoStarted && (
-            <button onClick={resetDemo}
-              style={{ padding:'4px 10px', borderRadius:5, fontSize:10, cursor:'pointer', fontFamily:'monospace', border:'1px solid rgba(239,68,68,0.3)', background:'transparent', color:'#ef4444' }}>
-              ↺ RESET
-            </button>
-          )}
-          <button onClick={() => { setDemoMode(d => !d); if (demoMode) resetDemo() }}
-            style={{ padding:'4px 10px', borderRadius:5, fontSize:10, cursor:'pointer', fontFamily:'monospace', border: demoMode ? '1px solid #00e5b0' : '1px solid rgba(255,255,255,0.1)', background: demoMode ? 'rgba(0,229,176,0.1)' : 'transparent', color: demoMode ? '#00e5b0' : '#4a5260' }}>
-            {demoMode ? '● DEMO ON' : 'DEMO MODE'}
-          </button>
         </div>
       </nav>
 
@@ -1822,59 +1754,20 @@ export default function DashboardPage() {
                 )}
               </div>
               <div style={{ borderTop:'1px solid rgba(255,255,255,0.06)', padding:'12px 20px', background:'#0d1014' }}>
-
-                {/* Demo mode — scenario not yet built */}
-                {demoMode && !demoStarted ? (
-                  <div>
-                    <div style={{ fontFamily:'monospace', fontSize:9, color:'#00e5b0', letterSpacing:'0.1em', marginBottom:6 }}>⚡ DEMO MODE — describe their scenario in plain English</div>
-                    <div style={{ display:'flex', gap:8, marginBottom:8 }}>
-                      <textarea
-                        value={demoInput}
-                        onChange={e => setDemoInput(e.target.value)}
-                        onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); generateDemoScenario() } }}
-                        placeholder="e.g. John is broken down on M62 northbound heading to Manchester, pharma stock on board, temperature dropping, 3 deliveries pending"
-                        rows={3}
-                        style={{ flex:1, background:'#111418', border:'1px solid rgba(0,229,176,0.25)', borderRadius:6, padding:'10px 13px', color:'#e8eaed', fontFamily:'IBM Plex Sans', fontSize:12, outline:'none', resize:'none', lineHeight:1.5 }}
-                      />
-                      <button onClick={generateDemoScenario} disabled={!demoInput.trim() || demoBuilding}
-                        style={{ background: demoBuilding ? '#111418' : '#00e5b0', color: demoBuilding ? '#00e5b0' : '#000', border: demoBuilding ? '1px solid rgba(0,229,176,0.3)' : 'none', padding:'10px 16px', borderRadius:6, fontWeight:700, fontSize:12, cursor: demoBuilding ? 'default' : 'pointer', whiteSpace:'nowrap', alignSelf:'flex-end', fontFamily:'monospace', minWidth:80 }}>
-                        {demoBuilding ? (
-                          <span style={{ display:'flex', alignItems:'center', gap:6 }}>
-                            <span style={{ width:10, height:10, border:'2px solid #00e5b0', borderTopColor:'transparent', borderRadius:'50%', display:'inline-block', animation:'spin 0.8s linear infinite' }} />
-                            BUILD
-                          </span>
-                        ) : 'BUILD →'}
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  /* Normal input — always present when not in demo pre-build state */
-                  <div>
-                    <div style={{ display:'flex', gap:8 }}>
-                      <input value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => { if(e.key==='Enter') runAnalysis(input) }} placeholder={demoMode && demoStarted ? "Ask a follow-up — 'draft client email', 'cheapest option', 'what's our liability'..." : "Type a disruption or follow-up question..."}
-                        style={{ flex:1, background:'#111418', border:'1px solid rgba(255,255,255,0.08)', borderRadius:6, padding:'10px 13px', color:'#e8eaed', fontFamily:'IBM Plex Sans', fontSize:12, outline:'none' }} />
-                      <button onClick={() => runAnalysis(input)} disabled={!input.trim()||loading}
-                        style={{ background:loading?'#111418':'#00e5b0', color:'#000', border:'none', padding:'10px 18px', borderRadius:6, fontWeight:600, fontSize:12, cursor:loading?'default':'pointer', whiteSpace:'nowrap' }}>
-                        {loading ? '...' : 'Analyse →'}
-                      </button>
-                    </div>
-                    {demoMode && demoStarted && demoDriverCode && (
-                      <div style={{ marginTop:8, padding:'7px 10px', background:'rgba(0,229,176,0.05)', border:'1px solid rgba(0,229,176,0.15)', borderRadius:5, display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-                        <span style={{ fontSize:10, color:'#4a5260', fontFamily:'monospace' }}>Driver app code:</span>
-                        <span style={{ fontFamily:'monospace', fontSize:12, color:'#00e5b0', fontWeight:700 }}>{demoDriverCode}</span>
-                        <button onClick={resetDemo} style={{ fontSize:10, color:'#ef4444', background:'none', border:'1px solid rgba(239,68,68,0.2)', borderRadius:4, padding:'2px 8px', cursor:'pointer', fontFamily:'monospace' }}>NEW SCENARIO</button>
-                      </div>
-                    )}
-                    {!demoMode && (
-                      <div style={{ marginTop:8, display:'flex', gap:6, flexWrap:'wrap' }}>
-                        {['Draft client email','Cheapest reroute','What\'s our liability?','Reorder recommendations'].map(q => (
-                          <button key={q} onClick={() => { setInput(q); runAnalysis(q) }}
-                            style={{ fontSize:10, color:'#4a5260', background:'none', border:'1px solid rgba(255,255,255,0.06)', borderRadius:4, padding:'3px 8px', cursor:'pointer', fontFamily:'IBM Plex Sans' }}>{q}</button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
+                <div style={{ display:'flex', gap:8 }}>
+                  <input value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => { if(e.key==='Enter') runAnalysis(input) }} placeholder="Type a disruption or follow-up question..."
+                    style={{ flex:1, background:'#111418', border:'1px solid rgba(255,255,255,0.08)', borderRadius:6, padding:'10px 13px', color:'#e8eaed', fontFamily:'IBM Plex Sans', fontSize:12, outline:'none' }} />
+                  <button onClick={() => runAnalysis(input)} disabled={!input.trim()||loading}
+                    style={{ background:loading?'#111418':'#00e5b0', color:'#000', border:'none', padding:'10px 18px', borderRadius:6, fontWeight:600, fontSize:12, cursor:loading?'default':'pointer', whiteSpace:'nowrap' }}>
+                    {loading ? '...' : 'Analyse →'}
+                  </button>
+                </div>
+                <div style={{ marginTop:8, display:'flex', gap:6, flexWrap:'wrap' }}>
+                  {['Draft client email','Cheapest reroute','What\'s our liability?','Reorder recommendations'].map(q => (
+                    <button key={q} onClick={() => { setInput(q); runAnalysis(q) }}
+                      style={{ fontSize:10, color:'#4a5260', background:'none', border:'1px solid rgba(255,255,255,0.06)', borderRadius:4, padding:'3px 8px', cursor:'pointer', fontFamily:'IBM Plex Sans' }}>{q}</button>
+                  ))}
+                </div>
               </div>
             </>
           )}

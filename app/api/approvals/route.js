@@ -172,27 +172,9 @@ export async function POST(request) {
       .eq('id', clientId)
       .single()
 
-    // ── DRIVER PHONE FALLBACK ────────────────────────────────────────────
-    // If action_details has no driver_phone, look up from driver_progress
-    // This covers demo mode where fictional driver reg ≠ real driver's phone
-    async function resolveDriverPhone() {
-      if (details.driver_phone) return details.driver_phone
-      try {
-        // Look up most recently active driver for this client
-        const { data: progress } = await db
-          .from('driver_progress')
-          .select('driver_phone')
-          .eq('client_id', clientId)
-          .order('updated_at', { ascending: false })
-          .limit(1)
-          .single()
-        return progress?.driver_phone || null
-      } catch { return null }
-    }
-
     // ── DISPATCH — recovery confirmation to driver ────────────────────────
     if (actionType === 'dispatch') {
-      const driverPhone = await resolveDriverPhone()
+      const driverPhone = details.driver_phone
       if (driverPhone) {
         const msg = `DisruptionHub OPS UPDATE${details.ref ? ` — ${details.ref}` : ''}\n\nOps confirmed. Recovery/assistance dispatched.\nStay with vehicle. Help is coming.`
         const result = await sendSMS(driverPhone, msg)
@@ -203,7 +185,7 @@ export async function POST(request) {
 
     // ── SMS / REROUTE / NOTIFY — instruction to driver ───────────────────
     if (actionType === 'sms' || actionType === 'reroute' || actionType === 'notify') {
-      const driverPhone = await resolveDriverPhone()
+      const driverPhone = details.driver_phone
       if (driverPhone) {
         const smsText = [
           `DisruptionHub OPS INSTRUCTION${details.ref ? ` — ${details.ref}` : ''}`,
@@ -245,26 +227,24 @@ export async function POST(request) {
         const callResult = await makeCall(carrierPhone, voiceMessage)
 
         // Always also notify driver if phone available
-        const resolvedDriverPhone = await resolveDriverPhone()
-        if (resolvedDriverPhone) {
+        if (details.driver_phone) {
           const driverMsg = `DisruptionHub OPS${details.ref ? ` — ${details.ref}` : ''}\n\nOps approved. Carrier being contacted.\nStay safe.`
-          await sendSMS(resolvedDriverPhone, driverMsg).catch(() => {})
+          await sendSMS(details.driver_phone, driverMsg).catch(() => {})
         }
 
         return Response.json({
           success: true,
           action: 'executed',
           call_result: callResult.success ? 'placed' : callResult.simulated ? 'simulated' : 'failed',
-          driver_notified: !!resolvedDriverPhone,
+          driver_notified: !!details.driver_phone,
           phase: 3
         })
       }
 
       // No carrier phone — still notify driver
-      const resolvedDriverPhone2 = await resolveDriverPhone()
-      if (resolvedDriverPhone2) {
+      if (details.driver_phone) {
         const driverMsg = `DisruptionHub OPS${details.ref ? ` — ${details.ref}` : ''}\n\nOps has reviewed your situation. Action approved.\nHelp is being arranged.`
-        const result = await sendSMS(resolvedDriverPhone2, driverMsg)
+        const result = await sendSMS(details.driver_phone, driverMsg)
         return Response.json({ success: true, action: 'executed', driver_notified: result.success, note: 'No carrier phone — driver notified directly' })
       }
 
