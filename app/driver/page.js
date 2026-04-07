@@ -280,15 +280,14 @@ export default function DriverApp() {
     return () => clearInterval(interval)
   }, [shiftStarted, driverInfo.clientId, driverInfo.vehicleReg])
 
-  // ── DEMO MODE POLL — checks every 5s for jobs when in demo mode and jobs list is empty ──
+  // ── DEMO MODE POLL — checks every 5s when in demo mode, always active during shift ──
   useEffect(() => {
     if (!demoMode || !shiftStarted || !driverInfo.clientId) return
-    if (jobs.length > 0) return // jobs already loaded, stop polling
     const interval = setInterval(() => {
       loadJobs(driverInfo)
     }, 5000)
     return () => clearInterval(interval)
-  }, [demoMode, shiftStarted, driverInfo.clientId, jobs.length])
+  }, [demoMode, shiftStarted, driverInfo.clientId])
 
   const showToast = (msg, type='ok') => { setToast({msg,type}); setTimeout(()=>setToast(null),3500) }
 

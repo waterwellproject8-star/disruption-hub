@@ -168,6 +168,11 @@ export async function GET(request) {
   } catch {}
 
   // Fall back to dynamically-generated demo data
+  // demo client_id = waiting for ops to build scenario — return empty, never static data
+  if (client_id === 'demo') {
+    return Response.json({ shipments: [], source: 'demo_waiting' })
+  }
+
   let shipments
   if (client_id === 'arctic-fresh') {
     shipments = buildArcticFreshShipments()
