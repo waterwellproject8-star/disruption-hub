@@ -1284,29 +1284,31 @@ export default function DashboardPage() {
     const actions = []
     const lines = text.split('\n')
 
-    // Match any numbered action line (1., 2., etc.)
     const actionPatterns = [
       { pattern: /999|emergency.service|ambulance|police/i, type: 'emergency', icon: '🚨', label: 'Call 999 — emergency services' },
-      { pattern: /call.{0,60}(driver|carl|james|mark|paul|depot|carrier|ops|manager|controller|haulage|express|freight|yodel|dhl|xpo)/i, type: 'call', icon: '📞' },
+      { pattern: /call.{0,80}(recovery|breakdown|rac|aa|green.flag|rescue|engineer)/i, type: 'call', icon: '📞' },
+      { pattern: /call.{0,60}(driver|depot|carrier|ops|manager|controller|haulage|express|freight|yodel|dhl|xpo|consignee|pharmacist|pharmacy|hospital|nhs|customer|client|dc)/i, type: 'call', icon: '📞' },
       { pattern: /telematics|webfleet|samsara|gps.{0,20}(pull|check|confirm)/i, type: 'call', icon: '📍', label: 'Pull telematics — confirm vehicle position' },
       { pattern: /send.{0,40}(sms|text|message|whatsapp|instruction|alert)/i, type: 'sms', icon: '💬' },
-      { pattern: /send|email|notify|notification/i, type: 'email', icon: '✉' },
       { pattern: /dispatch.{0,40}(relief|vehicle|driver|replace)/i, type: 'dispatch', icon: '🚛' },
       { pattern: /relief.{0,20}vehicle|relief.{0,20}driver|dispatch.{0,20}vehicle/i, type: 'dispatch', icon: '🚛' },
       { pattern: /reroute|re-route|divert|alternative.{0,20}route/i, type: 'reroute', icon: '🗺' },
       { pattern: /highways.england|0300|motorway/i, type: 'call', icon: '🛣' },
-      { pattern: /contact|speak|inform|update|alert.{0,20}(tesco|nhs|dc|customer|client|consignee)/i, type: 'notify', icon: '📣' },
+      { pattern: /notify|notif|inform|alert.{0,40}(tesco|nhs|dc|customer|client|consignee|pharmacist|pharmacy|hospital|asda|sainsbury|morrisons|boots|delivery|ops)/i, type: 'notify', icon: '📣' },
+      { pattern: /contact|speak.{0,40}(tesco|nhs|dc|customer|client|consignee|pharmacist|pharmacy|hospital|delivery|manager)/i, type: 'notify', icon: '📣' },
+      { pattern: /update.{0,40}(customer|client|consignee|tesco|nhs|dc|slot|delivery|eta)/i, type: 'notify', icon: '📣' },
+      { pattern: /email|send.{0,20}(report|document|confirmation)/i, type: 'email', icon: '✉' },
+      { pattern: /temperature|cold.chain|reefer|probe|cooling/i, type: 'notify', icon: '🌡' },
     ]
 
     for (const line of lines) {
-      // Only process numbered action lines
-      const numMatch = line.match(/^(\d+)\.?\s+(.{15,180})/)
+      const numMatch = line.match(/^\s*(\d+)\.?\s+(.{10,180})/)
       if (!numMatch) continue
       const clean = numMatch[2].replace(/\*\*/g,'').trim()
 
       for (const { pattern, type, icon, label: forcedLabel } of actionPatterns) {
         if (pattern.test(clean)) {
-          const label = forcedLabel || clean.split('—')[0].split('·')[0].split('.')[0].trim().substring(0, 65)
+          const label = forcedLabel || clean.split('—')[0].split('·')[0].split('.')[0].trim().substring(0, 70)
           if (!actions.find(a => a.label === label)) {
             actions.push({ label, type, icon, full: clean })
           }
@@ -1315,16 +1317,15 @@ export default function DashboardPage() {
       }
     }
 
-    // If no numbered matches found, try key phrase scan across all lines
     if (actions.length === 0) {
       for (const line of lines) {
-        const clean = line.replace(/^[-—*\d.]+\s*/,'').replace(/\*\*/g,'').trim()
+        const clean = line.replace(/^[-—*\s\d.]+/,'').replace(/\*\*/g,'').trim()
         if (clean.length < 15 || clean.length > 180) continue
-        if (/call 999|call.{0,30}(driver|ops|carrier)|dispatch.{0,20}(vehicle|relief)|send.{0,20}(sms|message)/i.test(clean)) {
-          const label = clean.split('—')[0].trim().substring(0,65)
+        if (/\b(call|contact|notify|inform|dispatch|send|alert|update|arrange|book|confirm)\b/i.test(clean)) {
+          const label = clean.split('—')[0].trim().substring(0, 70)
           if (!actions.find(a => a.label === label)) {
-            const type = /999/.test(clean) ? 'emergency' : /call/.test(clean) ? 'call' : /dispatch/.test(clean) ? 'dispatch' : 'sms'
-            const icon = /999/.test(clean) ? '🚨' : /call/.test(clean) ? '📞' : /dispatch/.test(clean) ? '🚛' : '💬'
+            const type = /999|emergency/.test(clean) ? 'emergency' : /call|phone|ring/.test(clean) ? 'call' : /dispatch|vehicle|relief/.test(clean) ? 'dispatch' : /reroute|route/.test(clean) ? 'reroute' : 'notify'
+            const icon = /999/.test(clean) ? '🚨' : /call|phone/.test(clean) ? '📞' : /dispatch/.test(clean) ? '🚛' : /reroute/.test(clean) ? '🗺' : '📣'
             actions.push({ label, type, icon, full: clean })
           }
         }
