@@ -172,20 +172,38 @@ export async function POST(request) {
       .eq('id', clientId)
       .single()
 
-    // ── DRIVER PHONE FALLBACK ────────────────────────────────────────────
-    // If action_details has no driver_phone, look up from driver_progress
-    // This covers demo mode where fictional driver reg ≠ real driver's phone
+    // ── DRIVER PHONE LOOKUP ──────────────────────────────────────────────
+    // Priority: 1) driver_phone in action_details (set by driver app alerts)
+    //           2) look up by vehicle_reg from driver_progress
+    //           3) fall back to most recent non-null phone for this client
     async function resolveDriverPhone() {
+      // 1. Direct — driver app alerts always include driver_phone in details
       if (details.driver_phone) return details.driver_phone
+
       try {
-        // Look up most recently active driver for this client
+        // 2. Look up by vehicle_reg — most reliable for webhook-triggered approvals
+        if (details.vehicle_reg) {
+          const { data: byReg } = await db
+            .from('driver_progress')
+            .select('driver_phone')
+            .eq('client_id', clientId)
+            .eq('vehicle_reg', details.vehicle_reg)
+            .not('driver_phone', 'is', null)
+            .order('updated_at', { ascending: false })
+            .limit(1)
+            .maybeSingle()
+          if (byReg?.driver_phone) return byReg.driver_phone
+        }
+
+        // 3. Fall back to most recently active driver with a phone number
         const { data: progress } = await db
           .from('driver_progress')
           .select('driver_phone')
           .eq('client_id', clientId)
+          .not('driver_phone', 'is', null)
           .order('updated_at', { ascending: false })
           .limit(1)
-          .single()
+          .maybeSingle()
         return progress?.driver_phone || null
       } catch { return null }
     }
@@ -224,7 +242,6 @@ export async function POST(request) {
         || extractPhoneNumber(actionLabel)
         || extractPhoneNumber(client?.system_prompt)
 
-      // Make voice call if carrier phone available
       if (carrierPhone) {
         const { data: recentIncidents } = await db
           .from('incidents')
@@ -244,7 +261,6 @@ export async function POST(request) {
 
         const callResult = await makeCall(carrierPhone, voiceMessage)
 
-        // Always also notify driver if phone available
         const resolvedDriverPhone = await resolveDriverPhone()
         if (resolvedDriverPhone) {
           const driverMsg = `DisruptionHub OPS${details.ref ? ` — ${details.ref}` : ''}\n\nOps approved. Carrier being contacted.\nStay safe.`
