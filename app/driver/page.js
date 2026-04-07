@@ -310,7 +310,7 @@ export default function DriverApp() {
     if (!driverInfo.clientId || !driverInfo.vehicleReg || !ref) return
     fetch('/api/driver/progress', {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ client_id:driverInfo.clientId, vehicle_reg:driverInfo.vehicleReg, driver_name:driverInfo.name, ref, status, alert:alert||null })
+      body: JSON.stringify({ client_id:driverInfo.clientId, vehicle_reg:driverInfo.vehicleReg, driver_name:driverInfo.name, driver_phone:driverInfo.phone||null, ref, status, alert:alert||null })
     }).catch(()=>{})
   }
 
@@ -608,6 +608,11 @@ export default function DriverApp() {
       // FIX: reload jobs fresh on new shift start so empty state is never shown
       setShiftStarted(true); setView('run')
       loadJobs(driverInfo)
+      // Register driver phone in Supabase so ops can SMS back
+      fetch('/api/driver/progress', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ client_id:driverInfo.clientId, vehicle_reg:driverInfo.vehicleReg, driver_name:driverInfo.name, driver_phone:driverInfo.phone||null, ref:'SHIFT_START', status:'on_shift', alert:null })
+      }).catch(()=>{})
     }
   }
 

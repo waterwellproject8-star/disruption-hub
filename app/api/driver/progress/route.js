@@ -7,11 +7,9 @@ function getDB() {
   return createClient(url, key)
 }
 
-// POST /api/driver/progress
-// Called on every job status change — upserts into driver_progress table
 export async function POST(request) {
   try {
-    const { client_id, vehicle_reg, driver_name, ref, status, alert } = await request.json()
+    const { client_id, vehicle_reg, driver_name, driver_phone, ref, status, alert } = await request.json()
 
     if (!client_id || !vehicle_reg || !ref || !status) {
       return Response.json({ error: 'client_id, vehicle_reg, ref, status required' }, { status: 400 })
@@ -24,6 +22,7 @@ export async function POST(request) {
       client_id,
       vehicle_reg,
       driver_name: driver_name || null,
+      driver_phone: driver_phone || null,
       ref,
       status,
       alert: alert || null,
@@ -33,29 +32,32 @@ export async function POST(request) {
     })
 
     if (error) {
-      console.error('driver_progress upsert error:', error.message)
+      // If driver_phone column doesn't exist yet, retry without it
+      if (error.message?.includes('driver_phone')) {
+        const { error: e2 } = await db.from('driver_progress').upsert({
+          client_id, vehicle_reg, driver_name: driver_name || null,
+          ref, status, alert: alert || null, updated_at: new Date().toISOString(),
+        }, { onConflict: 'client_id,vehicle_reg,ref' })
+        if (e2) return Response.json({ success: false, error: e2.message })
+        return Response.json({ success: true, saved: true, note: 'phone_column_missing' })
+      }
       return Response.json({ success: false, error: error.message })
     }
 
     return Response.json({ success: true, saved: true })
 
   } catch (e) {
-    console.error('driver progress error:', e.message)
     return Response.json({ error: e.message }, { status: 500 })
   }
 }
 
-// GET /api/driver/progress?client_id=x&vehicle_reg=y
-// Returns all progress rows for this driver — used to restore state on new device
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url)
     const client_id = searchParams.get('client_id')
     const vehicle_reg = searchParams.get('vehicle_reg')
 
-    if (!client_id || !vehicle_reg) {
-      return Response.json({ progress: [] })
-    }
+    if (!client_id || !vehicle_reg) return Response.json({ progress: [] })
 
     const db = getDB()
     if (!db) return Response.json({ progress: [] })
@@ -67,7 +69,6 @@ export async function GET(request) {
       .order('updated_at', { ascending: false })
 
     if (error) return Response.json({ progress: [] })
-
     return Response.json({ progress: data || [] })
 
   } catch (e) {
