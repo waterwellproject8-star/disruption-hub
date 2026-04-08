@@ -999,7 +999,10 @@ export default function DriverApp() {
       {/* Ops messages banner */}
       {opsMessages.length>0&&(
         <div style={{margin:'8px 12px 0',padding:'10px 13px',background:'rgba(59,130,246,0.08)',border:'1px solid rgba(59,130,246,0.25)',borderRadius:9}}>
-          <div style={{fontSize:9,color:'#3b82f6',fontFamily:'monospace',fontWeight:700,letterSpacing:'0.08em',marginBottom:4}}>OPS MESSAGE</div>
+          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:4}}>
+            <div style={{fontSize:9,color:'#3b82f6',fontFamily:'monospace',fontWeight:700,letterSpacing:'0.08em'}}>OPS MESSAGE</div>
+            <button onClick={()=>{setOpsMessages([]);try{localStorage.removeItem('dh_ops_messages')}catch{}}} style={{background:'none',border:'none',color:'#4a5260',fontSize:16,cursor:'pointer',padding:'0 2px',lineHeight:1}}>✕</button>
+          </div>
           <div style={{fontSize:13,color:'#e8eaed'}}>{opsMessages[opsMessages.length-1]}</div>
         </div>
       )}
