@@ -1153,14 +1153,24 @@ export default function DashboardPage() {
       const appData = await appRes.json()
       const allApprovals = appData.approvals || []
 
-      // Pilot start date — set manually here when pilot officially begins.
-      // This is the source of truth. Update this date when onboarding a new client.
-      // Format: 'YYYY-MM-DD'
-      const PILOT_START = '2026-04-09'
-      let pilotStartDate = new Date(PILOT_START)
+      // Pull pilot_started_at from client config API
+      let pilotStartDate = null
+      try {
+        const cfgRes = await fetch('/api/client-config?client_id=pearson-haulage')
+        const cfgData = await cfgRes.json()
+        if (cfgData.pilot_started_at) pilotStartDate = new Date(cfgData.pilot_started_at)
+      } catch {}
+
+      // Fallback to first webhook event if API fails
+      if (!pilotStartDate) {
+        const firstEvent = [...allLogs].sort((a,b) => new Date(a.created_at) - new Date(b.created_at))[0]
+        if (firstEvent?.created_at) pilotStartDate = new Date(firstEvent.created_at)
+      }
 
       // ── Filter to pilot period only ────────────────────────────────────────
-      const pilotLogs = allLogs.filter(l => l.created_at && new Date(l.created_at) >= pilotStartDate)
+      const pilotLogs = pilotStartDate
+        ? allLogs.filter(l => l.created_at && new Date(l.created_at) >= pilotStartDate)
+        : allLogs
 
       // ── Core counts ───────────────────────────────────────────────────────
       // Only count HIGH/CRITICAL as "real" incidents — these had ops SMS fired
@@ -1237,7 +1247,7 @@ export default function DashboardPage() {
         dailyRate,
         payloadGroundedCount: payloadGrounded.length,
         aiEstimatedCount: aiEstimated.length,
-        hasPilotDate: true,
+        hasPilotDate: !!pilotStartDate,
       })
     } catch (e) {
       console.error('loadSavings error', e)
