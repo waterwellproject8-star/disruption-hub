@@ -14,11 +14,23 @@ export async function GET(request) {
     const supabase = getSupabase()
     if (!supabase) return Response.json({ pilot_started_at: null })
 
-    const { data, error } = await supabase
+    // clients table uses id as the slug string (e.g. 'pearson-haulage')
+    // Try id first, fall back to slug column
+    let { data, error } = await supabase
       .from('clients')
       .select('id, name, slug, contact_name, contact_phone, pilot_started_at, fleet_size, tier')
-      .eq('slug', clientId)
+      .eq('id', clientId)
       .single()
+
+    if (error || !data) {
+      const res = await supabase
+        .from('clients')
+        .select('id, name, slug, contact_name, contact_phone, pilot_started_at, fleet_size, tier')
+        .eq('slug', clientId)
+        .single()
+      data = res.data
+      error = res.error
+    }
 
     if (error) throw error
     return Response.json(data || { pilot_started_at: null })
