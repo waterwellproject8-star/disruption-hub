@@ -187,7 +187,7 @@ export async function POST(request) {
   try {
     const formData = await request.formData()
     const body = formData.get('Body')?.trim().toUpperCase() || ''
-    const from = formData.get('From') || ''
+    const from = (formData.get('From') || '').replace(/\s/g, '')
 
     const db = getDB()
     if (!db) return twimlReply('DH: System error. Open disruptionhub.ai')
