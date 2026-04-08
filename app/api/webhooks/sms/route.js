@@ -224,19 +224,16 @@ export async function POST(request) {
               .not('status', 'eq', 'completed')
 
             // Log as resolved approval so it shows green tick in dashboard
-            await db.from('approvals').insert({
-              client_id: driverRow.client_id,
-              action_type: 'driver_resolved',
-              action_label: `\u2705 ${driverRow.driver_name || 'Driver'} (${driverRow.vehicle_reg}) confirmed complete${driverRow.ref ? ` \u2014 ${driverRow.ref}` : ''}`,
-              action_details: {
-                vehicle_reg: driverRow.vehicle_reg,
-                driver_name: driverRow.driver_name,
-                ref: driverRow.ref,
-                source: 'driver_done'
-              },
-              financial_value: 0,
-              status: 'executed'
-            }).catch(() => {})
+            try {
+              await db.from('approvals').insert({
+                client_id: driverRow.client_id,
+                action_type: 'driver_resolved',
+                action_label: '✅ ' + (driverRow.driver_name || 'Driver') + ' (' + driverRow.vehicle_reg + ') confirmed complete' + (driverRow.ref ? ' — ' + driverRow.ref : ''),
+                action_details: { vehicle_reg: driverRow.vehicle_reg, driver_name: driverRow.driver_name, ref: driverRow.ref, source: 'driver_done' },
+                financial_value: 0,
+                status: 'executed'
+              })
+            } catch {}
 
             return twimlReply('DH: Got it - logged as complete. Drive safe.')
           }
