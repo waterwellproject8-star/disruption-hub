@@ -1160,9 +1160,9 @@ export default function DashboardPage() {
 
       // ── SLA exposure protected ──
       // Sum financial_impact across all logged webhook events (AI-calculated at time)
-      // Only count HIGH and CRITICAL — LOW/MEDIUM rarely carry real SLA exposure
+      // Include MEDIUM, HIGH, CRITICAL — exclude LOW only (LOW = advisory, no real exposure)
       const exposureProtected = allLogs
-        .filter(l => ['HIGH','CRITICAL'].includes(l.severity) && l.financial_impact > 0)
+        .filter(l => ['MEDIUM','HIGH','CRITICAL'].includes(l.severity) && l.financial_impact > 0)
         .reduce((sum, l) => sum + Number(l.financial_impact), 0)
 
       // ── Response time saved ──
@@ -2069,7 +2069,7 @@ export default function DashboardPage() {
                           £{savings.exposureProtected.toLocaleString()}
                         </div>
                         <div style={{ fontSize:10, color:'#4a5260', fontFamily:'monospace', marginTop:4 }}>
-                          Sum of financial_impact on HIGH/CRITICAL incidents · AI-calculated at time of each event
+                          Sum of financial_impact on MEDIUM/HIGH/CRITICAL incidents · AI-calculated at time of each event
                         </div>
                       </div>
                       {savings.annualProjected > 0 && (
@@ -2127,7 +2127,7 @@ export default function DashboardPage() {
                           </div>
                         )}
                         <div style={{ fontSize:9, color:'#4a5260', fontFamily:'monospace', marginLeft:'auto' }}>
-                          // Methodology: SLA exposure from AI analysis + ops time at £14.42/hr + driver time at £15.38/hr. Conservative. No fuel or indirect costs included.
+                          // Methodology: SLA exposure from AI analysis (MEDIUM–CRITICAL) + ops time at £14.42/hr + driver time at £15.38/hr. Conservative. No fuel or indirect costs included.
                         </div>
                       </div>
                     )}
