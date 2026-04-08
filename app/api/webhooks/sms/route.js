@@ -238,12 +238,14 @@ export async function POST(request) {
               status: 'executed'
             }).catch(() => {})
 
-            return twimlReply('DH: Got it — logged as complete. Drive safe.')
+            return twimlReply('DH: Got it - logged as complete. Drive safe.')
           }
           // Driver sent something other than DONE
           return twimlReply('DH: Reply DONE when your instruction is complete.')
         }
-      } catch {}
+      } catch (e) {
+        console.log('[SMS] Driver lookup error:', e.message)
+      }
 
       return twimlReply('DH: Number not recognised. Visit disruptionhub.ai')
     }
