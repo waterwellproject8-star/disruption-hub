@@ -10,7 +10,6 @@ function getSupabase() {
   return createClient(url, key)
 }
 
-// Inlined SMS — no lib import needed
 async function sendSMS(to, body) {
   const sid   = process.env.TWILIO_ACCOUNT_SID
   const token = process.env.TWILIO_AUTH_TOKEN
@@ -38,7 +37,6 @@ async function sendSMS(to, body) {
   }
 }
 
-// Convert structured machine payload into natural-language incident description
 function buildDescription(system, event_type, payload) {
   const p = payload || {}
 
@@ -204,7 +202,7 @@ export async function POST(request) {
       } catch {}
     }
 
-    // SMS for all machine events except LOW — telematics signals are reliable
+    // SMS for all machine events except LOW
     let smsSent = false
     if (severity !== 'LOW' && contactPhone) {
       const sysLabels = { mandata:'Mandata', webfleet:'Webfleet', microlise:'Microlise', samsara:'Samsara', wms:'WMS', customer:'Customer' }
@@ -218,14 +216,21 @@ export async function POST(request) {
         await db.from('webhook_log').update({ sms_fired: smsSent }).eq('id', webhookLogId)
       }
 
-      // Create approval record
+      // Create approval record — vehicle_reg extracted to top level so driver lookup works
       if (db) {
         try {
           await db.from('approvals').insert({
             client_id,
             action_type: 'sms',
             action_label: `${sysLabels[system]||system} ${eventLabel} — ${firstAction.substring(0,120)}`,
-            action_details: { system, event_type, payload, source: 'webhook_inbound' },
+            action_details: {
+              system,
+              event_type,
+              payload,
+              source: 'webhook_inbound',
+              vehicle_reg: payload?.vehicle_reg || null,
+              ref: payload?.job_id || `WH-${system.toUpperCase()}`
+            },
             financial_value: financialImpact,
             status: 'pending'
           })
