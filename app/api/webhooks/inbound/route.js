@@ -8,41 +8,22 @@ function getSupabase() {
   return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY)
 }
 
-// ── STEP 1: EXTRACT REAL FINANCIAL VALUE FROM PAYLOAD ────────────────────────
-// Pull confirmed financial figures directly from the webhook payload.
-// These come from the TMS/telematics system — they are real numbers, not estimates.
-// Only fall back to null if no payload field exists (AI will then estimate).
+// ── EXTRACT REAL FINANCIAL VALUE FROM PAYLOAD ─────────────────────────────────
 function extractPayloadFinancial(payload) {
   if (!payload) return null
-
-  // Direct penalty/charge fields (most reliable — contractually defined)
-  if (payload.penalty_gbp       && payload.penalty_gbp > 0)       return payload.penalty_gbp
-  if (payload.total_charge_gbp  && payload.total_charge_gbp > 0)  return payload.total_charge_gbp
-
-  // Cargo/consignment value (exposure if lost/spoiled/delayed)
-  if (payload.cargo_value_gbp   && payload.cargo_value_gbp > 0)   return payload.cargo_value_gbp
-  if (payload.value_gbp         && payload.value_gbp > 0)          return payload.value_gbp
-
-  // Daily charges annualised conservatively (5 working days)
-  if (payload.daily_charge_gbp  && payload.daily_charge_gbp > 0)  return payload.daily_charge_gbp * 5
-
-  return null // No payload financial — AI will estimate from context
+  if (payload.penalty_gbp      && payload.penalty_gbp > 0)      return Number(payload.penalty_gbp)
+  if (payload.total_charge_gbp && payload.total_charge_gbp > 0) return Number(payload.total_charge_gbp)
+  if (payload.cargo_value_gbp  && payload.cargo_value_gbp > 0)  return Number(payload.cargo_value_gbp)
+  if (payload.value_gbp        && payload.value_gbp > 0)         return Number(payload.value_gbp)
+  if (payload.daily_charge_gbp && payload.daily_charge_gbp > 0) return Number(payload.daily_charge_gbp) * 5
+  return null
 }
 
-// ── STEP 2: RULES-BASED SEVERITY ─────────────────────────────────────────────
-// Severity should not be left entirely to AI estimation.
-// These rules are grounded in UK logistics risk standards:
-//   CRITICAL = immediate safety/legal risk or >£5,000 confirmed exposure
-//   HIGH     = SLA breach likely, cargo at risk, or customer-facing failure
-//   MEDIUM   = operational disruption, manageable within shift
-//   LOW      = advisory, no immediate impact
+// ── RULES-BASED SEVERITY ──────────────────────────────────────────────────────
 function determineEventSeverity(eventType, payload, confirmedFinancial) {
-
-  // Safety events — always CRITICAL regardless of cargo value
   const alwaysCritical = ['panic_button', 'impact_detected', 'reefer_fault']
   if (alwaysCritical.includes(eventType)) return 'CRITICAL'
 
-  // Cold chain: pharmaceutical or high-value frozen → CRITICAL
   if (eventType === 'temp_alarm' || eventType === 'temp_probe_failure') {
     const cargo = (payload?.cargo_type || payload?.cargo || '').toLowerCase()
     const isPharmaceutical = cargo.includes('pharma') || cargo.includes('nhs') || cargo.includes('medical')
@@ -52,33 +33,73 @@ function determineEventSeverity(eventType, payload, confirmedFinancial) {
     return 'HIGH'
   }
 
-  // Confirmed financial > £5,000 → HIGH minimum
   if (confirmedFinancial && confirmedFinancial >= 5000) return 'HIGH'
 
-  // Failed NHS/pharmaceutical delivery → CRITICAL (legal SLA obligations)
   if (eventType === 'failed_delivery') {
     const consignee = (payload?.consignee || '').toLowerCase()
     if (consignee.includes('nhs') || consignee.includes('hospital') || consignee.includes('pharma')) return 'CRITICAL'
     return 'HIGH'
   }
 
-  // Security events → HIGH
   const highSeverity = [
-    'panic_button', 'door_open_transit', 'geofence_breach', 'cargo_theft',
-    'job_cancelled', 'driver_change', 'engine_fault', 'fuel_critical',
-    'collection_no_show', 'border_doc_failure', 'ulez_entry'
+    'door_open_transit', 'geofence_breach', 'cargo_theft', 'job_cancelled',
+    'driver_change', 'engine_fault', 'fuel_critical', 'collection_no_show',
+    'border_doc_failure', 'ulez_entry', 'night_out_required', 'route_deviation'
   ]
   if (highSeverity.includes(eventType)) return 'HIGH'
 
-  // Compliance events with confirmed charge → HIGH
   if (eventType === 'detention_charge' && confirmedFinancial && confirmedFinancial > 100) return 'HIGH'
 
-  // Behavioural/minor → LOW
   const lowSeverity = ['harsh_braking', 'harsh_acceleration', 'overspeed', 'idle_excess']
   if (lowSeverity.includes(eventType)) return 'LOW'
 
-  // Everything else: MEDIUM
   return 'MEDIUM'
+}
+
+// ── PARSE AI JSON — ROBUST EXTRACTION ────────────────────────────────────────
+// FIX 1: AI sometimes prepends text e.g. "CRITICAL\n```json\n{".
+// Extract by finding first { and last } — ignores any prefix or suffix text.
+function extractJSON(rawText) {
+  if (!rawText) return null
+  try {
+    const start = rawText.indexOf('{')
+    const end = rawText.lastIndexOf('}')
+    if (start === -1 || end === -1 || end <= start) return null
+    return JSON.parse(rawText.slice(start, end + 1))
+  } catch {
+    return null
+  }
+}
+
+// ── BUILD READABLE ANALYSIS SUMMARY ──────────────────────────────────────────
+// FIX 2: Store plain-text markdown summary not raw JSON.
+// AgentResponse renders this cleanly — no JSON fences visible to user.
+function buildAnalysisSummary(parsed, eventType, severity, financialImpact) {
+  if (!parsed) return `**${severity}** — ${eventType.replace(/_/g,' ')}\n\nAI analysis unavailable.`
+
+  const parts = []
+
+  if (parsed.sections?.assessment) {
+    parts.push(`## Assessment\n${parsed.sections.assessment}`)
+  }
+
+  if (parsed.sections?.immediate_actions?.length) {
+    parts.push(`## Immediate Actions\n${parsed.sections.immediate_actions.map((a, i) => `${i+1}. ${a}`).join('\n')}`)
+  }
+
+  if (parsed.sections?.who_to_contact) {
+    parts.push(`## Who to Contact\n${parsed.sections.who_to_contact}`)
+  }
+
+  if (parsed.sections?.downstream_risks) {
+    parts.push(`## Downstream Risks\n${parsed.sections.downstream_risks}`)
+  }
+
+  if (financialImpact > 0) {
+    parts.push(`**Financial exposure: £${financialImpact.toLocaleString()}** · Time to resolution: ${parsed.time_to_resolution || 'unknown'}`)
+  }
+
+  return parts.join('\n\n') || `**${severity}** — ${eventType.replace(/_/g,' ')}`
 }
 
 // ── GET CLIENT CONFIG ─────────────────────────────────────────────────────────
@@ -86,14 +107,12 @@ async function getClientConfig(clientId) {
   const supabase = getSupabase()
   if (!supabase) return null
 
-  // Try id first (clients table uses slug string as id e.g. 'pearson-haulage')
   let { data } = await supabase
     .from('clients')
     .select('id, name, system_prompt, contact_phone, contact_name, pilot_started_at')
     .eq('id', clientId)
     .single()
 
-  // Fall back to slug column if not found by id
   if (!data) {
     const res = await supabase
       .from('clients')
@@ -106,7 +125,7 @@ async function getClientConfig(clientId) {
   return data
 }
 
-// ── SEND OPS SMS VIA TWILIO ───────────────────────────────────────────────────
+// ── SEND OPS SMS ──────────────────────────────────────────────────────────────
 async function sendOpsSMS(toPhone, body) {
   if (!process.env.TWILIO_ACCOUNT_SID || !process.env.TWILIO_AUTH_TOKEN) return false
   const { default: twilio } = await import('twilio')
@@ -114,39 +133,36 @@ async function sendOpsSMS(toPhone, body) {
   try {
     await client.messages.create({
       body,
-      from: process.env.TWILIO_FROM_NUMBER || '+447700139349',
+      // FIX 3: match Vercel env var name, with fallbacks
+      from: process.env.TWILIO_PHONE_NUMBER || process.env.TWILIO_FROM_NUMBER || '+447700139349',
       to: toPhone
     })
     return true
   } catch (err) {
-    console.error('Twilio error:', err.message)
+    console.error('Twilio SMS error:', err.message)
     return false
   }
 }
 
-// ── BUILD CLEAN OPS SMS ───────────────────────────────────────────────────────
-function buildOpsSMS(eventType, payload, severity, financialImpact, analysis) {
+// ── BUILD OPS SMS BODY ────────────────────────────────────────────────────────
+function buildOpsSMS(eventType, payload, severity, financialImpact, parsedResult) {
   const reg = payload?.vehicle_reg || 'Unknown'
   const location = payload?.location || payload?.current_location || ''
   const driver = payload?.driver_name || ''
-  const eventLabel = eventType.replace(/_/g, ' ').toUpperCase()
   const sevEmoji = severity === 'CRITICAL' ? '🔴' : severity === 'HIGH' ? '🟠' : '🟡'
+  const eventLabel = eventType.replace(/_/g, ' ').toUpperCase()
 
-  let line1 = `${sevEmoji} DISRUPTIONHUB ALERT — ${severity}`
-  let line2 = `${eventLabel} · ${reg}${driver ? ` · ${driver}` : ''}`
-  let line3 = location ? `Location: ${location}` : ''
-  let line4 = financialImpact > 0 ? `Exposure: £${financialImpact.toLocaleString()}` : ''
+  const firstAction = parsedResult?.sections?.immediate_actions?.[0] || ''
 
-  // Extract first action from AI analysis if available
-  let actionLine = ''
-  if (analysis) {
-    const actionMatch = analysis.match(/"immediate_actions"\s*:\s*\[\s*"([^"]{10,80})"/i)
-      || analysis.match(/immediate.{0,20}action[^:]*:\s*["']?([^"'\n]{15,80})/i)
-    if (actionMatch) actionLine = `Action: ${actionMatch[1].trim()}`
-  }
+  const parts = [
+    `${sevEmoji} DISRUPTIONHUB — ${severity}`,
+    `${eventLabel} · ${reg}${driver ? ` · ${driver}` : ''}`,
+    location ? `Location: ${location}` : '',
+    financialImpact > 0 ? `Exposure: £${financialImpact.toLocaleString()}` : '',
+    firstAction ? `Action: ${firstAction.substring(0, 100)}` : '',
+    'Reply YES to execute · NO to dismiss · OPEN for dashboard'
+  ].filter(Boolean)
 
-  const parts = [line1, line2, line3, line4, actionLine, 'Reply YES to execute · NO to dismiss · OPEN for dashboard']
-    .filter(Boolean)
   return parts.join('\n')
 }
 
@@ -162,60 +178,56 @@ export async function POST(request) {
 
     const supabase = getSupabase()
 
-    // ── 1. Get client config ──────────────────────────────────────────────────
+    // 1. Client config
     const client = await getClientConfig(client_id)
     const systemPrompt = client?.system_prompt || ''
     const opsPhone = client?.contact_phone || null
-    const simulated = !opsPhone // no ops phone = simulated only
+    const simulated = !opsPhone
 
-    // ── 2. Extract confirmed financial from payload ───────────────────────────
+    // 2. Financial from payload
     const confirmedFinancial = extractPayloadFinancial(payload)
 
-    // ── 3. Determine severity via rules (not AI guesswork) ───────────────────
+    // 3. Severity from rules
     const severity = determineEventSeverity(event_type, payload, confirmedFinancial)
 
-    // ── 4. Build AI prompt with grounded financial constraint ─────────────────
-    const financialConstraint = confirmedFinancial
-      ? `\n\nCONFIRMED FINANCIAL EXPOSURE: £${confirmedFinancial.toLocaleString()}. Use this exact figure as financial_impact. Do not estimate a different value.`
-      : `\n\nNo confirmed financial figure in payload. Estimate financial_impact conservatively based on event type and client context only.`
+    // 4. AI prompt — instructs JSON only, no preamble
+    const fullSystemPrompt = `You are DisruptionHub's autonomous UK logistics operations agent.
+20 years HGV freight, cold chain, NHS supply, compliance experience.
+Be direct. Give specific phone numbers, junction numbers, deadlines.
 
-    const severityConstraint = `\n\nCONFIRMED SEVERITY: ${severity}. Use this exact value. Do not override it.`
+IMPORTANT: Return ONLY the JSON object below. No preamble. No markdown. No explanation. Start your response with { and end with }.
 
-    const fullSystemPrompt = `You are DisruptionHub's autonomous logistics operations agent.
-You have 20 years of UK freight and supply chain experience.
-Be direct. Give specific names, numbers, deadlines. Never say "it depends" without giving both options.
-
-Analyse this logistics event and return this exact JSON — no preamble, no markdown fences:
 {
   "severity": "${severity}",
-  "financial_impact": ${confirmedFinancial || 'number'},
-  "time_to_resolution": "string",
-  "affected_shipments": number,
+  "financial_impact": ${confirmedFinancial !== null ? confirmedFinancial : 0},
+  "time_to_resolution": "string e.g. 2-4 hours",
+  "affected_shipments": 1,
   "sections": {
-    "assessment": "string — 2-3 sentences max",
-    "immediate_actions": ["string", "string", "string"],
-    "who_to_contact": "string",
-    "downstream_risks": "string"
+    "assessment": "2-3 sentence plain text",
+    "immediate_actions": ["action 1", "action 2", "action 3"],
+    "who_to_contact": "numbered contacts with phone numbers",
+    "downstream_risks": "plain text"
   },
   "actions": [
     {
-      "type": "send_sms|send_email|make_call",
+      "type": "send_sms",
       "label": "string",
       "recipient": "string",
       "content": "string",
-      "priority": "immediate|within_1hr|within_4hr",
+      "priority": "immediate",
       "auto_approve": false,
-      "financial_value": number
+      "financial_value": ${confirmedFinancial !== null ? confirmedFinancial : 0}
     }
   ]
 }
-${financialConstraint}${severityConstraint}
+
+RULES: severity must be "${severity}". financial_impact must be ${confirmedFinancial !== null ? confirmedFinancial : 'your conservative estimate'}.
 
 CLIENT CONTEXT:
 ${systemPrompt}`
 
-    // ── 5. Call AI ────────────────────────────────────────────────────────────
-    let aiAnalysis = ''
+    // 5. Call AI
+    let rawAIResponse = ''
     let parsedResult = null
     let financialImpact = confirmedFinancial || 0
 
@@ -230,28 +242,20 @@ ${systemPrompt}`
         }]
       })
 
-      aiAnalysis = msg.content[0]?.text?.trim() || ''
-      let clean = aiAnalysis.replace(/^```json\s*/,'').replace(/^```\s*/,'').replace(/\s*```$/,'').trim()
+      rawAIResponse = msg.content[0]?.text?.trim() || ''
+      parsedResult = extractJSON(rawAIResponse)
 
-      try {
-        parsedResult = JSON.parse(clean)
-        // Use payload financial if available — never let AI override a confirmed figure
-        if (confirmedFinancial) {
-          financialImpact = confirmedFinancial
-        } else {
-          // AI estimate: cap at reasonable values to prevent hallucinated large numbers
-          const aiFinancial = parsedResult?.financial_impact || 0
-          financialImpact = Math.min(aiFinancial, 50000) // cap at £50k — flag anything higher
-        }
-      } catch {
-        // AI returned invalid JSON — use payload financial or 0
-        financialImpact = confirmedFinancial || 0
+      if (parsedResult && confirmedFinancial === null) {
+        financialImpact = Math.min(parsedResult.financial_impact || 0, 50000)
       }
     } catch (aiErr) {
       console.error('AI error:', aiErr.message)
     }
 
-    // ── 6. Log to webhook_log ─────────────────────────────────────────────────
+    // 6. Build clean analysis summary
+    const analysisSummary = buildAnalysisSummary(parsedResult, event_type, severity, financialImpact)
+
+    // 7. Log to webhook_log
     let logId = null
     if (supabase) {
       try {
@@ -264,8 +268,9 @@ ${systemPrompt}`
             payload,
             severity,
             financial_impact: financialImpact,
-            analysis: aiAnalysis,
-            sms_fired: false, // updated below after SMS attempt
+            financial_source: confirmedFinancial !== null ? 'payload' : 'ai_estimate',
+            analysis: analysisSummary,
+            sms_fired: false,
             simulated,
             created_at: new Date().toISOString()
           })
@@ -277,67 +282,58 @@ ${systemPrompt}`
       }
     }
 
-    // ── 7. Send ops SMS if HIGH or CRITICAL ──────────────────────────────────
+    // 8. Send SMS if HIGH/CRITICAL
     let smsSent = false
     const shouldSendSMS = ['HIGH', 'CRITICAL'].includes(severity)
 
     if (shouldSendSMS && opsPhone && !simulated) {
-      const smsBody = buildOpsSMS(event_type, payload, severity, financialImpact, aiAnalysis)
+      const smsBody = buildOpsSMS(event_type, payload, severity, financialImpact, parsedResult)
       smsSent = await sendOpsSMS(opsPhone, smsBody)
-
-      // Update webhook_log with sms_fired status
       if (supabase && logId) {
         try {
-          await supabase
-            .from('webhook_log')
-            .update({ sms_fired: smsSent })
-            .eq('id', logId)
+          await supabase.from('webhook_log').update({ sms_fired: smsSent }).eq('id', logId)
         } catch {}
       }
     }
 
-    // ── 8. Write to approvals table ───────────────────────────────────────────
-    // vehicle_reg at top level of action_details (Session 9 fix — required for SMS loop)
+    // 9. Write approvals
     const vehicleReg = payload?.vehicle_reg || null
-    if (supabase && shouldSendSMS) {
+    if (supabase && shouldSendSMS && parsedResult?.actions?.length) {
       try {
-        const actions = parsedResult?.actions || []
-        for (const action of actions.slice(0, 3)) { // max 3 actions per event
-          await supabase
-            .from('approvals')
-            .insert({
-              client_id,
-              action_type: action.type || 'notify',
-              action_label: action.label || 'AI recommended action',
-              action_details: {
-                vehicle_reg: vehicleReg,         // TOP LEVEL — required by resolveDriverPhone()
-                event_type,
-                system,
-                recipient: action.recipient,
-                content: action.content,
-                payload,
-                financial_impact: financialImpact
-              },
-              financial_value: action.financial_value || financialImpact || 0,
-              requires_approval: !action.auto_approve,
-              status: 'pending',
-              created_at: new Date().toISOString()
-            })
+        for (const action of parsedResult.actions.slice(0, 3)) {
+          await supabase.from('approvals').insert({
+            client_id,
+            action_type: action.type || 'notify',
+            action_label: action.label || 'AI recommended action',
+            action_details: {
+              vehicle_reg: vehicleReg,
+              event_type,
+              system,
+              recipient: action.recipient,
+              content: action.content,
+              payload,
+              financial_impact: financialImpact
+            },
+            financial_value: action.financial_value || financialImpact || 0,
+            requires_approval: true,
+            status: 'pending',
+            created_at: new Date().toISOString()
+          })
         }
       } catch (err) {
         console.error('approvals insert error:', err.message)
       }
     }
 
-    // ── 9. Return result to dashboard ─────────────────────────────────────────
+    // 10. Return
     return Response.json({
       success: true,
       severity,
       financial_impact: financialImpact,
-      financial_source: confirmedFinancial ? 'payload' : 'ai_estimate',
+      financial_source: confirmedFinancial !== null ? 'payload' : 'ai_estimate',
       sms_sent: smsSent,
       simulated,
-      analysis: aiAnalysis,
+      analysis: analysisSummary,
       event_type,
       vehicle_reg: vehicleReg,
       actions_queued: parsedResult?.actions?.length || 0
@@ -349,7 +345,7 @@ ${systemPrompt}`
   }
 }
 
-// ── GET: Return webhook audit log ─────────────────────────────────────────────
+// ── GET: Webhook audit log ────────────────────────────────────────────────────
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url)
@@ -361,7 +357,7 @@ export async function GET(request) {
 
     const { data, error } = await supabase
       .from('webhook_log')
-      .select('id, system_name, event_type, severity, financial_impact, sms_fired, simulated, payload, created_at')
+      .select('id, system_name, event_type, severity, financial_impact, financial_source, sms_fired, simulated, payload, created_at')
       .eq('client_id', clientId)
       .order('created_at', { ascending: false })
       .limit(limit)

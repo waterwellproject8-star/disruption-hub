@@ -1168,8 +1168,17 @@ export default function DashboardPage() {
       }
 
       // ── Filter to pilot period only ────────────────────────────────────────
-      const pilotLogs = pilotStartDate
-        ? allLogs.filter(l => l.created_at && new Date(l.created_at) >= pilotStartDate)
+      // FIX: Compare YYYY-MM-DD date strings not full timestamps.
+      // Avoids timezone issues where e.g. 00:36 BST = 23:36 UTC previous day,
+      // which would incorrectly exclude events from the first morning of the pilot.
+      const pilotDateStr = pilotStartDate
+        ? pilotStartDate.toISOString().split('T')[0]
+        : null
+      const pilotLogs = pilotDateStr
+        ? allLogs.filter(l => {
+            if (!l.created_at) return false
+            return new Date(l.created_at).toISOString().split('T')[0] >= pilotDateStr
+          })
         : allLogs
 
       // ── Core counts ───────────────────────────────────────────────────────
