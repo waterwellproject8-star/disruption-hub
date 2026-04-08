@@ -69,16 +69,6 @@ function getDB() {
   return createClient(url, key)
 }
 
-function buildDriverInstructionSMS({ driverName, action, ref }) {
-  return [
-    `DisruptionHub OPS INSTRUCTION${ref ? ` — ${ref}` : ''}`,
-    '',
-    action,
-    '',
-    'Reply DONE when complete.'
-  ].join('\n')
-}
-
 function buildCarrierVoiceMessage({ carrierName, vehicleReg, clientName, incidentDescription, opsPhone, ref }) {
   return `This is an automated emergency alert from DisruptionHub on behalf of ${clientName || 'your client'}. ` +
     `Vehicle registration ${vehicleReg ? vehicleReg.split('').join(' ') : 'unknown'} ` +
@@ -97,6 +87,102 @@ function extractPhoneNumber(text) {
   return match[1].replace(/\s/g, '')
 }
 
+// Build a driver-facing instruction from webhook event data
+// Webhook AI analysis is written for ops ("contact driver", "call carrier") — not for the driver
+// This function translates the event into plain driver instructions
+function buildDriverInstruction(details, actionLabel) {
+  const p = details.payload || {}
+  const eventType = details.event_type || ''
+  const system = details.system || ''
+  const ref = details.ref || ''
+
+  // Webfleet events
+  if (system === 'webfleet') {
+    if (eventType === 'temp_alarm')
+      return `TEMP ALARM${ref ? ` — ${ref}` : ''}\nYour reefer is reading ${p.temp_reading || '?'}°C (threshold ${p.threshold || 5}°C). Pull over safely when safe to do so. Check reefer unit${p.reefer_unit ? ` (${p.reefer_unit})` : ''}. Do NOT continue with cargo above threshold. Reply DONE when checked.`
+    if (eventType === 'temp_probe_failure')
+      return `TEMP PROBE FAILURE${ref ? ` — ${ref}` : ''}\nYour temperature probe has failed at ${p.location || 'your location'}. Pull over at next safe point. Treat cargo as potentially compromised. Call ops. Reply DONE when stopped.`
+    if (eventType === 'reefer_fault')
+      return `REEFER FAULT${ref ? ` — ${ref}` : ''}\nFault code ${p.fault_code || 'unknown'} on your reefer unit. Pull over immediately — do NOT continue with frozen cargo at risk. Call ops for recovery instructions. Reply DONE when stopped.`
+    if (eventType === 'engine_fault')
+      return `ENGINE FAULT${ref ? ` — ${ref}` : ''}\nFault code ${p.fault_code || 'unknown'} detected. Pull over at next safe location. Do not continue if warning lights are showing. Call ops. Reply DONE when stopped.`
+    if (eventType === 'fuel_critical')
+      return `FUEL CRITICAL${ref ? ` — ${ref}` : ''}\nYou have approximately ${p.estimated_range_miles || '?'} miles of fuel remaining. ${p.nearest_forecourt ? `Nearest forecourt: ${p.nearest_forecourt}.` : 'Find a fuel stop immediately.'} Fill up now. Reply DONE when fuelled.`
+    if (eventType === 'tyre_pressure')
+      return `TYRE PRESSURE ALERT${ref ? ` — ${ref}` : ''}\n${p.tyre_position || 'A tyre'} is at ${p.pressure_bar || '?'} bar (minimum ${p.threshold_bar || '?'} bar). Pull over safely and check. Do NOT continue on a deflating tyre at this load weight. Reply DONE when checked.`
+    if (eventType === 'panic_button')
+      return `OPS RECEIVED YOUR PANIC ALERT. Help is being arranged. Stay with vehicle, doors locked. Call 999 if in immediate danger. Reply DONE when situation is stable.`
+    if (eventType === 'impact_detected')
+      return `IMPACT DETECTED${ref ? ` — ${ref}` : ''}\nOps received a collision alert. Are you OK? Pull over safely. Check yourself and cargo. Call 999 if anyone is injured. Reply DONE when you have assessed the situation.`
+    if (eventType === 'door_open_transit')
+      return `DOOR ALERT${ref ? ` — ${ref}` : ''}\nOps can see your cargo door is open. Please check your load is secure before continuing. Reply DONE when doors are secured.`
+    if (eventType === 'off_route')
+      return `ROUTE CHECK${ref ? ` — ${ref}` : ''}\nOps can see you are off your planned route. Is everything OK? Check your navigation. Reply DONE to confirm all is fine.`
+  }
+
+  // Microlise events
+  if (system === 'microlise') {
+    if (eventType === 'wtd_hours_breach' || eventType === 'wtd_hours_warning')
+      return `HOURS ALERT${ref ? ` — ${ref}` : ''}\nYou have ${p.hours_remaining || '?'} hours remaining this week under WTD rules. Ops is reviewing your remaining jobs. Do NOT start any new jobs until confirmed by ops. Reply DONE when you have noted this.`
+    if (eventType === 'tacho_fault')
+      return `TACHO FAULT${ref ? ` — ${ref}` : ''}\nA tachograph fault has been detected. Pull over at next safe location. Do NOT drive further until tacho issue is resolved — DVSA prohibition risk. Call ops immediately. Reply DONE when stopped.`
+    if (eventType === 'no_driver_card')
+      return `TACHO CARD ALERT${ref ? ` — ${ref}` : ''}\nNo driver card detected. You must stop at next safe location and insert your tacho card. Driving without a card is a DVSA offence. Reply DONE when card is inserted.`
+    if (eventType === 'long_stop')
+      return `CHECK-IN${ref ? ` — ${ref}` : ''}\nOps has noticed you have been stopped for ${p.stop_duration_mins || '?'} minutes. Please reply to confirm everything is OK and your ETA for next delivery.`
+    if (eventType === 'fatigue_alert')
+      return `BREAK REQUIRED${ref ? ` — ${ref}` : ''}\nYour break is now ${p.break_overdue_mins || '?'} minutes overdue under EU Reg 561/2006. You MUST take a 45-minute break at next safe location. Reply DONE when you have stopped for your break.`
+  }
+
+  // Mandata TMS events
+  if (system === 'mandata') {
+    if (eventType === 'job_delayed')
+      return `JOB UPDATE${ref ? ` — ${ref}` : ''}\nOps is aware of the delay. Continue to ${p.consignee || 'your destination'}. Ops is notifying the customer. Reply DONE to confirm you have noted this.`
+    if (eventType === 'night_out_required')
+      return `NIGHT OUT APPROVED${ref ? ` — ${ref}` : ''}\nOps has confirmed you need to stay overnight. Find a secure truck park. ${p.cargo && p.cargo.includes('chilled') ? 'Keep reefer running — cargo is temperature sensitive.' : ''} Call ops with your location. Reply DONE when parked safely.`
+    if (eventType === 'driver_change')
+      return `JOB REASSIGNED${ref ? ` — ${ref}` : ''}\nOps has noted a driver change is needed for ${p.job_id || 'your current job'}. Please confirm your current status and location. Reply DONE when you have spoken to ops.`
+  }
+
+  // Samsara events
+  if (system === 'samsara') {
+    if (eventType === 'cargo_tamper')
+      return `CARGO ALERT${ref ? ` — ${ref}` : ''}\nA cargo tamper alert has been triggered. Do NOT leave the vehicle. Call 999 if you feel unsafe. Reply DONE when you have checked your load and confirmed it is secure.`
+    if (eventType === 'load_movement')
+      return `LOAD MOVEMENT${ref ? ` — ${ref}` : ''}\nOps detected load movement in your trailer. Pull over at next safe location and check your load is secure before continuing. Reply DONE when load is checked.`
+    if (eventType === 'fatigue_alert')
+      return `FATIGUE ALERT${ref ? ` — ${ref}` : ''}\nYour driving pattern indicates fatigue. Pull over at next safe location for a break. Do NOT continue driving when tired. Reply DONE when you have stopped.`
+    if (eventType === 'tail_lift_fault')
+      return `TAIL LIFT FAULT${ref ? ` — ${ref}` : ''}\nTail lift hydraulic fault detected. Do NOT attempt to use the tail lift. Call ops before attempting delivery. Manual unload may be arranged. Reply DONE when you have called ops.`
+    if (eventType === 'wrong_fuel')
+      return `WRONG FUEL ALERT${ref ? ` — ${ref}` : ''}\nA wrong fuel alert has been raised. Do NOT start the engine. Call ops immediately for recovery instructions. Reply DONE when you have stopped and called ops.`
+  }
+
+  // Compliance events
+  if (system === 'compliance') {
+    if (eventType === 'adr_documentation')
+      return `ADR DOCUMENT MISSING${ref ? ` — ${ref}` : ''}\nYour consignor declaration is missing for the dangerous goods on this vehicle. Do NOT depart until documentation is complete. Ops is arranging this. Reply DONE when documents are received.`
+    if (eventType === 'overweight_enforcement')
+      return `OVERWEIGHT ALERT${ref ? ` — ${ref}` : ''}\nVehicle is over legal weight limit. Do NOT approach the weigh station. Divert away immediately. Call ops for alternative routing. Reply DONE when diverted.`
+    if (eventType === 'low_bridge_risk')
+      return `LOW BRIDGE AHEAD${ref ? ` — ${ref}` : ''}\nThere is a ${p.restriction_height_m || '?'}m height restriction ahead at ${p.restriction_location || 'your route'}. Your vehicle is ${p.vehicle_height_m || '?'}m. DO NOT proceed — turn around now. Call ops for alternative route. Reply DONE when diverted.`
+  }
+
+  // Generic fallback — strip ops-facing language, make it driver-appropriate
+  const stripped = actionLabel
+    .replace(/contact\s+driver[^.—\n]*/gi, '')
+    .replace(/call\s+driver[^.—\n]*/gi, '')
+    .replace(/notify\s+driver[^.—\n]*/gi, '')
+    .replace(/alert\s+driver[^.—\n]*/gi, '')
+    .replace(/send.*?to\s+driver[^.—\n]*/gi, '')
+    .replace(/\*\*/g, '')
+    .trim()
+
+  return stripped.length > 10
+    ? `OPS INSTRUCTION${ref ? ` — ${ref}` : ''}\n${stripped}\nReply DONE when complete.`
+    : `OPS INSTRUCTION${ref ? ` — ${ref}` : ''}\nOps has reviewed your situation and approved action. Reply DONE when complete.`
+}
+
 export async function POST(request) {
   try {
     const formData = await request.formData()
@@ -106,13 +192,58 @@ export async function POST(request) {
     const db = getDB()
     if (!db) return twimlReply('DH: System error. Open disruptionhub.ai')
 
+    // Find client by ops manager phone number
     const { data: clients } = await db
       .from('clients')
       .select('id, contact_name, contact_phone, system_prompt')
       .eq('contact_phone', from)
       .limit(1)
 
+    // ── DRIVER REPLY HANDLER ─────────────────────────────────────────────
+    // If number not recognised as ops, check if it's a driver
     if (!clients?.length) {
+      try {
+        const { data: driverRow } = await db
+          .from('driver_progress')
+          .select('client_id, vehicle_reg, driver_name, ref')
+          .eq('driver_phone', from)
+          .not('status', 'eq', 'completed')
+          .order('updated_at', { ascending: false })
+          .limit(1)
+          .maybeSingle()
+
+        if (driverRow) {
+          const upperBody = body.toUpperCase().trim()
+          if (upperBody === 'DONE' || upperBody.startsWith('DONE')) {
+            // Clear the ops message from driver_progress
+            await db.from('driver_progress')
+              .update({ alert: null, updated_at: new Date().toISOString() })
+              .eq('client_id', driverRow.client_id)
+              .eq('vehicle_reg', driverRow.vehicle_reg)
+              .not('status', 'eq', 'completed')
+
+            // Log as resolved approval so it shows green tick in dashboard
+            await db.from('approvals').insert({
+              client_id: driverRow.client_id,
+              action_type: 'driver_resolved',
+              action_label: `\u2705 ${driverRow.driver_name || 'Driver'} (${driverRow.vehicle_reg}) confirmed complete${driverRow.ref ? ` \u2014 ${driverRow.ref}` : ''}`,
+              action_details: {
+                vehicle_reg: driverRow.vehicle_reg,
+                driver_name: driverRow.driver_name,
+                ref: driverRow.ref,
+                source: 'driver_done'
+              },
+              financial_value: 0,
+              status: 'executed'
+            }).catch(() => {})
+
+            return twimlReply('DH: Got it — logged as complete. Drive safe.')
+          }
+          // Driver sent something other than DONE
+          return twimlReply('DH: Reply DONE when your instruction is complete.')
+        }
+      } catch {}
+
       return twimlReply('DH: Number not recognised. Visit disruptionhub.ai')
     }
 
@@ -121,6 +252,7 @@ export async function POST(request) {
     const contactName = client.contact_name || 'Ops'
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://disruptionhub.ai'
 
+    // ── NO ─────────────────────────────────────────────────────────────────
     if (body === 'NO' || body === 'N' || body === 'REJECT') {
       const { data: pending } = await db
         .from('approvals')
@@ -141,8 +273,10 @@ export async function POST(request) {
       return twimlReply('DH: Action rejected and logged.')
     }
 
+    // ── OPEN ────────────────────────────────────────────────────────────────
     if (body === 'OPEN') return twimlReply(`DH: Dashboard -> ${appUrl}/dashboard`)
 
+    // ── STATUS ──────────────────────────────────────────────────────────────
     if (body === 'STATUS') {
       const { data: incidents } = await db
         .from('incidents')
@@ -163,6 +297,7 @@ export async function POST(request) {
       return twimlReply(`DH Last 3:\n${lines.join('\n')}`)
     }
 
+    // ── YES ─────────────────────────────────────────────────────────────────
     if (body === 'YES' || body === 'Y' || body === 'APPROVE') {
       const { data: approvals } = await db
         .from('approvals')
@@ -223,30 +358,55 @@ export async function POST(request) {
         } catch { return null }
       }
 
+      // Write instruction to driver_progress.alert so driver app can poll it
+      async function writeInstructionToApp(instruction) {
+        if (!details.vehicle_reg) return
+        try {
+          await db.from('driver_progress')
+            .update({
+              alert: `OPS_MSG:${instruction}`,
+              updated_at: new Date().toISOString()
+            })
+            .eq('client_id', clientId)
+            .eq('vehicle_reg', details.vehicle_reg)
+            .not('status', 'eq', 'completed')
+        } catch {}
+      }
+
+      // ── DISPATCH ─────────────────────────────────────────────────────────
       if (actionType === 'dispatch') {
         const driverPhone = await resolveDriverPhone()
+        const msg = `DisruptionHub OPS UPDATE${details.ref ? ` — ${details.ref}` : ''}\n\nOps confirmed. Recovery dispatched.\nStay with vehicle. Hazards on.`
+        await writeInstructionToApp(msg)
         if (driverPhone) {
-          const msg = `DisruptionHub OPS UPDATE${details.ref ? ` — ${details.ref}` : ''}\n\nOps confirmed. Recovery dispatched.\nStay with vehicle. Hazards on.`
           const result = await sendSMS(driverPhone, msg)
           return twimlReply(result.success ? 'DH: Driver notified. Recovery confirmed.' : 'DH: Approved. Call driver directly — SMS failed.')
         }
         return twimlReply('DH: Approved. No driver phone — call them directly.')
       }
 
+      // ── SMS / REROUTE / NOTIFY ────────────────────────────────────────────
       if (actionType === 'sms' || actionType === 'reroute' || actionType === 'notify') {
         const driverPhone = await resolveDriverPhone()
+
+        // Build proper driver-facing instruction
+        // For webhook-triggered approvals, build from event data
+        // For agent/module actions, use action_label directly
+        const isWebhook = details.source === 'webhook_inbound'
+        const instruction = isWebhook
+          ? buildDriverInstruction(details, actionLabel)
+          : `${actionLabel}\n\nReply DONE when complete.`
+
+        await writeInstructionToApp(instruction)
+
         if (driverPhone) {
-          const smsText = buildDriverInstructionSMS({
-            driverName: details.driver_name,
-            action: actionLabel,
-            ref: details.ref
-          })
-          const result = await sendSMS(driverPhone, smsText)
+          const result = await sendSMS(driverPhone, instruction)
           return twimlReply(result.success ? 'DH: Driver notified. Check dashboard.' : 'DH: Approved. Send instruction to driver manually.')
         }
         return twimlReply('DH: Approved. No driver phone — send instruction manually.')
       }
 
+      // ── CALL / EMERGENCY ──────────────────────────────────────────────────
       if (actionType === 'call' || actionType === 'emergency') {
         const carrierPhone = details.carrier_phone
           || extractPhoneNumber(actionLabel)
@@ -271,8 +431,10 @@ export async function POST(request) {
 
           const callResult = await makeCall(carrierPhone, voiceMessage)
           const driverPhone = await resolveDriverPhone()
+          const driverMsg = `DisruptionHub OPS${details.ref ? ` — ${details.ref}` : ''}\n\nOps approved. Carrier being contacted now.\nStay safe. Help is coming.`
+          await writeInstructionToApp(driverMsg)
           if (driverPhone) {
-            await sendSMS(driverPhone, `DisruptionHub OPS${details.ref ? ` — ${details.ref}` : ''}\n\nOps approved. Carrier being contacted.\nStay safe.`).catch(() => {})
+            await sendSMS(driverPhone, driverMsg).catch(() => {})
           }
 
           if (callResult.success) return twimlReply(`DH: Calling ${details.carrier_name || carrierPhone}. Driver notified.`)
@@ -281,13 +443,16 @@ export async function POST(request) {
         }
 
         const driverPhone = await resolveDriverPhone()
+        const helpMsg = `DisruptionHub OPS${details.ref ? ` — ${details.ref}` : ''}\n\nOps approved. Help being arranged. Stay safe.`
+        await writeInstructionToApp(helpMsg)
         if (driverPhone) {
-          const result = await sendSMS(driverPhone, `DisruptionHub OPS${details.ref ? ` — ${details.ref}` : ''}\n\nOps approved. Help being arranged. Stay safe.`)
+          const result = await sendSMS(driverPhone, helpMsg)
           return twimlReply(result.success ? 'DH: Driver notified. No carrier phone on file.' : 'DH: Approved. No carrier phone — arrange manually.')
         }
         return twimlReply('DH: Approved. No carrier or driver phone — action manually.')
       }
 
+      // Unknown action type
       const driverPhone = await resolveDriverPhone()
       if (driverPhone) {
         await sendSMS(driverPhone, `DisruptionHub OPS${details.ref ? ` — ${details.ref}` : ''}\n\nOps approved your report. Action being taken.`).catch(() => {})

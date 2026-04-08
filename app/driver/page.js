@@ -272,6 +272,24 @@ export default function DriverApp() {
             return prev
           })
         }
+
+        // Detect ops instructions written to driver_progress.alert
+        // When ops approves a webhook action, instruction is written as OPS_MSG:...
+        const opsInstructions = remote.filter(p => p.alert?.startsWith('OPS_MSG:'))
+        if (opsInstructions.length > 0) {
+          const latest = opsInstructions[opsInstructions.length - 1]
+          const msg = latest.alert.replace('OPS_MSG:', '').trim()
+          const msgKey = 'ops_msg_' + latest.updated_at
+          if (!notifiedCancellations.current.has(msgKey)) {
+            notifiedCancellations.current.add(msgKey)
+            setOpsMessages(prev => {
+              const updated = [...prev, msg]
+              try { localStorage.setItem('dh_ops_messages', JSON.stringify(updated)) } catch {}
+              return updated
+            })
+          }
+        }
+
       } catch {}
     }
 
