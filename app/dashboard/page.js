@@ -1153,27 +1153,14 @@ export default function DashboardPage() {
       const appData = await appRes.json()
       const allApprovals = appData.approvals || []
 
-      // Pull pilot_started_at from client config
-      // We pass it back via a dedicated endpoint or reuse shipments response
-      let pilotStartDate = null
-      try {
-        const cfgRes = await fetch('/api/client-config?client_id=pearson-haulage')
-        const cfgData = await cfgRes.json()
-        if (cfgData.pilot_started_at) pilotStartDate = new Date(cfgData.pilot_started_at)
-      } catch {}
+      // Pilot start date — set manually here when pilot officially begins.
+      // This is the source of truth. Update this date when onboarding a new client.
+      // Format: 'YYYY-MM-DD'
+      const PILOT_START = '2026-04-09'
+      let pilotStartDate = new Date(PILOT_START)
 
       // ── Filter to pilot period only ────────────────────────────────────────
-      // If pilot_started_at is set, only count events from that date forward.
-      // This removes pre-pilot test fires from the savings calculation.
-      const pilotLogs = pilotStartDate
-        ? allLogs.filter(l => l.created_at && new Date(l.created_at) >= pilotStartDate)
-        : allLogs
-
-      // If no pilot date set, use first webhook event as fallback
-      if (!pilotStartDate) {
-        const firstEvent = [...pilotLogs].sort((a,b) => new Date(a.created_at) - new Date(b.created_at))[0]
-        if (firstEvent?.created_at) pilotStartDate = new Date(firstEvent.created_at)
-      }
+      const pilotLogs = allLogs.filter(l => l.created_at && new Date(l.created_at) >= pilotStartDate)
 
       // ── Core counts ───────────────────────────────────────────────────────
       // Only count HIGH/CRITICAL as "real" incidents — these had ops SMS fired
@@ -1250,7 +1237,7 @@ export default function DashboardPage() {
         dailyRate,
         payloadGroundedCount: payloadGrounded.length,
         aiEstimatedCount: aiEstimated.length,
-        hasPilotDate: !!pilotStartDate,
+        hasPilotDate: true,
       })
     } catch (e) {
       console.error('loadSavings error', e)
