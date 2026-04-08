@@ -4,8 +4,8 @@ import { createClient } from '@supabase/supabase-js'
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
 function getSupabase() {
-  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_KEY) return null
-  return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY)
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) return null
+  return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY)
 }
 
 // ── STEP 1: EXTRACT REAL FINANCIAL VALUE FROM PAYLOAD ────────────────────────
@@ -85,11 +85,24 @@ function determineEventSeverity(eventType, payload, confirmedFinancial) {
 async function getClientConfig(clientId) {
   const supabase = getSupabase()
   if (!supabase) return null
-  const { data } = await supabase
+
+  // Try id first (clients table uses slug string as id e.g. 'pearson-haulage')
+  let { data } = await supabase
     .from('clients')
     .select('id, name, system_prompt, contact_phone, contact_name, pilot_started_at')
-    .eq('slug', clientId)
+    .eq('id', clientId)
     .single()
+
+  // Fall back to slug column if not found by id
+  if (!data) {
+    const res = await supabase
+      .from('clients')
+      .select('id, name, system_prompt, contact_phone, contact_name, pilot_started_at')
+      .eq('slug', clientId)
+      .single()
+    data = res.data
+  }
+
   return data
 }
 
