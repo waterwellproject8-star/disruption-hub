@@ -188,6 +188,7 @@ export async function POST(request) {
     const formData = await request.formData()
     const body = formData.get('Body')?.trim().toUpperCase() || ''
     const from = (formData.get('From') || '').replace(/\s/g, '')
+    console.log('[SMS] From:', from, '| Body:', body)
 
     const db = getDB()
     if (!db) return twimlReply('DH: System error. Open disruptionhub.ai')
