@@ -1143,60 +1143,99 @@ export default function DashboardPage() {
   async function loadSavings() {
     setSavingsLoading(true)
     try {
-      // Pull all approvals for this client (handled incidents)
-      const appRes = await fetch('/api/approvals?client_id=pearson-haulage&limit=500')
-      const appData = await appRes.json()
-      const allApprovals = appData.approvals || []
-
-      // Pull webhook audit log (all fires including simulated)
+      // Pull webhook audit log
       const logRes = await fetch('/api/webhooks/inbound?client_id=pearson-haulage&limit=500')
       const logData = await logRes.json()
       const allLogs = logData.logs || []
 
-      // ── Core counts ──
-      const totalIncidents = allLogs.length // every webhook fire = one incident handled by AI
-      const smsHandled = allLogs.filter(l => l.sms_fired).length // incidents that went to ops SMS
-      const approved = allApprovals.filter(a => ['approved','executed'].includes(a.status)).length
+      // Pull approvals
+      const appRes = await fetch('/api/approvals?client_id=pearson-haulage&limit=500')
+      const appData = await appRes.json()
+      const allApprovals = appData.approvals || []
 
-      // ── SLA exposure protected ──
-      // Sum financial_impact across all logged webhook events (AI-calculated at time)
-      // Include MEDIUM, HIGH, CRITICAL — exclude LOW only (LOW = advisory, no real exposure)
-      const exposureProtected = allLogs
-        .filter(l => ['MEDIUM','HIGH','CRITICAL'].includes(l.severity) && l.financial_impact > 0)
-        .reduce((sum, l) => sum + Number(l.financial_impact), 0)
-
-      // ── Response time saved ──
-      // Each incident handled: 12 min saved vs phone-tag average
-      const minutesSaved = totalIncidents * 12
-      const hoursSaved = Math.round((minutesSaved / 60) * 10) / 10
-
-      // ── Ops time value ──
-      // £14.42/hr ops coordinator. 0.2 hrs per incident (12 min).
-      const opsTimeSaved = Math.round(totalIncidents * 0.2 * 14.42)
-
-      // ── Driver time recovered ──
-      // £15.38/hr driver rate. 12 min faster instruction = 0.2 hrs per incident.
-      const driverTimeSaved = Math.round(totalIncidents * 0.2 * 15.38)
-
-      // ── Total quantified value ──
-      const totalValue = exposureProtected + opsTimeSaved + driverTimeSaved
-
-      // ── Pilot duration ──
-      let pilotDays = 1
+      // Pull pilot_started_at from client config
+      // We pass it back via a dedicated endpoint or reuse shipments response
       let pilotStartDate = null
-      const firstEvent = [...allLogs].sort((a,b) => new Date(a.created_at)-new Date(b.created_at))[0]
-      if (firstEvent?.created_at) {
-        pilotStartDate = new Date(firstEvent.created_at)
-        pilotDays = Math.max(1, Math.round((Date.now() - pilotStartDate.getTime()) / (1000 * 60 * 60 * 24)))
+      try {
+        const cfgRes = await fetch('/api/client-config?client_id=pearson-haulage')
+        const cfgData = await cfgRes.json()
+        if (cfgData.pilot_started_at) pilotStartDate = new Date(cfgData.pilot_started_at)
+      } catch {}
+
+      // ── Filter to pilot period only ────────────────────────────────────────
+      // If pilot_started_at is set, only count events from that date forward.
+      // This removes pre-pilot test fires from the savings calculation.
+      const pilotLogs = pilotStartDate
+        ? allLogs.filter(l => l.created_at && new Date(l.created_at) >= pilotStartDate)
+        : allLogs
+
+      // If no pilot date set, use first webhook event as fallback
+      if (!pilotStartDate) {
+        const firstEvent = [...pilotLogs].sort((a,b) => new Date(a.created_at) - new Date(b.created_at))[0]
+        if (firstEvent?.created_at) pilotStartDate = new Date(firstEvent.created_at)
       }
 
-      // ── Projected annual ──
-      // Annualise from actual rate of incidents per day
-      const dailyRate = totalIncidents / pilotDays
-      const annualProjected = Math.round((totalValue / pilotDays) * 365)
+      // ── Core counts ───────────────────────────────────────────────────────
+      // Only count HIGH/CRITICAL as "real" incidents — these had ops SMS fired
+      // MEDIUM logged for audit trail but not counted as active interventions
+      const realIncidents = pilotLogs.filter(l => ['HIGH','CRITICAL'].includes(l.severity))
+      const totalIncidents = pilotLogs.length
+      const smsHandled = pilotLogs.filter(l => l.sms_fired).length
+      const approved = allApprovals.filter(a => ['approved','executed'].includes(a.status)).length
+
+      // ── Payload-grounded vs AI-estimated split ────────────────────────────
+      // financial_source field tells us whether the number came from the payload
+      // or was estimated by AI. We surface this in the UI for transparency.
+      const payloadGrounded = pilotLogs.filter(l => l.financial_source === 'payload' && l.financial_impact > 0)
+      const aiEstimated = pilotLogs.filter(l => l.financial_source === 'ai_estimate' && l.financial_impact > 0)
+
+      // ── SLA exposure protected ────────────────────────────────────────────
+      // Sum financial_impact on HIGH/CRITICAL only.
+      // MEDIUM excluded from exposure total — conservative and defensible.
+      // financial_impact is now payload-grounded where possible (Session 10 fix).
+      const exposureProtected = pilotLogs
+        .filter(l => ['HIGH','CRITICAL'].includes(l.severity) && l.financial_impact > 0)
+        .reduce((sum, l) => sum + Number(l.financial_impact), 0)
+
+      // ── Response time saved ───────────────────────────────────────────────
+      // Benchmark: 18 min average ops phone response (RHA 2023 survey data)
+      // DisruptionHub SMS loop average: ~6 min (webhook fire → YES → driver instruction)
+      // Conservative delta used: 12 min per incident
+      // Only applied to incidents that actually triggered an ops SMS (sms_fired = true)
+      const smsTriggered = smsHandled
+      const minutesSaved = smsTriggered * 12
+      const hoursSaved = Math.round((minutesSaved / 60) * 10) / 10
+
+      // ── Ops time value ────────────────────────────────────────────────────
+      // UK ops coordinator salary £30,000/yr ÷ 2,080 working hrs = £14.42/hr
+      // Each avoided phone-tag loop: 12 min = 0.2 hrs = £2.88
+      const opsTimeSaved = Math.round(smsTriggered * 0.2 * 14.42)
+
+      // ── Driver time recovered ─────────────────────────────────────────────
+      // UK HGV driver average £32,000/yr ÷ 2,080 hrs = £15.38/hr
+      // 12 min faster instruction per incident = 0.2 hrs = £3.08
+      const driverTimeSaved = Math.round(smsTriggered * 0.2 * 15.38)
+
+      // ── Total quantified value ────────────────────────────────────────────
+      const totalValue = exposureProtected + opsTimeSaved + driverTimeSaved
+
+      // ── Pilot duration ────────────────────────────────────────────────────
+      const pilotDays = pilotStartDate
+        ? Math.max(1, Math.round((Date.now() - pilotStartDate.getTime()) / (1000 * 60 * 60 * 24)))
+        : 1
+
+      // ── Projected annual ──────────────────────────────────────────────────
+      // Only project if we have at least 3 days of data — prevents wild extrapolation
+      // from a single day spike
+      const annualProjected = pilotDays >= 3
+        ? Math.round((totalValue / pilotDays) * 365)
+        : null
+
+      const dailyRate = Math.round((totalIncidents / pilotDays) * 10) / 10
 
       setSavings({
         totalIncidents,
+        realIncidents: realIncidents.length,
         smsHandled,
         approved,
         exposureProtected,
@@ -1208,7 +1247,10 @@ export default function DashboardPage() {
         pilotDays,
         pilotStartDate,
         annualProjected,
-        dailyRate: Math.round(dailyRate * 10) / 10,
+        dailyRate,
+        payloadGroundedCount: payloadGrounded.length,
+        aiEstimatedCount: aiEstimated.length,
+        hasPilotDate: !!pilotStartDate,
       })
     } catch (e) {
       console.error('loadSavings error', e)
@@ -2061,6 +2103,13 @@ export default function DashboardPage() {
 
                 {savings && (
                   <>
+                    {/* Pilot date warning — shown if no official start date set */}
+                    {!savings.hasPilotDate && (
+                      <div style={{ padding:'8px 12px', background:'rgba(245,158,11,0.08)', border:'1px solid rgba(245,158,11,0.2)', borderRadius:6, marginBottom:10, fontSize:10, color:'#f59e0b', fontFamily:'monospace' }}>
+                        ⚠ No official pilot start date set — using first webhook event as fallback. Run the SQL migration and set pilot_started_at in Supabase to lock in the real start date.
+                      </div>
+                    )}
+
                     {/* Primary metric — full width */}
                     <div style={{ padding:'16px 20px', background:'rgba(0,229,176,0.06)', border:'1px solid rgba(0,229,176,0.2)', borderRadius:10, marginBottom:10, display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:12 }}>
                       <div>
@@ -2069,52 +2118,53 @@ export default function DashboardPage() {
                           £{savings.exposureProtected.toLocaleString()}
                         </div>
                         <div style={{ fontSize:10, color:'#4a5260', fontFamily:'monospace', marginTop:4 }}>
-                          Sum of financial_impact on MEDIUM/HIGH/CRITICAL incidents · AI-calculated at time of each event
+                          HIGH/CRITICAL incidents only · {savings.realIncidents} qualifying events
+                          {savings.payloadGroundedCount > 0 && <span style={{ color:'#00e5b0' }}> · {savings.payloadGroundedCount} payload-verified</span>}
+                          {savings.aiEstimatedCount > 0 && <span style={{ color:'#f59e0b' }}> · {savings.aiEstimatedCount} AI-estimated</span>}
                         </div>
                       </div>
-                      {savings.annualProjected > 0 && (
+                      {savings.annualProjected && (
                         <div style={{ textAlign:'right' }}>
-                          <div style={{ fontSize:10, fontFamily:'monospace', color:'#4a5260', marginBottom:3 }}>PROJECTED ANNUAL (at current rate)</div>
+                          <div style={{ fontSize:10, fontFamily:'monospace', color:'#4a5260', marginBottom:3 }}>PROJECTED ANNUAL (≥3 days data)</div>
                           <div style={{ fontSize:22, fontWeight:700, color:'#a855f7', fontFamily:'monospace' }}>£{savings.annualProjected.toLocaleString()}</div>
-                          <div style={{ fontSize:9, color:'#4a5260', fontFamily:'monospace', marginTop:2 }}>{savings.dailyRate} incidents/day × 365</div>
+                          <div style={{ fontSize:9, color:'#4a5260', fontFamily:'monospace', marginTop:2 }}>{savings.dailyRate} incidents/day avg × 365</div>
                         </div>
+                      )}
+                      {!savings.annualProjected && (
+                        <div style={{ fontSize:10, color:'#4a5260', fontFamily:'monospace' }}>Annual projection available after 3 days of data</div>
                       )}
                     </div>
 
                     {/* Grid of secondary metrics */}
                     <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(160px,1fr))', gap:8, marginBottom:10 }}>
 
-                      {/* Response time saved */}
                       <div style={{ padding:'12px 14px', background:'#111418', border:'1px solid rgba(255,255,255,0.08)', borderRadius:8 }}>
                         <div style={{ fontSize:9, color:'#4a5260', fontFamily:'monospace', marginBottom:4 }}>RESPONSE TIME SAVED</div>
                         <div style={{ fontSize:22, fontWeight:700, color:'#3b82f6', fontFamily:'monospace' }}>{savings.hoursSaved}h</div>
-                        <div style={{ fontSize:9, color:'#4a5260', fontFamily:'monospace', marginTop:3 }}>{savings.minutesSaved} min total · 12 min/incident</div>
+                        <div style={{ fontSize:9, color:'#4a5260', fontFamily:'monospace', marginTop:3 }}>{savings.minutesSaved} min · 12 min/SMS-handled event</div>
                       </div>
 
-                      {/* Incidents handled */}
                       <div style={{ padding:'12px 14px', background:'#111418', border:'1px solid rgba(255,255,255,0.08)', borderRadius:8 }}>
-                        <div style={{ fontSize:9, color:'#4a5260', fontFamily:'monospace', marginBottom:4 }}>INCIDENTS HANDLED</div>
+                        <div style={{ fontSize:9, color:'#4a5260', fontFamily:'monospace', marginBottom:4 }}>INCIDENTS LOGGED</div>
                         <div style={{ fontSize:22, fontWeight:700, color:'#e8eaed', fontFamily:'monospace' }}>{savings.totalIncidents}</div>
-                        <div style={{ fontSize:9, color:'#4a5260', fontFamily:'monospace', marginTop:3 }}>{savings.smsHandled} sent to ops SMS · {savings.approved} approved</div>
+                        <div style={{ fontSize:9, color:'#4a5260', fontFamily:'monospace', marginTop:3 }}>{savings.smsHandled} ops SMS sent · {savings.realIncidents} HIGH/CRIT · {savings.approved} approved</div>
                       </div>
 
-                      {/* Ops time value */}
                       <div style={{ padding:'12px 14px', background:'#111418', border:'1px solid rgba(255,255,255,0.08)', borderRadius:8 }}>
                         <div style={{ fontSize:9, color:'#4a5260', fontFamily:'monospace', marginBottom:4 }}>OPS TIME RECOVERED</div>
                         <div style={{ fontSize:22, fontWeight:700, color:'#f59e0b', fontFamily:'monospace' }}>£{savings.opsTimeSaved}</div>
-                        <div style={{ fontSize:9, color:'#4a5260', fontFamily:'monospace', marginTop:3 }}>£14.42/hr · 12 min/incident · {savings.totalIncidents} events</div>
+                        <div style={{ fontSize:9, color:'#4a5260', fontFamily:'monospace', marginTop:3 }}>£14.42/hr · 12 min per SMS event</div>
                       </div>
 
-                      {/* Driver time value */}
                       <div style={{ padding:'12px 14px', background:'#111418', border:'1px solid rgba(255,255,255,0.08)', borderRadius:8 }}>
                         <div style={{ fontSize:9, color:'#4a5260', fontFamily:'monospace', marginBottom:4 }}>DRIVER TIME RECOVERED</div>
                         <div style={{ fontSize:22, fontWeight:700, color:'#f59e0b', fontFamily:'monospace' }}>£{savings.driverTimeSaved}</div>
-                        <div style={{ fontSize:9, color:'#4a5260', fontFamily:'monospace', marginTop:3 }}>£15.38/hr · 12 min faster/instruction</div>
+                        <div style={{ fontSize:9, color:'#4a5260', fontFamily:'monospace', marginTop:3 }}>£15.38/hr · 12 min faster per instruction</div>
                       </div>
 
                     </div>
 
-                    {/* ROI line — subscription vs value */}
+                    {/* ROI line */}
                     {savings.totalValue > 0 && (
                       <div style={{ padding:'10px 14px', background:'rgba(168,85,247,0.06)', border:'1px solid rgba(168,85,247,0.15)', borderRadius:8, display:'flex', alignItems:'center', gap:16, flexWrap:'wrap' }}>
                         <div style={{ fontSize:10, color:'#4a5260', fontFamily:'monospace' }}>
@@ -2123,18 +2173,18 @@ export default function DashboardPage() {
                         <div style={{ fontSize:9, color:'#4a5260', fontFamily:'monospace' }}>vs pilot cost £99</div>
                         {savings.totalValue > 99 && (
                           <div style={{ fontSize:10, color:'#a855f7', fontFamily:'monospace', fontWeight:700 }}>
-                            {Math.round(savings.totalValue / 99)}× ROI on pilot · £299/mo = £{(savings.totalValue - 299).toLocaleString()} net/mo at this rate
+                            {Math.round(savings.totalValue / 99)}× ROI · £299/mo = £{Math.max(0, savings.totalValue - 299).toLocaleString()} net/mo at this rate
                           </div>
                         )}
-                        <div style={{ fontSize:9, color:'#4a5260', fontFamily:'monospace', marginLeft:'auto' }}>
-                          // Methodology: SLA exposure from AI analysis (MEDIUM–CRITICAL) + ops time at £14.42/hr + driver time at £15.38/hr. Conservative. No fuel or indirect costs included.
+                        <div style={{ fontSize:9, color:'#4a5260', fontFamily:'monospace', marginLeft:'auto', maxWidth:300, textAlign:'right' }}>
+                          // SLA exposure: payload-grounded where possible, AI-estimated otherwise. Time recovery: £14.42/hr ops + £15.38/hr driver. No fuel or indirect costs.
                         </div>
                       </div>
                     )}
 
                     {savings.totalIncidents === 0 && (
                       <div style={{ padding:'12px 14px', background:'rgba(255,255,255,0.02)', border:'1px solid rgba(255,255,255,0.06)', borderRadius:8, textAlign:'center' }}>
-                        <div style={{ fontSize:11, color:'#4a5260', fontFamily:'monospace' }}>No incidents logged yet — fire webhooks from the SETUP tab to start tracking</div>
+                        <div style={{ fontSize:11, color:'#4a5260', fontFamily:'monospace' }}>No incidents logged in pilot period — fire webhooks from SETUP tab to begin tracking</div>
                       </div>
                     )}
                   </>
