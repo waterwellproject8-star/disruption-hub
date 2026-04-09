@@ -78,8 +78,8 @@ export default function HomePage() {
         .stat-card:hover { border-color: ${T.amberBorder}; transform: translateY(-2px); }
         .how-card:hover { border-color: ${T.amberBorder}; }
         .pricing-card:hover { transform: translateY(-3px); }
-        /* Hero — left on desktop */
-        .hero-section { justify-content: flex-start; }
+        /* Hero — centre-left on desktop */
+        .hero-section { justify-content: flex-start; padding-left: max(5%, calc(50vw - 680px)); }
         .hero-content { text-align: left; }
         .hero-sub { margin-left: 0; }
         .hero-ctas { justify-content: flex-start; }
@@ -136,18 +136,18 @@ export default function HomePage() {
       {/* ── HERO ─────────────────────────────────────────────────────────────── */}
       <section className="hero-section" style={{
         minHeight: '100vh', display: 'flex', alignItems: 'center',
-        padding: '120px 40px 80px', position: 'relative', overflow: 'hidden',
+        padding: '120px 5% 80px', position: 'relative', overflow: 'hidden',
       }}>
         {/* Truck photo background */}
         <div style={{
           position: 'absolute', inset: 0, pointerEvents: 'none',
           backgroundImage: 'url(/hero-bg.jpg)',
-          backgroundSize: 'cover', backgroundPosition: 'center right',
+          backgroundSize: 'cover', backgroundPosition: '70% center',
         }} />
         {/* Dark overlay — heavy left so text pops, fades right to show trucks */}
         <div style={{
           position: 'absolute', inset: 0, pointerEvents: 'none',
-          background: 'linear-gradient(90deg, rgba(8,12,20,0.95) 0%, rgba(8,12,20,0.85) 35%, rgba(8,12,20,0.5) 65%, rgba(8,12,20,0.15) 100%)',
+          background: 'linear-gradient(90deg, rgba(8,12,20,0.97) 0%, rgba(8,12,20,0.9) 30%, rgba(8,12,20,0.65) 55%, rgba(8,12,20,0.15) 100%)',
         }} />
         {/* Amber glow */}
         <div style={{
@@ -155,7 +155,7 @@ export default function HomePage() {
           background: 'radial-gradient(ellipse 50% 60% at 20% 55%, rgba(245,166,35,0.07) 0%, transparent 70%)',
         }} />
 
-        <div className="hero-content" style={{ position: 'relative', zIndex: 2, maxWidth: 680 }}>
+        <div className="hero-content" style={{ position: 'relative', zIndex: 2, maxWidth: 720 }}>
           {/* Label */}
           <div style={{
             fontFamily: FF.mono, fontSize: 11, fontWeight: 500,
