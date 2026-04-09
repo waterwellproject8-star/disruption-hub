@@ -159,19 +159,18 @@ export default function HomePage() {
           {/* Headline */}
           <h1 style={{
             fontFamily: FF.condensed,
-            fontSize: 'clamp(52px, 9vw, 92px)',
+            fontSize: 'clamp(48px, 8vw, 88px)',
             fontWeight: 900, lineHeight: 0.93,
             letterSpacing: '-0.01em', textTransform: 'uppercase',
             color: '#fff', marginBottom: 28,
           }}>
-            Your AI Operations
+            Your Ops Never Sleep.
             <span style={{
               color: T.amber, display: 'block',
               textShadow: '0 0 40px rgba(245,166,35,0.3)',
             }}>
-              Room for UK
+              Neither Does Ours.
             </span>
-            Haulage
           </h1>
 
           {/* Subheadline */}
