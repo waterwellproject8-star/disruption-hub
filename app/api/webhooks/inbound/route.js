@@ -112,22 +112,45 @@ async function sendOpsSMS(toPhone, body) {
   }
 }
 
-function buildOpsSMS(eventType, payload, severity, financialImpact, parsedResult) {
-  const reg = payload?.vehicle_reg || 'Unknown'
-  const location = payload?.location || payload?.current_location || ''
-  const driver = payload?.driver_name || ''
-  const sevEmoji = severity === 'CRITICAL' ? '🔴' : severity === 'HIGH' ? '🟠' : '🟡'
+// Build targeted ops SMS per action type — each tells ops exactly what YES executes
+function buildActionSMS(eventType, payload, severity, financialImpact, action) {
+  const reg        = payload?.vehicle_reg || 'Unknown'
+  const location   = payload?.location || payload?.current_location || payload?.current_position || ''
+  const consignee  = payload?.consignee || action?.consignee_name || ''
+  const delayMins  = payload?.delay_minutes || ''
+  const sevEmoji   = severity === 'CRITICAL' ? '🔴' : severity === 'HIGH' ? '🟠' : '🟡'
   const eventLabel = eventType.replace(/_/g, ' ').toUpperCase()
-  const firstAction = parsedResult?.sections?.immediate_actions?.[0] || ''
-  // Target under 160 chars — Action line removed (too long, ops just needs key facts)
-  const parts = [
-    `${sevEmoji} DISRUPTIONHUB — ${severity}`,
-    `${eventLabel} · ${reg}${driver ? ` · ${driver}` : ''}`,
-    location ? `Location: ${location}` : '',
-    financialImpact > 0 ? `Exposure: £${financialImpact.toLocaleString()}` : '',
-    'Reply YES · NO · OPEN'
-  ].filter(Boolean)
-  return parts.join('\n')
+  const actionType = action?.type || 'send_sms'
+  const callType   = action?.call_type || ''
+
+  // Line 1: severity + event
+  // Line 2: vehicle + location + delay
+  // Line 3: consignee + exposure
+  // Line 4: what YES does — specific to this action
+  // Line 5: reply options
+
+  const line1 = `${sevEmoji} ${severity} — ${eventLabel}`
+  const line2 = [reg, location ? location : '', delayMins ? `${delayMins}min` : ''].filter(Boolean).join(' · ')
+  const line3 = [consignee, financialImpact > 0 ? `£${financialImpact.toLocaleString()} exposure` : ''].filter(Boolean).join(' · ')
+
+  let line4 = ''
+  if (actionType === 'send_sms' || actionType === 'sms' || actionType === 'reroute' || actionType === 'notify') {
+    line4 = 'YES = notify driver of situation'
+  } else if (actionType === 'dispatch') {
+    line4 = 'YES = dispatch recovery + notify driver'
+  } else if (actionType === 'call' && callType === 'consignee_delay_alert') {
+    const name = action?.consignee_name || consignee || 'consignee'
+    line4 = `YES = call ${name} automatically`
+  } else if (actionType === 'call' && callType === 'carrier_alert') {
+    const name = action?.carrier_name || 'carrier'
+    line4 = `YES = call ${name} for recovery`
+  } else if (actionType === 'call') {
+    line4 = 'YES = make automated call'
+  } else {
+    line4 = 'YES = execute action'
+  }
+
+  return [line1, line2, line3, line4, 'Reply YES · NO · OPEN'].filter(Boolean).join('\n')
 }
 
 // ── EVENT CATEGORIES FOR CALL ROUTING ────────────────────────────────────────
@@ -283,18 +306,13 @@ ${systemPrompt}`
       } catch (err) { console.error('webhook_log insert error:', err.message) }
     }
 
-    let smsSent = false
     const shouldSendSMS = ['HIGH', 'CRITICAL'].includes(severity)
 
-    if (shouldSendSMS && opsPhone && !simulated) {
-      const smsBody = buildOpsSMS(event_type, payload, severity, financialImpact, parsedResult)
-      smsSent = await sendOpsSMS(opsPhone, smsBody)
-      if (supabase && logId) {
-        try { await supabase.from('webhook_log').update({ sms_fired: smsSent }).eq('id', logId) } catch {}
-      }
-    }
-
-    // ── WRITE APPROVALS ───────────────────────────────────────────────────────
+    // ── WRITE APPROVALS + SEND ONE SMS PER ACTION ─────────────────────────────
+    // Each action gets its own approval row AND its own targeted ops SMS
+    // SMS 1 (driver action): "YES = notify driver of delay"
+    // SMS 2 (call action):   "YES = call Tesco DC automatically"
+    // Ops can approve or reject each independently
     const actionsToWrite = parsedResult?.actions?.length
       ? parsedResult.actions.slice(0, 4)
       : [{
@@ -309,9 +327,13 @@ ${systemPrompt}`
 
     let approvalsWritten = 0
     let approvalsError = null
+    let smsSent = false
 
     if (supabase && shouldSendSMS) {
-      for (const action of actionsToWrite) {
+      for (let i = 0; i < actionsToWrite.length; i++) {
+        const action = actionsToWrite[i]
+
+        // Write approval row first
         // NOTE: Supabase insert does NOT throw — always check { error } object
         const { error: approvalErr } = await supabase
           .from('approvals')
@@ -320,25 +342,23 @@ ${systemPrompt}`
             action_type: action.type || 'send_sms',
             action_label: action.label || `${severity} alert — ${event_type.replace(/_/g,' ')}`,
             action_details: {
-              // Core fields — always present
-              vehicle_reg:    vehicleReg || null,
+              vehicle_reg:        vehicleReg || null,
               event_type,
               system,
-              source:         'webhook_inbound',
-              recipient:      action.recipient,
-              content:        action.content,
+              source:             'webhook_inbound',
+              recipient:          action.recipient,
+              content:            action.content,
               payload,
-              financial_impact: financialImpact,
-              ref:            payload?.job_id || payload?.booking_ref || null,
-              // Call-specific fields — populated for call action types
-              call_type:          action.call_type         || null,
-              consignee_name:     action.consignee_name    || null,
-              consignee_phone:    action.consignee_phone   || null,
-              carrier_phone:      action.carrier_phone     || null,
-              carrier_name:       action.carrier_name      || null,
-              delay_minutes:      action.delay_minutes      || null,
-              revised_eta:        action.revised_eta        || null,
-              delay_reason:       action.delay_reason       || null,
+              financial_impact:   financialImpact,
+              ref:                payload?.job_id || payload?.booking_ref || null,
+              call_type:          action.call_type          || null,
+              consignee_name:     action.consignee_name     || null,
+              consignee_phone:    action.consignee_phone    || null,
+              carrier_phone:      action.carrier_phone      || null,
+              carrier_name:       action.carrier_name       || null,
+              delay_minutes:      action.delay_minutes       || null,
+              revised_eta:        action.revised_eta         || null,
+              delay_reason:       action.delay_reason        || null,
               incident_description: action.incident_description || null,
               ops_callback_phone: action.ops_callback_phone || opsPhone || null
             },
@@ -350,9 +370,25 @@ ${systemPrompt}`
         if (approvalErr) {
           approvalsError = approvalErr.message
           console.error('approvals insert error:', approvalErr.message, approvalErr.code)
-        } else {
-          approvalsWritten++
+          continue
         }
+
+        approvalsWritten++
+
+        // Send targeted SMS for this action — tells ops exactly what YES will do
+        if (opsPhone && !simulated) {
+          const smsBody = buildActionSMS(event_type, payload, severity, financialImpact, action)
+          const sent = await sendOpsSMS(opsPhone, smsBody)
+          if (sent) smsSent = true
+          // Small delay between messages so they arrive in order
+          if (i < actionsToWrite.length - 1) {
+            await new Promise(resolve => setTimeout(resolve, 1500))
+          }
+        }
+      }
+
+      if (logId) {
+        try { await supabase.from('webhook_log').update({ sms_fired: smsSent }).eq('id', logId) } catch {}
       }
     }
 
