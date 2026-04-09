@@ -195,9 +195,11 @@ export default function DriverApp() {
       if (shiftDone) setShiftStarted(true)
       if (savedAlert) { try { setLastAlert(JSON.parse(savedAlert)) } catch {} }
       loadJobs(info).then(loaded => {
-        // FIX: only auto-clear if all jobs completed AND we have actual jobs
-        // Don't clear on new shift — localStorage progress will be empty so no false positives
-        if (loaded && loaded.length > 0 && loaded.every(j => j.status === 'completed')) clearSession()
+        // Auto-clear only if all REAL jobs are completed (not SHIFT_START rows)
+        // and there is actually job progress saved locally (not a brand new shift)
+        const hasLocalProgress = !!localStorage.getItem('dh_job_progress')
+        const realJobs = (loaded || []).filter(j => j.ref !== 'SHIFT_START')
+        if (hasLocalProgress && realJobs.length > 0 && realJobs.every(j => j.status === 'completed')) clearSession()
       })
     } else { setLoading(false) }
     return () => { clearTimeout(undoTimer.current); clearInterval(countdownTimer.current) }
@@ -339,7 +341,8 @@ export default function DriverApp() {
     if (!driverInfo.clientId || !driverInfo.vehicleReg || !ref) return
     fetch('/api/driver/progress', {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ client_id:driverInfo.clientId, vehicle_reg:driverInfo.vehicleReg, driver_name:driverInfo.name, ref, status, alert:alert||null })
+      // Always include driver_phone so resolveDriverPhone() in ops routes can find this driver
+      body: JSON.stringify({ client_id:driverInfo.clientId, vehicle_reg:driverInfo.vehicleReg, driver_name:driverInfo.name, driver_phone:driverInfo.phone||null, ref, status, alert:alert||null })
     }).catch(()=>{})
   }
 
@@ -655,25 +658,31 @@ export default function DriverApp() {
         body:JSON.stringify({client_id:driverInfo.clientId,driver_name:driverInfo.name,driver_phone:driverInfo.phone||null,vehicle_reg:driverInfo.vehicleReg,issue_description:`PRE-SHIFT VEHICLE DEFECT. Driver ${driverInfo.name} (${driverInfo.vehicleReg}) flagged issues: ${failedLabels.join(', ')}. Vehicle may not be roadworthy.`,human_description:`⚠ Vehicle defects: ${failedLabels.join(', ')}`,location_description:'At depot — pre-departure',force_alert:true,force_financial_zero:true})
       }).catch(()=>{})
     } else {
-      setShiftStarted(true); setView('run')
-      loadJobs(driverInfo)
+      // Clear old job progress from localStorage BEFORE loading jobs
+      // Prevents mergeJobProgress reading stale completed statuses and auto-firing clearSession
+      // which would immediately mark the new SHIFT_START row as completed
+      localStorage.removeItem('dh_job_progress')
 
-      // Write initial driver_progress row on shift start
-      // This makes the driver appear in Live Fleet on the ops dashboard immediately
-      // Without this, driver only appears after their first job step tap
+      setShiftStarted(true); setView('run')
+
+      // Write SHIFT_START row to driver_progress FIRST with driver phone
+      // This ensures the driver appears in Live Fleet on ops dashboard immediately
+      // Must happen before loadJobs to avoid the clearSession race condition
       fetch('/api/driver/progress', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          client_id:   driverInfo.clientId,
-          vehicle_reg: driverInfo.vehicleReg,
-          driver_name: driverInfo.name,
+          client_id:    driverInfo.clientId,
+          vehicle_reg:  driverInfo.vehicleReg,
+          driver_name:  driverInfo.name,
           driver_phone: driverInfo.phone || null,
           ref:    'SHIFT_START',
           status: 'on_shift',
           alert:  null
         })
       }).catch(() => {})
+
+      loadJobs(driverInfo)
     }
   }
 
