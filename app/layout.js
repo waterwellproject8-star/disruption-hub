@@ -30,6 +30,8 @@ export const viewport = {
   themeColor: '#06080d',
   width: 'device-width',
   initialScale: 1,
+  maximumScale: 1,   // prevents iOS auto-zoom on tap/focus
+  userScalable: false,
   viewportFit: 'cover',
 }
 

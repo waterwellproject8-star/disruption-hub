@@ -911,7 +911,7 @@ export default function DriverApp() {
     const allChecked = checks.every(c=>preShiftChecks[c.id]!==undefined)
     const hasFails = checks.some(c=>preShiftChecks[c.id]===false)
     return (
-      <div style={{minHeight:'100vh',background:'#0a0c0e',color:'#e8eaed',fontFamily:'IBM Plex Sans,sans-serif',paddingBottom:40}}>
+      <div style={{minHeight:'100vh',background:'#0a0c0e',color:'#e8eaed',fontFamily:'IBM Plex Sans,sans-serif',paddingBottom:40,touchAction:'manipulation'}}>
         <div style={{padding:'14px 16px',display:'flex',alignItems:'center',justifyContent:'space-between',borderBottom:'1px solid rgba(255,255,255,0.06)'}}>
           <div style={{display:'flex',alignItems:'center',gap:10}}>
             <div style={{width:26,height:26,background:'#00e5b0',borderRadius:5,display:'flex',alignItems:'center',justifyContent:'center',fontSize:9,fontWeight:700,color:'#000',fontFamily:'monospace'}}>DH</div>
@@ -925,12 +925,12 @@ export default function DriverApp() {
           {checks.map(check=>{
             const passed=preShiftChecks[check.id]; const failed=preShiftChecks[check.id]===false
             return (
-              <div key={check.id} style={{display:'flex',alignItems:'center',gap:12,padding:'15px',background:failed?'rgba(239,68,68,0.06)':passed?'rgba(0,229,176,0.04)':'#111418',border:`1px solid ${failed?'rgba(239,68,68,0.3)':passed?'rgba(0,229,176,0.2)':'rgba(255,255,255,0.06)'}`,borderRadius:10,marginBottom:8,transition:'all 0.15s'}}>
+              <div key={check.id} style={{display:'flex',alignItems:'center',gap:12,padding:'15px',background:failed?'rgba(239,68,68,0.06)':passed?'rgba(0,229,176,0.04)':'#111418',border:`1px solid ${failed?'rgba(239,68,68,0.3)':passed?'rgba(0,229,176,0.2)':'rgba(255,255,255,0.06)'}`,borderRadius:10,marginBottom:8,transition:'background 0s,border 0s'}}>
                 <span style={{fontSize:22,flexShrink:0}}>{check.icon}</span>
                 <div style={{flex:1,fontSize:15,color:failed?'#ef4444':passed?'#00e5b0':'#e8eaed',fontWeight:passed||failed?500:400}}>{check.label}</div>
                 <div style={{display:'flex',gap:8}}>
-                  <button onClick={()=>setPreShiftChecks(p=>({...p,[check.id]:true}))} style={{width:44,height:44,borderRadius:8,border:`2px solid ${passed?'#00e5b0':'rgba(0,229,176,0.3)'}`,background:passed?'rgba(0,229,176,0.15)':'transparent',color:passed?'#00e5b0':'#4a5260',fontSize:20,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>✓</button>
-                  <button onClick={()=>setPreShiftChecks(p=>({...p,[check.id]:false}))} style={{width:44,height:44,borderRadius:8,border:`2px solid ${failed?'#ef4444':'rgba(239,68,68,0.2)'}`,background:failed?'rgba(239,68,68,0.12)':'transparent',color:failed?'#ef4444':'#4a5260',fontSize:20,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>✗</button>
+                  <button onClick={()=>setPreShiftChecks(p=>({...p,[check.id]:true}))} style={{width:52,height:52,borderRadius:8,border:`2px solid ${passed?'#00e5b0':'rgba(0,229,176,0.3)'}`,background:passed?'rgba(0,229,176,0.15)':'transparent',color:passed?'#00e5b0':'#4a5260',fontSize:22,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',touchAction:'manipulation',WebkitTapHighlightColor:'transparent',transition:'none',userSelect:'none'}}>✓</button>
+                  <button onClick={()=>setPreShiftChecks(p=>({...p,[check.id]:false}))} style={{width:52,height:52,borderRadius:8,border:`2px solid ${failed?'#ef4444':'rgba(239,68,68,0.2)'}`,background:failed?'rgba(239,68,68,0.12)':'transparent',color:failed?'#ef4444':'#4a5260',fontSize:22,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',touchAction:'manipulation',WebkitTapHighlightColor:'transparent',transition:'none',userSelect:'none'}}>✗</button>
                 </div>
               </div>
             )
