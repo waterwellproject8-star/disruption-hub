@@ -97,6 +97,9 @@ export default function HomePage() {
           .footer-cols { flex-direction: column !important; gap: 32px !important; }
           /* Hero — center on mobile */
           .hero-section { justify-content: center; padding: 80px 20px 60px !important; }
+          .hero-truck-bg { display: none !important; }
+          .hero-overlay { display: none !important; }
+          .hero-glow { display: none !important; }
           .hero-content { text-align: center; max-width: 100% !important; }
           .hero-sub { margin: 0 auto 32px !important; font-size: 16px !important; }
           .hero-ctas { justify-content: center; flex-direction: column; align-items: center; }
@@ -149,12 +152,12 @@ export default function HomePage() {
           backgroundSize: 'cover', backgroundPosition: '70% center',
         }} />
         {/* Dark overlay — heavy left so text pops, fades right to show trucks */}
-        <div style={{
+        <div className="hero-overlay" style={{
           position: 'absolute', inset: 0, pointerEvents: 'none',
           background: 'linear-gradient(90deg, rgba(8,12,20,0.97) 0%, rgba(8,12,20,0.9) 30%, rgba(8,12,20,0.65) 55%, rgba(8,12,20,0.15) 100%)',
         }} />
         {/* Amber glow */}
-        <div style={{
+        <div className="hero-glow" style={{
           position: 'absolute', inset: 0, pointerEvents: 'none',
           background: 'radial-gradient(ellipse 50% 60% at 20% 55%, rgba(245,166,35,0.07) 0%, transparent 70%)',
         }} />
