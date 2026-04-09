@@ -27,7 +27,7 @@ const INCIDENT_LOG = [
   { date: '3 days ago', ref: 'PH-6602', type: 'Driver Hours', severity: 'MEDIUM', saved: '£900' },
 ]
 
-const STATUS_COLORS = { 'on-track': '#00e5b0', 'disrupted': '#ef4444', 'delayed': '#f59e0b' }
+const STATUS_COLORS = { 'on-track': '#f5a623', 'disrupted': '#ef4444', 'delayed': '#f59e0b' }
 const SEV_COLORS = { 'CRITICAL': '#ef4444', 'HIGH': '#f59e0b', 'MEDIUM': '#3b82f6', 'LOW': '#8a9099' }
 const SEV_BG = { 'CRITICAL': 'rgba(239,68,68,0.1)', 'HIGH': 'rgba(245,158,11,0.1)', 'MEDIUM': 'rgba(59,130,246,0.1)', 'LOW': 'rgba(138,144,153,0.1)' }
 
@@ -58,7 +58,7 @@ const MODULES = [
 
 const CAT_COLORS = {
   ops:        { bg: 'rgba(59,130,246,0.08)',  border: 'rgba(59,130,246,0.2)',  text: '#3b82f6' },
-  save:       { bg: 'rgba(0,229,176,0.08)',   border: 'rgba(0,229,176,0.2)',   text: '#00e5b0' },
+  save:       { bg: 'rgba(245,166,35,0.08)',   border: 'rgba(245,166,35,0.2)',   text: '#f5a623' },
   compliance: { bg: 'rgba(245,158,11,0.08)',  border: 'rgba(245,158,11,0.2)', text: '#f59e0b' },
   growth:     { bg: 'rgba(168,85,247,0.08)',  border: 'rgba(168,85,247,0.2)', text: '#a855f7' },
 }
@@ -124,7 +124,7 @@ const WEBHOOK_SYSTEMS = {
 
   // ── TELEMATICS — SAMSARA / IOT SENSORS ───────────────────────────────────
   samsara: {
-    label: 'Samsara IoT', icon: '🔬', color: '#00e5b0',
+    label: 'Samsara IoT', icon: '🔬', color: '#f5a623',
     events: {
       cargo_tamper:         { label: 'Cargo Tamper / Theft Alert',    fields: { vehicle_reg:'LK72 ABX', sensor:'cargo_seal_broken', location:'A1 southbound J41 layby', time:'02:34', cargo:'mixed retail', cargo_value_gbp:24000, driver_name:'Dave P' } },
       trailer_detached:     { label: 'Trailer Detached Unexpectedly', fields: { vehicle_reg:'LK72 ABX', trailer_id:'TRL-0087', location:'M1 J32 slip road', driver_name:'Dave P', cargo_loaded:true, cargo_value_gbp:18000 } },
@@ -156,7 +156,7 @@ const WEBHOOK_SYSTEMS = {
 
   // ── WMS — OUTBOUND / DESPATCH ─────────────────────────────────────────────
   wms_outbound: {
-    label: 'WMS — Outbound', icon: '📤', color: '#00e5b0',
+    label: 'WMS — Outbound', icon: '📤', color: '#f5a623',
     events: {
       short_pick:           { label: 'Short Pick',                     fields: { order_id:'ORD-88321', warehouse:'Leeds DC', ordered_qty:24, available_qty:18, product_code:'FRZN-MIX-001', consignee:'Asda DC Lutterworth', despatch_deadline:'13:00', sla_penalty_gbp:1800, consignee_phone:'' } },
       pick_error:           { label: 'Pick Error Detected',            fields: { order_id:'ORD-88322', warehouse:'Leeds DC', picker:'Staff ID 047', wrong_product:'AMBT-DRY-003 picked instead of AMBT-DRY-004', consignee:'Tesco DC Donington', packing_already_complete:false } },
@@ -225,11 +225,12 @@ const WEBHOOK_SYSTEMS = {
 
 
 const TAB_STYLE = (active) => ({
-  padding: '6px 16px', borderRadius: 6, fontSize: 11, cursor: 'pointer',
-  fontFamily: 'monospace', letterSpacing: '0.04em',
-  border: active ? '1px solid #00e5b0' : '1px solid rgba(255,255,255,0.08)',
-  background: active ? 'rgba(0,229,176,0.1)' : 'transparent',
-  color: active ? '#00e5b0' : '#8a9099', transition: 'all 0.15s'
+  padding: '6px 16px', borderRadius: 3, fontSize: 11, cursor: 'pointer',
+  fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: '0.06em',
+  fontWeight: active ? 700 : 500, textTransform: 'uppercase',
+  border: active ? '1px solid #f5a623' : '1px solid rgba(255,255,255,0.08)',
+  background: active ? 'rgba(245,166,35,0.1)' : 'transparent',
+  color: active ? '#f5a623' : '#8a9099', transition: 'all 0.15s'
 })
 
 // ── PIN GATE ─────────────────────────────────────────────────────────────────
@@ -244,17 +245,17 @@ function PinGate({ onUnlock }) {
     else { setError(true); setPin(''); setTimeout(() => setError(false), 2000) }
   }
   return (
-    <div style={{ minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center', background:'#0a0c0e', fontFamily:'IBM Plex Sans, sans-serif' }}>
-      <div style={{ width:360, padding:'40px 36px', background:'#111418', border:'1px solid rgba(255,255,255,0.08)', borderRadius:12, textAlign:'center' }}>
-        <div style={{ width:44, height:44, background:'#00e5b0', borderRadius:8, display:'flex', alignItems:'center', justifyContent:'center', fontSize:16, fontWeight:700, color:'#000', fontFamily:'monospace', margin:'0 auto 20px' }}>DH</div>
-        <div style={{ fontFamily:'monospace', fontSize:11, color:'#00e5b0', letterSpacing:'0.1em', marginBottom:8 }}>DISRUPTIONHUB</div>
+    <div style={{ minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center', background:'#080c14', fontFamily:'Barlow, sans-serif' }}>
+      <div style={{ width:360, padding:'40px 36px', background:'#0f1826', border:'1px solid rgba(255,255,255,0.08)', borderRadius:12, textAlign:'center' }}>
+        <div style={{ width:48, height:48, background:'#f5a623', clipPath:'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)', margin:'0 auto 20px' }} />
+        <div style={{ fontFamily:'monospace', fontSize:11, color:'#f5a623', letterSpacing:'0.1em', marginBottom:8 }}>DISRUPTIONHUB</div>
         <div style={{ fontSize:15, color:'#e8eaed', marginBottom:6 }}>Operations Dashboard</div>
         <div style={{ fontSize:12, color:'#4a5260', marginBottom:28 }}>Authorised access only</div>
         <input type="password" value={pin} onChange={e => setPin(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSubmit()} placeholder="Enter access code" autoFocus
-          style={{ width:'100%', padding:'12px 14px', background:'#0a0c0e', border: error ? '1px solid #ef4444' : '1px solid rgba(255,255,255,0.12)', borderRadius:6, color:'#e8eaed', fontSize:14, outline:'none', fontFamily:'IBM Plex Mono, monospace', letterSpacing:'0.2em', textAlign:'center', marginBottom:12, boxSizing:'border-box', transition:'border 0.2s' }} />
+          style={{ width:'100%', padding:'12px 14px', background:'#080c14', border: error ? '1px solid #ef4444' : '1px solid rgba(255,255,255,0.12)', borderRadius:6, color:'#e8eaed', fontSize:14, outline:'none', fontFamily:'IBM Plex Mono, monospace', letterSpacing:'0.2em', textAlign:'center', marginBottom:12, boxSizing:'border-box', transition:'border 0.2s' }} />
         {error && <div style={{ fontSize:11, color:'#ef4444', fontFamily:'monospace', marginBottom:10 }}>Invalid access code</div>}
-        <button onClick={handleSubmit} style={{ width:'100%', padding:'11px', background:'#00e5b0', border:'none', borderRadius:6, color:'#000', fontWeight:600, fontSize:13, cursor:'pointer', fontFamily:'IBM Plex Sans, sans-serif' }}>Access Dashboard →</button>
-        <div style={{ marginTop:20, fontSize:11, color:'#4a5260' }}>Not a client? <a href="/" style={{ color:'#00e5b0', textDecoration:'none' }}>View live demo →</a></div>
+        <button onClick={handleSubmit} style={{ width:'100%', padding:'11px', background:'#f5a623', border:'none', borderRadius:6, color:'#000', fontWeight:600, fontSize:13, cursor:'pointer', fontFamily:'Barlow, sans-serif' }}>Access Dashboard →</button>
+        <div style={{ marginTop:20, fontSize:11, color:'#4a5260' }}>Not a client? <a href="/" style={{ color:'#f5a623', textDecoration:'none' }}>View live demo →</a></div>
       </div>
     </div>
   )
@@ -263,7 +264,7 @@ function PinGate({ onUnlock }) {
 // ── AGENT RESPONSE RENDERER — Option B (colour-coded cards) ──────────────────
 function money(text) {
   return text.replace(/(£[\d,]+(?:[–-]£[\d,]+)?(?:K)?)/g,
-    '<span style="color:#00e5b0;font-weight:600;font-family:monospace">$1</span>')
+    '<span style="color:#f5a623;font-weight:600;font-family:monospace">$1</span>')
 }
 function bold(text) {
   return text.replace(/\*\*(.*?)\*\*/g, '<strong style="color:#e8eaed;font-weight:500">$1</strong>')
@@ -282,8 +283,8 @@ const SECTION_STYLES = {
   'IMMEDIATE ACTIONS':       { bg:'rgba(239,68,68,0.05)',   border:'rgba(239,68,68,0.18)',   label:'#ef4444' },
   'IMMEDIATE ACTIONS (DO THESE NOW)': { bg:'rgba(239,68,68,0.05)', border:'rgba(239,68,68,0.18)', label:'#ef4444' },
   'ACTION PLAN':             { bg:'rgba(239,68,68,0.05)',   border:'rgba(239,68,68,0.18)',   label:'#ef4444' },
-  'WHO TO CONTACT':          { bg:'rgba(0,229,176,0.04)',   border:'rgba(0,229,176,0.15)',   label:'#00e5b0' },
-  'CONTACTS':                { bg:'rgba(0,229,176,0.04)',   border:'rgba(0,229,176,0.15)',   label:'#00e5b0' },
+  'WHO TO CONTACT':          { bg:'rgba(245,166,35,0.04)',   border:'rgba(245,166,35,0.15)',   label:'#f5a623' },
+  'CONTACTS':                { bg:'rgba(245,166,35,0.04)',   border:'rgba(245,166,35,0.15)',   label:'#f5a623' },
   'REROUTING':               { bg:'rgba(168,85,247,0.05)', border:'rgba(168,85,247,0.15)', label:'#a855f7' },
   'REROUTING / REORDER RECOMMENDATIONS': { bg:'rgba(168,85,247,0.05)', border:'rgba(168,85,247,0.15)', label:'#a855f7' },
   'REROUTE OPTIONS':         { bg:'rgba(168,85,247,0.05)', border:'rgba(168,85,247,0.15)', label:'#a855f7' },
@@ -363,13 +364,13 @@ function AgentResponse({ text }) {
         const isContact = titleUp.includes('CONTACT') || titleUp.includes('WHO TO')
         const isReroute = titleUp.includes('REROUTE') || titleUp.includes('REROUTING') || titleUp.includes('OPTION')
         const isPrevention = titleUp.includes('PREVENTION')
-        const dotBg = isContact ? '#00e5b0' : isReroute ? '#a855f7' : isPrevention ? '#4a5260' : urgent ? '#ef4444' : '#ef4444'
+        const dotBg = isContact ? '#f5a623' : isReroute ? '#a855f7' : isPrevention ? '#4a5260' : urgent ? '#ef4444' : '#ef4444'
         const dotText = isContact ? '#000' : '#fff'
         // Contact items get a different card style — teal left border, no dark bg
         if (isContact) {
           items.push(
-            <div key={k++} style={{margin:'6px 0',padding:'10px 14px',background:'rgba(0,229,176,0.04)',borderRadius:6,borderLeft:'3px solid rgba(0,229,176,0.3)'}}>
-              <div style={{fontSize:11,fontWeight:600,color:'#00e5b0',marginBottom:4}}>Contact {num}</div>
+            <div key={k++} style={{margin:'6px 0',padding:'10px 14px',background:'rgba(245,166,35,0.04)',borderRadius:6,borderLeft:'3px solid rgba(245,166,35,0.3)'}}>
+              <div style={{fontSize:11,fontWeight:600,color:'#f5a623',marginBottom:4}}>Contact {num}</div>
               <div style={{fontSize:12,color:'#e8eaed',lineHeight:1.7}} dangerouslySetInnerHTML={{__html:fmt(content)}}/>
             </div>
           )
@@ -389,7 +390,7 @@ function AgentResponse({ text }) {
         const content = line.replace(/^[-—]\s+/,'')
         items.push(
           <div key={k++} style={{display:'flex',gap:8,margin:'3px 0',paddingLeft:4}}>
-            <span style={{color:'#00e5b0',fontSize:11,marginTop:2,flexShrink:0}}>—</span>
+            <span style={{color:'#f5a623',fontSize:11,marginTop:2,flexShrink:0}}>—</span>
             <span style={{fontSize:12,color:'#8a9099',lineHeight:1.7}} dangerouslySetInnerHTML={{__html:fmt(content)}}/>
           </div>
         )
@@ -412,7 +413,7 @@ function AgentResponse({ text }) {
     <div style={{padding:'4px 0'}}>
       {/* Severity + financial header strip */}
       {(severity || financialLine) && (
-        <div style={{display:'flex',alignItems:'center',gap:10,padding:'10px 14px',background:'#111418',borderRadius:8,marginBottom:14,flexWrap:'wrap',border:'1px solid rgba(255,255,255,0.06)'}}>
+        <div style={{display:'flex',alignItems:'center',gap:10,padding:'10px 14px',background:'#0f1826',borderRadius:8,marginBottom:14,flexWrap:'wrap',border:'1px solid rgba(255,255,255,0.06)'}}>
           {severity && (
             <span style={{background:SEV_BG[severity],color:SEV_COLOR[severity],fontSize:11,fontFamily:'monospace',fontWeight:700,padding:'3px 10px',borderRadius:4,border:`1px solid ${SEV_COLOR[severity]}30`,letterSpacing:'0.05em'}}>{severity}</span>
           )}
@@ -444,7 +445,7 @@ function AgentResponse({ text }) {
 }
 
 // ── MODULE RESULT RENDERER ─────────────────────────────────────────────────
-function MetricBadge({ label, value, color = '#00e5b0', prefix = '' }) {
+function MetricBadge({ label, value, color = '#f5a623', prefix = '' }) {
   return (
     <div style={{ padding:'6px 14px', borderRadius:6, background:`${color}10`, border:`1px solid ${color}25` }}>
       <div style={{ fontSize:9, color:'#4a5260', fontFamily:'monospace', marginBottom:2 }}>{label}</div>
@@ -464,8 +465,8 @@ function SectionBlock({ label, children, labelColor = '#4a5260' }) {
 
 function ActionCard({ text, index, urgent }) {
   return (
-    <div style={{ display:'flex', gap:10, marginBottom:6, padding:'8px 10px', background:'#111418', borderRadius:5, border: urgent ? '1px solid rgba(239,68,68,0.2)' : '1px solid rgba(255,255,255,0.06)' }}>
-      <div style={{ width:18, height:18, borderRadius:'50%', background: urgent ? '#ef4444' : '#00e5b0', color:'#000', display:'flex', alignItems:'center', justifyContent:'center', fontSize:9, fontWeight:700, flexShrink:0, marginTop:1 }}>{index + 1}</div>
+    <div style={{ display:'flex', gap:10, marginBottom:6, padding:'8px 10px', background:'#0f1826', borderRadius:5, border: urgent ? '1px solid rgba(239,68,68,0.2)' : '1px solid rgba(255,255,255,0.06)' }}>
+      <div style={{ width:18, height:18, borderRadius:'50%', background: urgent ? '#ef4444' : '#f5a623', color:'#000', display:'flex', alignItems:'center', justifyContent:'center', fontSize:9, fontWeight:700, flexShrink:0, marginTop:1 }}>{index + 1}</div>
       <div style={{ fontSize:11, color:'#e8eaed', lineHeight:1.6 }}>{text}</div>
     </div>
   )
@@ -505,22 +506,22 @@ function ModuleResult({ result, moduleName }) {
   return (
     <div style={{ marginTop:16 }}>
       {/* Header */}
-      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'10px 14px', background:'rgba(0,229,176,0.06)', border:'1px solid rgba(0,229,176,0.15)', borderRadius:'8px 8px 0 0', fontFamily:'monospace', fontSize:11, color:'#00e5b0' }}>
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'10px 14px', background:'rgba(245,166,35,0.06)', border:'1px solid rgba(245,166,35,0.15)', borderRadius:'8px 8px 0 0', fontFamily:'monospace', fontSize:11, color:'#f5a623' }}>
         <span>MODULE RESULT — {moduleName?.toUpperCase()}</span>
         {result.demo_mode && <span style={{ color:'#4a5260' }}>DEMO DATA</span>}
         {result.actions_queued > 0 && <span style={{ color:'#f59e0b' }}>● {result.actions_queued} actions queued</span>}
       </div>
 
-      <div style={{ border:'1px solid rgba(0,229,176,0.15)', borderTop:'none', borderRadius:'0 0 8px 8px', overflow:'hidden' }}>
+      <div style={{ border:'1px solid rgba(245,166,35,0.15)', borderTop:'none', borderRadius:'0 0 8px 8px', overflow:'hidden' }}>
 
         {/* Metrics bar */}
         {(r.severity || financialMetrics.length > 0 || r.all_clear === false) && (
-          <div style={{ display:'flex', gap:8, padding:'12px 14px', background:'#0d1014', borderBottom:'1px solid rgba(255,255,255,0.06)', flexWrap:'wrap' }}>
+          <div style={{ display:'flex', gap:8, padding:'12px 14px', background:'#0d1420', borderBottom:'1px solid rgba(255,255,255,0.06)', flexWrap:'wrap' }}>
             {r.severity && <MetricBadge label="SEVERITY" value={r.severity} color={SEV[r.severity] || '#8a9099'} />}
             {r.all_clear === false && <MetricBadge label="STATUS" value="ACTION REQUIRED" color="#ef4444" />}
-            {r.all_clear === true && <MetricBadge label="STATUS" value="ALL CLEAR" color="#00e5b0" />}
+            {r.all_clear === true && <MetricBadge label="STATUS" value="ALL CLEAR" color="#f5a623" />}
             {financialMetrics.slice(0,3).map(k => (
-              <MetricBadge key={k} label={k.replace(/_/g,' ').toUpperCase()} value={r[k]} color="#00e5b0" prefix="£" />
+              <MetricBadge key={k} label={k.replace(/_/g,' ').toUpperCase()} value={r[k]} color="#f5a623" prefix="£" />
             ))}
             {(r.drivers_at_risk?.length > 0) && <MetricBadge label="DRIVERS AT RISK" value={r.drivers_at_risk.length} color="#f59e0b" />}
             {(r.vehicles_at_risk?.length > 0) && <MetricBadge label="VEHICLES AT RISK" value={r.vehicles_at_risk.length} color="#ef4444" />}
@@ -530,7 +531,7 @@ function ModuleResult({ result, moduleName }) {
             {(r.compliance_failures?.length > 0) && <MetricBadge label="COMPLIANCE FAILURES" value={r.compliance_failures.length} color="#ef4444" />}
             {(r.discrepancies?.length > 0) && <MetricBadge label="OVERCHARGES FOUND" value={r.discrepancies.length} color="#ef4444" />}
             {(r.matching_tenders?.length > 0) && <MetricBadge label="MATCHING TENDERS" value={r.matching_tenders.length} color="#a855f7" />}
-            {(r.opportunities?.length > 0) && <MetricBadge label="OPPORTUNITIES" value={r.opportunities.length} color="#00e5b0" />}
+            {(r.opportunities?.length > 0) && <MetricBadge label="OPPORTUNITIES" value={r.opportunities.length} color="#f5a623" />}
           </div>
         )}
 
@@ -568,7 +569,7 @@ function ModuleResult({ result, moduleName }) {
               <ItemCard key={i} bg="rgba(239,68,68,0.06)" border="rgba(239,68,68,0.15)">
                 <div style={{ display:'flex', justifyContent:'space-between', marginBottom:4 }}>
                   <span style={{ fontSize:11, color:'#e8eaed', fontFamily:'monospace' }}>{d.invoice_ref} — {d.carrier}</span>
-                  <span style={{ fontSize:12, color:'#00e5b0', fontFamily:'monospace', fontWeight:700 }}>+£{(d.delta||0).toLocaleString()}</span>
+                  <span style={{ fontSize:12, color:'#f5a623', fontFamily:'monospace', fontWeight:700 }}>+£{(d.delta||0).toLocaleString()}</span>
                 </div>
                 <div style={{ fontSize:10, color:'#8a9099' }}>{d.issue_type?.replace(/_/g,' ').toUpperCase()}</div>
                 <div style={{ fontSize:11, color:'#8a9099', marginTop:3 }}>{d.evidence}</div>
@@ -581,10 +582,10 @@ function ModuleResult({ result, moduleName }) {
         {r.carriers?.length > 0 && (
           <SectionBlock label="CARRIER PERFORMANCE">
             {r.carriers.map((c,i) => (
-              <ItemCard key={i} bg={c.below_threshold ? 'rgba(239,68,68,0.05)' : 'rgba(0,229,176,0.03)'} border={c.below_threshold ? 'rgba(239,68,68,0.15)' : 'rgba(255,255,255,0.08)'}>
+              <ItemCard key={i} bg={c.below_threshold ? 'rgba(239,68,68,0.05)' : 'rgba(245,166,35,0.03)'} border={c.below_threshold ? 'rgba(239,68,68,0.15)' : 'rgba(255,255,255,0.08)'}>
                 <div style={{ display:'flex', justifyContent:'space-between', marginBottom:4 }}>
                   <span style={{ fontSize:12, color:'#e8eaed', fontWeight:500 }}>{c.name}</span>
-                  <span style={{ fontSize:11, color: c.recommendation==='terminate'?'#ef4444':c.recommendation==='renegotiate'?'#f59e0b':'#00e5b0', fontFamily:'monospace', fontWeight:700 }}>{c.recommendation?.toUpperCase()}</span>
+                  <span style={{ fontSize:11, color: c.recommendation==='terminate'?'#ef4444':c.recommendation==='renegotiate'?'#f59e0b':'#f5a623', fontFamily:'monospace', fontWeight:700 }}>{c.recommendation?.toUpperCase()}</span>
                 </div>
                 <div style={{ display:'flex', gap:12, flexWrap:'wrap' }}>
                   <span style={{ fontSize:10, color: c.on_time_rate < c.contract_threshold_otr ? '#ef4444' : '#8a9099' }}>OTR: {c.on_time_rate}% (min {c.contract_threshold_otr}%)</span>
@@ -641,7 +642,7 @@ function ModuleResult({ result, moduleName }) {
                   <span style={{ fontSize:11, color: d.breach_probability > 80 ? '#ef4444' : '#f59e0b', fontFamily:'monospace' }}>{d.breach_probability}% breach risk</span>
                 </div>
                 <div style={{ fontSize:10, color:'#8a9099' }}>SLA closes: {d.sla_window_closes} · Current ETA: {d.current_eta} · Penalty: £{d.penalty_if_breached?.toLocaleString()}</div>
-                {d.reroute_saves_sla && <div style={{ fontSize:11, color:'#00e5b0', marginTop:4 }}>✓ REROUTE AVAILABLE: {d.reroute_instruction}</div>}
+                {d.reroute_saves_sla && <div style={{ fontSize:11, color:'#f5a623', marginTop:4 }}>✓ REROUTE AVAILABLE: {d.reroute_instruction}</div>}
                 {!d.reroute_saves_sla && <div style={{ fontSize:11, color:'#ef4444', marginTop:4 }}>{d.reroute_instruction}</div>}
               </ItemCard>
             ))}
@@ -650,13 +651,13 @@ function ModuleResult({ result, moduleName }) {
 
         {/* ── FUEL vehicles ── */}
         {r.vehicles_to_fill?.length > 0 && (
-          <SectionBlock label={`FILL NOW — ${r.recommendation?.toUpperCase().replace(/_/g,' ')}`} labelColor={r.recommendation==='fill_now'?'#00e5b0':'#f59e0b'}>
+          <SectionBlock label={`FILL NOW — ${r.recommendation?.toUpperCase().replace(/_/g,' ')}`} labelColor={r.recommendation==='fill_now'?'#f5a623':'#f59e0b'}>
             <div style={{ fontSize:12, color:'#8a9099', marginBottom:8, lineHeight:1.6 }}>{r.reasoning}</div>
             {r.vehicles_to_fill.map((v,i) => (
               <ItemCard key={i}>
                 <div style={{ display:'flex', justifyContent:'space-between' }}>
                   <span style={{ fontSize:11, color:'#e8eaed' }}>{v.reg} — {v.driver}</span>
-                  <span style={{ fontSize:11, color:'#00e5b0', fontFamily:'monospace' }}>Save £{v.saving?.toFixed(2)}</span>
+                  <span style={{ fontSize:11, color:'#f5a623', fontFamily:'monospace' }}>Save £{v.saving?.toFixed(2)}</span>
                 </div>
                 <div style={{ fontSize:10, color:'#8a9099', marginTop:2 }}>{v.current_level_pct}% fuel · {v.nearest_fuel_stop}</div>
               </ItemCard>
@@ -705,7 +706,7 @@ function ModuleResult({ result, moduleName }) {
                   <span style={{ fontSize:10, color: c.urgency==='IMMEDIATE'?'#ef4444':'#f59e0b', fontFamily:'monospace' }}>{c.urgency?.replace(/_/g,' ')}</span>
                 </div>
                 <div style={{ fontSize:11, color:'#8a9099', marginBottom:4 }}>{c.impact_description}</div>
-                <div style={{ fontSize:11, color:'#00e5b0' }}>Action: {c.compliance_action}</div>
+                <div style={{ fontSize:11, color:'#f5a623' }}>Action: {c.compliance_action}</div>
                 {c.penalty_if_ignored > 0 && <div style={{ fontSize:10, color:'#ef4444', marginTop:3 }}>Penalty if ignored: £{c.penalty_if_ignored?.toLocaleString()}</div>}
               </ItemCard>
             ))}
@@ -732,10 +733,10 @@ function ModuleResult({ result, moduleName }) {
         {r.opportunities?.length > 0 && (
           <SectionBlock label="CONSOLIDATION OPPORTUNITIES">
             {r.opportunities.map((o,i) => (
-              <ItemCard key={i} bg={o.feasibility==='YES'?'rgba(0,229,176,0.04)':'rgba(245,158,11,0.04)'} border={o.feasibility==='YES'?'rgba(0,229,176,0.15)':'rgba(245,158,11,0.15)'}>
+              <ItemCard key={i} bg={o.feasibility==='YES'?'rgba(245,166,35,0.04)':'rgba(245,158,11,0.04)'} border={o.feasibility==='YES'?'rgba(245,166,35,0.15)':'rgba(245,158,11,0.15)'}>
                 <div style={{ display:'flex', justifyContent:'space-between', marginBottom:4 }}>
                   <span style={{ fontSize:11, color:'#e8eaed', fontWeight:500 }}>{o.route_a} + {o.route_b}</span>
-                  <span style={{ fontSize:11, color:'#00e5b0', fontFamily:'monospace' }}>Save £{o.total_saving?.toLocaleString()}</span>
+                  <span style={{ fontSize:11, color:'#f5a623', fontFamily:'monospace' }}>Save £{o.total_saving?.toLocaleString()}</span>
                 </div>
                 <div style={{ fontSize:10, color:'#8a9099', marginBottom:3 }}>{o.feasibility} · {o.vehicles_saved} vehicle saved · {o.combined_utilisation_pct}% utilisation</div>
                 <div style={{ fontSize:11, color:'#8a9099' }}>{o.new_schedule}</div>
@@ -749,10 +750,10 @@ function ModuleResult({ result, moduleName }) {
           <SectionBlock label="LANE RATE ANALYSIS">
             <div style={{ fontSize:12, color:'#8a9099', marginBottom:8 }}>{r.net_recommendation}</div>
             {r.lane_analysis.map((l,i) => (
-              <ItemCard key={i} bg={l.status==='underpriced'?'rgba(239,68,68,0.04)':'rgba(0,229,176,0.03)'}>
+              <ItemCard key={i} bg={l.status==='underpriced'?'rgba(239,68,68,0.04)':'rgba(245,166,35,0.03)'}>
                 <div style={{ display:'flex', justifyContent:'space-between', marginBottom:3 }}>
                   <span style={{ fontSize:11, color:'#e8eaed', fontWeight:500 }}>{l.lane}</span>
-                  <span style={{ fontSize:10, color: l.status==='underpriced'?'#ef4444':'#00e5b0', fontFamily:'monospace' }}>{l.status?.toUpperCase()}</span>
+                  <span style={{ fontSize:10, color: l.status==='underpriced'?'#ef4444':'#f5a623', fontFamily:'monospace' }}>{l.status?.toUpperCase()}</span>
                 </div>
                 <div style={{ fontSize:10, color:'#8a9099' }}>Current: £{l.current_rate_per_mile}/mi · Market: £{l.market_rate_per_mile}/mi · Gap: £{l.annual_revenue_gap?.toLocaleString()}/yr</div>
               </ItemCard>
@@ -764,13 +765,13 @@ function ModuleResult({ result, moduleName }) {
         {r.forecast_periods?.length > 0 && (
           <SectionBlock label="DEMAND FORECAST">
             {r.forecast_periods.map((f,i) => (
-              <ItemCard key={i} bg={f.capacity_gap > 0 ? 'rgba(239,68,68,0.05)' : 'rgba(0,229,176,0.03)'}>
+              <ItemCard key={i} bg={f.capacity_gap > 0 ? 'rgba(239,68,68,0.05)' : 'rgba(245,166,35,0.03)'}>
                 <div style={{ display:'flex', justifyContent:'space-between', marginBottom:4 }}>
                   <span style={{ fontSize:11, color:'#e8eaed', fontWeight:500 }}>{f.week}</span>
-                  <span style={{ fontSize:11, color: f.capacity_gap > 0 ? '#ef4444' : '#00e5b0', fontFamily:'monospace' }}>{f.capacity_gap > 0 ? `${f.capacity_gap} jobs over capacity` : 'Within capacity'}</span>
+                  <span style={{ fontSize:11, color: f.capacity_gap > 0 ? '#ef4444' : '#f5a623', fontFamily:'monospace' }}>{f.capacity_gap > 0 ? `${f.capacity_gap} jobs over capacity` : 'Within capacity'}</span>
                 </div>
                 {f.preparation_actions?.map((a,ai) => <div key={ai} style={{ fontSize:10, color:'#8a9099', marginBottom:1 }}>— {a}</div>)}
-                {f.saving_by_planning > 0 && <div style={{ fontSize:10, color:'#00e5b0', marginTop:3 }}>Plan now and save: £{f.saving_by_planning?.toLocaleString()}</div>}
+                {f.saving_by_planning > 0 && <div style={{ fontSize:10, color:'#f5a623', marginTop:3 }}>Plan now and save: £{f.saving_by_planning?.toLocaleString()}</div>}
               </ItemCard>
             ))}
           </SectionBlock>
@@ -788,7 +789,7 @@ function ModuleResult({ result, moduleName }) {
             {r.optimisation_opportunities.map((o,i) => (
               <ItemCard key={i}>
                 <div style={{ fontSize:11, color:'#e8eaed', marginBottom:3 }}>{o.description}</div>
-                <div style={{ fontSize:10, color:'#00e5b0' }}>-{o.emission_reduction_pct}% emissions · Save £{o.cost_saving?.toLocaleString()}/yr</div>
+                <div style={{ fontSize:10, color:'#f5a623' }}>-{o.emission_reduction_pct}% emissions · Save £{o.cost_saving?.toLocaleString()}/yr</div>
               </ItemCard>
             ))}
           </SectionBlock>
@@ -796,9 +797,9 @@ function ModuleResult({ result, moduleName }) {
 
         {/* ── INSURANCE claim ── */}
         {r.verdict && (
-          <SectionBlock label={`VERDICT — ${r.liability_assessment?.replace(/_/g,' ')}`} labelColor={r.liability_assessment==='NO_LIABILITY'?'#00e5b0':'#ef4444'}>
+          <SectionBlock label={`VERDICT — ${r.liability_assessment?.replace(/_/g,' ')}`} labelColor={r.liability_assessment==='NO_LIABILITY'?'#f5a623':'#ef4444'}>
             <div style={{ fontSize:12, color:'#e8eaed', lineHeight:1.7, marginBottom:8 }}>{r.verdict}</div>
-            {r.response_letter && <div style={{ fontSize:11, color:'#8a9099', lineHeight:1.6, padding:'8px 10px', background:'#111418', borderRadius:5, border:'1px solid rgba(255,255,255,0.06)' }}>{r.response_letter}</div>}
+            {r.response_letter && <div style={{ fontSize:11, color:'#8a9099', lineHeight:1.6, padding:'8px 10px', background:'#0f1826', borderRadius:5, border:'1px solid rgba(255,255,255,0.06)' }}>{r.response_letter}</div>}
           </SectionBlock>
         )}
 
@@ -825,20 +826,20 @@ function ModuleResult({ result, moduleName }) {
                 )}
                 {f.secure_parking_options?.length > 0 && (
                   <div>
-                    <div style={{ fontSize:9, color:'#00e5b0', fontFamily:'monospace', letterSpacing:'0.06em', marginBottom:5 }}>SECURE PARKING OPTIONS — DIVERT NOW</div>
+                    <div style={{ fontSize:9, color:'#f5a623', fontFamily:'monospace', letterSpacing:'0.06em', marginBottom:5 }}>SECURE PARKING OPTIONS — DIVERT NOW</div>
                     {f.secure_parking_options.map((p,pi) => (
-                      <div key={pi} style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', padding:'7px 9px', background:'rgba(0,229,176,0.05)', border:'1px solid rgba(0,229,176,0.15)', borderRadius:5, marginBottom:4 }}>
+                      <div key={pi} style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', padding:'7px 9px', background:'rgba(245,166,35,0.05)', border:'1px solid rgba(245,166,35,0.15)', borderRadius:5, marginBottom:4 }}>
                         <div style={{ flex:1 }}>
                           <div style={{ fontSize:11, color:'#e8eaed', fontWeight:500, marginBottom:2 }}>{p.name}</div>
                           <div style={{ fontSize:10, color:'#8a9099' }}>{p.direction} · {p.distance_miles} miles</div>
                           {p.note && <div style={{ fontSize:10, color:'#f59e0b', marginTop:2 }}>{p.note}</div>}
                           <div style={{ display:'flex', gap:8, marginTop:3 }}>
-                            {p.accredited && <span style={{ fontSize:9, color:'#00e5b0', fontFamily:'monospace' }}>✓ ACCREDITED</span>}
+                            {p.accredited && <span style={{ fontSize:9, color:'#f5a623', fontFamily:'monospace' }}>✓ ACCREDITED</span>}
                             {p.cctv && <span style={{ fontSize:9, color:'#8a9099', fontFamily:'monospace' }}>CCTV</span>}
                             {p.security_patrol && <span style={{ fontSize:9, color:'#8a9099', fontFamily:'monospace' }}>SECURITY PATROL</span>}
                           </div>
                         </div>
-                        <div style={{ fontSize:16, fontWeight:700, color:'#00e5b0', fontFamily:'monospace', marginLeft:12, flexShrink:0 }}>
+                        <div style={{ fontSize:16, fontWeight:700, color:'#f5a623', fontFamily:'monospace', marginLeft:12, flexShrink:0 }}>
                           {p.cost_gbp===0 ? 'FREE' : `£${p.cost_gbp}`}
                         </div>
                       </div>
@@ -850,13 +851,13 @@ function ModuleResult({ result, moduleName }) {
           </SectionBlock>
         )}
         {r.secure_parking_policy && (
-          <SectionBlock label="SECURE PARKING POLICY" labelColor="#00e5b0">
-            <ItemCard bg="rgba(0,229,176,0.04)" border="rgba(0,229,176,0.15)">
+          <SectionBlock label="SECURE PARKING POLICY" labelColor="#f5a623">
+            <ItemCard bg="rgba(245,166,35,0.04)" border="rgba(245,166,35,0.15)">
               <div style={{ fontSize:11, color:'#e8eaed', marginBottom:6 }}>{r.secure_parking_policy.policy}</div>
               <div style={{ display:'flex', gap:16, flexWrap:'wrap' }}>
                 <div><span style={{ fontSize:10, color:'#4a5260' }}>Annual cost: </span><span style={{ fontSize:11, color:'#f59e0b', fontWeight:600 }}>£{r.secure_parking_policy.annual_cost_estimate?.toLocaleString()}</span></div>
-                <div><span style={{ fontSize:10, color:'#4a5260' }}>Risk mitigated: </span><span style={{ fontSize:11, color:'#00e5b0', fontWeight:600 }}>£{r.secure_parking_policy.annual_theft_risk_mitigated?.toLocaleString()}</span></div>
-                <div><span style={{ fontSize:10, color:'#4a5260' }}>ROI: </span><span style={{ fontSize:11, color:'#00e5b0', fontWeight:600 }}>{r.secure_parking_policy.roi}</span></div>
+                <div><span style={{ fontSize:10, color:'#4a5260' }}>Risk mitigated: </span><span style={{ fontSize:11, color:'#f5a623', fontWeight:600 }}>£{r.secure_parking_policy.annual_theft_risk_mitigated?.toLocaleString()}</span></div>
+                <div><span style={{ fontSize:10, color:'#4a5260' }}>ROI: </span><span style={{ fontSize:11, color:'#f5a623', fontWeight:600 }}>{r.secure_parking_policy.roi}</span></div>
               </div>
             </ItemCard>
           </SectionBlock>
@@ -883,7 +884,7 @@ function ModuleResult({ result, moduleName }) {
                   <span style={{ fontSize:10, color:'#ef4444', fontFamily:'monospace' }}>{s.type?.replace(/_/g,' ').toUpperCase()}</span>
                 </div>
                 <div style={{ fontSize:11, color:'#8a9099', marginBottom:4 }}>{s.evidence}</div>
-                <div style={{ fontSize:11, color:'#00e5b0' }}>Action: {s.action}</div>
+                <div style={{ fontSize:11, color:'#f5a623' }}>Action: {s.action}</div>
                 {s.financial_exposure > 0 && <div style={{ fontSize:10, color:'#ef4444', marginTop:3 }}>Exposure: £{s.financial_exposure.toLocaleString()} · Confidence: {s.confidence}</div>}
               </ItemCard>
             ))}
@@ -894,14 +895,14 @@ function ModuleResult({ result, moduleName }) {
         {r.trust_scores?.length > 0 && (
           <SectionBlock label="SUBCONTRACTOR TRUST SCORES">
             {r.trust_scores.map((s,i) => {
-              const scoreColor = s.overall_score >= 80 ? '#00e5b0' : s.overall_score >= 60 ? '#f59e0b' : '#ef4444'
+              const scoreColor = s.overall_score >= 80 ? '#f5a623' : s.overall_score >= 60 ? '#f59e0b' : '#ef4444'
               return (
-                <ItemCard key={i} bg={s.recommendation==='terminate'?'rgba(239,68,68,0.06)':s.recommendation==='use_with_caution'?'rgba(245,158,11,0.04)':'rgba(0,229,176,0.03)'} border={s.recommendation==='terminate'?'rgba(239,68,68,0.2)':s.recommendation==='use_with_caution'?'rgba(245,158,11,0.15)':'rgba(0,229,176,0.12)'}>
+                <ItemCard key={i} bg={s.recommendation==='terminate'?'rgba(239,68,68,0.06)':s.recommendation==='use_with_caution'?'rgba(245,158,11,0.04)':'rgba(245,166,35,0.03)'} border={s.recommendation==='terminate'?'rgba(239,68,68,0.2)':s.recommendation==='use_with_caution'?'rgba(245,158,11,0.15)':'rgba(245,166,35,0.12)'}>
                   <div style={{ display:'flex', justifyContent:'space-between', marginBottom:4 }}>
                     <span style={{ fontSize:12, color:'#e8eaed', fontWeight:500 }}>{s.name}</span>
                     <div style={{ display:'flex', alignItems:'center', gap:8 }}>
                       <span style={{ fontSize:16, fontWeight:700, color:scoreColor, fontFamily:'monospace' }}>{s.overall_score}</span>
-                      <span style={{ fontSize:10, color:s.recommendation==='terminate'?'#ef4444':s.recommendation==='use_with_caution'?'#f59e0b':'#00e5b0', fontFamily:'monospace', fontWeight:700 }}>{s.recommendation?.replace(/_/g,' ').toUpperCase()}</span>
+                      <span style={{ fontSize:10, color:s.recommendation==='terminate'?'#ef4444':s.recommendation==='use_with_caution'?'#f59e0b':'#f5a623', fontFamily:'monospace', fontWeight:700 }}>{s.recommendation?.replace(/_/g,' ').toUpperCase()}</span>
                     </div>
                   </div>
                   {s.flags?.map((f,fi) => <div key={fi} style={{ fontSize:10, color:'#f59e0b', marginBottom:2 }}>— {f}</div>)}
@@ -913,13 +914,13 @@ function ModuleResult({ result, moduleName }) {
 
         {/* ── CASH FLOW ── */}
         {r.forecast_weeks?.length > 0 && !r.preparation_actions && (
-          <SectionBlock label={`CASH FLOW FORECAST — ${r.overall_health?.replace(/_/g,' ')}`} labelColor={r.overall_health==='CRITICAL'||r.overall_health==='STRAINED'?'#ef4444':'#00e5b0'}>
+          <SectionBlock label={`CASH FLOW FORECAST — ${r.overall_health?.replace(/_/g,' ')}`} labelColor={r.overall_health==='CRITICAL'||r.overall_health==='STRAINED'?'#ef4444':'#f5a623'}>
             {r.total_penalty_exposure > 0 && <div style={{ fontSize:11, color:'#ef4444', marginBottom:8 }}>Total penalty exposure: £{r.total_penalty_exposure.toLocaleString()} · Outstanding receivables: £{r.outstanding_receivables?.toLocaleString()}</div>}
             {r.forecast_weeks.map((w,i) => (
-              <ItemCard key={i} bg={w.net<0?'rgba(239,68,68,0.05)':'rgba(0,229,176,0.03)'} border={w.net<0?'rgba(239,68,68,0.15)':'rgba(0,229,176,0.12)'}>
+              <ItemCard key={i} bg={w.net<0?'rgba(239,68,68,0.05)':'rgba(245,166,35,0.03)'} border={w.net<0?'rgba(239,68,68,0.15)':'rgba(245,166,35,0.12)'}>
                 <div style={{ display:'flex', justifyContent:'space-between', marginBottom:4 }}>
                   <span style={{ fontSize:11, color:'#e8eaed', fontWeight:500 }}>{w.week}</span>
-                  <span style={{ fontSize:12, color:w.net<0?'#ef4444':'#00e5b0', fontFamily:'monospace', fontWeight:700 }}>{w.net<0?'-':'+'}£{Math.abs(w.net).toLocaleString()}</span>
+                  <span style={{ fontSize:12, color:w.net<0?'#ef4444':'#f5a623', fontFamily:'monospace', fontWeight:700 }}>{w.net<0?'-':'+'}£{Math.abs(w.net).toLocaleString()}</span>
                 </div>
                 {w.alert && <div style={{ fontSize:10, color:'#f59e0b', marginBottom:4 }}>{w.alert}</div>}
                 {w.risk_items?.map((ri,ri_i) => <div key={ri_i} style={{ fontSize:10, color:'#4a5260', marginBottom:1 }}>— {ri.description}: £{ri.amount.toLocaleString()} due {ri.due_date}</div>)}
@@ -930,20 +931,20 @@ function ModuleResult({ result, moduleName }) {
 
         {/* ── CHURN PREDICTION ── */}
         {r.clients_at_risk?.length > 0 && (
-          <SectionBlock label="CLIENT CHURN PREDICTION" labelColor={r.high_risk_count>0?'#ef4444':'#00e5b0'}>
+          <SectionBlock label="CLIENT CHURN PREDICTION" labelColor={r.high_risk_count>0?'#ef4444':'#f5a623'}>
             {r.total_revenue_at_risk > 0 && <div style={{ fontSize:11, color:'#ef4444', marginBottom:8 }}>Total revenue at risk: £{r.total_revenue_at_risk.toLocaleString()}/year</div>}
             {r.clients_at_risk.map((c,i) => (
-              <ItemCard key={i} bg={c.churn_risk==='HIGH'||c.churn_risk==='CRITICAL'?'rgba(239,68,68,0.05)':'rgba(0,229,176,0.03)'} border={c.churn_risk==='HIGH'||c.churn_risk==='CRITICAL'?'rgba(239,68,68,0.18)':'rgba(0,229,176,0.12)'}>
+              <ItemCard key={i} bg={c.churn_risk==='HIGH'||c.churn_risk==='CRITICAL'?'rgba(239,68,68,0.05)':'rgba(245,166,35,0.03)'} border={c.churn_risk==='HIGH'||c.churn_risk==='CRITICAL'?'rgba(239,68,68,0.18)':'rgba(245,166,35,0.12)'}>
                 <div style={{ display:'flex', justifyContent:'space-between', marginBottom:4 }}>
                   <span style={{ fontSize:12, color:'#e8eaed', fontWeight:500 }}>{c.client}</span>
                   <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-                    <span style={{ fontSize:12, color:c.churn_risk==='HIGH'||c.churn_risk==='CRITICAL'?'#ef4444':'#00e5b0', fontFamily:'monospace', fontWeight:700 }}>{c.churn_probability_pct}%</span>
-                    <span style={{ fontSize:10, color:c.churn_risk==='HIGH'||c.churn_risk==='CRITICAL'?'#ef4444':'#00e5b0', fontFamily:'monospace' }}>{c.churn_risk}</span>
+                    <span style={{ fontSize:12, color:c.churn_risk==='HIGH'||c.churn_risk==='CRITICAL'?'#ef4444':'#f5a623', fontFamily:'monospace', fontWeight:700 }}>{c.churn_probability_pct}%</span>
+                    <span style={{ fontSize:10, color:c.churn_risk==='HIGH'||c.churn_risk==='CRITICAL'?'#ef4444':'#f5a623', fontFamily:'monospace' }}>{c.churn_risk}</span>
                   </div>
                 </div>
                 <div style={{ fontSize:10, color:'#4a5260', marginBottom:4 }}>Contract renewal: {c.days_to_contract_renewal} days · Revenue at risk: £{c.revenue_at_risk?.toLocaleString()}/yr</div>
                 {c.risk_signals?.slice(0,2).map((s,si) => <div key={si} style={{ fontSize:10, color:'#f59e0b', marginBottom:1 }}>— {s}</div>)}
-                <div style={{ fontSize:11, color:'#00e5b0', marginTop:5 }}>{c.recommended_action}</div>
+                <div style={{ fontSize:11, color:'#f5a623', marginTop:5 }}>{c.recommended_action}</div>
               </ItemCard>
             ))}
           </SectionBlock>
@@ -951,7 +952,7 @@ function ModuleResult({ result, moduleName }) {
 
         {/* ── WORKFORCE PIPELINE ── */}
         {r.upcoming_issues?.length > 0 && (
-          <SectionBlock label={`WORKFORCE PIPELINE — ${r.workforce_health?.replace(/_/g,' ')}`} labelColor={r.workforce_health==='AT_RISK'||r.workforce_health==='CRITICAL'?'#ef4444':'#00e5b0'}>
+          <SectionBlock label={`WORKFORCE PIPELINE — ${r.workforce_health?.replace(/_/g,' ')}`} labelColor={r.workforce_health==='AT_RISK'||r.workforce_health==='CRITICAL'?'#ef4444':'#f5a623'}>
             {r.headcount_risk?.shortfall > 0 && (
               <div style={{ padding:'8px 10px', background:'rgba(239,68,68,0.06)', border:'1px solid rgba(239,68,68,0.15)', borderRadius:6, marginBottom:8 }}>
                 <span style={{ fontSize:11, color:'#ef4444' }}>Driver shortfall: {r.headcount_risk.shortfall} · Agency dependency: {r.headcount_risk.agency_dependency_pct}%</span>
@@ -963,7 +964,7 @@ function ModuleResult({ result, moduleName }) {
                   <span style={{ fontSize:12, color:'#e8eaed', fontWeight:500 }}>{u.driver}</span>
                   <span style={{ fontSize:10, color:u.days_remaining<60?'#ef4444':'#f59e0b', fontFamily:'monospace' }}>{u.days_remaining} days · {u.issue_type?.replace(/_/g,' ').toUpperCase()}</span>
                 </div>
-                <div style={{ fontSize:11, color:'#00e5b0' }}>{u.action}</div>
+                <div style={{ fontSize:11, color:'#f5a623' }}>{u.action}</div>
               </ItemCard>
             ))}
           </SectionBlock>
@@ -977,7 +978,7 @@ function ModuleResult({ result, moduleName }) {
           && !r.risk_flags && !r.suspicious_entries && !r.trust_scores
           && !r.forecast_weeks && !r.clients_at_risk && !r.upcoming_issues && (
           <div style={{ padding:'20px 14px', textAlign:'center' }}>
-            <div style={{ fontFamily:'monospace', fontSize:11, color:'#00e5b0', marginBottom:6 }}>✓ ALL CLEAR</div>
+            <div style={{ fontFamily:'monospace', fontSize:11, color:'#f5a623', marginBottom:6 }}>✓ ALL CLEAR</div>
             <div style={{ fontSize:12, color:'#4a5260' }}>No issues detected. Module continues monitoring.</div>
           </div>
         )}
@@ -997,15 +998,15 @@ function ScenarioResult({ result }) {
     <div>
       {entries.map(([k, v]) => (
         <div key={k} style={{ marginBottom: 16 }}>
-          <div style={{ fontFamily:'monospace', fontSize:10, color:'#00e5b0', letterSpacing:'0.08em', marginBottom:6, display:'flex', alignItems:'center', gap:8 }}>
-            <div style={{ height:1, width:12, background:'#00e5b0' }} />
+          <div style={{ fontFamily:'monospace', fontSize:10, color:'#f5a623', letterSpacing:'0.08em', marginBottom:6, display:'flex', alignItems:'center', gap:8 }}>
+            <div style={{ height:1, width:12, background:'#f5a623' }} />
             {k.replace(/_/g,' ').toUpperCase()}
           </div>
           {Array.isArray(v) ? (
             v.length === 0
               ? <div style={{ fontSize:12, color:'#4a5260' }}>None</div>
               : v.map((item, i) => (
-                <div key={i} style={{ padding:'8px 10px', background:'#111418', borderRadius:5, border:'1px solid rgba(255,255,255,0.06)', marginBottom:6 }}>
+                <div key={i} style={{ padding:'8px 10px', background:'#0f1826', borderRadius:5, border:'1px solid rgba(255,255,255,0.06)', marginBottom:6 }}>
                   {typeof item === 'object'
                     ? Object.entries(item).map(([ik,iv]) => (
                         <div key={ik} style={{ fontSize:11, color:'#8a9099', marginBottom:2 }}>
@@ -1018,7 +1019,7 @@ function ScenarioResult({ result }) {
                 </div>
               ))
           ) : typeof v === 'object' && v !== null ? (
-            <div style={{ padding:'8px 10px', background:'#111418', borderRadius:5, border:'1px solid rgba(255,255,255,0.06)' }}>
+            <div style={{ padding:'8px 10px', background:'#0f1826', borderRadius:5, border:'1px solid rgba(255,255,255,0.06)' }}>
               {Object.entries(v).map(([ik,iv]) => (
                 <div key={ik} style={{ fontSize:11, color:'#8a9099', marginBottom:2 }}>
                   <span style={{ color:'#e8eaed', fontWeight:500 }}>{ik.replace(/_/g,' ')}: </span>
@@ -1036,10 +1037,10 @@ function ScenarioResult({ result }) {
           <div style={{ fontFamily:'monospace', fontSize:10, color:'#ef4444', letterSpacing:'0.08em', marginBottom:6 }}>CASCADE CHAIN</div>
           {result.cascade.map((c,i) => (
             <div key={i} style={{ display:'flex', gap:8, alignItems:'flex-start', marginBottom:4 }}>
-              <div style={{ width:20, height:20, borderRadius:'50%', background: c.sla_breached?'#ef4444':'#00e5b0', color:'#fff', display:'flex', alignItems:'center', justifyContent:'center', fontSize:9, fontWeight:700, flexShrink:0 }}>{i}</div>
+              <div style={{ width:20, height:20, borderRadius:'50%', background: c.sla_breached?'#ef4444':'#f5a623', color:'#fff', display:'flex', alignItems:'center', justifyContent:'center', fontSize:9, fontWeight:700, flexShrink:0 }}>{i}</div>
               <div style={{ fontSize:11, color:'#8a9099', flex:1 }}>
                 <span style={{ color:'#e8eaed' }}>{c.ref}</span> — {c.description}
-                {c.penalty > 0 && <span style={{ color:'#00e5b0', marginLeft:8 }}>£{c.penalty.toLocaleString()}</span>}
+                {c.penalty > 0 && <span style={{ color:'#f5a623', marginLeft:8 }}>£{c.penalty.toLocaleString()}</span>}
               </div>
             </div>
           ))}
@@ -1419,9 +1420,9 @@ export default function DashboardPage() {
     const typeConfig = {
       call:     { ico: '📞', bg: 'rgba(59,130,246,0.07)',   border: 'rgba(59,130,246,0.2)' },
       sms:      { ico: '💬', bg: 'rgba(245,158,11,0.07)',   border: 'rgba(245,158,11,0.22)' },
-      email:    { ico: '✉',  bg: 'rgba(0,229,176,0.05)',    border: 'rgba(0,229,176,0.18)' },
+      email:    { ico: '✉',  bg: 'rgba(245,166,35,0.05)',    border: 'rgba(245,166,35,0.18)' },
       dispatch: { ico: '🚛', bg: 'rgba(168,85,247,0.06)',   border: 'rgba(168,85,247,0.2)' },
-      notify:   { ico: '📣', bg: 'rgba(0,229,176,0.05)',    border: 'rgba(0,229,176,0.18)' },
+      notify:   { ico: '📣', bg: 'rgba(245,166,35,0.05)',    border: 'rgba(245,166,35,0.18)' },
       reroute:  { ico: '🗺', bg: 'rgba(168,85,247,0.06)',   border: 'rgba(168,85,247,0.2)' },
       book:     { ico: '🔧', bg: 'rgba(59,130,246,0.07)',   border: 'rgba(59,130,246,0.2)' },
       block:    { ico: '🚨', bg: 'rgba(239,68,68,0.07)',    border: 'rgba(239,68,68,0.2)' },
@@ -1683,16 +1684,16 @@ export default function DashboardPage() {
   }
 
   return (
-    <div style={{ minHeight:'100vh', display:'flex', flexDirection:'column', fontFamily:'IBM Plex Sans, sans-serif', background:'#0a0c0e', color:'#e8eaed' }}>
+    <div style={{ minHeight:'100vh', display:'flex', flexDirection:'column', fontFamily:'Barlow, sans-serif', background:'#080c14', color:'#e8eaed' }}>
       <style>{`
         @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
         @keyframes spin{to{transform:rotate(360deg)}}
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { overscroll-behavior: none; }
         .dh-layout { display: grid; grid-template-columns: 290px 1fr; flex: 1; min-height: 0; }
-        .dh-sidebar { border-right: 1px solid rgba(255,255,255,0.06); background: #0d1014; overflow-y: auto; display: flex; flex-direction: column; }
+        .dh-sidebar { border-right: 1px solid rgba(255,255,255,0.06); background: #0d1420; overflow-y: auto; display: flex; flex-direction: column; }
         .dh-main { display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
-        .dh-tabs { display: flex; gap: 6px; padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,0.06); background: #0a0c0e; flex-shrink: 0; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        .dh-tabs { display: flex; gap: 6px; padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,0.06); background: #080c14; flex-shrink: 0; overflow-x: auto; -webkit-overflow-scrolling: touch; }
         .dh-tabs::-webkit-scrollbar { display: none; }
         .dh-nav { display: flex; align-items: center; justify-content: space-between; padding: 12px 24px; border-bottom: 1px solid rgba(255,255,255,0.06); background: rgba(10,12,14,0.98); position: sticky; top: 0; z-index: 100; }
         .dh-nav-right { display: flex; align-items: center; gap: 16px; }
@@ -1712,7 +1713,7 @@ export default function DashboardPage() {
       <nav className="dh-nav">
         <div style={{ display:'flex', alignItems:'center', gap:16 }}>
           <Link href="/" style={{ display:'flex', alignItems:'center', gap:8, textDecoration:'none' }}>
-            <div style={{ width:24, height:24, background:'#00e5b0', borderRadius:4, display:'flex', alignItems:'center', justifyContent:'center', fontSize:10, fontWeight:700, color:'#000', fontFamily:'monospace' }}>DH</div>
+            <div style={{ width:24, height:24, background:'#f5a623', clipPath:'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)', flexShrink:0 }} />
             <span style={{ fontFamily:'monospace', fontSize:12, color:'#8a9099' }}>DisruptionHub</span>
           </Link>
           <span style={{ color:'rgba(255,255,255,0.1)' }}>|</span>
@@ -1724,9 +1725,9 @@ export default function DashboardPage() {
             const totalCount = pendingApprovals.length + localApprovals.length
             const hasPending = pendingCount > 0
             return (
-              <button onClick={() => setActiveTab('approvals')} style={{ display:'flex', alignItems:'center', gap:6, background: hasPending ? 'rgba(239,68,68,0.1)' : 'rgba(0,229,176,0.08)', border: hasPending ? '1px solid rgba(239,68,68,0.25)' : '1px solid rgba(0,229,176,0.2)', borderRadius:6, padding:'5px 10px', cursor:'pointer' }}>
-                <div style={{ width:7, height:7, borderRadius:'50%', background: hasPending ? '#ef4444' : '#00e5b0', animation: hasPending ? 'pulse 2s infinite' : 'none' }} />
-                <span style={{ fontSize:11, color: hasPending ? '#ef4444' : '#00e5b0', fontFamily:'monospace' }}>
+              <button onClick={() => setActiveTab('approvals')} style={{ display:'flex', alignItems:'center', gap:6, background: hasPending ? 'rgba(239,68,68,0.1)' : 'rgba(245,166,35,0.08)', border: hasPending ? '1px solid rgba(239,68,68,0.25)' : '1px solid rgba(245,166,35,0.2)', borderRadius:6, padding:'5px 10px', cursor:'pointer' }}>
+                <div style={{ width:7, height:7, borderRadius:'50%', background: hasPending ? '#ef4444' : '#f5a623', animation: hasPending ? 'pulse 2s infinite' : 'none' }} />
+                <span style={{ fontSize:11, color: hasPending ? '#ef4444' : '#f5a623', fontFamily:'monospace' }}>
                   {hasPending ? `${pendingCount} AWAITING APPROVAL` : `${totalCount} ACTIONS LOGGED`}
                 </span>
               </button>
@@ -1745,8 +1746,8 @@ export default function DashboardPage() {
           <div style={{ padding:'14px', borderBottom:'1px solid rgba(255,255,255,0.06)' }}>
             <div style={{ fontSize:9, fontFamily:'monospace', color:'#4a5260', letterSpacing:'0.08em', marginBottom:8 }}>TODAY — {new Date().toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'}).toUpperCase()}</div>
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:6 }}>
-              {[{l:'Active shipments',v:'4'},{l:'Alerts',v:'1',vc:'#ef4444'},{l:'On time',v:'75%'},{l:'Saved today',v:'£7.4K',vc:'#00e5b0'}].map(m=>(
-                <div key={m.l} style={{ background:'#111418', borderRadius:6, padding:'10px 10px' }}>
+              {[{l:'Active shipments',v:'4'},{l:'Alerts',v:'1',vc:'#ef4444'},{l:'On time',v:'75%'},{l:'Saved today',v:'£7.4K',vc:'#f5a623'}].map(m=>(
+                <div key={m.l} style={{ background:'#0f1826', borderRadius:6, padding:'10px 10px' }}>
                   <div style={{ fontSize:9, color:'#4a5260', marginBottom:3 }}>{m.l}</div>
                   <div style={{ fontSize:18, fontWeight:500, fontFamily:'monospace', color:m.vc||'#e8eaed' }}>{m.v}</div>
                 </div>
@@ -1758,7 +1759,7 @@ export default function DashboardPage() {
           <div style={{ padding:'14px', borderBottom:'1px solid rgba(255,255,255,0.06)' }}>
             <div style={{ fontSize:9, fontFamily:'monospace', color:'#4a5260', letterSpacing:'0.08em', marginBottom:8 }}>ACTIVE SHIPMENTS</div>
             {(liveShipments.length > 0 ? liveShipments : ACTIVE_SHIPMENTS).map(s => (
-              <div key={s.ref} onClick={() => analyseShipment(s)} style={{ padding:'9px 10px', borderRadius:6, marginBottom:5, cursor:'pointer', border:activeShipment===s.ref?'1px solid #00e5b0':'1px solid rgba(255,255,255,0.05)', background:s.status==='disrupted'?'rgba(239,68,68,0.07)':s.status==='delayed'?'rgba(245,158,11,0.05)':'#111418', transition:'all 0.15s' }}>
+              <div key={s.ref} onClick={() => analyseShipment(s)} style={{ padding:'9px 10px', borderRadius:6, marginBottom:5, cursor:'pointer', border:activeShipment===s.ref?'1px solid #f5a623':'1px solid rgba(255,255,255,0.05)', background:s.status==='disrupted'?'rgba(239,68,68,0.07)':s.status==='delayed'?'rgba(245,158,11,0.05)':'#0f1826', transition:'all 0.15s' }}>
                 <div style={{ display:'flex', justifyContent:'space-between', marginBottom:2 }}>
                   <span style={{ fontFamily:'monospace', fontSize:11, color:'#e8eaed', fontWeight:500 }}>{s.ref}</span>
                   <span style={{ fontFamily:'monospace', fontSize:9, color:STATUS_COLORS[s.status], textTransform:'uppercase' }}>{s.status}</span>
@@ -1776,12 +1777,12 @@ export default function DashboardPage() {
             {[...sessionIncidents, ...INCIDENT_LOG].slice(0,8).map((inc,i) => (
               <div key={i} style={{ padding:'8px 0', borderBottom:'1px solid rgba(255,255,255,0.03)', display:'grid', gridTemplateColumns:'1fr auto' }}>
                 <div>
-                  <div style={{ fontSize:10, color: i===0&&sessionIncidents.length>0?'#00e5b0':'#e8eaed', fontFamily:'monospace' }}>{inc.ref} — {inc.type.substring(0,22)}</div>
+                  <div style={{ fontSize:10, color: i===0&&sessionIncidents.length>0?'#f5a623':'#e8eaed', fontFamily:'monospace' }}>{inc.ref} — {inc.type.substring(0,22)}</div>
                   <div style={{ fontSize:9, color:'#4a5260', marginTop:1 }}>{inc.date}</div>
                 </div>
                 <div style={{ textAlign:'right' }}>
                   <div style={{ fontSize:9, color:SEV_COLORS[inc.severity], fontFamily:'monospace', padding:'1px 5px', borderRadius:2, background:SEV_BG[inc.severity], display:'inline-block' }}>{inc.severity}</div>
-                  {inc.saved && <div style={{ fontSize:9, color:'#00e5b0', marginTop:3 }}>{inc.saved}</div>}
+                  {inc.saved && <div style={{ fontSize:9, color:'#f5a623', marginTop:3 }}>{inc.saved}</div>}
                 </div>
               </div>
             ))}
@@ -1789,7 +1790,7 @@ export default function DashboardPage() {
         </div>
 
         {/* ── RIGHT PANEL ───────────────────────────────────────────────────── */}
-        <div style={{ display:'flex', flexDirection:'column', background:'#0a0c0e', overflow:'hidden' }}>
+        <div style={{ display:'flex', flexDirection:'column', background:'#080c14', overflow:'hidden' }}>
 
           {/* Tab bar */}
           <div style={{ padding:'10px 20px', borderBottom:'1px solid rgba(255,255,255,0.06)', display:'flex', alignItems:'center', gap:8 }}>
@@ -1801,7 +1802,7 @@ export default function DashboardPage() {
             <button style={TAB_STYLE(activeTab==='scenarios')} onClick={() => setActiveTab('scenarios')}>SCENARIOS</button>
             <button style={TAB_STYLE(activeTab==='integrations')} onClick={() => { setActiveTab('integrations'); loadWebhookLog(); loadActiveDrivers() }}>SETUP</button>
             <div style={{ marginLeft:'auto', display:'flex', alignItems:'center', gap:8 }}>
-              <div style={{ width:7, height:7, borderRadius:'50%', background: loading ? '#f59e0b' : '#00e5b0', animation: loading ? 'pulse 1s infinite' : 'none' }} />
+              <div style={{ width:7, height:7, borderRadius:'50%', background: loading ? '#f59e0b' : '#f5a623', animation: loading ? 'pulse 1s infinite' : 'none' }} />
               <span style={{ fontFamily:'monospace', fontSize:10, color:'#4a5260' }}>{loading ? 'ANALYSING...' : 'AGENT READY'}</span>
               {messages.length > 0 && (
                 <button onClick={() => { setMessages([]); setResponse(''); setActiveShipment(null); setAgentActions([]); setModuleActions([]); setActionStates({}) }} style={{ fontSize:10, color:'#4a5260', background:'none', border:'1px solid rgba(255,255,255,0.06)', borderRadius:4, padding:'3px 8px', cursor:'pointer', fontFamily:'monospace', marginLeft:4 }}>CLEAR ×</button>
@@ -1821,7 +1822,7 @@ export default function DashboardPage() {
                 )}
                 {loading && !response && (
                   <div style={{ display:'flex', gap:5, padding:'4px 0' }}>
-                    {[0,1,2].map(i => <div key={i} style={{ width:7, height:7, borderRadius:'50%', background:'#00e5b0', animation:`pulse 1.2s ${i*0.2}s infinite` }} />)}
+                    {[0,1,2].map(i => <div key={i} style={{ width:7, height:7, borderRadius:'50%', background:'#f5a623', animation:`pulse 1.2s ${i*0.2}s infinite` }} />)}
                   </div>
                 )}
                 {response && <AgentResponse text={response} />}
@@ -1833,32 +1834,32 @@ export default function DashboardPage() {
 
                 {/* ── SUGGESTED ACTIONS ── */}
                 {agentActions.length > 0 && !loading && (
-                  <div style={{ marginTop:16, padding:'12px 14px', background:'#0d1014', borderRadius:8, border:'1px solid rgba(0,229,176,0.12)' }}>
-                    <div style={{ fontSize:10, fontFamily:'monospace', color:'#00e5b0', letterSpacing:'0.08em', marginBottom:10 }}>SUGGESTED ACTIONS — click to execute</div>
+                  <div style={{ marginTop:16, padding:'12px 14px', background:'#0d1420', borderRadius:8, border:'1px solid rgba(245,166,35,0.12)' }}>
+                    <div style={{ fontSize:10, fontFamily:'monospace', color:'#f5a623', letterSpacing:'0.08em', marginBottom:10 }}>SUGGESTED ACTIONS — click to execute</div>
                     <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
                       {agentActions.map(action => {
                         const state = actionStates[action.id]
                         const isDone = state === 'done'
                         const isFiring = state === 'firing'
                         return (
-                          <div key={action.id} style={{ display:'flex', alignItems:'center', gap:10, padding:'9px 12px', background: isDone ? 'rgba(0,229,176,0.06)' : '#111418', borderRadius:6, border: isDone ? '1px solid rgba(0,229,176,0.2)' : '1px solid rgba(255,255,255,0.06)', transition:'all 0.3s' }}>
+                          <div key={action.id} style={{ display:'flex', alignItems:'center', gap:10, padding:'9px 12px', background: isDone ? 'rgba(245,166,35,0.06)' : '#0f1826', borderRadius:6, border: isDone ? '1px solid rgba(245,166,35,0.2)' : '1px solid rgba(255,255,255,0.06)', transition:'all 0.3s' }}>
                             <span style={{ fontSize:14, flexShrink:0 }}>{action.icon}</span>
                             <div style={{ flex:1, minWidth:0 }}>
-                              <div style={{ fontSize:11, color: isDone ? '#00e5b0' : '#e8eaed', lineHeight:1.4, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
+                              <div style={{ fontSize:11, color: isDone ? '#f5a623' : '#e8eaed', lineHeight:1.4, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
                                 {action.label}
                               </div>
                               <div style={{ fontSize:9, color:'#4a5260', fontFamily:'monospace', marginTop:1 }}>{action.type.toUpperCase()}</div>
                             </div>
                             {isDone ? (
                               <div style={{ display:'flex', alignItems:'center', gap:5, flexShrink:0 }}>
-                                <div style={{ width:6, height:6, borderRadius:'50%', background:'#00e5b0' }} />
-                                <span style={{ fontSize:10, color:'#00e5b0', fontFamily:'monospace' }}>SENT</span>
+                                <div style={{ width:6, height:6, borderRadius:'50%', background:'#f5a623' }} />
+                                <span style={{ fontSize:10, color:'#f5a623', fontFamily:'monospace' }}>SENT</span>
                               </div>
                             ) : (
                               <button
                                 onClick={() => fireAction(action.id, action.label, action.type)}
                                 disabled={isFiring}
-                                style={{ padding:'5px 12px', background: isFiring ? 'transparent' : '#00e5b0', color: isFiring ? '#00e5b0' : '#000', border: isFiring ? '1px solid rgba(0,229,176,0.3)' : 'none', borderRadius:5, fontSize:10, fontWeight:600, cursor: isFiring ? 'default' : 'pointer', fontFamily:'monospace', flexShrink:0, minWidth:60, transition:'all 0.2s' }}>
+                                style={{ padding:'5px 12px', background: isFiring ? 'transparent' : '#f5a623', color: isFiring ? '#f5a623' : '#000', border: isFiring ? '1px solid rgba(245,166,35,0.3)' : 'none', borderRadius:5, fontSize:10, fontWeight:600, cursor: isFiring ? 'default' : 'pointer', fontFamily:'monospace', flexShrink:0, minWidth:60, transition:'all 0.2s' }}>
                                 {isFiring ? '...' : 'FIRE →'}
                               </button>
                             )}
@@ -1868,25 +1869,25 @@ export default function DashboardPage() {
                     </div>
                     {Object.values(actionStates).some(s => s === 'done') && (
                       <div style={{ marginTop:8, fontSize:10, color:'#4a5260', fontFamily:'monospace' }}>
-                        Executed actions logged · <span style={{ color:'#00e5b0', cursor:'pointer' }} onClick={() => setActiveTab('approvals')}>View in approvals →</span>
+                        Executed actions logged · <span style={{ color:'#f5a623', cursor:'pointer' }} onClick={() => setActiveTab('approvals')}>View in approvals →</span>
                       </div>
                     )}
                   </div>
                 )}
               </div>
-              <div style={{ borderTop:'1px solid rgba(255,255,255,0.06)', padding:'12px 20px', background:'#0d1014' }}>
+              <div style={{ borderTop:'1px solid rgba(255,255,255,0.06)', padding:'12px 20px', background:'#0d1420' }}>
                 <div style={{ display:'flex', gap:8 }}>
                   <input value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => { if(e.key==='Enter') runAnalysis(input) }} placeholder="Type a disruption or follow-up question..."
-                    style={{ flex:1, background:'#111418', border:'1px solid rgba(255,255,255,0.08)', borderRadius:6, padding:'10px 13px', color:'#e8eaed', fontFamily:'IBM Plex Sans', fontSize:12, outline:'none' }} />
+                    style={{ flex:1, background:'#0f1826', border:'1px solid rgba(255,255,255,0.08)', borderRadius:6, padding:'10px 13px', color:'#e8eaed', fontFamily:'Barlow', fontSize:12, outline:'none' }} />
                   <button onClick={() => runAnalysis(input)} disabled={!input.trim()||loading}
-                    style={{ background:loading?'#111418':'#00e5b0', color:'#000', border:'none', padding:'10px 18px', borderRadius:6, fontWeight:600, fontSize:12, cursor:loading?'default':'pointer', whiteSpace:'nowrap' }}>
+                    style={{ background:loading?'#0f1826':'#f5a623', color:'#000', border:'none', padding:'10px 18px', borderRadius:6, fontWeight:600, fontSize:12, cursor:loading?'default':'pointer', whiteSpace:'nowrap' }}>
                     {loading ? '...' : 'Analyse →'}
                   </button>
                 </div>
                 <div style={{ marginTop:8, display:'flex', gap:6, flexWrap:'wrap' }}>
                   {['Draft client email','Cheapest reroute','What\'s our liability?','Reorder recommendations'].map(q => (
                     <button key={q} onClick={() => { setInput(q); runAnalysis(q) }}
-                      style={{ fontSize:10, color:'#4a5260', background:'none', border:'1px solid rgba(255,255,255,0.06)', borderRadius:4, padding:'3px 8px', cursor:'pointer', fontFamily:'IBM Plex Sans' }}>{q}</button>
+                      style={{ fontSize:10, color:'#4a5260', background:'none', border:'1px solid rgba(255,255,255,0.06)', borderRadius:4, padding:'3px 8px', cursor:'pointer', fontFamily:'Barlow' }}>{q}</button>
                   ))}
                 </div>
               </div>
@@ -1928,18 +1929,18 @@ export default function DashboardPage() {
                     return `${Math.floor(hrs/24)}d ago`
                   })() : null
                   // Border and bg override if issues found
-                  const borderColor = hasIssue ? 'rgba(239,68,68,0.4)' : isClear ? 'rgba(0,229,176,0.25)' : c.border
-                  const bgColor = hasIssue ? 'rgba(239,68,68,0.06)' : isClear ? 'rgba(0,229,176,0.04)' : c.bg
+                  const borderColor = hasIssue ? 'rgba(239,68,68,0.4)' : isClear ? 'rgba(245,166,35,0.25)' : c.border
+                  const bgColor = hasIssue ? 'rgba(239,68,68,0.06)' : isClear ? 'rgba(245,166,35,0.04)' : c.bg
                   return (
                     <button key={m.id} onClick={() => runModule(m.id)} disabled={!!moduleRunning}
                       style={{ textAlign:'left', padding:'12px 13px', borderRadius:7, border:`1px solid ${borderColor}`, background:bgColor, cursor:moduleRunning?'default':'pointer', transition:'all 0.15s', opacity:moduleRunning&&moduleRunning!==m.id?0.4:1, position:'relative' }}>
                       {hasIssue && <div style={{ position:'absolute', top:7, right:9, width:7, height:7, borderRadius:'50%', background:'#ef4444' }} />}
-                      {isClear && <div style={{ position:'absolute', top:7, right:9, width:7, height:7, borderRadius:'50%', background:'#00e5b0' }} />}
+                      {isClear && <div style={{ position:'absolute', top:7, right:9, width:7, height:7, borderRadius:'50%', background:'#f5a623' }} />}
                       <div style={{ display:'flex', alignItems:'center', gap:7, marginBottom:4 }}>
                         <span style={{ fontSize:15 }}>{m.icon}</span>
                         <span style={{ fontSize:11, fontWeight:500, color:'#e8eaed', lineHeight:1.3 }}>{m.label}</span>
                       </div>
-                      <div style={{ fontSize:9, fontFamily:'monospace', letterSpacing:'0.04em', color: isRunning?'#00e5b0':hasIssue?'#ef4444':isClear?'#00e5b0':c.text }}>
+                      <div style={{ fontSize:9, fontFamily:'monospace', letterSpacing:'0.04em', color: isRunning?'#f5a623':hasIssue?'#ef4444':isClear?'#f5a623':c.text }}>
                         {isRunning ? '● RUNNING...' : hasIssue ? '● ACTION REQUIRED' : isClear ? `✓ CLEAR · ${ranAgo}` : m.cat.toUpperCase()}
                       </div>
                       {hasIssue && lastRun.financial_impact > 0 && (
@@ -1951,36 +1952,36 @@ export default function DashboardPage() {
               </div>
 
               {moduleRunning && (
-                <div style={{ display:'flex', alignItems:'center', gap:10, padding:'14px', background:'#111418', borderRadius:8, border:'1px solid rgba(0,229,176,0.15)' }}>
-                  <div style={{ width:16, height:16, border:'2px solid #00e5b0', borderTopColor:'transparent', borderRadius:'50%', animation:'spin 0.8s linear infinite', flexShrink:0 }} />
-                  <span style={{ fontFamily:'monospace', fontSize:11, color:'#00e5b0' }}>Running {MODULES.find(m=>m.id===moduleRunning)?.label}...</span>
+                <div style={{ display:'flex', alignItems:'center', gap:10, padding:'14px', background:'#0f1826', borderRadius:8, border:'1px solid rgba(245,166,35,0.15)' }}>
+                  <div style={{ width:16, height:16, border:'2px solid #f5a623', borderTopColor:'transparent', borderRadius:'50%', animation:'spin 0.8s linear infinite', flexShrink:0 }} />
+                  <span style={{ fontFamily:'monospace', fontSize:11, color:'#f5a623' }}>Running {MODULES.find(m=>m.id===moduleRunning)?.label}...</span>
                 </div>
               )}
 
               {/* Module action buttons */}
               {moduleActions.length > 0 && !moduleRunning && (
-                <div style={{ marginTop:16, padding:'12px 14px', background:'#0d1014', borderRadius:8, border:'1px solid rgba(0,229,176,0.12)' }}>
-                  <div style={{ fontSize:10, fontFamily:'monospace', color:'#00e5b0', letterSpacing:'0.08em', marginBottom:10 }}>SUGGESTED ACTIONS — click to execute</div>
+                <div style={{ marginTop:16, padding:'12px 14px', background:'#0d1420', borderRadius:8, border:'1px solid rgba(245,166,35,0.12)' }}>
+                  <div style={{ fontSize:10, fontFamily:'monospace', color:'#f5a623', letterSpacing:'0.08em', marginBottom:10 }}>SUGGESTED ACTIONS — click to execute</div>
                   <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
                     {moduleActions.map(action => {
                       const state = actionStates[action.id]
                       const isDone = state === 'done'
                       const isFiring = state === 'firing'
                       return (
-                        <div key={action.id} style={{ display:'flex', alignItems:'center', gap:10, padding:'9px 12px', background: isDone ? 'rgba(0,229,176,0.06)' : '#111418', borderRadius:6, border: isDone ? '1px solid rgba(0,229,176,0.2)' : '1px solid rgba(255,255,255,0.06)', transition:'all 0.3s' }}>
+                        <div key={action.id} style={{ display:'flex', alignItems:'center', gap:10, padding:'9px 12px', background: isDone ? 'rgba(245,166,35,0.06)' : '#0f1826', borderRadius:6, border: isDone ? '1px solid rgba(245,166,35,0.2)' : '1px solid rgba(255,255,255,0.06)', transition:'all 0.3s' }}>
                           <span style={{ fontSize:14, flexShrink:0 }}>{action.icon}</span>
                           <div style={{ flex:1, minWidth:0 }}>
-                            <div style={{ fontSize:11, color: isDone ? '#00e5b0' : '#e8eaed', lineHeight:1.4 }}>{action.label}</div>
+                            <div style={{ fontSize:11, color: isDone ? '#f5a623' : '#e8eaed', lineHeight:1.4 }}>{action.label}</div>
                             <div style={{ fontSize:9, color:'#4a5260', fontFamily:'monospace', marginTop:1 }}>{action.type.toUpperCase()}</div>
                           </div>
                           {isDone ? (
                             <div style={{ display:'flex', alignItems:'center', gap:5, flexShrink:0 }}>
-                              <div style={{ width:6, height:6, borderRadius:'50%', background:'#00e5b0' }} />
-                              <span style={{ fontSize:10, color:'#00e5b0', fontFamily:'monospace' }}>SENT</span>
+                              <div style={{ width:6, height:6, borderRadius:'50%', background:'#f5a623' }} />
+                              <span style={{ fontSize:10, color:'#f5a623', fontFamily:'monospace' }}>SENT</span>
                             </div>
                           ) : (
                             <button onClick={() => fireAction(action.id, action.label, action.type)} disabled={isFiring}
-                              style={{ padding:'5px 12px', background: isFiring ? 'transparent' : '#00e5b0', color: isFiring ? '#00e5b0' : '#000', border: isFiring ? '1px solid rgba(0,229,176,0.3)' : 'none', borderRadius:5, fontSize:10, fontWeight:600, cursor: isFiring ? 'default' : 'pointer', fontFamily:'monospace', flexShrink:0, minWidth:60, transition:'all 0.2s' }}>
+                              style={{ padding:'5px 12px', background: isFiring ? 'transparent' : '#f5a623', color: isFiring ? '#f5a623' : '#000', border: isFiring ? '1px solid rgba(245,166,35,0.3)' : 'none', borderRadius:5, fontSize:10, fontWeight:600, cursor: isFiring ? 'default' : 'pointer', fontFamily:'monospace', flexShrink:0, minWidth:60, transition:'all 0.2s' }}>
                               {isFiring ? '...' : 'FIRE →'}
                             </button>
                           )}
@@ -2029,14 +2030,14 @@ export default function DashboardPage() {
                 ))}
               </div>
               {scenarioRunning && (
-                <div style={{ display:'flex', alignItems:'center', gap:10, padding:'14px', background:'#111418', borderRadius:8, border:'1px solid rgba(0,229,176,0.15)' }}>
-                  <div style={{ width:16, height:16, border:'2px solid #00e5b0', borderTopColor:'transparent', borderRadius:'50%', animation:'spin 0.8s linear infinite', flexShrink:0 }} />
-                  <span style={{ fontFamily:'monospace', fontSize:11, color:'#00e5b0' }}>Analysing scenario...</span>
+                <div style={{ display:'flex', alignItems:'center', gap:10, padding:'14px', background:'#0f1826', borderRadius:8, border:'1px solid rgba(245,166,35,0.15)' }}>
+                  <div style={{ width:16, height:16, border:'2px solid #f5a623', borderTopColor:'transparent', borderRadius:'50%', animation:'spin 0.8s linear infinite', flexShrink:0 }} />
+                  <span style={{ fontFamily:'monospace', fontSize:11, color:'#f5a623' }}>Analysing scenario...</span>
                 </div>
               )}
               {scenarioResult && !scenarioRunning && (
-                <div style={{ border:'1px solid rgba(0,229,176,0.15)', borderRadius:8, overflow:'hidden' }}>
-                  <div style={{ padding:'10px 14px', background:'rgba(0,229,176,0.06)', borderBottom:'1px solid rgba(0,229,176,0.1)', fontFamily:'monospace', fontSize:11, color:'#00e5b0' }}>
+                <div style={{ border:'1px solid rgba(245,166,35,0.15)', borderRadius:8, overflow:'hidden' }}>
+                  <div style={{ padding:'10px 14px', background:'rgba(245,166,35,0.06)', borderBottom:'1px solid rgba(245,166,35,0.1)', fontFamily:'monospace', fontSize:11, color:'#f5a623' }}>
                     SCENARIO RESULT — {scenarioResult.scenario?.toUpperCase().replace(/_/g,' ')}
                   </div>
                   {scenarioResult.error
@@ -2056,7 +2057,7 @@ export default function DashboardPage() {
 
               {/* ══ LEFT — LIVE FLEET ══ */}
               <div style={{ width:280, flexShrink:0, display:'flex', flexDirection:'column', borderRight:'2px solid rgba(255,255,255,0.06)', overflow:'hidden' }}>
-                <div style={{ background:'#0d1014', borderBottom:'1px solid rgba(255,255,255,0.06)', padding:'12px 16px', display:'flex', justifyContent:'space-between', alignItems:'center', flexShrink:0 }}>
+                <div style={{ background:'#0d1420', borderBottom:'1px solid rgba(255,255,255,0.06)', padding:'12px 16px', display:'flex', justifyContent:'space-between', alignItems:'center', flexShrink:0 }}>
                   <div>
                     <div style={{ fontSize:10, fontWeight:700, letterSpacing:'0.1em', color:'#e8eaed', fontFamily:'monospace' }}>LIVE FLEET</div>
                     <div style={{ fontSize:9, color:'#4a5260', marginTop:2 }}>{activeDrivers.length} on shift</div>
@@ -2078,7 +2079,7 @@ export default function DashboardPage() {
                       const cargo = v.cargo_type || null
                       const route = v.current_route || null
                       const status = v.status || 'active'
-                      const statusColor = status === 'disrupted' || status === 'at_risk' ? '#ef4444' : status === 'delayed' ? '#f59e0b' : '#00e5b0'
+                      const statusColor = status === 'disrupted' || status === 'at_risk' ? '#ef4444' : status === 'delayed' ? '#f59e0b' : '#f5a623'
                       const cargoColor = cargo?.includes('pharma') ? '#a855f7' : cargo?.includes('chilled') || cargo?.includes('frozen') ? '#3b82f6' : '#4a5260'
                       const fleetVehicle = fleet.find(fv => fv.vehicle_reg === reg)
                       return (
@@ -2113,7 +2114,7 @@ export default function DashboardPage() {
                           <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:4 }}>
                             <span style={{ fontFamily:'monospace', fontSize:11, color:'#e8eaed' }}>{job.ref}</span>
                             <button onClick={() => { setReassignJobRef(job.ref); setReassignTo('') }}
-                              style={{ padding:'3px 8px', borderRadius:4, border:'1px solid rgba(0,229,176,0.3)', background:'rgba(0,229,176,0.06)', color:'#00e5b0', fontSize:9, cursor:'pointer', fontFamily:'monospace' }}>
+                              style={{ padding:'3px 8px', borderRadius:4, border:'1px solid rgba(245,166,35,0.3)', background:'rgba(245,166,35,0.06)', color:'#f5a623', fontSize:9, cursor:'pointer', fontFamily:'monospace' }}>
                               Assign →
                             </button>
                           </div>
@@ -2121,12 +2122,12 @@ export default function DashboardPage() {
                           {reassignJobRef === job.ref && (
                             <div style={{ display:'flex', gap:6, marginTop:6 }}>
                               <select value={reassignTo} onChange={e => setReassignTo(e.target.value)}
-                                style={{ flex:1, padding:'4px 6px', background:'#0a0c0e', border:'1px solid rgba(255,255,255,0.1)', borderRadius:4, color: reassignTo ? '#e8eaed' : '#4a5260', fontSize:10, outline:'none', fontFamily:'IBM Plex Sans' }}>
+                                style={{ flex:1, padding:'4px 6px', background:'#080c14', border:'1px solid rgba(255,255,255,0.1)', borderRadius:4, color: reassignTo ? '#e8eaed' : '#4a5260', fontSize:10, outline:'none', fontFamily:'Barlow' }}>
                                 <option value=''>Pick driver...</option>
                                 {fleet.map(v => <option key={v.vehicle_reg} value={v.vehicle_reg}>{v.vehicle_reg}{v.driver_name ? ` — ${v.driver_name}` : ''}</option>)}
                               </select>
                               <button onClick={() => reassignTo && reassignUnassigned(job.ref, reassignTo, job.reason)} disabled={!reassignTo}
-                                style={{ padding:'4px 8px', borderRadius:4, border:'none', background: reassignTo ? '#00e5b0' : 'rgba(0,229,176,0.2)', color: reassignTo ? '#000' : '#4a5260', fontSize:10, fontWeight:700, cursor: reassignTo ? 'pointer' : 'default', fontFamily:'monospace' }}>
+                                style={{ padding:'4px 8px', borderRadius:4, border:'none', background: reassignTo ? '#f5a623' : 'rgba(245,166,35,0.2)', color: reassignTo ? '#000' : '#4a5260', fontSize:10, fontWeight:700, cursor: reassignTo ? 'pointer' : 'default', fontFamily:'monospace' }}>
                                 ✓
                               </button>
                               <button onClick={() => { setReassignJobRef(null); setReassignTo('') }}
@@ -2140,11 +2141,11 @@ export default function DashboardPage() {
                 </div>
 
                 {/* Fleet footer stats */}
-                <div style={{ background:'#0d1014', borderTop:'1px solid rgba(255,255,255,0.06)', padding:'10px 16px', flexShrink:0, display:'flex', gap:16 }}>
+                <div style={{ background:'#0d1420', borderTop:'1px solid rgba(255,255,255,0.06)', padding:'10px 16px', flexShrink:0, display:'flex', gap:16 }}>
                   {[
                     { n: fleet.filter(v=>v.jobs?.some(j=>j.status==='at_risk'||j.status==='disrupted')).length, l:'CRITICAL', c:'#ef4444' },
                     { n: fleet.filter(v=>v.jobs?.some(j=>j.status==='delayed')).length, l:'DELAYED', c:'#f59e0b' },
-                    { n: activeDrivers.length, l:'ACTIVE', c:'#00e5b0' }
+                    { n: activeDrivers.length, l:'ACTIVE', c:'#f5a623' }
                   ].map(s => (
                     <div key={s.l} style={{ textAlign:'center' }}>
                       <div style={{ fontSize:16, fontWeight:700, color:s.c, fontFamily:'monospace' }}>{s.n}</div>
@@ -2156,7 +2157,7 @@ export default function DashboardPage() {
 
               {/* ══ CENTRE — ACTION QUEUE ══ */}
               <div style={{ flex:1, display:'flex', flexDirection:'column', borderRight:'2px solid rgba(255,255,255,0.06)', overflow:'hidden' }}>
-                <div style={{ background:'#0d1014', borderBottom:'1px solid rgba(255,255,255,0.06)', padding:'12px 20px', display:'flex', justifyContent:'space-between', alignItems:'center', flexShrink:0 }}>
+                <div style={{ background:'#0d1420', borderBottom:'1px solid rgba(255,255,255,0.06)', padding:'12px 20px', display:'flex', justifyContent:'space-between', alignItems:'center', flexShrink:0 }}>
                   <div>
                     <div style={{ fontSize:10, fontWeight:700, letterSpacing:'0.1em', color:'#e8eaed', fontFamily:'monospace' }}>ACTION QUEUE</div>
                     <div style={{ fontSize:9, color:'#4a5260', marginTop:2 }}>Decisions waiting · Auto-handled · Resolved</div>
@@ -2164,7 +2165,7 @@ export default function DashboardPage() {
                   <div style={{ display:'flex', gap:6 }}>
                     {[
                       { n: pendingApprovals.filter(a=>a.status==='pending').length, l:'PENDING', c:'#f59e0b' },
-                      { n: pendingApprovals.filter(a=>a.status==='executed'||a.status==='resolved').length, l:'DONE', c:'#00e5b0' },
+                      { n: pendingApprovals.filter(a=>a.status==='executed'||a.status==='resolved').length, l:'DONE', c:'#f5a623' },
                     ].map(s => (
                       <div key={s.l} style={{ textAlign:'center', padding:'4px 10px', background:`${s.c}11`, border:`1px solid ${s.c}33` }}>
                         <div style={{ fontSize:15, fontWeight:700, color:s.c, fontFamily:'monospace' }}>{s.n}</div>
@@ -2180,7 +2181,7 @@ export default function DashboardPage() {
                   {localApprovals.length > 0 && (
                     <div style={{ marginBottom:12 }}>
                       {localApprovals.map(a => (
-                        <div key={a.id} style={{ border:`1px solid ${a.border}`, borderRadius:8, background:a.bg, marginBottom:7, borderLeft:`3px solid #00e5b0` }}>
+                        <div key={a.id} style={{ border:`1px solid ${a.border}`, borderRadius:8, background:a.bg, marginBottom:7, borderLeft:`3px solid #f5a623` }}>
                           <div style={{ padding:'10px 14px', display:'flex', alignItems:'center', gap:10 }}>
                             <span style={{ fontSize:15 }}>{a.ico}</span>
                             <div style={{ flex:1, minWidth:0 }}>
@@ -2188,8 +2189,8 @@ export default function DashboardPage() {
                               <div style={{ fontSize:9, color:'#4a5260', fontFamily:'monospace', marginTop:2 }}>{(a.action_type||'').toUpperCase()} · {a.executed_at}</div>
                             </div>
                             <div style={{ display:'flex', alignItems:'center', gap:5 }}>
-                              <div style={{ width:6, height:6, borderRadius:'50%', background:'#00e5b0' }} />
-                              <span style={{ fontSize:9, color:'#00e5b0', fontFamily:'monospace' }}>DONE</span>
+                              <div style={{ width:6, height:6, borderRadius:'50%', background:'#f5a623' }} />
+                              <span style={{ fontSize:9, color:'#f5a623', fontFamily:'monospace' }}>DONE</span>
                             </div>
                           </div>
                         </div>
@@ -2205,8 +2206,8 @@ export default function DashboardPage() {
                       const isExecuted = a.status === 'executed' || a.status === 'resolved'
                       const isRejected = a.status === 'rejected' || a.status === 'expired'
                       const isProcessing = approvingId === a.id
-                      const borderCol = isPending ? '#f59e0b' : isExecuted ? '#00e5b0' : '#374151'
-                      const bgCol = isPending ? 'rgba(245,158,11,0.04)' : isExecuted ? 'rgba(0,229,176,0.03)' : 'rgba(55,65,81,0.03)'
+                      const borderCol = isPending ? '#f59e0b' : isExecuted ? '#f5a623' : '#374151'
+                      const bgCol = isPending ? 'rgba(245,158,11,0.04)' : isExecuted ? 'rgba(245,166,35,0.03)' : 'rgba(55,65,81,0.03)'
                       const typeMap = { call:'📞', make_call:'📞', send_sms:'💬', sms:'💬', send_email:'✉', email:'✉', dispatch:'🚛', reroute:'🗺', notify:'📣', emergency:'🚨', driver_resolved:'✅' }
                       const ico = typeMap[a.action_type] || '⚡'
                       const timeStr = a.executed_at ? new Date(a.executed_at).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}) : a.created_at ? new Date(a.created_at).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}) : ''
@@ -2227,7 +2228,7 @@ export default function DashboardPage() {
                             {isPending && (
                               <div style={{ display:'flex', gap:6 }}>
                                 <button onClick={() => handleApproval(a.id,'approve')} disabled={isProcessing}
-                                  style={{ padding:'6px 16px', borderRadius:5, border:'none', background:'#00e5b0', color:'#000', fontWeight:700, fontSize:11, cursor:isProcessing?'default':'pointer', fontFamily:'monospace' }}>
+                                  style={{ padding:'6px 16px', borderRadius:5, border:'none', background:'#f5a623', color:'#000', fontWeight:700, fontSize:11, cursor:isProcessing?'default':'pointer', fontFamily:'monospace' }}>
                                   {isProcessing ? '...' : 'YES'}
                                 </button>
                                 <button onClick={() => assessCancelAction(a.id, a.sent_at)} disabled={isProcessing}
@@ -2237,7 +2238,7 @@ export default function DashboardPage() {
 
                               </div>
                             )}
-                            {isExecuted && <div style={{ fontSize:9, color:'#00e5b0', fontFamily:'monospace' }}>✓ Actioned {timeStr} — no further action needed</div>}
+                            {isExecuted && <div style={{ fontSize:9, color:'#f5a623', fontFamily:'monospace' }}>✓ Actioned {timeStr} — no further action needed</div>}
                             {isRejected && <div style={{ fontSize:9, color:'#4a5260', fontFamily:'monospace' }}>Dismissed</div>}
                           </div>
                         </div>
@@ -2256,13 +2257,13 @@ export default function DashboardPage() {
               <div style={{ width:280, flexShrink:0, display:'flex', flexDirection:'column', overflow:'hidden' }}>
 
                 {/* Toggle header */}
-                <div style={{ background:'#0d1014', borderBottom:'1px solid rgba(255,255,255,0.06)', flexShrink:0, display:'flex' }}>
+                <div style={{ background:'#0d1420', borderBottom:'1px solid rgba(255,255,255,0.06)', flexShrink:0, display:'flex' }}>
                   <button onClick={() => setCommandRightTab('incidents')}
-                    style={{ flex:1, padding:'12px 0', background:'transparent', border:'none', borderBottom: commandRightTab==='incidents' ? '2px solid #00e5b0' : '2px solid transparent', color: commandRightTab==='incidents' ? '#e8eaed' : '#4a5260', fontSize:10, fontWeight:700, letterSpacing:'0.08em', cursor:'pointer', fontFamily:'monospace' }}>
+                    style={{ flex:1, padding:'12px 0', background:'transparent', border:'none', borderBottom: commandRightTab==='incidents' ? '2px solid #f5a623' : '2px solid transparent', color: commandRightTab==='incidents' ? '#e8eaed' : '#4a5260', fontSize:10, fontWeight:700, letterSpacing:'0.08em', cursor:'pointer', fontFamily:'monospace' }}>
                     INCIDENTS
                   </button>
                   <button onClick={() => setCommandRightTab('value')}
-                    style={{ flex:1, padding:'12px 0', background:'transparent', border:'none', borderBottom: commandRightTab==='value' ? '2px solid #00e5b0' : '2px solid transparent', color: commandRightTab==='value' ? '#00e5b0' : '#4a5260', fontSize:10, fontWeight:700, letterSpacing:'0.08em', cursor:'pointer', fontFamily:'monospace' }}>
+                    style={{ flex:1, padding:'12px 0', background:'transparent', border:'none', borderBottom: commandRightTab==='value' ? '2px solid #f5a623' : '2px solid transparent', color: commandRightTab==='value' ? '#f5a623' : '#4a5260', fontSize:10, fontWeight:700, letterSpacing:'0.08em', cursor:'pointer', fontFamily:'monospace' }}>
                     VALUE ▲
                   </button>
                 </div>
@@ -2273,14 +2274,14 @@ export default function DashboardPage() {
                   const totalProtected = hiCrit.reduce((s, l) => s + (l.financial_impact || 0), 0)
                   const timeSavedMins = whLog.filter(l=>l.sms_fired).length * 12
                   return (
-                    <div onClick={() => setCommandRightTab('value')} style={{ background:'rgba(0,229,176,0.04)', borderBottom:'1px solid rgba(0,229,176,0.12)', padding:'10px 16px', cursor:'pointer', flexShrink:0, display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                    <div onClick={() => setCommandRightTab('value')} style={{ background:'rgba(245,166,35,0.04)', borderBottom:'1px solid rgba(245,166,35,0.12)', padding:'10px 16px', cursor:'pointer', flexShrink:0, display:'flex', justifyContent:'space-between', alignItems:'center' }}>
                       <div>
                         <div style={{ fontSize:8, color:'#4a5260', letterSpacing:2, marginBottom:2 }}>SLA PROTECTED</div>
-                        <div style={{ fontSize:20, fontWeight:700, color:'#00e5b0', fontFamily:'monospace', lineHeight:1 }}>£{totalProtected.toLocaleString()}</div>
+                        <div style={{ fontSize:20, fontWeight:700, color:'#f5a623', fontFamily:'monospace', lineHeight:1 }}>£{totalProtected.toLocaleString()}</div>
                       </div>
                       <div style={{ textAlign:'right' }}>
                         <div style={{ fontSize:8, color:'#4a5260', letterSpacing:2, marginBottom:2 }}>TIME SAVED</div>
-                        <div style={{ fontSize:20, fontWeight:700, color:'#00e5b0', fontFamily:'monospace', lineHeight:1 }}>{timeSavedMins >= 60 ? `${(timeSavedMins/60).toFixed(1)}h` : `${timeSavedMins}m`}</div>
+                        <div style={{ fontSize:20, fontWeight:700, color:'#f5a623', fontFamily:'monospace', lineHeight:1 }}>{timeSavedMins >= 60 ? `${(timeSavedMins/60).toFixed(1)}h` : `${timeSavedMins}m`}</div>
                       </div>
                     </div>
                   )
@@ -2305,8 +2306,8 @@ export default function DashboardPage() {
                                 {log.event_type?.replace(/_/g,' ')} · {log.payload?.vehicle_reg || ''}
                               </div>
                               <div style={{ fontSize:9, color:'#4a5260' }}>{log.system_name} · {timeStr}</div>
-                              {log.financial_impact > 0 && <div style={{ fontSize:9, color: i===0 ? '#f59e0b' : '#00e5b0', marginTop:2, fontWeight:600 }}>£{Number(log.financial_impact).toLocaleString()}</div>}
-                              {log.sms_fired && <div style={{ fontSize:8, color:'#00e5b0', marginTop:1 }}>✓ SMS sent</div>}
+                              {log.financial_impact > 0 && <div style={{ fontSize:9, color: i===0 ? '#f59e0b' : '#f5a623', marginTop:2, fontWeight:600 }}>£{Number(log.financial_impact).toLocaleString()}</div>}
+                              {log.sms_fired && <div style={{ fontSize:8, color:'#f5a623', marginTop:1 }}>✓ SMS sent</div>}
                             </div>
                           </div>
                         </div>
@@ -2327,8 +2328,8 @@ export default function DashboardPage() {
                   const driverValueGbp = Math.round(smsFired.length * (15.38 / 60) * 12)
                   const canProject = whLog.length >= 20 // 3+ days of data
                   const stats = [
-                    { label:'TOTAL SLA EXPOSURE PROTECTED', value:`£${totalProtected.toLocaleString()}`, sub:`${hiCrit.length} qualifying events · ${payloadVerified} payload-verified · ${aiEstimated} AI-estimated`, color:'#00e5b0' },
-                    { label:'RESPONSE TIME SAVED', value: timeSavedMins >= 60 ? `${(timeSavedMins/60).toFixed(1)}h` : `${timeSavedMins}m`, sub:`${timeSavedMins} min · 12 min/SMS-handled event`, color:'#00e5b0' },
+                    { label:'TOTAL SLA EXPOSURE PROTECTED', value:`£${totalProtected.toLocaleString()}`, sub:`${hiCrit.length} qualifying events · ${payloadVerified} payload-verified · ${aiEstimated} AI-estimated`, color:'#f5a623' },
+                    { label:'RESPONSE TIME SAVED', value: timeSavedMins >= 60 ? `${(timeSavedMins/60).toFixed(1)}h` : `${timeSavedMins}m`, sub:`${timeSavedMins} min · 12 min/SMS-handled event`, color:'#f5a623' },
                     { label:'INCIDENTS LOGGED', value:String(whLog.length), sub:`${smsFired.length} ops SMS sent · ${hiCrit.length} HIGH/CRIT`, color:'#f59e0b' },
                     { label:'OPS TIME RECOVERED', value:`£${opsValueGbp}`, sub:`£14.42/hr · 12 min per SMS event`, color:'#6366f1' },
                     { label:'DRIVER TIME RECOVERED', value:`£${driverValueGbp}`, sub:`£15.38/hr · 12 min faster per instruction`, color:'#6366f1' },
@@ -2353,7 +2354,7 @@ export default function DashboardPage() {
                 })()}
 
                 {/* Stats footer */}
-                <div style={{ background:'#0d1014', borderTop:'1px solid rgba(255,255,255,0.06)', padding:'10px 16px', flexShrink:0 }}>
+                <div style={{ background:'#0d1420', borderTop:'1px solid rgba(255,255,255,0.06)', padding:'10px 16px', flexShrink:0 }}>
                   <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'5px 0' }}>
                     {[
                       ['WEBHOOKS', String(whLog.length)],
@@ -2373,7 +2374,7 @@ export default function DashboardPage() {
               {/* ── CANCEL JOB CONFIRM MODAL ── */}
               {cancelConfirm && (
                 <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.75)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:1001 }}>
-                  <div style={{ background:'#111418', border:'1px solid rgba(255,255,255,0.12)', borderRadius:12, padding:'24px', maxWidth:420, width:'90%' }}>
+                  <div style={{ background:'#0f1826', border:'1px solid rgba(255,255,255,0.12)', borderRadius:12, padding:'24px', maxWidth:420, width:'90%' }}>
                     <div style={{ fontFamily:'monospace', fontSize:11, color:'#ef4444', letterSpacing:'0.08em', marginBottom:12 }}>
                       {cancelConfirm.cancel_all ? 'CANCEL ALL JOBS' : `CANCEL JOB — ${cancelConfirm.ref}`}
                     </div>
@@ -2385,16 +2386,16 @@ export default function DashboardPage() {
                     {fleet.filter(v => v.vehicle_reg !== cancelConfirm.vehicle_reg).length > 0 && (
                       <div style={{ marginBottom:12 }}>
                         <div style={{ fontSize:11, color:'#4a5260', fontFamily:'monospace', marginBottom:6 }}>REASSIGN TO ANOTHER DRIVER — optional</div>
-                        <select value={reassignTo} onChange={e => setReassignTo(e.target.value)} style={{ width:'100%', padding:'9px 12px', background:'#0a0c0e', border:'1px solid rgba(255,255,255,0.1)', borderRadius:6, color: reassignTo ? '#e8eaed' : '#4a5260', fontSize:12, outline:'none', fontFamily:'IBM Plex Sans', cursor:'pointer' }}>
+                        <select value={reassignTo} onChange={e => setReassignTo(e.target.value)} style={{ width:'100%', padding:'9px 12px', background:'#080c14', border:'1px solid rgba(255,255,255,0.1)', borderRadius:6, color: reassignTo ? '#e8eaed' : '#4a5260', fontSize:12, outline:'none', fontFamily:'Barlow', cursor:'pointer' }}>
                           <option value=''>No reassignment — just cancel</option>
                           {fleet.filter(v => v.vehicle_reg !== cancelConfirm.vehicle_reg).map(v => (<option key={v.vehicle_reg} value={v.vehicle_reg}>{v.vehicle_reg}{v.driver_name ? ` — ${v.driver_name}` : ''} ({v.jobs.length} job{v.jobs.length !== 1 ? 's' : ''})</option>))}
                         </select>
-                        {reassignTo && <div style={{ fontSize:11, color:'#00e5b0', marginTop:5 }}>✓ Job will be pushed to {reassignTo}</div>}
+                        {reassignTo && <div style={{ fontSize:11, color:'#f5a623', marginTop:5 }}>✓ Job will be pushed to {reassignTo}</div>}
                       </div>
                     )}
-                    <input value={cancelReason} onChange={e => setCancelReason(e.target.value)} placeholder='Reason — optional' style={{ width:'100%', padding:'10px 12px', background:'#0a0c0e', border:'1px solid rgba(255,255,255,0.1)', borderRadius:6, color:'#e8eaed', fontSize:12, outline:'none', marginBottom:14, boxSizing:'border-box', fontFamily:'IBM Plex Sans' }} />
+                    <input value={cancelReason} onChange={e => setCancelReason(e.target.value)} placeholder='Reason — optional' style={{ width:'100%', padding:'10px 12px', background:'#080c14', border:'1px solid rgba(255,255,255,0.1)', borderRadius:6, color:'#e8eaed', fontSize:12, outline:'none', marginBottom:14, boxSizing:'border-box', fontFamily:'Barlow' }} />
                     <div style={{ display:'flex', gap:8 }}>
-                      <button onClick={() => cancelJob(cancelConfirm)} disabled={!!cancellingJob} style={{ flex:1, padding:'10px', background: reassignTo ? '#00e5b0' : '#ef4444', border:'none', borderRadius:6, color: reassignTo ? '#000' : '#fff', fontWeight:600, fontSize:12, cursor:'pointer', fontFamily:'monospace' }}>
+                      <button onClick={() => cancelJob(cancelConfirm)} disabled={!!cancellingJob} style={{ flex:1, padding:'10px', background: reassignTo ? '#f5a623' : '#ef4444', border:'none', borderRadius:6, color: reassignTo ? '#000' : '#fff', fontWeight:600, fontSize:12, cursor:'pointer', fontFamily:'monospace' }}>
                         {cancellingJob ? '...' : reassignTo ? `Reassign to ${reassignTo}` : 'Confirm cancel'}
                       </button>
                       <button onClick={() => { setCancelConfirm(null); setCancelReason(''); setReassignTo('') }} style={{ padding:'10px 16px', background:'transparent', border:'1px solid rgba(255,255,255,0.1)', borderRadius:6, color:'#8a9099', fontSize:12, cursor:'pointer', fontFamily:'monospace' }}>Keep job</button>
@@ -2406,8 +2407,8 @@ export default function DashboardPage() {
               {/* ── CANCEL ASSESSMENT MODAL ── */}
               {cancelAssessment && (
                 <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.7)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:1000 }}>
-                  <div style={{ background:'#111418', border:'1px solid rgba(255,255,255,0.12)', borderRadius:12, padding:'24px', maxWidth:480, width:'90%' }}>
-                    <div style={{ fontFamily:'monospace', fontSize:11, color: cancelAssessment.risk==='NONE'?'#00e5b0':cancelAssessment.risk==='LOW'?'#f59e0b':'#ef4444', letterSpacing:'0.08em', marginBottom:12 }}>CANCEL ASSESSMENT — {cancelAssessment.risk} RISK</div>
+                  <div style={{ background:'#0f1826', border:'1px solid rgba(255,255,255,0.12)', borderRadius:12, padding:'24px', maxWidth:480, width:'90%' }}>
+                    <div style={{ fontFamily:'monospace', fontSize:11, color: cancelAssessment.risk==='NONE'?'#f5a623':cancelAssessment.risk==='LOW'?'#f59e0b':'#ef4444', letterSpacing:'0.08em', marginBottom:12 }}>CANCEL ASSESSMENT — {cancelAssessment.risk} RISK</div>
                     <div style={{ fontSize:13, color:'#e8eaed', lineHeight:1.7, marginBottom:20 }}>{cancelAssessment.message}</div>
                     {cancelAssessment.type === 'clean_cancel' && (<div style={{ display:'flex', gap:8 }}><button onClick={() => executeCancelAction(cancelAssessment.approvalId,'clean_cancel')} style={{ flex:1, padding:'10px', background:'#ef4444', border:'none', borderRadius:6, color:'#fff', fontWeight:600, fontSize:12, cursor:'pointer', fontFamily:'monospace' }}>CONFIRM CANCEL</button><button onClick={() => setCancelAssessment(null)} style={{ padding:'10px 16px', background:'transparent', border:'1px solid rgba(255,255,255,0.12)', borderRadius:6, color:'#8a9099', fontSize:12, cursor:'pointer', fontFamily:'monospace' }}>KEEP ACTION</button></div>)}
                     {cancelAssessment.type === 'disregard_cancel' && (<div><div style={{ padding:'10px 12px', background:'rgba(245,158,11,0.08)', border:'1px solid rgba(245,158,11,0.2)', borderRadius:6, fontSize:12, color:'#f59e0b', fontFamily:'monospace', marginBottom:14 }}>Will send to driver: "DISREGARD previous route instruction."</div><div style={{ display:'flex', gap:8 }}><button onClick={() => executeCancelAction(cancelAssessment.approvalId,'disregard')} style={{ flex:1, padding:'10px', background:'#f59e0b', border:'none', borderRadius:6, color:'#000', fontWeight:600, fontSize:12, cursor:'pointer', fontFamily:'monospace' }}>SEND DISREGARD + CANCEL</button><button onClick={() => setCancelAssessment(null)} style={{ padding:'10px 16px', background:'transparent', border:'1px solid rgba(255,255,255,0.12)', borderRadius:6, color:'#8a9099', fontSize:12, cursor:'pointer', fontFamily:'monospace' }}>KEEP ACTION</button></div></div>)}
@@ -2434,10 +2435,10 @@ export default function DashboardPage() {
                 <div style={{ gridColumn:'1 / -1', marginBottom:4 }}>
                   <div style={{ fontSize:9, color:'#4a5260', fontFamily:'monospace', letterSpacing:'0.08em', marginBottom:10 }}>// ACTIVE FLEET — DRIVERS CURRENTLY ON SHIFT</div>
                   {activeDriversLoading && (
-                    <div style={{ fontSize:11, color:'#4a5260', padding:'12px 14px', background:'#111418', borderRadius:8 }}>Loading active drivers...</div>
+                    <div style={{ fontSize:11, color:'#4a5260', padding:'12px 14px', background:'#0f1826', borderRadius:8 }}>Loading active drivers...</div>
                   )}
                   {!activeDriversLoading && activeDrivers.length === 0 && (
-                    <div style={{ fontSize:11, color:'#4a5260', padding:'12px 14px', background:'#111418', border:'1px solid rgba(255,255,255,0.06)', borderRadius:8 }}>
+                    <div style={{ fontSize:11, color:'#4a5260', padding:'12px 14px', background:'#0f1826', border:'1px solid rgba(255,255,255,0.06)', borderRadius:8 }}>
                       No drivers currently on shift. Have a driver start their shift in the driver app first.
                     </div>
                   )}
@@ -2447,10 +2448,10 @@ export default function DashboardPage() {
                         const isSelected = selectedTestVehicle?.vehicle_reg === driver.vehicle_reg
                         const cargoColor = driver.cargo_type?.includes('pharma') ? '#a855f7' : driver.cargo_type?.includes('chilled') || driver.cargo_type?.includes('frozen') ? '#3b82f6' : '#4a5260'
                         return (
-                          <div key={i} onClick={() => selectTestVehicle(driver)} style={{ padding:'12px 16px', background: isSelected ? 'rgba(0,229,176,0.06)' : '#111418', border: isSelected ? '1px solid rgba(0,229,176,0.35)' : '1px solid rgba(255,255,255,0.08)', borderRadius:9, cursor:'pointer', minWidth:220, flex:'1 1 220px', transition:'all 0.15s' }}>
+                          <div key={i} onClick={() => selectTestVehicle(driver)} style={{ padding:'12px 16px', background: isSelected ? 'rgba(245,166,35,0.06)' : '#0f1826', border: isSelected ? '1px solid rgba(245,166,35,0.35)' : '1px solid rgba(255,255,255,0.08)', borderRadius:9, cursor:'pointer', minWidth:220, flex:'1 1 220px', transition:'all 0.15s' }}>
                             <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:6 }}>
-                              <span style={{ fontSize:13, fontWeight:700, color: isSelected ? '#00e5b0' : '#e8eaed', fontFamily:'monospace', letterSpacing:1 }}>{driver.vehicle_reg}</span>
-                              {isSelected && <span style={{ fontSize:9, color:'#00e5b0', fontFamily:'monospace', letterSpacing:1 }}>✓ SELECTED</span>}
+                              <span style={{ fontSize:13, fontWeight:700, color: isSelected ? '#f5a623' : '#e8eaed', fontFamily:'monospace', letterSpacing:1 }}>{driver.vehicle_reg}</span>
+                              {isSelected && <span style={{ fontSize:9, color:'#f5a623', fontFamily:'monospace', letterSpacing:1 }}>✓ SELECTED</span>}
                             </div>
                             <div style={{ fontSize:11, color:'#8a9099', marginBottom:4 }}>{driver.driver_name}</div>
                             {driver.last_known_location && (
@@ -2464,7 +2465,7 @@ export default function DashboardPage() {
                             {driver.current_route && (
                               <div style={{ fontSize:10, color:'#4a5260', marginTop:4 }}>→ {driver.current_route}</div>
                             )}
-                            <div style={{ fontSize:9, color: isSelected ? '#00e5b0' : '#4a5260', marginTop:6, fontFamily:'monospace' }}>
+                            <div style={{ fontSize:9, color: isSelected ? '#f5a623' : '#4a5260', marginTop:6, fontFamily:'monospace' }}>
                               {isSelected ? '✓ Events filtered for this vehicle · payload injected' : 'Select → auto-filters relevant events'}
                             </div>
                           </div>
@@ -2511,7 +2512,7 @@ export default function DashboardPage() {
                     <div style={{ fontSize:9, fontFamily:'monospace', color:'#4a5260', letterSpacing:'0.08em', marginBottom:8 }}>
                       SELECT EVENT TYPE
                       {relevantEvents && selectedTestVehicle && (
-                        <span style={{ marginLeft:8, color:'#00e5b0' }}>· filtered for {selectedTestVehicle.cargo_type || selectedTestVehicle.vehicle_reg}</span>
+                        <span style={{ marginLeft:8, color:'#f5a623' }}>· filtered for {selectedTestVehicle.cargo_type || selectedTestVehicle.vehicle_reg}</span>
                       )}
                       {relevantEvents && <button onClick={() => setRelevantEvents(null)} style={{ marginLeft:8, background:'none', border:'none', color:'#4a5260', fontSize:9, cursor:'pointer', fontFamily:'monospace' }}>show all ×</button>}
                     </div>
@@ -2548,12 +2549,12 @@ export default function DashboardPage() {
                             style={{
                               padding:'5px 11px', borderRadius:5, fontFamily:'monospace', transition:'all 0.15s', fontSize:11, cursor: isRelevant ? 'pointer' : 'not-allowed',
                               border: isSelected ? `1px solid ${sys.color}80` : isTopPick ? `1px solid ${sys.color}50` : '1px solid rgba(255,255,255,0.07)',
-                              background: isSelected ? `${sys.color}12` : isTopPick ? `${sys.color}08` : '#111418',
+                              background: isSelected ? `${sys.color}12` : isTopPick ? `${sys.color}08` : '#0f1826',
                               color: isSelected ? sys.color : isRelevant ? '#8a9099' : '#2a3040',
                               opacity: isRelevant ? 1 : 0.35,
                               position:'relative'
                             }}>
-                            {isTopPick && !isSelected && <span style={{ position:'absolute', top:-4, right:-4, width:6, height:6, borderRadius:'50%', background:'#00e5b0' }} />}
+                            {isTopPick && !isSelected && <span style={{ position:'absolute', top:-4, right:-4, width:6, height:6, borderRadius:'50%', background:'#f5a623' }} />}
                             {evt.label}
                           </button>
                         )
@@ -2565,7 +2566,7 @@ export default function DashboardPage() {
                   {evtConfig && (
                     <div style={{ marginBottom:14 }}>
                       <div style={{ fontSize:9, fontFamily:'monospace', color:'#4a5260', letterSpacing:'0.08em', marginBottom:8 }}>PAYLOAD — edit fields then fire</div>
-                      <div style={{ background:'#111418', border:'1px solid rgba(255,255,255,0.08)', borderRadius:8, overflow:'hidden' }}>
+                      <div style={{ background:'#0f1826', border:'1px solid rgba(255,255,255,0.08)', borderRadius:8, overflow:'hidden' }}>
                         {Object.entries(currentPayload).map(([key, val], i, arr) => (
                           <div key={key} style={{ display:'flex', alignItems:'center', padding:'8px 12px', borderBottom: i < arr.length-1 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
                             <span style={{ fontSize:10, fontFamily:'monospace', color:'#4a5260', width:160, flexShrink:0 }}>{key.replace(/_/g,' ')}</span>
@@ -2586,7 +2587,7 @@ export default function DashboardPage() {
                   {/* Fire button */}
                   <div style={{ display:'flex', gap:8, marginBottom:14 }}>
                     <button onClick={fireWebhook} disabled={whFiring}
-                      style={{ flex:1, padding:'12px', background: whFiring ? '#111418' : sys?.color || '#00e5b0', border: whFiring ? `1px solid ${sys?.color||'#00e5b0'}40` : 'none', borderRadius:7, color: whFiring ? (sys?.color||'#00e5b0') : '#000', fontWeight:700, fontSize:13, cursor: whFiring ? 'default' : 'pointer', fontFamily:'monospace', letterSpacing:'0.04em', transition:'all 0.2s' }}>
+                      style={{ flex:1, padding:'12px', background: whFiring ? '#0f1826' : sys?.color || '#f5a623', border: whFiring ? `1px solid ${sys?.color||'#f5a623'}40` : 'none', borderRadius:7, color: whFiring ? (sys?.color||'#f5a623') : '#000', fontWeight:700, fontSize:13, cursor: whFiring ? 'default' : 'pointer', fontFamily:'monospace', letterSpacing:'0.04em', transition:'all 0.2s' }}>
                       {whFiring ? (
                         <span style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:8 }}>
                           <span style={{ width:12, height:12, border:'2px solid currentColor', borderTopColor:'transparent', borderRadius:'50%', display:'inline-block', animation:'spin 0.8s linear infinite' }} />
@@ -2602,16 +2603,16 @@ export default function DashboardPage() {
 
                   {/* Result */}
                   {whResult && !whFiring && (
-                    <div style={{ border: whResult.error ? '1px solid rgba(239,68,68,0.25)' : `1px solid ${SEV_C[whResult.severity]||'#00e5b0'}30`, borderRadius:8, overflow:'hidden' }}>
+                    <div style={{ border: whResult.error ? '1px solid rgba(239,68,68,0.25)' : `1px solid ${SEV_C[whResult.severity]||'#f5a623'}30`, borderRadius:8, overflow:'hidden' }}>
                       {/* Result header */}
-                      <div style={{ padding:'10px 14px', background: whResult.error ? 'rgba(239,68,68,0.08)' : `${SEV_BG2[whResult.severity]||'rgba(0,229,176,0.06)'}`, display:'flex', alignItems:'center', gap:10, flexWrap:'wrap' }}>
+                      <div style={{ padding:'10px 14px', background: whResult.error ? 'rgba(239,68,68,0.08)' : `${SEV_BG2[whResult.severity]||'rgba(245,166,35,0.06)'}`, display:'flex', alignItems:'center', gap:10, flexWrap:'wrap' }}>
                         {whResult.error ? (
                           <span style={{ fontSize:11, fontFamily:'monospace', color:'#ef4444' }}>✗ ERROR — {whResult.error}</span>
                         ) : (
                           <>
-                            <span style={{ fontSize:11, fontFamily:'monospace', color: SEV_C[whResult.severity]||'#00e5b0', fontWeight:700, padding:'2px 8px', borderRadius:4, background:`${SEV_C[whResult.severity]||'#00e5b0'}15`, border:`1px solid ${SEV_C[whResult.severity]||'#00e5b0'}30` }}>{whResult.severity}</span>
-                            {whResult.financial_impact > 0 && <span style={{ fontSize:11, fontFamily:'monospace', color:'#00e5b0' }}>£{whResult.financial_impact.toLocaleString()}</span>}
-                            <span style={{ fontSize:10, fontFamily:'monospace', color: whResult.sms_sent ? '#00e5b0' : '#f59e0b' }}>
+                            <span style={{ fontSize:11, fontFamily:'monospace', color: SEV_C[whResult.severity]||'#f5a623', fontWeight:700, padding:'2px 8px', borderRadius:4, background:`${SEV_C[whResult.severity]||'#f5a623'}15`, border:`1px solid ${SEV_C[whResult.severity]||'#f5a623'}30` }}>{whResult.severity}</span>
+                            {whResult.financial_impact > 0 && <span style={{ fontSize:11, fontFamily:'monospace', color:'#f5a623' }}>£{whResult.financial_impact.toLocaleString()}</span>}
+                            <span style={{ fontSize:10, fontFamily:'monospace', color: whResult.sms_sent ? '#f5a623' : '#f59e0b' }}>
                               {whResult.sms_sent ? '✓ SMS FIRED TO OPS' : whResult.simulated ? '◎ SIMULATED — no ops phone' : '✗ SMS FAILED'}
                             </span>
                           </>
@@ -2647,7 +2648,7 @@ export default function DashboardPage() {
 
                   {whLogLoading && whLog.length === 0 && (
                     <div style={{ display:'flex', alignItems:'center', gap:8, padding:'16px 0' }}>
-                      <div style={{ width:14, height:14, border:'2px solid #00e5b0', borderTopColor:'transparent', borderRadius:'50%', animation:'spin 0.8s linear infinite' }} />
+                      <div style={{ width:14, height:14, border:'2px solid #f5a623', borderTopColor:'transparent', borderRadius:'50%', animation:'spin 0.8s linear infinite' }} />
                       <span style={{ fontSize:11, color:'#4a5260', fontFamily:'monospace' }}>Loading log...</span>
                     </div>
                   )}
@@ -2659,7 +2660,7 @@ export default function DashboardPage() {
                     const timeStr = entry.created_at ? new Date(entry.created_at).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'}) : ''
                     const dateStr = entry.created_at ? new Date(entry.created_at).toLocaleDateString('en-GB',{day:'numeric',month:'short'}) : ''
                     return (
-                      <div key={entry.id} style={{ padding:'10px 12px', background:'#111418', borderRadius:7, border:'1px solid rgba(255,255,255,0.06)', marginBottom:6 }}>
+                      <div key={entry.id} style={{ padding:'10px 12px', background:'#0f1826', borderRadius:7, border:'1px solid rgba(255,255,255,0.06)', marginBottom:6 }}>
                         <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:5, flexWrap:'wrap' }}>
                           {/* System badge */}
                           <span style={{ fontSize:10, fontFamily:'monospace', color:sysColor, background:`${sysColor}12`, border:`1px solid ${sysColor}25`, padding:'2px 7px', borderRadius:4 }}>
@@ -2673,10 +2674,10 @@ export default function DashboardPage() {
                           )}
                           {/* Financial impact */}
                           {entry.financial_impact > 0 && (
-                            <span style={{ fontSize:10, fontFamily:'monospace', color:'#00e5b0' }}>£{Number(entry.financial_impact).toLocaleString()}</span>
+                            <span style={{ fontSize:10, fontFamily:'monospace', color:'#f5a623' }}>£{Number(entry.financial_impact).toLocaleString()}</span>
                           )}
                           {/* SMS status */}
-                          <span style={{ fontSize:9, fontFamily:'monospace', color: entry.sms_fired ? '#00e5b0' : entry.simulated ? '#4a5260' : '#f59e0b', marginLeft:'auto' }}>
+                          <span style={{ fontSize:9, fontFamily:'monospace', color: entry.sms_fired ? '#f5a623' : entry.simulated ? '#4a5260' : '#f59e0b', marginLeft:'auto' }}>
                             {entry.sms_fired ? '✓ SMS SENT' : entry.simulated ? '◎ SIM' : '— SMS NOT SENT'}
                           </span>
                         </div>
