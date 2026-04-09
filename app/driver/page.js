@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from 'react'
 
 const PROGRESS_STEPS = [
   { id:'arrived_collection', label:'Arrived at Collection', icon:'📍', color:'#3b82f6', status:'at_collection' },
-  { id:'loading_complete',   label:'Loaded & Secured',     icon:'✅', color:'#00e5b0', status:'loaded' },
+  { id:'loading_complete',   label:'Loaded & Secured',     icon:'✅', color:'#f5a623', status:'loaded' },
   { id:'arrived_delivery',   label:'Arrived at Customer',  icon:'🏭', color:'#3b82f6', status:'at_customer' },
 ]
 
@@ -79,9 +79,9 @@ const POSTSHIFT_CHECKS = [
 ]
 
 const STATUS_COLORS = {
-  'on-track':       { dot:'#00e5b0', label:'ON TRACK',       border:'rgba(0,229,176,0.2)',  bg:'rgba(0,229,176,0.03)' },
+  'on-track':       { dot:'#f5a623', label:'ON TRACK',       border:'rgba(245,166,35,0.2)',  bg:'rgba(245,166,35,0.03)' },
   'at_collection':  { dot:'#3b82f6', label:'AT COLLECTION',  border:'rgba(59,130,246,0.2)', bg:'rgba(59,130,246,0.03)' },
-  'loaded':         { dot:'#00e5b0', label:'LOADED',         border:'rgba(0,229,176,0.2)',  bg:'rgba(0,229,176,0.03)' },
+  'loaded':         { dot:'#f5a623', label:'LOADED',         border:'rgba(245,166,35,0.2)',  bg:'rgba(245,166,35,0.03)' },
   'at_customer':    { dot:'#3b82f6', label:'AT CUSTOMER',    border:'rgba(59,130,246,0.2)', bg:'rgba(59,130,246,0.03)' },
   'part_delivered': { dot:'#f59e0b', label:'PART DELIVERED', border:'rgba(245,158,11,0.25)',bg:'rgba(245,158,11,0.04)' },
   'at_risk':        { dot:'#ef4444', label:'AT RISK',        border:'rgba(239,68,68,0.3)',  bg:'rgba(239,68,68,0.04)' },
@@ -95,8 +95,8 @@ const SEV = {
   CRITICAL: { bg:'rgba(239,68,68,0.12)',  border:'rgba(239,68,68,0.4)',  color:'#ef4444', icon:'🚨' },
   HIGH:     { bg:'rgba(245,158,11,0.12)', border:'rgba(245,158,11,0.4)', color:'#f59e0b', icon:'⚠️' },
   MEDIUM:   { bg:'rgba(59,130,246,0.1)',  border:'rgba(59,130,246,0.35)',color:'#3b82f6', icon:'ℹ️' },
-  LOW:      { bg:'rgba(0,229,176,0.08)',  border:'rgba(0,229,176,0.3)',  color:'#00e5b0', icon:'✅' },
-  OK:       { bg:'rgba(0,229,176,0.08)',  border:'rgba(0,229,176,0.3)',  color:'#00e5b0', icon:'✅' },
+  LOW:      { bg:'rgba(245,166,35,0.08)',  border:'rgba(245,166,35,0.3)',  color:'#f5a623', icon:'✅' },
+  OK:       { bg:'rgba(245,166,35,0.08)',  border:'rgba(245,166,35,0.3)',  color:'#f5a623', icon:'✅' },
 }
 
 export default function DriverApp() {
@@ -187,6 +187,24 @@ export default function DriverApp() {
         if (hoursAgo > 16) {
           let lastAlertTime = null
           if (savedAlert) { try { lastAlertTime = JSON.parse(savedAlert).time } catch {} }
+
+          // Auto-expire: immediately mark Supabase driver_progress rows as completed
+          // Prevents ghost driver appearing in ops Live Fleet while stale session screen is shown
+          // Driver can still tap "Continue previous session" for overnight/trunking runs
+          const expiredInfo = (() => { try { return JSON.parse(saved) } catch { return null } })()
+          if (expiredInfo?.clientId) {
+            fetch('/api/driver/end-shift', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                client_id:    expiredInfo.clientId,
+                vehicle_reg:  expiredInfo.vehicleReg || null,
+                driver_phone: expiredInfo.phone || null,
+                reason: 'shift_expired_16h'
+              })
+            }).catch(() => {})
+          }
+
           setStaleSession({ startedAt: new Date(parseInt(shiftStartedAt)).toLocaleString('en-GB',{weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}), hoursAgo: Math.round(hoursAgo), lastAlertTime })
           setLoading(false); return
         }
@@ -765,10 +783,10 @@ export default function DriverApp() {
     const ready = driverInfo.name && driverInfo.phone && driverInfo.vehicleType && driverInfo.clientId && driverInfo.vehicleReg
 
     return (
-    <div style={{minHeight:'100vh',background:'#0a0c0e',color:'#e8eaed',fontFamily:'IBM Plex Sans,sans-serif',display:'flex',alignItems:'center',justifyContent:'center',padding:24}}>
+    <div style={{minHeight:'100vh',background:'#080c14',color:'#e8eaed',fontFamily:'Barlow,sans-serif',display:'flex',alignItems:'center',justifyContent:'center',padding:24}}>
       <div style={{width:'100%',maxWidth:380}}>
         <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:24}}>
-          <div style={{width:36,height:36,background:'#00e5b0',borderRadius:7,display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,fontWeight:700,color:'#000',fontFamily:'monospace'}}>DH</div>
+          <div style={{width:36,height:36,background:'#f5a623',clipPath:'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)'}} />
           <div>
             <div style={{fontSize:17,fontWeight:600}}>DisruptionHub</div>
             <div style={{fontSize:12,color:'#4a5260'}}>Driver App</div>
@@ -786,7 +804,7 @@ export default function DriverApp() {
             value={driverInfo.name}
             onChange={e=>setDriverInfo(p=>({...p,name:e.target.value}))}
             placeholder='e.g. Carl Hughes'
-            style={{width:'100%',padding:'13px',background:'#111418',border:'1px solid rgba(255,255,255,0.1)',borderRadius:8,color:'#e8eaed',fontSize:16,outline:'none',boxSizing:'border-box'}}/>
+            style={{width:'100%',padding:'13px',background:'#0f1826',border:'1px solid rgba(255,255,255,0.1)',borderRadius:8,color:'#e8eaed',fontSize:16,outline:'none',boxSizing:'border-box'}}/>
         </div>
 
         {/* Phone — pre-filled from history */}
@@ -797,7 +815,7 @@ export default function DriverApp() {
             onChange={e=>setDriverInfo(p=>({...p,phone:e.target.value}))}
             placeholder='e.g. 07810 499983'
             inputMode='tel'
-            style={{width:'100%',padding:'13px',background:'#111418',border:'1px solid rgba(255,255,255,0.1)',borderRadius:8,color:'#e8eaed',fontSize:16,outline:'none',boxSizing:'border-box'}}/>
+            style={{width:'100%',padding:'13px',background:'#0f1826',border:'1px solid rgba(255,255,255,0.1)',borderRadius:8,color:'#e8eaed',fontSize:16,outline:'none',boxSizing:'border-box'}}/>
         </div>
 
         {/* Vehicle reg — dropdown if history exists, plain input if not */}
@@ -817,7 +835,7 @@ export default function DriverApp() {
                     setDriverInfo(p=>({...p,vehicleReg:val,vehicleType:found?.type||p.vehicleType}))
                   }
                 }}
-                style={{width:'100%',padding:'13px',background:'#111418',border:'1px solid rgba(255,255,255,0.1)',borderRadius:8,color:driverInfo.vehicleReg?'#e8eaed':'#4a5260',fontSize:16,outline:'none',boxSizing:'border-box',cursor:'pointer'}}>
+                style={{width:'100%',padding:'13px',background:'#0f1826',border:'1px solid rgba(255,255,255,0.1)',borderRadius:8,color:driverInfo.vehicleReg?'#e8eaed':'#4a5260',fontSize:16,outline:'none',boxSizing:'border-box',cursor:'pointer'}}>
                 <option value=''>Select vehicle...</option>
                 {driverHistory.regs.map(r=>(
                   <option key={r.reg} value={r.reg}>
@@ -827,7 +845,7 @@ export default function DriverApp() {
                 <option value='__new__'>＋ Different registration...</option>
               </select>
               {driverInfo.vehicleReg && (
-                <div style={{fontSize:11,color:'#00e5b0',marginTop:5,fontFamily:'monospace'}}>
+                <div style={{fontSize:11,color:'#f5a623',marginTop:5,fontFamily:'monospace'}}>
                   ✓ Vehicle type auto-selected — check below and change if needed
                 </div>
               )}
@@ -839,7 +857,7 @@ export default function DriverApp() {
                 onChange={e=>setDriverInfo(p=>({...p,vehicleReg:e.target.value.toUpperCase()}))}
                 placeholder='e.g. BK21 XYZ'
                 autoCapitalize='characters'
-                style={{width:'100%',padding:'13px',background:'#111418',border:'1px solid rgba(0,229,176,0.3)',borderRadius:8,color:'#e8eaed',fontSize:16,outline:'none',boxSizing:'border-box'}}/>
+                style={{width:'100%',padding:'13px',background:'#0f1826',border:'1px solid rgba(245,166,35,0.3)',borderRadius:8,color:'#e8eaed',fontSize:16,outline:'none',boxSizing:'border-box'}}/>
               {hasHistory && (
                 <button onClick={()=>{setRegInputMode('dropdown');setDriverInfo(p=>({...p,vehicleReg:''}))}}
                   style={{marginTop:6,background:'none',border:'none',color:'#4a5260',fontSize:12,cursor:'pointer',padding:0}}>
@@ -856,9 +874,9 @@ export default function DriverApp() {
           <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:7}}>
             {VEHICLE_TYPES.map(v=>(
               <button key={v.id} onClick={()=>setDriverInfo(p=>({...p,vehicleType:v.id}))}
-                style={{padding:'10px 6px',borderRadius:8,border:`1px solid ${driverInfo.vehicleType===v.id?'#00e5b0':'rgba(255,255,255,0.08)'}`,background:driverInfo.vehicleType===v.id?'rgba(0,229,176,0.1)':'#111418',display:'flex',flexDirection:'column',alignItems:'center',gap:4,cursor:'pointer'}}>
+                style={{padding:'10px 6px',borderRadius:8,border:`1px solid ${driverInfo.vehicleType===v.id?'#f5a623':'rgba(255,255,255,0.08)'}`,background:driverInfo.vehicleType===v.id?'rgba(245,166,35,0.1)':'#0f1826',display:'flex',flexDirection:'column',alignItems:'center',gap:4,cursor:'pointer'}}>
                 <span style={{fontSize:18}}>{v.icon}</span>
-                <span style={{fontSize:10,color:driverInfo.vehicleType===v.id?'#00e5b0':'#8a9099',textAlign:'center',lineHeight:1.2}}>{v.label}</span>
+                <span style={{fontSize:10,color:driverInfo.vehicleType===v.id?'#f5a623':'#8a9099',textAlign:'center',lineHeight:1.2}}>{v.label}</span>
               </button>
             ))}
           </div>
@@ -871,12 +889,12 @@ export default function DriverApp() {
             value={driverInfo.clientId}
             onChange={e=>setDriverInfo(p=>({...p,clientId:e.target.value}))}
             placeholder='Given by your manager'
-            style={{width:'100%',padding:'13px',background:'#111418',border:'1px solid rgba(255,255,255,0.1)',borderRadius:8,color:'#e8eaed',fontSize:16,outline:'none',boxSizing:'border-box'}}/>
+            style={{width:'100%',padding:'13px',background:'#0f1826',border:'1px solid rgba(255,255,255,0.1)',borderRadius:8,color:'#e8eaed',fontSize:16,outline:'none',boxSizing:'border-box'}}/>
         </div>
 
         {!ready && <div style={{fontSize:12,color:'#4a5260',textAlign:'center',marginBottom:10}}>All fields required to continue</div>}
         <button onClick={saveDriverInfo} disabled={!ready}
-          style={{width:'100%',padding:15,background:ready?'#00e5b0':'rgba(0,229,176,0.3)',border:'none',borderRadius:10,color:'#000',fontWeight:700,fontSize:16,cursor:ready?'pointer':'default'}}>
+          style={{width:'100%',padding:15,background:ready?'#f5a623':'rgba(245,166,35,0.3)',border:'none',borderRadius:10,color:'#000',fontWeight:700,fontSize:16,cursor:ready?'pointer':'default'}}>
           {isReturning ? 'Start shift →' : 'Get started →'}
         </button>
       </div>
@@ -885,20 +903,20 @@ export default function DriverApp() {
 
   // ── STALE SESSION ─────────────────────────────────────────────────────────
   if (setupDone && staleSession) return (
-    <div style={{minHeight:'100vh',background:'#0a0c0e',color:'#e8eaed',fontFamily:'IBM Plex Sans,sans-serif',display:'flex',alignItems:'center',justifyContent:'center',padding:24}}>
+    <div style={{minHeight:'100vh',background:'#080c14',color:'#e8eaed',fontFamily:'Barlow,sans-serif',display:'flex',alignItems:'center',justifyContent:'center',padding:24}}>
       <div style={{width:'100%',maxWidth:380}}>
         <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:28}}>
-          <div style={{width:32,height:32,background:'#00e5b0',borderRadius:6,display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,fontWeight:700,color:'#000',fontFamily:'monospace'}}>DH</div>
+          <div style={{width:32,height:32,background:'#f5a623',clipPath:'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)'}} />
           <div><div style={{fontSize:15,fontWeight:600}}>{driverInfo.name}</div><div style={{fontSize:11,color:'#4a5260',fontFamily:'monospace'}}>{driverInfo.vehicleReg}</div></div>
         </div>
         <div style={{padding:'18px',background:'rgba(245,158,11,0.06)',border:'1px solid rgba(245,158,11,0.25)',borderRadius:12,marginBottom:20}}>
-          <div style={{fontSize:12,color:'#f59e0b',fontFamily:'monospace',fontWeight:700,marginBottom:6}}>PREVIOUS SESSION FOUND</div>
+          <div style={{fontSize:12,color:'#f59e0b',fontFamily:'monospace',fontWeight:700,marginBottom:6}}>SHIFT EXPIRED</div>
           <div style={{fontSize:15,color:'#e8eaed',fontWeight:500,marginBottom:3}}>Started {staleSession.startedAt}</div>
-          <div style={{fontSize:13,color:'#8a9099'}}>{staleSession.hoursAgo} hours ago</div>
+          <div style={{fontSize:13,color:'#8a9099'}}>{staleSession.hoursAgo} hours ago — automatically signed out</div>
           {staleSession.lastAlertTime&&<div style={{fontSize:12,color:'#f59e0b',marginTop:5}}>⚠ Last alert at {staleSession.lastAlertTime}</div>}
         </div>
-        <div style={{fontSize:13,color:'#8a9099',marginBottom:20,lineHeight:1.6}}>Starting a new shift or continuing from before?</div>
-        <button onClick={clearSession} style={{width:'100%',padding:'15px',background:'#00e5b0',border:'none',borderRadius:10,color:'#000',fontWeight:700,fontSize:16,cursor:'pointer',marginBottom:10}}>Start new shift</button>
+        <div style={{fontSize:13,color:'#8a9099',marginBottom:20,lineHeight:1.6}}>Your previous shift has expired. Tap below to start fresh, or continue if you're on a trunking or overnight run.</div>
+        <button onClick={clearSession} style={{width:'100%',padding:'15px',background:'#f5a623',border:'none',borderRadius:10,color:'#000',fontWeight:700,fontSize:16,cursor:'pointer',marginBottom:10}}>Start new shift</button>
         <button onClick={resumeSession} style={{width:'100%',padding:'14px',background:'transparent',border:'1px solid rgba(255,255,255,0.1)',borderRadius:10,color:'#8a9099',fontWeight:500,fontSize:15,cursor:'pointer'}}>Continue previous session</button>
         <div style={{marginTop:14,fontSize:11,color:'#4a5260',textAlign:'center'}}>Overnight or trunking drivers — tap Continue.</div>
       </div>
@@ -911,10 +929,10 @@ export default function DriverApp() {
     const allChecked = checks.every(c=>preShiftChecks[c.id]!==undefined)
     const hasFails = checks.some(c=>preShiftChecks[c.id]===false)
     return (
-      <div style={{minHeight:'100vh',background:'#0a0c0e',color:'#e8eaed',fontFamily:'IBM Plex Sans,sans-serif',paddingBottom:40,touchAction:'manipulation'}}>
+      <div style={{minHeight:'100vh',background:'#080c14',color:'#e8eaed',fontFamily:'Barlow,sans-serif',paddingBottom:40,touchAction:'manipulation'}}>
         <div style={{padding:'14px 16px',display:'flex',alignItems:'center',justifyContent:'space-between',borderBottom:'1px solid rgba(255,255,255,0.06)'}}>
           <div style={{display:'flex',alignItems:'center',gap:10}}>
-            <div style={{width:26,height:26,background:'#00e5b0',borderRadius:5,display:'flex',alignItems:'center',justifyContent:'center',fontSize:9,fontWeight:700,color:'#000',fontFamily:'monospace'}}>DH</div>
+            <div style={{width:26,height:26,background:'#f5a623',clipPath:'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)'}} />
             <div><div style={{fontSize:13,fontWeight:500}}>{driverInfo.name}</div><div style={{fontSize:10,color:'#4a5260',fontFamily:'monospace'}}>{driverInfo.vehicleReg} · {VEHICLE_TYPES.find(v=>v.id===driverInfo.vehicleType)?.label||''}</div></div>
           </div>
           {view==='preshift'&&<button onClick={()=>setView('run')} style={{background:'none',border:'none',color:'#4a5260',fontSize:13,cursor:'pointer'}}>Skip →</button>}
@@ -925,11 +943,11 @@ export default function DriverApp() {
           {checks.map(check=>{
             const passed=preShiftChecks[check.id]; const failed=preShiftChecks[check.id]===false
             return (
-              <div key={check.id} style={{display:'flex',alignItems:'center',gap:12,padding:'15px',background:failed?'rgba(239,68,68,0.06)':passed?'rgba(0,229,176,0.04)':'#111418',border:`1px solid ${failed?'rgba(239,68,68,0.3)':passed?'rgba(0,229,176,0.2)':'rgba(255,255,255,0.06)'}`,borderRadius:10,marginBottom:8,transition:'background 0s,border 0s'}}>
+              <div key={check.id} style={{display:'flex',alignItems:'center',gap:12,padding:'15px',background:failed?'rgba(239,68,68,0.06)':passed?'rgba(245,166,35,0.04)':'#0f1826',border:`1px solid ${failed?'rgba(239,68,68,0.3)':passed?'rgba(245,166,35,0.2)':'rgba(255,255,255,0.06)'}`,borderRadius:10,marginBottom:8,transition:'background 0s,border 0s'}}>
                 <span style={{fontSize:22,flexShrink:0}}>{check.icon}</span>
-                <div style={{flex:1,fontSize:15,color:failed?'#ef4444':passed?'#00e5b0':'#e8eaed',fontWeight:passed||failed?500:400}}>{check.label}</div>
+                <div style={{flex:1,fontSize:15,color:failed?'#ef4444':passed?'#f5a623':'#e8eaed',fontWeight:passed||failed?500:400}}>{check.label}</div>
                 <div style={{display:'flex',gap:8}}>
-                  <button onClick={()=>setPreShiftChecks(p=>({...p,[check.id]:true}))} style={{width:52,height:52,borderRadius:8,border:`2px solid ${passed?'#00e5b0':'rgba(0,229,176,0.3)'}`,background:passed?'rgba(0,229,176,0.15)':'transparent',color:passed?'#00e5b0':'#4a5260',fontSize:22,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',touchAction:'manipulation',WebkitTapHighlightColor:'transparent',transition:'none',userSelect:'none'}}>✓</button>
+                  <button onClick={()=>setPreShiftChecks(p=>({...p,[check.id]:true}))} style={{width:52,height:52,borderRadius:8,border:`2px solid ${passed?'#f5a623':'rgba(245,166,35,0.3)'}`,background:passed?'rgba(245,166,35,0.15)':'transparent',color:passed?'#f5a623':'#4a5260',fontSize:22,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',touchAction:'manipulation',WebkitTapHighlightColor:'transparent',transition:'none',userSelect:'none'}}>✓</button>
                   <button onClick={()=>setPreShiftChecks(p=>({...p,[check.id]:false}))} style={{width:52,height:52,borderRadius:8,border:`2px solid ${failed?'#ef4444':'rgba(239,68,68,0.2)'}`,background:failed?'rgba(239,68,68,0.12)':'transparent',color:failed?'#ef4444':'#4a5260',fontSize:22,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',touchAction:'manipulation',WebkitTapHighlightColor:'transparent',transition:'none',userSelect:'none'}}>✗</button>
                 </div>
               </div>
@@ -951,7 +969,7 @@ export default function DriverApp() {
             </div>
           )}
           {allChecked&&!defectBlocked&&(
-            <button onClick={startShift} style={{width:'100%',padding:16,background:'#00e5b0',border:'none',borderRadius:10,color:'#000',fontWeight:700,fontSize:16,cursor:'pointer',marginTop:14}}>
+            <button onClick={startShift} style={{width:'100%',padding:16,background:'#f5a623',border:'none',borderRadius:10,color:'#000',fontWeight:700,fontSize:16,cursor:'pointer',marginTop:14}}>
               ✓ Start shift
             </button>
           )}
@@ -963,7 +981,7 @@ export default function DriverApp() {
 
   // ── POST-SHIFT CHECK ──────────────────────────────────────────────────────
   if (showPostShift) return (
-    <div style={{minHeight:'100vh',background:'#0a0c0e',color:'#e8eaed',fontFamily:'IBM Plex Sans,sans-serif',paddingBottom:40}}>
+    <div style={{minHeight:'100vh',background:'#080c14',color:'#e8eaed',fontFamily:'Barlow,sans-serif',paddingBottom:40}}>
       <div style={{padding:'14px 16px',borderBottom:'1px solid rgba(255,255,255,0.06)'}}>
         <div style={{fontSize:16,fontWeight:600}}>Return Check</div>
         <div style={{fontSize:12,color:'#4a5260',marginTop:2}}>Vehicle walkaround before handing back</div>
@@ -972,11 +990,11 @@ export default function DriverApp() {
         {POSTSHIFT_CHECKS.map(check=>{
           const passed=postShiftChecks[check.id]; const failed=postShiftChecks[check.id]===false
           return (
-            <div key={check.id} style={{display:'flex',alignItems:'center',gap:12,padding:'14px',background:failed?'rgba(239,68,68,0.06)':passed?'rgba(0,229,176,0.04)':'#111418',border:`1px solid ${failed?'rgba(239,68,68,0.3)':passed?'rgba(0,229,176,0.2)':'rgba(255,255,255,0.06)'}`,borderRadius:10,marginBottom:8}}>
+            <div key={check.id} style={{display:'flex',alignItems:'center',gap:12,padding:'14px',background:failed?'rgba(239,68,68,0.06)':passed?'rgba(245,166,35,0.04)':'#0f1826',border:`1px solid ${failed?'rgba(239,68,68,0.3)':passed?'rgba(245,166,35,0.2)':'rgba(255,255,255,0.06)'}`,borderRadius:10,marginBottom:8}}>
               <span style={{fontSize:22,flexShrink:0}}>{check.icon}</span>
-              <div style={{flex:1,fontSize:15,color:failed?'#ef4444':passed?'#00e5b0':'#e8eaed'}}>{check.label}</div>
+              <div style={{flex:1,fontSize:15,color:failed?'#ef4444':passed?'#f5a623':'#e8eaed'}}>{check.label}</div>
               <div style={{display:'flex',gap:8}}>
-                <button onClick={()=>setPostShiftChecks(p=>({...p,[check.id]:true}))} style={{width:44,height:44,borderRadius:8,border:`2px solid ${passed?'#00e5b0':'rgba(0,229,176,0.3)'}`,background:passed?'rgba(0,229,176,0.15)':'transparent',color:passed?'#00e5b0':'#4a5260',fontSize:20,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>✓</button>
+                <button onClick={()=>setPostShiftChecks(p=>({...p,[check.id]:true}))} style={{width:44,height:44,borderRadius:8,border:`2px solid ${passed?'#f5a623':'rgba(245,166,35,0.3)'}`,background:passed?'rgba(245,166,35,0.15)':'transparent',color:passed?'#f5a623':'#4a5260',fontSize:20,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>✓</button>
                 <button onClick={()=>setPostShiftChecks(p=>({...p,[check.id]:false}))} style={{width:44,height:44,borderRadius:8,border:`2px solid ${failed?'#ef4444':'rgba(239,68,68,0.2)'}`,background:failed?'rgba(239,68,68,0.12)':'transparent',color:failed?'#ef4444':'#4a5260',fontSize:20,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>✗</button>
               </div>
             </div>
@@ -987,15 +1005,15 @@ export default function DriverApp() {
             Mileage at end of shift {mileageError&&'— required ⚠'}
           </div>
           <input value={shiftMileage} onChange={e=>{setShiftMileage(e.target.value);setMileageError(false)}} placeholder='e.g. 48,320' inputMode='numeric'
-            style={{width:'100%',padding:'12px',background:'#111418',border:`1px solid ${mileageError?'rgba(239,68,68,0.6)':'rgba(255,255,255,0.1)'}`,borderRadius:8,color:'#e8eaed',fontSize:15,outline:'none',boxSizing:'border-box',marginBottom:14,transition:'border 0.2s'}}/>
+            style={{width:'100%',padding:'12px',background:'#0f1826',border:`1px solid ${mileageError?'rgba(239,68,68,0.6)':'rgba(255,255,255,0.1)'}`,borderRadius:8,color:'#e8eaed',fontSize:15,outline:'none',boxSizing:'border-box',marginBottom:14,transition:'border 0.2s'}}/>
           <div style={{fontSize:13,color:'#8a9099',marginBottom:6}}>Shift notes (optional)</div>
           <textarea value={shiftNotes} onChange={e=>setShiftNotes(e.target.value)} rows={3} placeholder='Any notes for ops — customer issues, delays, anything to flag...'
-            style={{width:'100%',padding:'12px',background:'#111418',border:'1px solid rgba(255,255,255,0.1)',borderRadius:8,color:'#e8eaed',fontSize:14,outline:'none',resize:'none',boxSizing:'border-box',lineHeight:1.6}}/>
+            style={{width:'100%',padding:'12px',background:'#0f1826',border:'1px solid rgba(255,255,255,0.1)',borderRadius:8,color:'#e8eaed',fontSize:14,outline:'none',resize:'none',boxSizing:'border-box',lineHeight:1.6}}/>
         </div>
         {Object.values(postShiftChecks).some(v=>v===false)&&(
           <div style={{padding:'10px 12px',background:'rgba(239,68,68,0.06)',border:'1px solid rgba(239,68,68,0.2)',borderRadius:7,marginTop:10,fontSize:12,color:'#ef4444'}}>⚠ Defects noted — ops will be informed in shift summary</div>
         )}
-        <button onClick={submitEndShift} style={{width:'100%',padding:15,background:'#00e5b0',border:'none',borderRadius:10,color:'#000',fontWeight:700,fontSize:16,cursor:'pointer',marginTop:18}}>
+        <button onClick={submitEndShift} style={{width:'100%',padding:15,background:'#f5a623',border:'none',borderRadius:10,color:'#000',fontWeight:700,fontSize:16,cursor:'pointer',marginTop:18}}>
           ✓ Submit and end shift
         </button>
       </div>
@@ -1004,19 +1022,19 @@ export default function DriverApp() {
 
   // ── SHIFT SUMMARY ─────────────────────────────────────────────────────────
   if (shiftEnded && shiftSummary) return (
-    <div style={{minHeight:'100vh',background:'#0a0c0e',color:'#e8eaed',fontFamily:'IBM Plex Sans,sans-serif',display:'flex',alignItems:'center',justifyContent:'center',padding:24}}>
+    <div style={{minHeight:'100vh',background:'#080c14',color:'#e8eaed',fontFamily:'Barlow,sans-serif',display:'flex',alignItems:'center',justifyContent:'center',padding:24}}>
       <div style={{width:'100%',maxWidth:400}}>
         <div style={{textAlign:'center',marginBottom:28}}>
           <div style={{fontSize:52,marginBottom:10}}>🏁</div>
-          <div style={{fontSize:24,fontWeight:700,color:'#00e5b0',marginBottom:3}}>Shift Complete</div>
+          <div style={{fontSize:24,fontWeight:700,color:'#f5a623',marginBottom:3}}>Shift Complete</div>
           <div style={{fontSize:13,color:'#4a5260'}}>Signed off {shiftSummary.endTime}</div>
         </div>
         <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8,marginBottom:10}}>
           {[
-            {val:shiftSummary.completed,  sub:'Delivered',   color:'#00e5b0', bg:'rgba(0,229,176,0.06)',  border:'rgba(0,229,176,0.2)'},
+            {val:shiftSummary.completed,  sub:'Delivered',   color:'#f5a623', bg:'rgba(245,166,35,0.06)',  border:'rgba(245,166,35,0.2)'},
             {val:shiftSummary.total,      sub:'Total runs',  color:'#3b82f6', bg:'rgba(59,130,246,0.06)', border:'rgba(59,130,246,0.2)'},
-            {val:shiftSummary.incidents,  sub:'Incidents',   color:shiftSummary.incidents>0?'#f59e0b':'#00e5b0', bg:'#111418', border:'rgba(255,255,255,0.06)'},
-            {val:shiftSummary.duration?`${shiftSummary.duration}m`:'—', sub:'Duration', color:'#e8eaed', bg:'#111418', border:'rgba(255,255,255,0.06)'},
+            {val:shiftSummary.incidents,  sub:'Incidents',   color:shiftSummary.incidents>0?'#f59e0b':'#f5a623', bg:'#0f1826', border:'rgba(255,255,255,0.06)'},
+            {val:shiftSummary.duration?`${shiftSummary.duration}m`:'—', sub:'Duration', color:'#e8eaed', bg:'#0f1826', border:'rgba(255,255,255,0.06)'},
           ].map((s,i)=>(
             <div key={i} style={{padding:'16px',background:s.bg,border:`1px solid ${s.border}`,borderRadius:10,textAlign:'center'}}>
               <div style={{fontSize:30,fontWeight:700,color:s.color,fontFamily:'monospace'}}>{s.val}</div>
@@ -1024,12 +1042,12 @@ export default function DriverApp() {
             </div>
           ))}
         </div>
-        {shiftSummary.mileage&&<div style={{padding:'10px 14px',background:'#111418',border:'1px solid rgba(255,255,255,0.06)',borderRadius:8,marginBottom:8,fontSize:13,color:'#8a9099'}}>Mileage: <span style={{color:'#e8eaed'}}>{shiftSummary.mileage}</span></div>}
+        {shiftSummary.mileage&&<div style={{padding:'10px 14px',background:'#0f1826',border:'1px solid rgba(255,255,255,0.06)',borderRadius:8,marginBottom:8,fontSize:13,color:'#8a9099'}}>Mileage: <span style={{color:'#e8eaed'}}>{shiftSummary.mileage}</span></div>}
         {shiftSummary.unresolved>0&&<div style={{padding:'10px 14px',background:'rgba(245,158,11,0.06)',border:'1px solid rgba(245,158,11,0.2)',borderRadius:8,marginBottom:8,fontSize:13,color:'#f59e0b'}}>⚠ {shiftSummary.unresolved} unresolved job{shiftSummary.unresolved>1?'s':''} — ops have been notified</div>}
-        {shiftSummary.notes&&<div style={{padding:'10px 14px',background:'#111418',border:'1px solid rgba(255,255,255,0.06)',borderRadius:8,marginBottom:8,fontSize:13,color:'#8a9099'}}>Notes: <span style={{color:'#e8eaed'}}>{shiftSummary.notes}</span></div>}
-        {shiftSummary.completed===shiftSummary.total&&<div style={{padding:'12px',background:'rgba(0,229,176,0.05)',border:'1px solid rgba(0,229,176,0.2)',borderRadius:9,textAlign:'center',marginBottom:12,fontSize:14,color:'#00e5b0',fontWeight:500}}>✓ Full shift — all runs delivered</div>}
+        {shiftSummary.notes&&<div style={{padding:'10px 14px',background:'#0f1826',border:'1px solid rgba(255,255,255,0.06)',borderRadius:8,marginBottom:8,fontSize:13,color:'#8a9099'}}>Notes: <span style={{color:'#e8eaed'}}>{shiftSummary.notes}</span></div>}
+        {shiftSummary.completed===shiftSummary.total&&<div style={{padding:'12px',background:'rgba(245,166,35,0.05)',border:'1px solid rgba(245,166,35,0.2)',borderRadius:9,textAlign:'center',marginBottom:12,fontSize:14,color:'#f5a623',fontWeight:500}}>✓ Full shift — all runs delivered</div>}
         <button onClick={()=>{['dh_driver_info','dh_shift_started','dh_shift_started_at','dh_last_alert','dh_job_progress','dh_ops_messages'].forEach(k=>localStorage.removeItem(k));setSetupDone(false);setShiftStarted(false);setShiftEnded(false);setJobs([]);setActiveJob(null);setShiftSummary(null)}}
-          style={{width:'100%',padding:'14px',background:'#111418',border:'1px solid rgba(255,255,255,0.08)',borderRadius:10,color:'#4a5260',fontWeight:500,fontSize:14,cursor:'pointer'}}>
+          style={{width:'100%',padding:'14px',background:'#0f1826',border:'1px solid rgba(255,255,255,0.08)',borderRadius:10,color:'#4a5260',fontWeight:500,fontSize:14,cursor:'pointer'}}>
           Sign out
         </button>
       </div>
@@ -1039,7 +1057,7 @@ export default function DriverApp() {
   // ── POD CONFIRMATION ──────────────────────────────────────────────────────
   if (podFlow) return (
     <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.9)',zIndex:300,display:'flex',alignItems:'center',justifyContent:'center',padding:24}}>
-      <div style={{width:'100%',maxWidth:360,background:'#111418',borderRadius:14,padding:24,border:'1px solid rgba(255,255,255,0.08)'}}>
+      <div style={{width:'100%',maxWidth:360,background:'#0f1826',borderRadius:14,padding:24,border:'1px solid rgba(255,255,255,0.08)'}}>
         <div style={{fontSize:18,fontWeight:700,color:'#e8eaed',marginBottom:6}}>Delivery confirmation</div>
         <div style={{fontSize:13,color:'#8a9099',marginBottom:20}}>How was the delivery confirmed?</div>
         {[
@@ -1049,9 +1067,9 @@ export default function DriverApp() {
           {id:'safe_place',label:'📦 Safe place delivery',   sub:'Left in agreed safe location'},
         ].map(opt=>(
           <button key={opt.id} onClick={()=>confirmDelivered(opt.id)}
-            style={{width:'100%',marginBottom:8,padding:'13px',background:'rgba(0,229,176,0.04)',border:'1px solid rgba(0,229,176,0.12)',borderRadius:10,cursor:'pointer',textAlign:'left',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+            style={{width:'100%',marginBottom:8,padding:'13px',background:'rgba(245,166,35,0.04)',border:'1px solid rgba(245,166,35,0.12)',borderRadius:10,cursor:'pointer',textAlign:'left',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
             <div><div style={{fontSize:14,color:'#e8eaed',fontWeight:500}}>{opt.label}</div><div style={{fontSize:11,color:'#4a5260',marginTop:2}}>{opt.sub}</div></div>
-            <span style={{color:'#00e5b0',fontSize:15}}>→</span>
+            <span style={{color:'#f5a623',fontSize:15}}>→</span>
           </button>
         ))}
         <button onClick={()=>setPodFlow(null)} style={{width:'100%',padding:10,background:'transparent',border:'none',color:'#4a5260',fontSize:12,cursor:'pointer',marginTop:4}}>← Cancel</button>
@@ -1061,12 +1079,12 @@ export default function DriverApp() {
 
   // ── MAIN RUN VIEW ─────────────────────────────────────────────────────────
   return (
-    <div style={{minHeight:'100vh',background:'#0a0c0e',color:'#e8eaed',fontFamily:'IBM Plex Sans,sans-serif',paddingBottom:90}}>
+    <div style={{minHeight:'100vh',background:'#080c14',color:'#e8eaed',fontFamily:'Barlow,sans-serif',paddingBottom:90}}>
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}`}</style>
 
       {/* Toast */}
       {toast&&(
-        <div style={{position:'fixed',top:16,left:'50%',transform:'translateX(-50%)',zIndex:500,padding:'10px 18px',borderRadius:10,background:toast.type==='error'?'rgba(239,68,68,0.95)':'rgba(0,229,176,0.95)',color:toast.type==='error'?'#fff':'#000',fontWeight:600,fontSize:13,boxShadow:'0 4px 20px rgba(0,0,0,0.4)',whiteSpace:'nowrap'}}>
+        <div style={{position:'fixed',top:16,left:'50%',transform:'translateX(-50%)',zIndex:500,padding:'10px 18px',borderRadius:10,background:toast.type==='error'?'rgba(239,68,68,0.95)':'rgba(245,166,35,0.95)',color:toast.type==='error'?'#fff':'#000',fontWeight:600,fontSize:13,boxShadow:'0 4px 20px rgba(0,0,0,0.4)',whiteSpace:'nowrap'}}>
           {toast.msg}
         </div>
       )}
@@ -1082,11 +1100,11 @@ export default function DriverApp() {
       {/* Header */}
       <div style={{padding:'12px 16px',borderBottom:'1px solid rgba(255,255,255,0.06)',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
         <div style={{display:'flex',alignItems:'center',gap:10}}>
-          <div style={{width:28,height:28,background:'#00e5b0',borderRadius:5,display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,fontWeight:700,color:'#000',fontFamily:'monospace'}}>DH</div>
+          <div style={{width:28,height:28,background:'#f5a623',clipPath:'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)'}} />
           <div><div style={{fontSize:13,fontWeight:500}}>{driverInfo.name}</div><div style={{fontSize:10,color:'#4a5260',fontFamily:'monospace'}}>{driverInfo.vehicleReg}</div></div>
         </div>
         <div style={{display:'flex',gap:8,alignItems:'center'}}>
-          {loading&&<div style={{width:16,height:16,border:'2px solid rgba(0,229,176,0.2)',borderTop:'2px solid #00e5b0',borderRadius:'50%',animation:'spin 0.8s linear infinite'}}/>}
+          {loading&&<div style={{width:16,height:16,border:'2px solid rgba(245,166,35,0.2)',borderTop:'2px solid #f5a623',borderRadius:'50%',animation:'spin 0.8s linear infinite'}}/>}
         </div>
       </div>
 
@@ -1117,7 +1135,7 @@ export default function DriverApp() {
         <div>
 
           {/* ── DATE + RUN COUNT STRIP ── */}
-          <div style={{padding:'8px 16px',borderBottom:'1px solid rgba(255,255,255,0.04)',display:'flex',alignItems:'center',justifyContent:'space-between',background:'#0d1014'}}>
+          <div style={{padding:'8px 16px',borderBottom:'1px solid rgba(255,255,255,0.04)',display:'flex',alignItems:'center',justifyContent:'space-between',background:'#0d1420'}}>
             <div style={{fontSize:11,color:'#4a5260',fontFamily:'monospace',letterSpacing:'0.06em'}}>
               {new Date().toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'}).toUpperCase()}
             </div>
@@ -1125,7 +1143,7 @@ export default function DriverApp() {
               {loading
                 ? <div style={{fontSize:11,color:'#4a5260',fontFamily:'monospace'}}>Loading...</div>
                 : <div style={{fontSize:11,fontFamily:'monospace',color:'#4a5260'}}>
-                    <span style={{color:'#00e5b0',fontWeight:700}}>{jobs.filter(j=>j.status==='completed').length}</span>
+                    <span style={{color:'#f5a623',fontWeight:700}}>{jobs.filter(j=>j.status==='completed').length}</span>
                     <span style={{color:'#4a5260'}}> / {jobs.length} runs</span>
                   </div>
               }
@@ -1155,7 +1173,7 @@ export default function DriverApp() {
             const sc = STATUS_COLORS[activeJob.status]||STATUS_COLORS['on-track']
             const currentStepIndex = PROGRESS_STEPS.findIndex(s=>s.status===activeJob.status)
             return (
-              <div style={{margin:'10px 12px 0',background:'#111418',border:`1px solid ${sc.border}`,borderRadius:14,overflow:'hidden'}}>
+              <div style={{margin:'10px 12px 0',background:'#0f1826',border:`1px solid ${sc.border}`,borderRadius:14,overflow:'hidden'}}>
                 {/* Active job header */}
                 <div style={{padding:'12px 14px',borderBottom:'1px solid rgba(255,255,255,0.05)',background:sc.bg}}>
                   <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:4}}>
@@ -1182,7 +1200,7 @@ export default function DriverApp() {
                       const isCurrent = step.status===activeJob.status || (activeJob.status==='on-track'&&i===0) || (activeJob.status==='pending'&&i===0)
                       return (
                         <button key={step.id} onClick={()=>{if(!isDoneStep)logProgress(step)}} disabled={isDoneStep}
-                          style={{width:'100%',marginBottom:7,padding:'13px',background:isDoneStep?'rgba(0,229,176,0.03)':isCurrent?'rgba(0,229,176,0.06)':'rgba(255,255,255,0.02)',border:`1px solid ${isDoneStep?'rgba(0,229,176,0.12)':isCurrent?'rgba(0,229,176,0.3)':'rgba(255,255,255,0.06)'}`,borderRadius:10,cursor:isDoneStep?'default':'pointer',display:'flex',alignItems:'center',gap:12,opacity:isDoneStep?0.5:1}}>
+                          style={{width:'100%',marginBottom:7,padding:'13px',background:isDoneStep?'rgba(245,166,35,0.03)':isCurrent?'rgba(245,166,35,0.06)':'rgba(255,255,255,0.02)',border:`1px solid ${isDoneStep?'rgba(245,166,35,0.12)':isCurrent?'rgba(245,166,35,0.3)':'rgba(255,255,255,0.06)'}`,borderRadius:10,cursor:isDoneStep?'default':'pointer',display:'flex',alignItems:'center',gap:12,opacity:isDoneStep?0.5:1}}>
                           <span style={{fontSize:20,flexShrink:0}}>{isDoneStep?'✓':step.icon}</span>
                           <span style={{fontSize:15,color:isDoneStep?'#4a5260':isCurrent?step.color:'#e8eaed',fontWeight:isCurrent?600:400}}>{step.label}</span>
                           {isCurrent&&<span style={{marginLeft:'auto',fontSize:11,color:step.color,fontFamily:'monospace'}}>TAP →</span>}
@@ -1190,9 +1208,9 @@ export default function DriverApp() {
                       )
                     })}
                     <button onClick={initiateDelivered}
-                      style={{width:'100%',padding:'15px',borderRadius:10,border:'2px solid rgba(0,229,176,0.4)',background:'rgba(0,229,176,0.07)',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:10,marginBottom:6}}>
+                      style={{width:'100%',padding:'15px',borderRadius:10,border:'2px solid rgba(245,166,35,0.4)',background:'rgba(245,166,35,0.07)',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:10,marginBottom:6}}>
                       <span style={{fontSize:22}}>📦</span>
-                      <span style={{fontSize:16,color:'#00e5b0',fontWeight:700}}>Mark as Delivered</span>
+                      <span style={{fontSize:16,color:'#f5a623',fontWeight:700}}>Mark as Delivered</span>
                     </button>
                   </div>
                 )}
@@ -1208,7 +1226,7 @@ export default function DriverApp() {
                       <>
                         {/* Primary action — continue */}
                         <button onClick={()=>setResumeConfirm(true)}
-                          style={{width:'100%',padding:'13px',borderRadius:9,border:'1px solid rgba(0,229,176,0.28)',background:'rgba(0,229,176,0.04)',color:'#00e5b0',fontSize:14,fontWeight:500,cursor:'pointer',marginBottom:8}}>
+                          style={{width:'100%',padding:'13px',borderRadius:9,border:'1px solid rgba(245,166,35,0.28)',background:'rgba(245,166,35,0.04)',color:'#f5a623',fontSize:14,fontWeight:500,cursor:'pointer',marginBottom:8}}>
                           ✓ Situation resolved — I can continue
                         </button>
                         {/* End shift — always available when jobs are locked */}
@@ -1242,7 +1260,7 @@ export default function DriverApp() {
                                 force_alert:false
                               })
                             }).catch(()=>{})
-                          }} style={{flex:1,padding:'11px',borderRadius:8,border:'none',background:'#00e5b0',color:'#000',fontWeight:700,fontSize:13,cursor:'pointer'}}>
+                          }} style={{flex:1,padding:'11px',borderRadius:8,border:'none',background:'#f5a623',color:'#000',fontWeight:700,fontSize:13,cursor:'pointer'}}>
                             Confirmed — continue
                           </button>
                           <button onClick={()=>setResumeConfirm(false)}
@@ -1264,11 +1282,11 @@ export default function DriverApp() {
 
           {/* ── ALL RUNS COMPLETE ── */}
           {!loading && jobs.length > 0 && jobs.every(j=>j.status==='completed') && (
-            <div style={{margin:'10px 12px 0',padding:'22px 18px',borderRadius:12,background:'rgba(0,229,176,0.04)',border:'1px solid rgba(0,229,176,0.18)',textAlign:'center'}}>
+            <div style={{margin:'10px 12px 0',padding:'22px 18px',borderRadius:12,background:'rgba(245,166,35,0.04)',border:'1px solid rgba(245,166,35,0.18)',textAlign:'center'}}>
               <div style={{fontSize:36,marginBottom:8}}>🎉</div>
-              <div style={{fontSize:19,fontWeight:700,color:'#00e5b0',marginBottom:5}}>All runs complete</div>
+              <div style={{fontSize:19,fontWeight:700,color:'#f5a623',marginBottom:5}}>All runs complete</div>
               <div style={{fontSize:13,color:'#8a9099',marginBottom:20}}>{jobs.length} run{jobs.length!==1?'s':''} delivered today.</div>
-              <button onClick={endShift} style={{width:'100%',padding:'15px',background:'#00e5b0',border:'none',borderRadius:10,color:'#000',fontWeight:700,fontSize:16,cursor:'pointer',marginBottom:10}}>✓ End shift</button>
+              <button onClick={endShift} style={{width:'100%',padding:'15px',background:'#f5a623',border:'none',borderRadius:10,color:'#000',fontWeight:700,fontSize:16,cursor:'pointer',marginBottom:10}}>✓ End shift</button>
               <div style={{fontSize:11,color:'#4a5260'}}>Vehicle return check and shift summary</div>
             </div>
           )}
@@ -1284,7 +1302,7 @@ export default function DriverApp() {
                 const isAtRisk = job.status==='at_risk'||job.status==='part_delivered'
                 return (
                   <div key={job.ref} onClick={()=>setActiveJob(job)}
-                    style={{padding:'10px 12px',background:'#111418',border:`1px solid ${isAtRisk?sc.border:'rgba(255,255,255,0.06)'}`,borderRadius:10,marginBottom:6,cursor:'pointer',display:'flex',alignItems:'center',gap:10,transition:'all 0.15s'}}>
+                    style={{padding:'10px 12px',background:'#0f1826',border:`1px solid ${isAtRisk?sc.border:'rgba(255,255,255,0.06)'}`,borderRadius:10,marginBottom:6,cursor:'pointer',display:'flex',alignItems:'center',gap:10,transition:'all 0.15s'}}>
                     <div style={{width:6,height:6,borderRadius:'50%',background:sc.dot,flexShrink:0}}/>
                     <div style={{flex:1,minWidth:0}}>
                       <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:2}}>
@@ -1335,7 +1353,7 @@ export default function DriverApp() {
                   <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:7,padding:'0 12px 8px'}}>
                     {group.issues.map(issue=>(
                       <button key={issue.id} onClick={()=>openIssue(issue)}
-                        style={{padding:'12px 10px',borderRadius:9,background:'#111418',border:'1px solid rgba(255,255,255,0.07)',display:'flex',alignItems:'center',gap:9,cursor:'pointer',outline:'none',textAlign:'left'}}>
+                        style={{padding:'12px 10px',borderRadius:9,background:'#0f1826',border:'1px solid rgba(255,255,255,0.07)',display:'flex',alignItems:'center',gap:9,cursor:'pointer',outline:'none',textAlign:'left'}}>
                         <span style={{fontSize:20,flexShrink:0}}>{issue.icon}</span>
                         <span style={{fontSize:13,color:'#e8eaed',lineHeight:1.3}}>{issue.label}</span>
                       </button>
@@ -1352,7 +1370,7 @@ export default function DriverApp() {
               🔍 Check
             </button>
             <button onClick={endShift}
-              style={{flex:2,padding:'10px',background:'rgba(0,229,176,0.08)',border:'1px solid rgba(0,229,176,0.25)',borderRadius:8,color:'#00e5b0',fontSize:12,fontWeight:600,cursor:'pointer'}}>
+              style={{flex:2,padding:'10px',background:'rgba(245,166,35,0.08)',border:'1px solid rgba(245,166,35,0.25)',borderRadius:8,color:'#f5a623',fontSize:12,fontWeight:600,cursor:'pointer'}}>
               ✓ End Shift
             </button>
             <button onClick={()=>{
@@ -1392,7 +1410,7 @@ export default function DriverApp() {
       {/* ISSUE PANEL */}
       {panelOpen&&(
         <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.85)',zIndex:200,display:'flex',alignItems:'flex-end'}}>
-          <div style={{width:'100%',background:'#0d1014',borderRadius:'16px 16px 0 0',maxHeight:'90vh',overflowY:'auto',padding:'20px 16px 36px'}}>
+          <div style={{width:'100%',background:'#0d1420',borderRadius:'16px 16px 0 0',maxHeight:'90vh',overflowY:'auto',padding:'20px 16px 36px'}}>
             <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:16}}>
               <div>
                 <div style={{fontSize:9,color:'#4a5260',fontFamily:'monospace',letterSpacing:'0.08em',marginBottom:3}}>ISSUE REPORT</div>
@@ -1403,7 +1421,7 @@ export default function DriverApp() {
 
             {/* GPS status */}
             {gpsStatus==='getting'&&<div style={{fontSize:11,color:'#3b82f6',fontFamily:'monospace',marginBottom:10}}>📍 Getting location...</div>}
-            {gpsStatus==='got'&&gpsDescription&&<div style={{fontSize:11,color:'#00e5b0',fontFamily:'monospace',marginBottom:10}}>📍 {gpsDescription}</div>}
+            {gpsStatus==='got'&&gpsDescription&&<div style={{fontSize:11,color:'#f5a623',fontFamily:'monospace',marginBottom:10}}>📍 {gpsDescription}</div>}
             {gpsStatus==='failed'&&<div style={{fontSize:11,color:'#f59e0b',fontFamily:'monospace',marginBottom:10}}>📍 Location not available</div>}
 
             {/* Contextual warnings */}
@@ -1452,9 +1470,9 @@ export default function DriverApp() {
                       </div>}
                     </div>
                   )}
-                  <button onClick={closePanel} style={{width:'100%',padding:15,background:'#00e5b0',border:'none',borderRadius:10,color:'#000',fontWeight:700,fontSize:16,cursor:'pointer',marginBottom:9}}>Got it — close</button>
+                  <button onClick={closePanel} style={{width:'100%',padding:15,background:'#f5a623',border:'none',borderRadius:10,color:'#000',fontWeight:700,fontSize:16,cursor:'pointer',marginBottom:9}}>Got it — close</button>
                   {!['cant_complete','hours_running_out','medical','vehicle_theft'].includes(panelIssue?.id)&&(
-                    <button onClick={()=>setPanelState('resolving')} style={{width:'100%',padding:13,background:'transparent',border:'1px solid rgba(0,229,176,0.28)',borderRadius:10,color:'#00e5b0',fontWeight:500,fontSize:14,cursor:'pointer'}}>
+                    <button onClick={()=>setPanelState('resolving')} style={{width:'100%',padding:13,background:'transparent',border:'1px solid rgba(245,166,35,0.28)',borderRadius:10,color:'#f5a623',fontWeight:500,fontSize:14,cursor:'pointer'}}>
                       ✅ Issue resolved — back on track
                     </button>
                   )}
@@ -1478,25 +1496,25 @@ export default function DriverApp() {
                   {id:'other_resolved',label:'✅ Other — resolved',sub:'Issue no longer active'},
                 ].map(opt=>(
                   <button key={opt.id} onClick={()=>resolveIssue(opt.label)}
-                    style={{width:'100%',marginBottom:8,padding:'13px',background:'rgba(0,229,176,0.04)',border:'1px solid rgba(0,229,176,0.12)',borderRadius:10,cursor:'pointer',textAlign:'left',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+                    style={{width:'100%',marginBottom:8,padding:'13px',background:'rgba(245,166,35,0.04)',border:'1px solid rgba(245,166,35,0.12)',borderRadius:10,cursor:'pointer',textAlign:'left',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
                     <div><div style={{fontSize:14,color:'#e8eaed',fontWeight:500}}>{opt.label}</div><div style={{fontSize:11,color:'#4a5260',marginTop:2}}>{opt.sub}</div></div>
-                    <span style={{color:'#00e5b0',fontSize:15}}>→</span>
+                    <span style={{color:'#f5a623',fontSize:15}}>→</span>
                   </button>
                 ))}
                 <button onClick={()=>setPanelState('result')} style={{width:'100%',padding:9,background:'transparent',border:'none',color:'#4a5260',fontSize:12,cursor:'pointer',marginTop:3}}>← Back</button>
               </div>
             )}
 
-            {panelState==='resolving_loading'&&<div style={{textAlign:'center',padding:'44px 0'}}><div style={{width:38,height:38,border:'3px solid rgba(0,229,176,0.15)',borderTop:'3px solid #00e5b0',borderRadius:'50%',margin:'0 auto 14px',animation:'spin 1s linear infinite'}}/><div style={{fontSize:13,color:'#00e5b0',fontFamily:'monospace'}}>NOTIFYING OPS...</div></div>}
+            {panelState==='resolving_loading'&&<div style={{textAlign:'center',padding:'44px 0'}}><div style={{width:38,height:38,border:'3px solid rgba(245,166,35,0.15)',borderTop:'3px solid #f5a623',borderRadius:'50%',margin:'0 auto 14px',animation:'spin 1s linear infinite'}}/><div style={{fontSize:13,color:'#f5a623',fontFamily:'monospace'}}>NOTIFYING OPS...</div></div>}
 
             {/* RESOLVED state */}
             {panelState==='resolved'&&(
               <div style={{textAlign:'center',padding:'22px 0'}}>
                 <div style={{fontSize:46,marginBottom:10}}>✅</div>
-                <div style={{fontSize:19,color:'#00e5b0',fontWeight:700,marginBottom:5}}>Back on track</div>
+                <div style={{fontSize:19,color:'#f5a623',fontWeight:700,marginBottom:5}}>Back on track</div>
                 <div style={{fontSize:13,color:'#8a9099',marginBottom:resolvedEta?12:22}}>Ops notified. Job updated.</div>
-                {resolvedEta&&<div style={{padding:'10px 14px',background:'rgba(0,229,176,0.05)',border:'1px solid rgba(0,229,176,0.2)',borderRadius:9,marginBottom:22,fontSize:13,color:'#e8eaed',lineHeight:1.6,textAlign:'left'}}>{resolvedEta}</div>}
-                <button onClick={closePanel} style={{padding:'13px 44px',background:'#00e5b0',border:'none',borderRadius:10,color:'#000',fontWeight:700,fontSize:15,cursor:'pointer'}}>Close</button>
+                {resolvedEta&&<div style={{padding:'10px 14px',background:'rgba(245,166,35,0.05)',border:'1px solid rgba(245,166,35,0.2)',borderRadius:9,marginBottom:22,fontSize:13,color:'#e8eaed',lineHeight:1.6,textAlign:'left'}}>{resolvedEta}</div>}
+                <button onClick={closePanel} style={{padding:'13px 44px',background:'#f5a623',border:'none',borderRadius:10,color:'#000',fontWeight:700,fontSize:15,cursor:'pointer'}}>Close</button>
               </div>
             )}
 
@@ -1504,9 +1522,9 @@ export default function DriverApp() {
             {panelState==='sent'&&(
               <div style={{textAlign:'center',padding:'30px 0'}}>
                 <div style={{fontSize:42,marginBottom:10}}>✅</div>
-                <div style={{fontSize:17,color:'#00e5b0',fontWeight:700,marginBottom:5}}>Ops notified</div>
+                <div style={{fontSize:17,color:'#f5a623',fontWeight:700,marginBottom:5}}>Ops notified</div>
                 <div style={{fontSize:13,color:'#4a5260',marginBottom:22}}>Your manager has been alerted.</div>
-                <button onClick={closePanel} style={{padding:'12px 38px',background:'#00e5b0',border:'none',borderRadius:10,color:'#000',fontWeight:700,fontSize:14,cursor:'pointer'}}>Close</button>
+                <button onClick={closePanel} style={{padding:'12px 38px',background:'#f5a623',border:'none',borderRadius:10,color:'#000',fontWeight:700,fontSize:14,cursor:'pointer'}}>Close</button>
               </div>
             )}
 
@@ -1514,7 +1532,7 @@ export default function DriverApp() {
             {panelState==='no_active_job'&&(
               <div style={{textAlign:'center',padding:'30px 0'}}>
                 <div style={{fontSize:42,marginBottom:10}}>✅</div>
-                <div style={{fontSize:17,color:'#00e5b0',fontWeight:700,marginBottom:7}}>All runs are complete</div>
+                <div style={{fontSize:17,color:'#f5a623',fontWeight:700,marginBottom:7}}>All runs are complete</div>
                 <div style={{fontSize:13,color:'#8a9099',marginBottom:7,lineHeight:1.6}}>No active delivery to raise this against.</div>
                 <div style={{fontSize:12,color:'#4a5260',marginBottom:22}}>For vehicle or medical emergencies use Breakdown or Medical.</div>
                 <button onClick={closePanel} style={{padding:'12px 38px',background:'rgba(255,255,255,0.06)',border:'1px solid rgba(255,255,255,0.1)',borderRadius:10,color:'#8a9099',fontWeight:500,fontSize:13,cursor:'pointer'}}>Close</button>
@@ -1524,8 +1542,8 @@ export default function DriverApp() {
             {/* LOADING state */}
             {panelState==='loading'&&(
               <div style={{textAlign:'center',padding:'44px 0'}}>
-                <div style={{width:42,height:42,border:'3px solid rgba(0,229,176,0.12)',borderTop:'3px solid #00e5b0',borderRadius:'50%',margin:'0 auto 14px',animation:'spin 1s linear infinite'}}/>
-                <div style={{fontSize:13,color:'#00e5b0',fontFamily:'monospace',marginBottom:5}}>GETTING INSTRUCTIONS...</div>
+                <div style={{width:42,height:42,border:'3px solid rgba(245,166,35,0.12)',borderTop:'3px solid #f5a623',borderRadius:'50%',margin:'0 auto 14px',animation:'spin 1s linear infinite'}}/>
+                <div style={{fontSize:13,color:'#f5a623',fontFamily:'monospace',marginBottom:5}}>GETTING INSTRUCTIONS...</div>
                 <div style={{fontSize:12,color:'#4a5260'}}>Ops manager alerted</div>
               </div>
             )}
@@ -1540,12 +1558,12 @@ export default function DriverApp() {
                     style={{width:'100%',padding:'13px',background:'#1a1f26',border:'2px solid rgba(255,255,255,0.16)',borderRadius:10,color:'#e8eaed',fontSize:16,lineHeight:1.6,outline:'none',resize:'none',boxSizing:'border-box',marginBottom:13,WebkitAppearance:'none'}}/>
                 )}
                 {activeJob&&(
-                  <div style={{padding:'8px 11px',background:'rgba(0,229,176,0.03)',border:'1px solid rgba(0,229,176,0.1)',borderRadius:7,fontSize:12,color:'#8a9099',marginBottom:14}}>
-                    Job: <span style={{color:'#00e5b0',fontWeight:500}}>{activeJob.ref}</span> · {activeJob.route}
+                  <div style={{padding:'8px 11px',background:'rgba(245,166,35,0.03)',border:'1px solid rgba(245,166,35,0.1)',borderRadius:7,fontSize:12,color:'#8a9099',marginBottom:14}}>
+                    Job: <span style={{color:'#f5a623',fontWeight:500}}>{activeJob.ref}</span> · {activeJob.route}
                   </div>
                 )}
                 <button onClick={sendAlert}
-                  style={{width:'100%',padding:15,background:['breakdown','cant_complete','theft_threat','driver_unwell','medical','accident','vehicle_theft'].includes(panelIssue?.id)?'#ef4444':'#00e5b0',border:'none',borderRadius:10,color:['breakdown','cant_complete','theft_threat','driver_unwell','medical','accident','vehicle_theft'].includes(panelIssue?.id)?'#fff':'#000',fontWeight:700,fontSize:16,cursor:'pointer',marginBottom:9}}>
+                  style={{width:'100%',padding:15,background:['breakdown','cant_complete','theft_threat','driver_unwell','medical','accident','vehicle_theft'].includes(panelIssue?.id)?'#ef4444':'#f5a623',border:'none',borderRadius:10,color:['breakdown','cant_complete','theft_threat','driver_unwell','medical','accident','vehicle_theft'].includes(panelIssue?.id)?'#fff':'#000',fontWeight:700,fontSize:16,cursor:'pointer',marginBottom:9}}>
                   {panelIssue?.id==='breakdown'?'🚨 Alert ops now':
                    panelIssue?.id==='accident'?'💥 Alert ops — accident':
                    panelIssue?.id==='medical'?'🚑 Alert ops — medical':
