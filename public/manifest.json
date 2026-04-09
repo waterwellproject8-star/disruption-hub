@@ -4,8 +4,8 @@
   "description": "DisruptionHub driver app — jobs, instructions, proof of delivery",
   "start_url": "/driver",
   "display": "standalone",
-  "background_color": "#0a0c0e",
-  "theme_color": "#00e5b0",
+  "background_color": "#080c14",
+  "theme_color": "#f5a623",
   "orientation": "portrait",
   "icons": [
     {
