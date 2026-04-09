@@ -655,9 +655,25 @@ export default function DriverApp() {
         body:JSON.stringify({client_id:driverInfo.clientId,driver_name:driverInfo.name,driver_phone:driverInfo.phone||null,vehicle_reg:driverInfo.vehicleReg,issue_description:`PRE-SHIFT VEHICLE DEFECT. Driver ${driverInfo.name} (${driverInfo.vehicleReg}) flagged issues: ${failedLabels.join(', ')}. Vehicle may not be roadworthy.`,human_description:`⚠ Vehicle defects: ${failedLabels.join(', ')}`,location_description:'At depot — pre-departure',force_alert:true,force_financial_zero:true})
       }).catch(()=>{})
     } else {
-      // FIX: reload jobs fresh on new shift start so empty state is never shown
       setShiftStarted(true); setView('run')
       loadJobs(driverInfo)
+
+      // Write initial driver_progress row on shift start
+      // This makes the driver appear in Live Fleet on the ops dashboard immediately
+      // Without this, driver only appears after their first job step tap
+      fetch('/api/driver/progress', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          client_id:   driverInfo.clientId,
+          vehicle_reg: driverInfo.vehicleReg,
+          driver_name: driverInfo.name,
+          driver_phone: driverInfo.phone || null,
+          ref:    'SHIFT_START',
+          status: 'on_shift',
+          alert:  null
+        })
+      }).catch(() => {})
     }
   }
 
