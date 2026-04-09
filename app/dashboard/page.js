@@ -4,12 +4,22 @@ import Link from 'next/link'
 
 const DASHBOARD_PIN = 'DH2026'
 
-const ACTIVE_SHIPMENTS = [
-  { ref: 'PH-4421', route: 'Leeds → Bradford (Tesco DC)', status: 'on-track', eta: '08:45', carrier: 'Pearson Haulage', alert: null },
-  { ref: 'PH-8832', route: 'Leeds → London (M1)', status: 'disrupted', eta: '???', carrier: 'Pearson Haulage', alert: 'M1 breakdown — recovery dispatched' },
-  { ref: 'PH-5517', route: 'Leeds → Sheffield (NHS Supply Chain)', status: 'delayed', eta: '18:15', carrier: 'Pearson Haulage', alert: 'Delayed — cascade from London disruption' },
-  { ref: 'PH-9103', route: 'Leeds → Edinburgh (A1)', status: 'delayed', eta: '21:30', carrier: 'Pearson Haulage', alert: 'Cold chain at risk — slot 20:00-22:00' },
-]
+// Generate demo shipments with ETAs relative to current time
+// Prevents stale times showing (e.g. 08:45 when it's 16:32)
+function buildDemoShipments() {
+  const now = new Date()
+  const fmt = mins => {
+    const d = new Date(now.getTime() + mins * 60000)
+    return d.toTimeString().slice(0,5)
+  }
+  return [
+    { ref: 'PH-4421', route: 'Leeds → Bradford (Tesco DC)', status: 'on-track', eta: fmt(25), carrier: 'Pearson Haulage', alert: null },
+    { ref: 'PH-8832', route: 'Leeds → London (M1)', status: 'disrupted', eta: '???', carrier: 'Pearson Haulage', alert: 'M1 breakdown — recovery dispatched' },
+    { ref: 'PH-5517', route: 'Leeds → Sheffield (NHS Supply Chain)', status: 'delayed', eta: fmt(105), carrier: 'Pearson Haulage', alert: 'Delayed — cascade from London disruption' },
+    { ref: 'PH-9103', route: 'Leeds → Edinburgh (A1)', status: 'delayed', eta: fmt(210), carrier: 'Pearson Haulage', alert: 'Cold chain at risk — slot closing soon' },
+  ]
+}
+const ACTIVE_SHIPMENTS = buildDemoShipments()
 
 const INCIDENT_LOG = [
   { date: 'Today 22:03', ref: 'PH-8832', type: 'Breakdown', severity: 'CRITICAL', saved: '£2,400' },
@@ -1601,8 +1611,20 @@ export default function DashboardPage() {
     setRelevantEvents(relevant)
 
     // ── Inject vehicle data into the new event's payload ─────────────────────
+    // All times calculated from actual current time — no more hardcoded 15:30 SLAs
     const newBase = WEBHOOK_SYSTEMS[bestSystem]?.events[bestEvent]?.fields || {}
     const now = new Date()
+    const fmtTime = mins => {
+      const d = new Date(now.getTime() + mins * 60000)
+      return d.toTimeString().slice(0,5)
+    }
+    // SLA deadline: 90 min from now (realistic delivery window)
+    // Current ETA: 45 min from now (before delay applied)
+    // Delay makes ETA slip past SLA
+    const slaDeadline  = fmtTime(90)
+    const currentEta   = fmtTime(45)
+    const delayMinutes = newBase.delay_minutes || 45
+
     setWhPayload({
       ...newBase,
       vehicle_reg:      driver.vehicle_reg,
@@ -1611,6 +1633,9 @@ export default function DashboardPage() {
       current_location: driver.last_known_location || newBase.current_location || '',
       consignee:        driver.current_route?.split('→')[1]?.trim() || newBase.consignee || '',
       cargo_type:       driver.cargo_type || newBase.cargo_type || '',
+      sla_deadline:     slaDeadline,
+      current_eta:      currentEta,
+      delay_minutes:    delayMinutes,
       fired_at:         now.toISOString(),
     })
   }
@@ -2490,6 +2515,8 @@ export default function DashboardPage() {
                               // Re-inject vehicle data into new event's payload
                               if (selectedTestVehicle) {
                                 const newBase = WEBHOOK_SYSTEMS[whSystem]?.events[key]?.fields || {}
+                                const nowEvt = new Date()
+                                const fmtEvt = m => new Date(nowEvt.getTime()+m*60000).toTimeString().slice(0,5)
                                 setWhPayload({
                                   ...newBase,
                                   vehicle_reg:      selectedTestVehicle.vehicle_reg,
@@ -2497,7 +2524,9 @@ export default function DashboardPage() {
                                   location:         selectedTestVehicle.last_known_location || newBase.location || '',
                                   current_location: selectedTestVehicle.last_known_location || newBase.current_location || '',
                                   cargo_type:       selectedTestVehicle.cargo_type || newBase.cargo_type || '',
-                                  fired_at:         new Date().toISOString(),
+                                  sla_deadline:     fmtEvt(90),
+                                  current_eta:      fmtEvt(45),
+                                  fired_at:         nowEvt.toISOString(),
                                 })
                               } else {
                                 setWhPayload(null)

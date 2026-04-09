@@ -1281,11 +1281,14 @@ export default function DriverApp() {
 
           {/* ── BOTTOM UTILITIES ── */}
           <div style={{padding:'6px 12px 12px',marginTop:8,display:'flex',gap:8}}>
-            <button onClick={()=>setView('preshift')} style={{flex:1,padding:'10px',background:'transparent',border:'1px solid rgba(255,255,255,0.06)',borderRadius:8,color:'#4a5260',fontSize:12,cursor:'pointer'}}>
-              🔍 Vehicle check
+            <button onClick={()=>setView('preshift')} style={{flex:1,padding:'10px',background:'transparent',border:'1px solid rgba(255,255,255,0.06)',borderRadius:8,color:'#4a5260',fontSize:11,cursor:'pointer'}}>
+              🔍 Check
+            </button>
+            <button onClick={endShift}
+              style={{flex:2,padding:'10px',background:'rgba(0,229,176,0.08)',border:'1px solid rgba(0,229,176,0.25)',borderRadius:8,color:'#00e5b0',fontSize:12,fontWeight:600,cursor:'pointer'}}>
+              ✓ End Shift
             </button>
             <button onClick={()=>{
-              // End shift in Supabase before changing driver — prevents stale data
               if (driverInfo.vehicleReg || driverInfo.phone) {
                 fetch('/api/driver/end-shift', {
                   method:'POST', headers:{'Content-Type':'application/json'},
@@ -1295,8 +1298,8 @@ export default function DriverApp() {
               ;['dh_driver_info','dh_shift_started','dh_shift_started_at','dh_last_alert','dh_job_progress','dh_ops_messages'].forEach(k=>localStorage.removeItem(k))
               setSetupDone(false);setShiftStarted(false);setJobs([]);setActiveJob(null)
             }}
-              style={{flex:1,padding:'10px',background:'transparent',border:'1px solid rgba(255,255,255,0.06)',borderRadius:8,color:'#4a5260',fontSize:12,cursor:'pointer'}}>
-              Change driver
+              style={{flex:1,padding:'10px',background:'transparent',border:'1px solid rgba(255,255,255,0.06)',borderRadius:8,color:'#4a5260',fontSize:11,cursor:'pointer'}}>
+              ↩ Change
             </button>
           </div>
 
