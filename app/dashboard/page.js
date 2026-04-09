@@ -216,7 +216,7 @@ const WEBHOOK_SYSTEMS = {
 
 const TAB_STYLE = (active) => ({
   padding: '6px 16px', borderRadius: 3, fontSize: 11, cursor: 'pointer',
-  fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: '0.06em',
+  fontFamily: 'Barlow Condensed, sans-serif', letterSpacing: '0.06em',
   fontWeight: active ? 700 : 500, textTransform: 'uppercase',
   border: active ? '1px solid #f5a623' : '1px solid rgba(255,255,255,0.08)',
   background: active ? 'rgba(245,166,35,0.1)' : 'transparent',
