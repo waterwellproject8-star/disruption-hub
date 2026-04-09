@@ -59,16 +59,16 @@ const WEBHOOK_SYSTEMS = {
   mandata: {
     label: 'Mandata TMS', icon: '🚛', color: '#3b82f6',
     events: {
-      job_delayed:          { label: 'Job Delayed',                    fields: { vehicle_reg:'BN21 XKT', delay_minutes:45, reason:'M62 congestion J26', sla_deadline:'15:30', consignee:'Tesco DC Donington', job_id:'MAN-44821', penalty_gbp:1200, consignee_phone:'' } },
-      job_cancelled:        { label: 'Job Cancelled by Customer',      fields: { vehicle_reg:'BN21 XKT', job_id:'MAN-44822', reason:'Customer cancelled 2h before collection', value_gbp:2400, collection:'Leeds DC', consignee:'Asda Lutterworth', driver_dispatched:true, consignee_phone:'' } },
-      collection_no_show:   { label: 'Collection No-Show',             fields: { vehicle_reg:'BN21 XKT', job_id:'MAN-44823', collection_point:'Sheffield DC', booked_time:'09:00', wait_minutes:55, driver_name:'Dave P', consignee_phone:'' } },
-      failed_delivery:      { label: 'Failed Delivery',                fields: { vehicle_reg:'BN21 XKT', job_id:'MAN-44824', consignee:'NHS Supply Chain Redditch', reason:'Site closed — no staff on loading bay', attempted_time:'14:22', value_gbp:6800, consignee_phone:'' } },
-      pod_overdue:          { label: 'POD Not Received',               fields: { vehicle_reg:'BN21 XKT', job_id:'MAN-44825', consignee:'NHS Supply Chain Redditch', hours_overdue:3, value_gbp:6800, consignee_phone:'' } },
-      route_deviation:      { label: 'Route Deviation',                fields: { vehicle_reg:'BN21 XKT', planned_route:'M62 → M1 south', current_location:'A1(M) northbound J8', deviation_miles:11, job_id:'MAN-44826', driver_name:'Dave P' } },
-      multi_drop_change:    { label: 'Multi-Drop Sequence Change',     fields: { vehicle_reg:'BN21 XKT', job_id:'MAN-44827', original_sequence:'Leeds→Bradford→Wakefield', new_sequence:'Leeds→Wakefield→Bradford', reason:'Bradford customer requested later slot', driver_name:'Dave P' } },
-      driver_change:        { label: 'Driver Change Required',         fields: { vehicle_reg:'BN21 XKT', job_id:'MAN-44828', original_driver:'Dave P', reason:'Driver reported unwell at depot', collection_in_mins:45, consignee:'Tesco DC Donington' } },
-      night_out_required:   { label: 'Night Out Required',             fields: { vehicle_reg:'BN21 XKT', driver_name:'Dave P', location:'Corley Services M6', reason:'Hours exhausted — cannot complete return leg', cargo:'perishable — chilled 0-5C', job_id:'MAN-44829' } },
-      detention_charge:     { label: 'Detention Charge Triggered',     fields: { vehicle_reg:'BN21 XKT', job_id:'MAN-44830', consignee:'Asda Lutterworth', wait_hours:3.5, hourly_rate_gbp:45, total_charge_gbp:157, driver_name:'Dave P' } },
+      job_delayed:          { label: 'Job Delayed',                    fields: { vehicle_reg:'LK72 ABX', delay_minutes:45, reason:'M62 congestion J26', sla_deadline:'15:30', consignee:'Tesco DC Donington', job_id:'MAN-44821', penalty_gbp:1200, consignee_phone:'' } },
+      job_cancelled:        { label: 'Job Cancelled by Customer',      fields: { vehicle_reg:'LK72 ABX', job_id:'MAN-44822', reason:'Customer cancelled 2h before collection', value_gbp:2400, collection:'Leeds DC', consignee:'Asda Lutterworth', driver_dispatched:true, consignee_phone:'' } },
+      collection_no_show:   { label: 'Collection No-Show',             fields: { vehicle_reg:'LK72 ABX', job_id:'MAN-44823', collection_point:'Sheffield DC', booked_time:'09:00', wait_minutes:55, driver_name:'Dave P', consignee_phone:'' } },
+      failed_delivery:      { label: 'Failed Delivery',                fields: { vehicle_reg:'LK72 ABX', job_id:'MAN-44824', consignee:'NHS Supply Chain Redditch', reason:'Site closed — no staff on loading bay', attempted_time:'14:22', value_gbp:6800, consignee_phone:'' } },
+      pod_overdue:          { label: 'POD Not Received',               fields: { vehicle_reg:'LK72 ABX', job_id:'MAN-44825', consignee:'NHS Supply Chain Redditch', hours_overdue:3, value_gbp:6800, consignee_phone:'' } },
+      route_deviation:      { label: 'Route Deviation',                fields: { vehicle_reg:'LK72 ABX', planned_route:'M62 → M1 south', current_location:'A1(M) northbound J8', deviation_miles:11, job_id:'MAN-44826', driver_name:'Dave P' } },
+      multi_drop_change:    { label: 'Multi-Drop Sequence Change',     fields: { vehicle_reg:'LK72 ABX', job_id:'MAN-44827', original_sequence:'Leeds→Bradford→Wakefield', new_sequence:'Leeds→Wakefield→Bradford', reason:'Bradford customer requested later slot', driver_name:'Dave P' } },
+      driver_change:        { label: 'Driver Change Required',         fields: { vehicle_reg:'LK72 ABX', job_id:'MAN-44828', original_driver:'Dave P', reason:'Driver reported unwell at depot', collection_in_mins:45, consignee:'Tesco DC Donington' } },
+      night_out_required:   { label: 'Night Out Required',             fields: { vehicle_reg:'LK72 ABX', driver_name:'Dave P', location:'Corley Services M6', reason:'Hours exhausted — cannot complete return leg', cargo:'perishable — chilled 0-5C', job_id:'MAN-44829' } },
+      detention_charge:     { label: 'Detention Charge Triggered',     fields: { vehicle_reg:'LK72 ABX', job_id:'MAN-44830', consignee:'Asda Lutterworth', wait_hours:3.5, hourly_rate_gbp:45, total_charge_gbp:157, driver_name:'Dave P' } },
     }
   },
 
@@ -79,16 +79,16 @@ const WEBHOOK_SYSTEMS = {
       temp_alarm:           { label: 'Temperature Alarm',              fields: { vehicle_reg:'LK72 ABX', temp_reading:7.2, threshold:5.0, cargo_type:'chilled 0-5C', location:'M1 southbound J18', driver_name:'Dave P', reefer_unit:'Carrier Transicold', consignee_phone:'' } },
       temp_probe_failure:   { label: 'Temperature Probe Failure',      fields: { vehicle_reg:'LK72 ABX', probe_id:'probe_1', location:'A1 northbound J41', cargo:'pharmaceutical chilled', consignee:'NHS Supply Chain', driver_name:'Dave P' } },
       reefer_fault:         { label: 'Reefer Unit Fault',              fields: { vehicle_reg:'LK72 ABX', fault_code:'E-014', fault_desc:'Compressor overload', location:'M62 westbound J27', cargo_type:'frozen -18C', cargo_value_gbp:14000, driver_name:'Dave P' } },
-      door_open_transit:    { label: 'Cargo Door Open in Transit',     fields: { vehicle_reg:'BN21 XKT', location:'B1234 industrial estate Sheffield', speed_mph:0, time_stopped_mins:18, cargo:'mixed retail', driver_name:'Dave P' } },
-      off_route:            { label: 'Vehicle Off Route',              fields: { vehicle_reg:'BN21 XKT', deviation_miles:8, planned_route:'M62 westbound', current_location:'A1(M) northbound J8', driver_name:'Dave P' } },
-      geofence_breach:      { label: 'Geofence Breach',               fields: { vehicle_reg:'BN21 XKT', zone:'Restricted residential area', location:'Selby town centre', reason:'unknown', driver_name:'Dave P', time:'22:47' } },
-      panic_button:         { label: 'Panic Button Pressed',          fields: { vehicle_reg:'BN21 XKT', driver_name:'Dave P', location:'A638 nr Wakefield', cargo_value_gbp:18000, time:'23:12' } },
-      impact_detected:      { label: 'Impact / Collision Detected',   fields: { vehicle_reg:'BN21 XKT', g_force:1.8, location:'A1 southbound J34', driver_name:'Dave P', speed_at_impact_mph:12, cargo:'fragile electronics', time:'09:34' } },
-      engine_fault:         { label: 'Engine Fault Code',             fields: { vehicle_reg:'BN21 XKT', fault_code:'P0236', fault_desc:'Turbo boost sensor fault', location:'M1 northbound J28', driver_name:'Dave P', mileage:187432 } },
-      fuel_critical:        { label: 'Fuel Level Critical',           fields: { vehicle_reg:'BN21 XKT', fuel_percent:8, estimated_range_miles:28, location:'M62 eastbound J33', driver_name:'Dave P', nearest_forecourt:'Ferrybridge Services 4 miles' } },
-      tyre_pressure:        { label: 'Tyre Pressure Alert',           fields: { vehicle_reg:'BN21 XKT', tyre_position:'nearside front', pressure_bar:5.2, threshold_bar:6.8, location:'M18 J2', driver_name:'Dave P', cargo_weight_kg:18000 } },
-      overspeed:            { label: 'Speed Violation',               fields: { vehicle_reg:'BN21 XKT', speed_mph:68, limit_mph:56, location:'M62 westbound J26', driver_name:'Dave P', duration_secs:34 } },
-      ulez_entry:           { label: 'ULEZ / Clean Air Zone Entry',   fields: { vehicle_reg:'BN21 XKT', zone:'London ULEZ', entry_time:'07:34', vehicle_compliant:false, daily_charge_gbp:100, driver_name:'Dave P' } },
+      door_open_transit:    { label: 'Cargo Door Open in Transit',     fields: { vehicle_reg:'LK72 ABX', location:'B1234 industrial estate Sheffield', speed_mph:0, time_stopped_mins:18, cargo:'mixed retail', driver_name:'Dave P' } },
+      off_route:            { label: 'Vehicle Off Route',              fields: { vehicle_reg:'LK72 ABX', deviation_miles:8, planned_route:'M62 westbound', current_location:'A1(M) northbound J8', driver_name:'Dave P' } },
+      geofence_breach:      { label: 'Geofence Breach',               fields: { vehicle_reg:'LK72 ABX', zone:'Restricted residential area', location:'Selby town centre', reason:'unknown', driver_name:'Dave P', time:'22:47' } },
+      panic_button:         { label: 'Panic Button Pressed',          fields: { vehicle_reg:'LK72 ABX', driver_name:'Dave P', location:'A638 nr Wakefield', cargo_value_gbp:18000, time:'23:12' } },
+      impact_detected:      { label: 'Impact / Collision Detected',   fields: { vehicle_reg:'LK72 ABX', g_force:1.8, location:'A1 southbound J34', driver_name:'Dave P', speed_at_impact_mph:12, cargo:'fragile electronics', time:'09:34' } },
+      engine_fault:         { label: 'Engine Fault Code',             fields: { vehicle_reg:'LK72 ABX', fault_code:'P0236', fault_desc:'Turbo boost sensor fault', location:'M1 northbound J28', driver_name:'Dave P', mileage:187432 } },
+      fuel_critical:        { label: 'Fuel Level Critical',           fields: { vehicle_reg:'LK72 ABX', fuel_percent:8, estimated_range_miles:28, location:'M62 eastbound J33', driver_name:'Dave P', nearest_forecourt:'Ferrybridge Services 4 miles' } },
+      tyre_pressure:        { label: 'Tyre Pressure Alert',           fields: { vehicle_reg:'LK72 ABX', tyre_position:'nearside front', pressure_bar:5.2, threshold_bar:6.8, location:'M18 J2', driver_name:'Dave P', cargo_weight_kg:18000 } },
+      overspeed:            { label: 'Speed Violation',               fields: { vehicle_reg:'LK72 ABX', speed_mph:68, limit_mph:56, location:'M62 westbound J26', driver_name:'Dave P', duration_secs:34 } },
+      ulez_entry:           { label: 'ULEZ / Clean Air Zone Entry',   fields: { vehicle_reg:'LK72 ABX', zone:'London ULEZ', entry_time:'07:34', vehicle_compliant:false, daily_charge_gbp:100, driver_name:'Dave P' } },
     }
   },
 
@@ -96,19 +96,19 @@ const WEBHOOK_SYSTEMS = {
   microlise: {
     label: 'Microlise Fleet', icon: '📍', color: '#a855f7',
     events: {
-      harsh_braking:        { label: 'Harsh Braking Event',           fields: { vehicle_reg:'BN21 XKT', g_force:0.45, location:'A1 southbound J34', cargo_type:'fragile electronics', driver_name:'Dave P', speed_before_mph:52 } },
-      harsh_acceleration:   { label: 'Harsh Acceleration',            fields: { vehicle_reg:'BN21 XKT', g_force:0.38, location:'M1 northbound J29', driver_name:'Dave P', cargo:'chilled foodstuffs', time:'08:17' } },
-      harsh_cornering:      { label: 'Harsh Cornering',               fields: { vehicle_reg:'BN21 XKT', g_force:0.31, location:'A638 roundabout Wakefield', driver_name:'Dave P', cargo:'fragile — stacked pallets' } },
-      wtd_hours_warning:    { label: 'WTD Hours Approaching Limit',   fields: { vehicle_reg:'BN21 XKT', driver_name:'Dave P', hours_driven_this_week:42, weekly_limit:48, hours_remaining:6, remaining_jobs:2 } },
-      wtd_hours_breach:     { label: 'WTD Hours Breached',            fields: { vehicle_reg:'BN21 XKT', driver_name:'Dave P', hours_driven:48.5, location:'M1 J30', remaining_jobs:1, consignee:'NHS Supply Chain', job_id:'MAN-44820' } },
-      tacho_fault:          { label: 'Tachograph Fault',              fields: { vehicle_reg:'BN21 XKT', fault_type:'card read error', driver_name:'Dave P', location:'Leeds DC', kilometres_driven_without_record:14 } },
-      no_driver_card:       { label: 'Driving Without Tacho Card',    fields: { vehicle_reg:'BN21 XKT', driver_name:'Dave P', location:'M62 westbound J28', duration_mins:22, distance_km:18 } },
-      long_stop:            { label: 'Unexpected Long Stop',          fields: { vehicle_reg:'BN21 XKT', stop_duration_mins:92, location:'Toddington Services M1', driver_name:'Dave P', cargo:'temperature sensitive', next_delivery_sla:'16:00' } },
-      excessive_idling:     { label: 'Excessive Idling',              fields: { vehicle_reg:'BN21 XKT', idle_minutes:45, fuel_wasted_litres:6.2, location:'Leeds Distribution Centre', driver_name:'Dave P' } },
-      licence_expiry:       { label: 'Driver Licence Expiry Warning', fields: { driver_name:'Dave P', vehicle_reg:'BN21 XKT', licence_expiry:'2026-05-14', days_remaining:38, licence_category:'C+E' } },
-      cpc_expiry:           { label: 'CPC / DQC Expiry Warning',     fields: { driver_name:'Dave P', dqc_expiry:'2026-06-01', days_remaining:56, vehicle_reg:'BN21 XKT', action_required:'Book CPC periodic training' } },
-      vehicle_service_due:  { label: 'Vehicle Service Overdue',       fields: { vehicle_reg:'BN21 XKT', service_type:'6-week safety inspection', overdue_days:4, mileage:187432, last_service:'2026-02-18', location:'Leeds depot' } },
-      mot_due:              { label: 'MOT / Annual Test Due',         fields: { vehicle_reg:'BN21 XKT', mot_expiry:'2026-04-28', days_remaining:22, vehicle_type:'HGV 44t', test_centre:'Pearson Haulage Leeds' } },
+      harsh_braking:        { label: 'Harsh Braking Event',           fields: { vehicle_reg:'LK72 ABX', g_force:0.45, location:'A1 southbound J34', cargo_type:'fragile electronics', driver_name:'Dave P', speed_before_mph:52 } },
+      harsh_acceleration:   { label: 'Harsh Acceleration',            fields: { vehicle_reg:'LK72 ABX', g_force:0.38, location:'M1 northbound J29', driver_name:'Dave P', cargo:'chilled foodstuffs', time:'08:17' } },
+      harsh_cornering:      { label: 'Harsh Cornering',               fields: { vehicle_reg:'LK72 ABX', g_force:0.31, location:'A638 roundabout Wakefield', driver_name:'Dave P', cargo:'fragile — stacked pallets' } },
+      wtd_hours_warning:    { label: 'WTD Hours Approaching Limit',   fields: { vehicle_reg:'LK72 ABX', driver_name:'Dave P', hours_driven_this_week:42, weekly_limit:48, hours_remaining:6, remaining_jobs:2 } },
+      wtd_hours_breach:     { label: 'WTD Hours Breached',            fields: { vehicle_reg:'LK72 ABX', driver_name:'Dave P', hours_driven:48.5, location:'M1 J30', remaining_jobs:1, consignee:'NHS Supply Chain', job_id:'MAN-44820' } },
+      tacho_fault:          { label: 'Tachograph Fault',              fields: { vehicle_reg:'LK72 ABX', fault_type:'card read error', driver_name:'Dave P', location:'Leeds DC', kilometres_driven_without_record:14 } },
+      no_driver_card:       { label: 'Driving Without Tacho Card',    fields: { vehicle_reg:'LK72 ABX', driver_name:'Dave P', location:'M62 westbound J28', duration_mins:22, distance_km:18 } },
+      long_stop:            { label: 'Unexpected Long Stop',          fields: { vehicle_reg:'LK72 ABX', stop_duration_mins:92, location:'Toddington Services M1', driver_name:'Dave P', cargo:'temperature sensitive', next_delivery_sla:'16:00' } },
+      excessive_idling:     { label: 'Excessive Idling',              fields: { vehicle_reg:'LK72 ABX', idle_minutes:45, fuel_wasted_litres:6.2, location:'Leeds Distribution Centre', driver_name:'Dave P' } },
+      licence_expiry:       { label: 'Driver Licence Expiry Warning', fields: { driver_name:'Dave P', vehicle_reg:'LK72 ABX', licence_expiry:'2026-05-14', days_remaining:38, licence_category:'C+E' } },
+      cpc_expiry:           { label: 'CPC / DQC Expiry Warning',     fields: { driver_name:'Dave P', dqc_expiry:'2026-06-01', days_remaining:56, vehicle_reg:'LK72 ABX', action_required:'Book CPC periodic training' } },
+      vehicle_service_due:  { label: 'Vehicle Service Overdue',       fields: { vehicle_reg:'LK72 ABX', service_type:'6-week safety inspection', overdue_days:4, mileage:187432, last_service:'2026-02-18', location:'Leeds depot' } },
+      mot_due:              { label: 'MOT / Annual Test Due',         fields: { vehicle_reg:'LK72 ABX', mot_expiry:'2026-04-28', days_remaining:22, vehicle_type:'HGV 44t', test_centre:'Pearson Haulage Leeds' } },
     }
   },
 
@@ -116,15 +116,15 @@ const WEBHOOK_SYSTEMS = {
   samsara: {
     label: 'Samsara IoT', icon: '🔬', color: '#00e5b0',
     events: {
-      cargo_tamper:         { label: 'Cargo Tamper / Theft Alert',    fields: { vehicle_reg:'BN21 XKT', sensor:'cargo_seal_broken', location:'A1 southbound J41 layby', time:'02:34', cargo:'mixed retail', cargo_value_gbp:24000, driver_name:'Dave P' } },
-      trailer_detached:     { label: 'Trailer Detached Unexpectedly', fields: { vehicle_reg:'BN21 XKT', trailer_id:'TRL-0087', location:'M1 J32 slip road', driver_name:'Dave P', cargo_loaded:true, cargo_value_gbp:18000 } },
-      rollover_detected:    { label: 'Rollover / Tip Detected',       fields: { vehicle_reg:'BN21 XKT', g_force:3.4, location:'A638 Wakefield ring road', driver_name:'Dave P', cargo:'fragile', emergency_services_notified:false } },
-      load_movement:        { label: 'Load Movement Detected',        fields: { vehicle_reg:'BN21 XKT', sensor:'load_shift', location:'M62 J27 roundabout', driver_name:'Dave P', cargo:'unstable pallets — mixed weight', action:'driver alerted to pull over' } },
-      fuel_card_anomaly:    { label: 'Fuel Card Anomaly',             fields: { vehicle_reg:'BN21 XKT', driver_name:'Dave P', expected_location:'Leeds to Sheffield route', transaction_location:'Peterborough A1', volume_litres:320, vehicle_tank_capacity_litres:280 } },
-      wrong_fuel:           { label: 'Wrong Fuel Type',               fields: { vehicle_reg:'BN21 XKT', driver_name:'Dave P', fuel_put_in:'AdBlue tank — wrong cap', location:'Ferrybridge Services M62', litres_added:40 } },
-      tail_lift_fault:      { label: 'Tail-Lift Fault',               fields: { vehicle_reg:'BN21 XKT', fault:'hydraulic failure', location:'NHS Supply Chain Redditch', driver_name:'Dave P', delivery_at_risk:true, pallets_to_unload:8 } },
-      fatigue_alert:        { label: 'Driver Fatigue Alert',          fields: { vehicle_reg:'BN21 XKT', driver_name:'Dave P', hours_driven_today:7.5, break_overdue_mins:22, location:'M1 northbound J29', next_delivery:'Sheffield NHS 16:00' } },
-      mileage_discrepancy:  { label: 'Mileage Discrepancy',           fields: { vehicle_reg:'BN21 XKT', recorded_miles:287, gps_actual_miles:341, date:'today', driver_name:'Dave P', note:'54 miles unaccounted' } },
+      cargo_tamper:         { label: 'Cargo Tamper / Theft Alert',    fields: { vehicle_reg:'LK72 ABX', sensor:'cargo_seal_broken', location:'A1 southbound J41 layby', time:'02:34', cargo:'mixed retail', cargo_value_gbp:24000, driver_name:'Dave P' } },
+      trailer_detached:     { label: 'Trailer Detached Unexpectedly', fields: { vehicle_reg:'LK72 ABX', trailer_id:'TRL-0087', location:'M1 J32 slip road', driver_name:'Dave P', cargo_loaded:true, cargo_value_gbp:18000 } },
+      rollover_detected:    { label: 'Rollover / Tip Detected',       fields: { vehicle_reg:'LK72 ABX', g_force:3.4, location:'A638 Wakefield ring road', driver_name:'Dave P', cargo:'fragile', emergency_services_notified:false } },
+      load_movement:        { label: 'Load Movement Detected',        fields: { vehicle_reg:'LK72 ABX', sensor:'load_shift', location:'M62 J27 roundabout', driver_name:'Dave P', cargo:'unstable pallets — mixed weight', action:'driver alerted to pull over' } },
+      fuel_card_anomaly:    { label: 'Fuel Card Anomaly',             fields: { vehicle_reg:'LK72 ABX', driver_name:'Dave P', expected_location:'Leeds to Sheffield route', transaction_location:'Peterborough A1', volume_litres:320, vehicle_tank_capacity_litres:280 } },
+      wrong_fuel:           { label: 'Wrong Fuel Type',               fields: { vehicle_reg:'LK72 ABX', driver_name:'Dave P', fuel_put_in:'AdBlue tank — wrong cap', location:'Ferrybridge Services M62', litres_added:40 } },
+      tail_lift_fault:      { label: 'Tail-Lift Fault',               fields: { vehicle_reg:'LK72 ABX', fault:'hydraulic failure', location:'NHS Supply Chain Redditch', driver_name:'Dave P', delivery_at_risk:true, pallets_to_unload:8 } },
+      fatigue_alert:        { label: 'Driver Fatigue Alert',          fields: { vehicle_reg:'LK72 ABX', driver_name:'Dave P', hours_driven_today:7.5, break_overdue_mins:22, location:'M1 northbound J29', next_delivery:'Sheffield NHS 16:00' } },
+      mileage_discrepancy:  { label: 'Mileage Discrepancy',           fields: { vehicle_reg:'LK72 ABX', recorded_miles:287, gps_actual_miles:341, date:'today', driver_name:'Dave P', note:'54 miles unaccounted' } },
     }
   },
 
@@ -151,13 +151,13 @@ const WEBHOOK_SYSTEMS = {
       short_pick:           { label: 'Short Pick',                     fields: { order_id:'ORD-88321', warehouse:'Leeds DC', ordered_qty:24, available_qty:18, product_code:'FRZN-MIX-001', consignee:'Asda DC Lutterworth', despatch_deadline:'13:00', sla_penalty_gbp:1800, consignee_phone:'' } },
       pick_error:           { label: 'Pick Error Detected',            fields: { order_id:'ORD-88322', warehouse:'Leeds DC', picker:'Staff ID 047', wrong_product:'AMBT-DRY-003 picked instead of AMBT-DRY-004', consignee:'Tesco DC Donington', packing_already_complete:false } },
       substitution_needed:  { label: 'Substitution Required',          fields: { order_id:'ORD-88323', warehouse:'Birmingham DC', out_of_stock:'Whole milk 6-pint x 48', suggested_sub:'Semi-skimmed 6-pint x 48', consignee:'NHS canteen Birmingham', customer_approval_needed:true } },
-      overweight_load:      { label: 'Overweight Load Detected',       fields: { vehicle_reg:'BN21 XKT', loaded_weight_kg:44800, legal_max_kg:44000, depot:'Manchester DC', consignee:'B&Q Swindon', overweight_kg:800, consignee_phone:'' } },
+      overweight_load:      { label: 'Overweight Load Detected',       fields: { vehicle_reg:'LK72 ABX', loaded_weight_kg:44800, legal_max_kg:44000, depot:'Manchester DC', consignee:'B&Q Swindon', overweight_kg:800, consignee_phone:'' } },
       hazmat_label_missing: { label: 'Hazmat Label Missing',           fields: { order_id:'ORD-88324', product:'isopropyl alcohol 5L x 20', un_number:'UN1219', consignee:'NHS Supply Chain', driver:'BN21 XKT', despatch_window:'closes in 25 mins' } },
-      manifest_mismatch:    { label: 'Manifest Mismatch',              fields: { vehicle_reg:'BN21 XKT', job_id:'MAN-44832', manifest_pallets:18, loaded_pallets:21, extra_product_code:'FRZN-MIX-002', consignee:'Tesco DC Donington', departure_time:'08:30' } },
+      manifest_mismatch:    { label: 'Manifest Mismatch',              fields: { vehicle_reg:'LK72 ABX', job_id:'MAN-44832', manifest_pallets:18, loaded_pallets:21, extra_product_code:'FRZN-MIX-002', consignee:'Tesco DC Donington', departure_time:'08:30' } },
       cutoff_approaching:   { label: 'Despatch Cut-Off Approaching',   fields: { warehouse:'Leeds DC', orders_not_picked:7, orders_total:32, cutoff_time:'17:00', mins_remaining:22, consignee:'Tesco Express stores', sla_penalty_per_order_gbp:500 } },
       vehicle_not_arrived:  { label: 'Vehicle Not Arrived for Loading', fields: { warehouse:'Leeds DC', vehicle_reg:'LK72 ABX', booked_arrival:'14:00', current_time:'14:38', orders_loaded_waiting:14, consignee:'NHS Supply Chain Redditch', bay:'Bay 3' } },
       bay_blocked:          { label: 'Loading Bay Unavailable',        fields: { warehouse:'Leeds DC', bay:'Bay 2', blocked_reason:'previous vehicle breakdown on apron', vehicles_queuing:3, earliest_clear_time:'15:30', despatch_impact_pallets:42 } },
-      returns_received:     { label: 'Failed Delivery Returned',       fields: { vehicle_reg:'BN21 XKT', job_id:'MAN-44833', consignee:'Asda Lutterworth', returned_pallets:6, return_reason:'site closed', product:'ambient grocery', rebook_required:true, value_gbp:2400 } },
+      returns_received:     { label: 'Failed Delivery Returned',       fields: { vehicle_reg:'LK72 ABX', job_id:'MAN-44833', consignee:'Asda Lutterworth', returned_pallets:6, return_reason:'site closed', product:'ambient grocery', rebook_required:true, value_gbp:2400 } },
     }
   },
 
@@ -182,9 +182,9 @@ const WEBHOOK_SYSTEMS = {
       booking_cancellation: { label: 'Booking Cancellation',           fields: { booking_ref:'BKG-55221', collection:'Birmingham DC', delivery:'NHS Supply Chain Redditch', pallets:12, value_gbp:3400, reason:'production delay', driver_dispatched:true, cancellation_fee_applies:true, consignee_phone:'' } },
       sla_dispute:          { label: 'SLA Dispute Raised',             fields: { booking_ref:'BKG-55222', consignee:'Tesco DC Donington', claimed_late_mins:47, penalty_claimed_gbp:1200, disputed_ref:'PH-8832', evidence:'driver timestamped arrival 14:47, slot was 14:00-15:00', consignee_phone:'' } },
       delivery_window_change:{ label: 'Delivery Window Change Request', fields: { booking_ref:'BKG-55223', consignee:'NHS Supply Chain', original_window:'08:00-10:00', requested_window:'13:00-15:00', reason:'emergency ward busy until midday', vehicle_already_dispatched:true, driver_name:'Dave P' } },
-      pod_dispute:          { label: 'POD Disputed by Customer',       fields: { booking_ref:'BKG-55224', consignee:'Asda Lutterworth', claim:'12 cases of damaged ambient goods', delivery_date:'yesterday', driver_name:'Dave P', vehicle_reg:'BN21 XKT', claimed_value_gbp:1440, cctv_available:true } },
+      pod_dispute:          { label: 'POD Disputed by Customer',       fields: { booking_ref:'BKG-55224', consignee:'Asda Lutterworth', claim:'12 cases of damaged ambient goods', delivery_date:'yesterday', driver_name:'Dave P', vehicle_reg:'LK72 ABX', claimed_value_gbp:1440, cctv_available:true } },
       complaint_logged:     { label: 'Customer Complaint',             fields: { booking_ref:'BKG-55225', consignee:'Tesco DC Donington', complaint:'driver rude to goods-in team, refused to stack in correct area', severity:'high', contract_value_monthly_gbp:28000, account_manager_notified:false } },
-      sla_breach_imminent:  { label: 'SLA Breach Imminent',            fields: { booking_ref:'BKG-55226', consignee:'NHS Supply Chain Birmingham', sla_deadline:'15:30', current_eta:'15:22', buffer_mins:8, penalty_if_late_gbp:2400, vehicle_reg:'BN21 XKT', driver_name:'Dave P' } },
+      sla_breach_imminent:  { label: 'SLA Breach Imminent',            fields: { booking_ref:'BKG-55226', consignee:'NHS Supply Chain Birmingham', sla_deadline:'15:30', current_eta:'15:22', buffer_mins:8, penalty_if_late_gbp:2400, vehicle_reg:'LK72 ABX', driver_name:'Dave P' } },
       change_of_address:    { label: 'Delivery Address Changed',       fields: { booking_ref:'BKG-55227', original_delivery:'NHS Supply Chain Redditch B98 0TH', new_delivery:'NHS Trust Birmingham B15 2TH', distance_change_miles:+28, vehicle_already_en_route:true, driver_name:'Dave P' } },
     }
   },
@@ -193,10 +193,10 @@ const WEBHOOK_SYSTEMS = {
   compliance: {
     label: 'Compliance System', icon: '⚖️', color: '#ef4444',
     events: {
-      dvsa_alert:           { label: 'DVSA Roadside Stop',             fields: { vehicle_reg:'BN21 XKT', driver_name:'Dave P', location:'A1 southbound check point Newark', prohibition_issued:false, advisory_issued:true, advisory_detail:'nearside front tyre wear approaching limit', tacho_checked:true } },
-      adr_documentation:    { label: 'ADR Documentation Incomplete',   fields: { vehicle_reg:'BN21 XKT', driver_name:'Dave P', dangerous_goods:'isopropyl alcohol UN1219 class 3', missing_document:'consignor declaration', location:'Leeds DC — pre-departure', collection_in_mins:30 } },
-      overweight_enforcement:{ label: 'Overweight — Enforcement Risk', fields: { vehicle_reg:'BN21 XKT', gross_weight_kg:44900, legal_max_kg:44000, location:'approaching Ferrybridge weigh-in', driver_name:'Dave P', cargo_offload_options:'none — sealed customer delivery' } },
-      low_bridge_risk:      { label: 'Low Bridge / Restriction Ahead', fields: { vehicle_reg:'BN21 XKT', vehicle_height_m:4.2, restriction_height_m:4.1, restriction_location:'Selby A1041 railway bridge', driver_name:'Dave P', current_route:'programmed route', alternative_required:true } },
+      dvsa_alert:           { label: 'DVSA Roadside Stop',             fields: { vehicle_reg:'LK72 ABX', driver_name:'Dave P', location:'A1 southbound check point Newark', prohibition_issued:false, advisory_issued:true, advisory_detail:'nearside front tyre wear approaching limit', tacho_checked:true } },
+      adr_documentation:    { label: 'ADR Documentation Incomplete',   fields: { vehicle_reg:'LK72 ABX', driver_name:'Dave P', dangerous_goods:'isopropyl alcohol UN1219 class 3', missing_document:'consignor declaration', location:'Leeds DC — pre-departure', collection_in_mins:30 } },
+      overweight_enforcement:{ label: 'Overweight — Enforcement Risk', fields: { vehicle_reg:'LK72 ABX', gross_weight_kg:44900, legal_max_kg:44000, location:'approaching Ferrybridge weigh-in', driver_name:'Dave P', cargo_offload_options:'none — sealed customer delivery' } },
+      low_bridge_risk:      { label: 'Low Bridge / Restriction Ahead', fields: { vehicle_reg:'LK72 ABX', vehicle_height_m:4.2, restriction_height_m:4.1, restriction_location:'Selby A1041 railway bridge', driver_name:'Dave P', current_route:'programmed route', alternative_required:true } },
       operator_licence:     { label: 'Operator Licence Action Needed', fields: { licence_number:'OK1234567', issue:'annual fee overdue 14 days', revocation_risk:true, action_deadline:'2026-04-20', tc_area:'North East of England' } },
     }
   },
@@ -1083,8 +1083,6 @@ export default function DashboardPage() {
   const [cancelConfirm, setCancelConfirm] = useState(null)
   const [reassignTo, setReassignTo] = useState('')
   const [reassignJobRef, setReassignJobRef] = useState(null) // ref being reassigned from unassigned queue
-  const [savings, setSavings] = useState(null)
-  const [savingsLoading, setSavingsLoading] = useState(false)
 
   async function assessCancelAction(approvalId, sentAt) {
     const now = Date.now()
@@ -1124,147 +1122,6 @@ export default function DashboardPage() {
     } catch {}
     finally { setCancellingId(null) }
   }
-  // ── SAVINGS CALCULATOR ─────────────────────────────────────────────────────
-  // Formulas are conservative and auditable. Every number has a cited source.
-  // We do NOT claim savings we cannot evidence. We claim exposure protected and
-  // time recovered — both are calculable from actual event data.
-  //
-  // Response time benchmark: 18 min avg ops phone response (RHA 2023 survey)
-  // Our avg SMS loop: ~6 min (webhook → YES → driver instruction)
-  // Conservative delta used: 12 min per incident
-  //
-  // Ops coordinator rate: £30,000/yr ÷ 2,080hrs = £14.42/hr = £2.88 per 12 min
-  // Driver rate: £32,000/yr ÷ 2,080hrs = £15.38/hr = £3.08 per 12 min
-  // Call eliminated value: £2.50 (ops mgr time per avoided call — internal cost)
-  //
-  // SLA exposure protected = sum of financial_impact on handled incidents.
-  // This is the at-risk value the AI calculated at time of incident — NOT a
-  // guaranteed saving, but the exposure that was managed vs going unresponded.
-  async function loadSavings() {
-    setSavingsLoading(true)
-    try {
-      // Pull webhook audit log
-      const logRes = await fetch('/api/webhooks/inbound?client_id=pearson-haulage&limit=500')
-      const logData = await logRes.json()
-      const allLogs = logData.logs || []
-
-      // Pull approvals
-      const appRes = await fetch('/api/approvals?client_id=pearson-haulage&limit=500')
-      const appData = await appRes.json()
-      const allApprovals = appData.approvals || []
-
-      // Pull pilot_started_at from client config API
-      let pilotStartDate = null
-      try {
-        const cfgRes = await fetch('/api/client-config?client_id=pearson-haulage')
-        const cfgData = await cfgRes.json()
-        if (cfgData.pilot_started_at) pilotStartDate = new Date(cfgData.pilot_started_at)
-      } catch {}
-
-      // Fallback to first webhook event if API fails
-      if (!pilotStartDate) {
-        const firstEvent = [...allLogs].sort((a,b) => new Date(a.created_at) - new Date(b.created_at))[0]
-        if (firstEvent?.created_at) pilotStartDate = new Date(firstEvent.created_at)
-      }
-
-      // ── Filter to pilot period only ────────────────────────────────────────
-      // FIX: Compare YYYY-MM-DD date strings not full timestamps.
-      // Avoids timezone issues where e.g. 00:36 BST = 23:36 UTC previous day,
-      // which would incorrectly exclude events from the first morning of the pilot.
-      const pilotDateStr = pilotStartDate
-        ? pilotStartDate.toISOString().split('T')[0]
-        : null
-      const pilotLogs = pilotDateStr
-        ? allLogs.filter(l => {
-            if (!l.created_at) return false
-            return new Date(l.created_at).toISOString().split('T')[0] >= pilotDateStr
-          })
-        : allLogs
-
-      // ── Core counts ───────────────────────────────────────────────────────
-      // Only count HIGH/CRITICAL as "real" incidents — these had ops SMS fired
-      // MEDIUM logged for audit trail but not counted as active interventions
-      const realIncidents = pilotLogs.filter(l => ['HIGH','CRITICAL'].includes(l.severity))
-      const totalIncidents = pilotLogs.length
-      const smsHandled = pilotLogs.filter(l => l.sms_fired).length
-      const approved = allApprovals.filter(a => ['approved','executed'].includes(a.status)).length
-
-      // ── Payload-grounded vs AI-estimated split ────────────────────────────
-      // financial_source field tells us whether the number came from the payload
-      // or was estimated by AI. We surface this in the UI for transparency.
-      const payloadGrounded = pilotLogs.filter(l => l.financial_source === 'payload' && l.financial_impact > 0)
-      const aiEstimated = pilotLogs.filter(l => l.financial_source === 'ai_estimate' && l.financial_impact > 0)
-
-      // ── SLA exposure protected ────────────────────────────────────────────
-      // Sum financial_impact on HIGH/CRITICAL only.
-      // MEDIUM excluded from exposure total — conservative and defensible.
-      // financial_impact is now payload-grounded where possible (Session 10 fix).
-      const exposureProtected = pilotLogs
-        .filter(l => ['HIGH','CRITICAL'].includes(l.severity) && l.financial_impact > 0)
-        .reduce((sum, l) => sum + Number(l.financial_impact), 0)
-
-      // ── Response time saved ───────────────────────────────────────────────
-      // Benchmark: 18 min average ops phone response (RHA 2023 survey data)
-      // DisruptionHub SMS loop average: ~6 min (webhook fire → YES → driver instruction)
-      // Conservative delta used: 12 min per incident
-      // Only applied to incidents that actually triggered an ops SMS (sms_fired = true)
-      const smsTriggered = smsHandled
-      const minutesSaved = smsTriggered * 12
-      const hoursSaved = Math.round((minutesSaved / 60) * 10) / 10
-
-      // ── Ops time value ────────────────────────────────────────────────────
-      // UK ops coordinator salary £30,000/yr ÷ 2,080 working hrs = £14.42/hr
-      // Each avoided phone-tag loop: 12 min = 0.2 hrs = £2.88
-      const opsTimeSaved = Math.round(smsTriggered * 0.2 * 14.42)
-
-      // ── Driver time recovered ─────────────────────────────────────────────
-      // UK HGV driver average £32,000/yr ÷ 2,080 hrs = £15.38/hr
-      // 12 min faster instruction per incident = 0.2 hrs = £3.08
-      const driverTimeSaved = Math.round(smsTriggered * 0.2 * 15.38)
-
-      // ── Total quantified value ────────────────────────────────────────────
-      const totalValue = exposureProtected + opsTimeSaved + driverTimeSaved
-
-      // ── Pilot duration ────────────────────────────────────────────────────
-      const pilotDays = pilotStartDate
-        ? Math.max(1, Math.round((Date.now() - pilotStartDate.getTime()) / (1000 * 60 * 60 * 24)))
-        : 1
-
-      // ── Projected annual ──────────────────────────────────────────────────
-      // Only project if we have at least 3 days of data — prevents wild extrapolation
-      // from a single day spike
-      const annualProjected = pilotDays >= 3
-        ? Math.round((totalValue / pilotDays) * 365)
-        : null
-
-      const dailyRate = Math.round((totalIncidents / pilotDays) * 10) / 10
-
-      setSavings({
-        totalIncidents,
-        realIncidents: realIncidents.length,
-        smsHandled,
-        approved,
-        exposureProtected,
-        minutesSaved,
-        hoursSaved,
-        opsTimeSaved,
-        driverTimeSaved,
-        totalValue,
-        pilotDays,
-        pilotStartDate,
-        annualProjected,
-        dailyRate,
-        payloadGroundedCount: payloadGrounded.length,
-        aiEstimatedCount: aiEstimated.length,
-        hasPilotDate: !!pilotStartDate,
-      })
-    } catch (e) {
-      console.error('loadSavings error', e)
-    } finally {
-      setSavingsLoading(false)
-    }
-  }
-
   const responseRef = useRef(null)
 
   useEffect(() => {
@@ -1277,10 +1134,6 @@ export default function DashboardPage() {
     const i = setInterval(loadApprovals, 30000)
     return () => clearInterval(i)
   }, [unlocked])
-
-  useEffect(() => {
-    if (unlocked && activeTab === 'approvals') loadSavings()
-  }, [unlocked, activeTab])
 
   useEffect(() => {
     // Load live shipments on every mount
@@ -2079,125 +1932,6 @@ export default function DashboardPage() {
           {/* ── APPROVALS TAB ──────────────────────────────────────────────── */}
           {activeTab === 'approvals' && (
             <div style={{ flex:1, overflowY:'auto', padding:'20px' }}>
-
-              {/* ── VALUE COUNTER PANEL ── */}
-              <div style={{ marginBottom:24 }}>
-                <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:12 }}>
-                  <div>
-                    <div style={{ fontSize:10, color:'#00e5b0', fontFamily:'monospace', fontWeight:700, letterSpacing:'0.08em' }}>// PILOT VALUE TRACKER</div>
-                    {savings?.pilotStartDate && (
-                      <div style={{ fontSize:10, color:'#4a5260', fontFamily:'monospace', marginTop:2 }}>
-                        Pilot started {savings.pilotStartDate.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})} · {savings.pilotDays} day{savings.pilotDays!==1?'s':''} active · {savings.totalIncidents} incident{savings.totalIncidents!==1?'s':''} handled
-                      </div>
-                    )}
-                    {!savings?.pilotStartDate && !savingsLoading && (
-                      <div style={{ fontSize:10, color:'#4a5260', fontFamily:'monospace', marginTop:2 }}>Fire a webhook to start tracking real savings data</div>
-                    )}
-                  </div>
-                  <button onClick={loadSavings} disabled={savingsLoading}
-                    style={{ fontSize:10, color:'#4a5260', background:'none', border:'1px solid rgba(255,255,255,0.06)', borderRadius:4, padding:'3px 8px', cursor:'pointer', fontFamily:'monospace' }}>
-                    {savingsLoading ? '...' : '↻ refresh'}
-                  </button>
-                </div>
-
-                {savingsLoading && !savings && (
-                  <div style={{ display:'flex', alignItems:'center', gap:8, padding:'16px 0' }}>
-                    <div style={{ width:14, height:14, border:'2px solid #00e5b0', borderTopColor:'transparent', borderRadius:'50%', animation:'spin 0.8s linear infinite' }} />
-                    <span style={{ fontSize:11, color:'#4a5260', fontFamily:'monospace' }}>Calculating savings from real incident data...</span>
-                  </div>
-                )}
-
-                {savings && (
-                  <>
-                    {/* Pilot date warning — shown if no official start date set */}
-                    {!savings.hasPilotDate && (
-                      <div style={{ padding:'8px 12px', background:'rgba(245,158,11,0.08)', border:'1px solid rgba(245,158,11,0.2)', borderRadius:6, marginBottom:10, fontSize:10, color:'#f59e0b', fontFamily:'monospace' }}>
-                        ⚠ No official pilot start date set — using first webhook event as fallback. Run the SQL migration and set pilot_started_at in Supabase to lock in the real start date.
-                      </div>
-                    )}
-
-                    {/* Primary metric — full width */}
-                    <div style={{ padding:'16px 20px', background:'rgba(0,229,176,0.06)', border:'1px solid rgba(0,229,176,0.2)', borderRadius:10, marginBottom:10, display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:12 }}>
-                      <div>
-                        <div style={{ fontSize:10, fontFamily:'monospace', color:'#00e5b0', letterSpacing:'0.08em', marginBottom:4 }}>TOTAL SLA EXPOSURE PROTECTED</div>
-                        <div style={{ fontSize:32, fontWeight:700, color:'#00e5b0', fontFamily:'monospace', lineHeight:1 }}>
-                          £{savings.exposureProtected.toLocaleString()}
-                        </div>
-                        <div style={{ fontSize:10, color:'#4a5260', fontFamily:'monospace', marginTop:4 }}>
-                          HIGH/CRITICAL incidents only · {savings.realIncidents} qualifying events
-                          {savings.payloadGroundedCount > 0 && <span style={{ color:'#00e5b0' }}> · {savings.payloadGroundedCount} payload-verified</span>}
-                          {savings.aiEstimatedCount > 0 && <span style={{ color:'#f59e0b' }}> · {savings.aiEstimatedCount} AI-estimated</span>}
-                        </div>
-                      </div>
-                      {savings.annualProjected && (
-                        <div style={{ textAlign:'right' }}>
-                          <div style={{ fontSize:10, fontFamily:'monospace', color:'#4a5260', marginBottom:3 }}>PROJECTED ANNUAL (≥3 days data)</div>
-                          <div style={{ fontSize:22, fontWeight:700, color:'#a855f7', fontFamily:'monospace' }}>£{savings.annualProjected.toLocaleString()}</div>
-                          <div style={{ fontSize:9, color:'#4a5260', fontFamily:'monospace', marginTop:2 }}>{savings.dailyRate} incidents/day avg × 365</div>
-                        </div>
-                      )}
-                      {!savings.annualProjected && (
-                        <div style={{ fontSize:10, color:'#4a5260', fontFamily:'monospace' }}>Annual projection available after 3 days of data</div>
-                      )}
-                    </div>
-
-                    {/* Grid of secondary metrics */}
-                    <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(160px,1fr))', gap:8, marginBottom:10 }}>
-
-                      <div style={{ padding:'12px 14px', background:'#111418', border:'1px solid rgba(255,255,255,0.08)', borderRadius:8 }}>
-                        <div style={{ fontSize:9, color:'#4a5260', fontFamily:'monospace', marginBottom:4 }}>RESPONSE TIME SAVED</div>
-                        <div style={{ fontSize:22, fontWeight:700, color:'#3b82f6', fontFamily:'monospace' }}>{savings.hoursSaved}h</div>
-                        <div style={{ fontSize:9, color:'#4a5260', fontFamily:'monospace', marginTop:3 }}>{savings.minutesSaved} min · 12 min/SMS-handled event</div>
-                      </div>
-
-                      <div style={{ padding:'12px 14px', background:'#111418', border:'1px solid rgba(255,255,255,0.08)', borderRadius:8 }}>
-                        <div style={{ fontSize:9, color:'#4a5260', fontFamily:'monospace', marginBottom:4 }}>INCIDENTS LOGGED</div>
-                        <div style={{ fontSize:22, fontWeight:700, color:'#e8eaed', fontFamily:'monospace' }}>{savings.totalIncidents}</div>
-                        <div style={{ fontSize:9, color:'#4a5260', fontFamily:'monospace', marginTop:3 }}>{savings.smsHandled} ops SMS sent · {savings.realIncidents} HIGH/CRIT · {savings.approved} approved</div>
-                      </div>
-
-                      <div style={{ padding:'12px 14px', background:'#111418', border:'1px solid rgba(255,255,255,0.08)', borderRadius:8 }}>
-                        <div style={{ fontSize:9, color:'#4a5260', fontFamily:'monospace', marginBottom:4 }}>OPS TIME RECOVERED</div>
-                        <div style={{ fontSize:22, fontWeight:700, color:'#f59e0b', fontFamily:'monospace' }}>£{savings.opsTimeSaved}</div>
-                        <div style={{ fontSize:9, color:'#4a5260', fontFamily:'monospace', marginTop:3 }}>£14.42/hr · 12 min per SMS event</div>
-                      </div>
-
-                      <div style={{ padding:'12px 14px', background:'#111418', border:'1px solid rgba(255,255,255,0.08)', borderRadius:8 }}>
-                        <div style={{ fontSize:9, color:'#4a5260', fontFamily:'monospace', marginBottom:4 }}>DRIVER TIME RECOVERED</div>
-                        <div style={{ fontSize:22, fontWeight:700, color:'#f59e0b', fontFamily:'monospace' }}>£{savings.driverTimeSaved}</div>
-                        <div style={{ fontSize:9, color:'#4a5260', fontFamily:'monospace', marginTop:3 }}>£15.38/hr · 12 min faster per instruction</div>
-                      </div>
-
-                    </div>
-
-                    {/* ROI line */}
-                    {savings.totalValue > 0 && (
-                      <div style={{ padding:'10px 14px', background:'rgba(168,85,247,0.06)', border:'1px solid rgba(168,85,247,0.15)', borderRadius:8, display:'flex', alignItems:'center', gap:16, flexWrap:'wrap' }}>
-                        <div style={{ fontSize:10, color:'#4a5260', fontFamily:'monospace' }}>
-                          Total quantified value this pilot: <span style={{ color:'#a855f7', fontWeight:700 }}>£{savings.totalValue.toLocaleString()}</span>
-                        </div>
-                        <div style={{ fontSize:9, color:'#4a5260', fontFamily:'monospace' }}>vs pilot cost £99</div>
-                        {savings.totalValue > 99 && (
-                          <div style={{ fontSize:10, color:'#a855f7', fontFamily:'monospace', fontWeight:700 }}>
-                            {Math.round(savings.totalValue / 99)}× ROI · £299/mo = £{Math.max(0, savings.totalValue - 299).toLocaleString()} net/mo at this rate
-                          </div>
-                        )}
-                        <div style={{ fontSize:9, color:'#4a5260', fontFamily:'monospace', marginLeft:'auto', maxWidth:300, textAlign:'right' }}>
-                          // SLA exposure: payload-grounded where possible, AI-estimated otherwise. Time recovery: £14.42/hr ops + £15.38/hr driver. No fuel or indirect costs.
-                        </div>
-                      </div>
-                    )}
-
-                    {savings.totalIncidents === 0 && (
-                      <div style={{ padding:'12px 14px', background:'rgba(255,255,255,0.02)', border:'1px solid rgba(255,255,255,0.06)', borderRadius:8, textAlign:'center' }}>
-                        <div style={{ fontSize:11, color:'#4a5260', fontFamily:'monospace' }}>No incidents logged in pilot period — fire webhooks from SETUP tab to begin tracking</div>
-                      </div>
-                    )}
-                  </>
-                )}
-              </div>
-
-              <div style={{ height:1, background:'rgba(255,255,255,0.06)', marginBottom:20 }}/>
 
               {/* ── ACTIVE FLEET — always visible at top ── */}
               <div style={{ marginBottom:20 }}>

@@ -34,9 +34,10 @@ async function makeCall(to, twimlMessage) {
   if (!sid || !token || !from || sid.includes('placeholder') || sid.startsWith('AC_')) {
     return { success: false, simulated: true }
   }
-  // Polly.Amy-Generative — British English, highest quality natural voice
+  // Polly.Amy — British English, standard voice (instant playback, no synthesis delay)
+  // Note: Polly.Amy-Generative causes 10-13s silence before speech — unacceptable for ops calls
   const safe = twimlMessage.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&apos;')
-  const twiml = `<?xml version="1.0" encoding="UTF-8"?><Response><Pause length="1"/><Say voice="Polly.Amy-Generative" language="en-GB">${safe}</Say><Pause length="1"/><Say voice="Polly.Amy-Generative" language="en-GB">I will repeat that message.</Say><Pause length="1"/><Say voice="Polly.Amy-Generative" language="en-GB">${safe}</Say><Pause length="1"/><Say voice="Polly.Amy-Generative" language="en-GB">End of message from DisruptionHub.</Say></Response>`
+  const twiml = `<?xml version="1.0" encoding="UTF-8"?><Response><Say voice="Polly.Amy" language="en-GB">${safe}</Say><Pause length="1"/><Say voice="Polly.Amy" language="en-GB">I will repeat that message.</Say><Pause length="1"/><Say voice="Polly.Amy" language="en-GB">${safe}</Say></Response>`
   try {
     const res = await fetch(
       `https://api.twilio.com/2010-04-01/Accounts/${sid}/Calls.json`,
