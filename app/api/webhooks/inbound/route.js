@@ -119,13 +119,13 @@ function buildOpsSMS(eventType, payload, severity, financialImpact, parsedResult
   const sevEmoji = severity === 'CRITICAL' ? '🔴' : severity === 'HIGH' ? '🟠' : '🟡'
   const eventLabel = eventType.replace(/_/g, ' ').toUpperCase()
   const firstAction = parsedResult?.sections?.immediate_actions?.[0] || ''
+  // Target under 160 chars — Action line removed (too long, ops just needs key facts)
   const parts = [
     `${sevEmoji} DISRUPTIONHUB — ${severity}`,
     `${eventLabel} · ${reg}${driver ? ` · ${driver}` : ''}`,
     location ? `Location: ${location}` : '',
     financialImpact > 0 ? `Exposure: £${financialImpact.toLocaleString()}` : '',
-    firstAction ? `Action: ${firstAction.substring(0, 100)}` : '',
-    'Reply YES to execute · NO to dismiss · OPEN for dashboard'
+    'Reply YES · NO · OPEN'
   ].filter(Boolean)
   return parts.join('\n')
 }

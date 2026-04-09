@@ -99,6 +99,13 @@ function toE164UK(phone) {
   return null
 }
 
+// Spell out alphanumeric string for TTS — prevents Polly reading "44821" as a number
+// "MAN-44821" → "M, A, N, 4, 4, 8, 2, 1"
+function spellOut(str) {
+  if (!str) return ''
+  return str.replace(/[^a-zA-Z0-9]/g, '').split('').join(', ')
+}
+
 // Build a driver-facing instruction from webhook event data
 // Webhook AI analysis is written for ops ("contact driver", "call carrier") — not for the driver
 // This function translates the event into plain driver instructions
@@ -459,22 +466,19 @@ export async function POST(request) {
           console.log('[DH Voice] consignee_delay_alert raw:', rawConsigneePhone, '→ E.164:', consigneePhone)
 
           if (consigneePhone) {
-            const spokenReg      = details.vehicle_reg ? details.vehicle_reg.replace(/\s/g,'').split('').join(', ') : null
-            const spokenOpsPhone = client.contact_phone ? client.contact_phone.replace(/\s/g,'').split('').join(', ') : null
+            // One-way notification — no callback instruction
+            // Ops contacts consignee directly if rescheduling needed
+            const spokenReg = details.vehicle_reg ? details.vehicle_reg.replace(/\s/g,'').split('').join(', ') : null
 
-            const parts = [`Hello. This is an automated message from ${contactName || 'your supplier'}.`]
+            const parts = [`Hello. This is an automated delivery update from ${contactName || 'your supplier'}.`]
             if (details.consignee_name) parts.push(`This message is for the goods in team at ${details.consignee_name}.`)
             parts.push(spokenReg
-              ? `Your delivery from vehicle ${spokenReg} is running late and will not arrive at the scheduled time.`
+              ? `Vehicle ${spokenReg} is running approximately ${details.delay_minutes || 'some'} minutes late.`
               : `Your scheduled delivery is running late.`)
-            if (details.delay_minutes) parts.push(`The delay is approximately ${details.delay_minutes} minutes.`)
-            if (details.revised_eta)   parts.push(`Revised estimated arrival is ${details.revised_eta}.`)
-            if (details.delay_reason)  parts.push(`Reason: ${String(details.delay_reason).substring(0,150)}.`)
-            parts.push(spokenOpsPhone
-              ? `To arrange a revised delivery slot, please call our operations team on ${spokenOpsPhone}.`
-              : `Please contact our operations team to arrange a revised slot.`)
-            if (details.ref) parts.push(`Reference number: ${details.ref}.`)
-            parts.push(`Thank you. This was an automated message from DisruptionHub.`)
+            if (details.revised_eta)  parts.push(`Revised estimated arrival is ${details.revised_eta}.`)
+            if (details.delay_reason) parts.push(`Reason: ${String(details.delay_reason).substring(0,120)}.`)
+            if (details.ref)          parts.push(`Delivery reference: ${spellOut(details.ref)}.`)
+            parts.push(`No action is required from you. Thank you.`)
 
             const voiceMessage = parts.join(' ')
             const callResult = await makeCall(consigneePhone, voiceMessage)
