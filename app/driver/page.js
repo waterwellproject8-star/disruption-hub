@@ -360,10 +360,31 @@ export default function DriverApp() {
         drops:s.drops||null
       }))
       const merged = mergeJobProgress(mapped, progData.progress||[])
-      setJobs(merged)
-      const first = merged.find(j=>j.status!=='completed')||merged[0]
+
+      // Check if ETAs are stale — if first active job ETA is in the past, use fresh shipment times
+      // This fixes the issue where ETAs are loaded from localStorage at shift start hours ago
+      const now = new Date()
+      const activeJobs = merged.filter(j => j.status !== 'completed' && j.eta && j.eta !== '???')
+      const firstActiveEta = activeJobs[0]?.eta
+      let finalJobs = merged
+      if (firstActiveEta) {
+        const [h, m] = firstActiveEta.split(':').map(Number)
+        const etaDate = new Date(now)
+        etaDate.setHours(h, m, 0, 0)
+        const staleByMins = (now - etaDate) / 60000
+        // If ETA is more than 30 minutes in the past, use fresh times from shipments API
+        if (staleByMins > 30) {
+          finalJobs = merged.map(j => {
+            const fresh = mapped.find(s => s.ref === j.ref)
+            return fresh ? { ...j, eta: fresh.eta, sla_window: fresh.sla_window } : j
+          })
+        }
+      }
+
+      setJobs(finalJobs)
+      const first = finalJobs.find(j=>j.status!=='completed')||finalJobs[0]
       if (first) setActiveJob(first)
-      return merged
+      return finalJobs
     } catch { showToast('Could not load jobs','error'); return [] }
     finally { setLoading(false) }
   }
