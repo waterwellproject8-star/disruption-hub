@@ -296,7 +296,6 @@ ${systemPrompt}`
     }
 
     // 9. Write approvals
-    // If AI returned no actions, create a default one so ops YES reply works
     const vehicleReg = payload?.vehicle_reg || null
     const actionsToWrite = parsedResult?.actions?.length
       ? parsedResult.actions.slice(0, 3)
@@ -310,10 +309,14 @@ ${systemPrompt}`
           financial_value: financialImpact
         }]
 
+    let approvalsWritten = 0
+    let approvalsError = null
+
     if (supabase && shouldSendSMS) {
-      try {
-        for (const action of actionsToWrite) {
-          await supabase.from('approvals').insert({
+      for (const action of actionsToWrite) {
+        const { data: approvalRow, error: approvalErr } = await supabase
+          .from('approvals')
+          .insert({
             client_id,
             action_type: action.type || 'send_sms',
             action_label: action.label || `${severity} alert — ${event_type.replace(/_/g,' ')}`,
@@ -331,9 +334,15 @@ ${systemPrompt}`
             status: 'pending',
             created_at: new Date().toISOString()
           })
+          .select('id')
+          .single()
+
+        if (approvalErr) {
+          approvalsError = approvalErr.message
+          console.error('approvals insert error:', approvalErr.message, approvalErr.code, approvalErr.details)
+        } else {
+          approvalsWritten++
         }
-      } catch (err) {
-        console.error('approvals insert error:', err.message)
       }
     }
 
@@ -348,7 +357,9 @@ ${systemPrompt}`
       analysis: analysisSummary,
       event_type,
       vehicle_reg: vehicleReg,
-      actions_queued: parsedResult?.actions?.length || 0
+      actions_queued: parsedResult?.actions?.length || 0,
+      approvals_written: approvalsWritten,
+      approvals_error: approvalsError || undefined
     })
 
   } catch (err) {
