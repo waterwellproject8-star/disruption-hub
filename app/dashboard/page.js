@@ -1667,6 +1667,21 @@ export default function DashboardPage() {
     }
   }
 
+  async function resetTestRun() {
+    // Clears all approvals + resets driver_progress for active test vehicle
+    // so a fresh webhook fire works cleanly without logging out of driver app
+    try {
+      // Clear all approvals for this client
+      await fetch('/api/approvals/reset?client_id=pearson-haulage', { method: 'POST' })
+      // Reload dashboard state
+      await Promise.all([loadApprovals(), loadWebhookLog(), loadActiveDrivers()])
+      setWhResult(null)
+      setLocalApprovals([])
+    } catch (e) {
+      console.error('Reset failed:', e.message)
+    }
+  }
+
   return (
     <div style={{ minHeight:'100vh', display:'flex', flexDirection:'column', fontFamily:'IBM Plex Sans, sans-serif', background:'#0a0c0e', color:'#e8eaed' }}>
       <style>{`
@@ -2569,15 +2584,21 @@ export default function DashboardPage() {
                   )}
 
                   {/* Fire button */}
-                  <button onClick={fireWebhook} disabled={whFiring}
-                    style={{ width:'100%', padding:'12px', background: whFiring ? '#111418' : sys?.color || '#00e5b0', border: whFiring ? `1px solid ${sys?.color||'#00e5b0'}40` : 'none', borderRadius:7, color: whFiring ? (sys?.color||'#00e5b0') : '#000', fontWeight:700, fontSize:13, cursor: whFiring ? 'default' : 'pointer', fontFamily:'monospace', letterSpacing:'0.04em', transition:'all 0.2s', marginBottom:14 }}>
-                    {whFiring ? (
-                      <span style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:8 }}>
-                        <span style={{ width:12, height:12, border:'2px solid currentColor', borderTopColor:'transparent', borderRadius:'50%', display:'inline-block', animation:'spin 0.8s linear infinite' }} />
-                        FIRING WEBHOOK...
-                      </span>
-                    ) : `${sys?.icon || '⚡'} FIRE ${sys?.label?.toUpperCase() || ''} → ${evtConfig?.label?.toUpperCase() || ''}`}
-                  </button>
+                  <div style={{ display:'flex', gap:8, marginBottom:14 }}>
+                    <button onClick={fireWebhook} disabled={whFiring}
+                      style={{ flex:1, padding:'12px', background: whFiring ? '#111418' : sys?.color || '#00e5b0', border: whFiring ? `1px solid ${sys?.color||'#00e5b0'}40` : 'none', borderRadius:7, color: whFiring ? (sys?.color||'#00e5b0') : '#000', fontWeight:700, fontSize:13, cursor: whFiring ? 'default' : 'pointer', fontFamily:'monospace', letterSpacing:'0.04em', transition:'all 0.2s' }}>
+                      {whFiring ? (
+                        <span style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:8 }}>
+                          <span style={{ width:12, height:12, border:'2px solid currentColor', borderTopColor:'transparent', borderRadius:'50%', display:'inline-block', animation:'spin 0.8s linear infinite' }} />
+                          FIRING...
+                        </span>
+                      ) : `${sys?.icon || '⚡'} FIRE → ${evtConfig?.label?.toUpperCase() || ''}`}
+                    </button>
+                    <button onClick={resetTestRun} title="Clear approvals and reset for next test"
+                      style={{ padding:'12px 16px', background:'transparent', border:'1px solid rgba(255,255,255,0.1)', borderRadius:7, color:'#4a5260', fontSize:12, cursor:'pointer', fontFamily:'monospace', whiteSpace:'nowrap' }}>
+                      ↺ Reset
+                    </button>
+                  </div>
 
                   {/* Result */}
                   {whResult && !whFiring && (
