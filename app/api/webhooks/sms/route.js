@@ -365,7 +365,7 @@ export async function POST(request) {
         .select('*')
         .eq('client_id', clientId)
         .eq('status', 'pending')
-        .order('created_at', { ascending: false })
+        .order('created_at', { ascending: true })  // oldest first — execute in order they were created
         .limit(1)
 
       if (!approvals?.length) return twimlReply('DH: No pending actions. Check disruptionhub.ai')
