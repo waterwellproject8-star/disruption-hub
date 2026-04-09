@@ -34,7 +34,9 @@ async function makeCall(to, twimlMessage) {
   if (!sid || !token || !from || sid.includes('placeholder') || sid.startsWith('AC_')) {
     return { success: false, simulated: true }
   }
-  const twiml = `<?xml version="1.0" encoding="UTF-8"?><Response><Pause length="1"/><Say voice="alice" language="en-GB">${twimlMessage}</Say><Pause length="1"/><Say voice="alice" language="en-GB">I will repeat that.</Say><Pause length="1"/><Say voice="alice" language="en-GB">${twimlMessage}</Say><Pause length="1"/><Say voice="alice" language="en-GB">End of message from DisruptionHub.</Say></Response>`
+  // Polly.Amy-Generative — British English, highest quality natural voice
+  const safe = twimlMessage.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&apos;')
+  const twiml = `<?xml version="1.0" encoding="UTF-8"?><Response><Pause length="1"/><Say voice="Polly.Amy-Generative" language="en-GB">${safe}</Say><Pause length="1"/><Say voice="Polly.Amy-Generative" language="en-GB">I will repeat that message.</Say><Pause length="1"/><Say voice="Polly.Amy-Generative" language="en-GB">${safe}</Say><Pause length="1"/><Say voice="Polly.Amy-Generative" language="en-GB">End of message from DisruptionHub.</Say></Response>`
   try {
     const res = await fetch(
       `https://api.twilio.com/2010-04-01/Accounts/${sid}/Calls.json`,
@@ -365,17 +367,30 @@ export async function POST(request) {
       }
 
       // Write instruction to driver_progress.alert so driver app can poll it
+      // NOTE: driver_progress has NO client_id column — never filter by it here
+      // Tries vehicle_reg first, falls back to driver_phone if no vehicle_reg match
       async function writeInstructionToApp(instruction) {
-        if (!details.vehicle_reg) return
         try {
-          const { error: wErr } = await db.from('driver_progress')
-            .update({
-              alert: `OPS_MSG:${instruction}`,
-              updated_at: new Date().toISOString()
-            })
-            .eq('vehicle_reg', details.vehicle_reg)
-            .not('status', 'eq', 'completed')
-          if (wErr) console.error('[writeInstructionToApp]', wErr.message)
+          const alertPayload = { alert: `OPS_MSG:${instruction}`, updated_at: new Date().toISOString() }
+
+          // Primary: match by vehicle_reg
+          if (details.vehicle_reg) {
+            const { error: wErr } = await db.from('driver_progress')
+              .update(alertPayload)
+              .eq('vehicle_reg', details.vehicle_reg)
+              .not('status', 'eq', 'completed')
+            if (!wErr) return
+            console.log('[writeInstructionToApp] vehicle_reg match failed, trying driver_phone')
+          }
+
+          // Fallback: match by driver_phone
+          const driverPhoneForBanner = details.driver_phone || null
+          if (driverPhoneForBanner) {
+            await db.from('driver_progress')
+              .update(alertPayload)
+              .eq('driver_phone', driverPhoneForBanner)
+              .not('status', 'eq', 'completed')
+          }
         } catch (e) { console.error('[writeInstructionToApp] exception:', e.message) }
       }
 
