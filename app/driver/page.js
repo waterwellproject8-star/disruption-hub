@@ -619,7 +619,21 @@ export default function DriverApp() {
     }
   }
 
-  function clearSession() {
+  function clearSession(reason = 'session_cleared') {
+    // Mark driver_progress as completed in Supabase before clearing local state
+    // Prevents stale rows from triggering banner notifications on next shift
+    if (driverInfo.vehicleReg || driverInfo.phone) {
+      fetch('/api/driver/end-shift', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          client_id:    driverInfo.clientId,
+          vehicle_reg:  driverInfo.vehicleReg || null,
+          driver_phone: driverInfo.phone || null,
+          reason
+        })
+      }).catch(() => {})
+    }
     ['dh_shift_started','dh_shift_started_at','dh_last_alert','dh_job_progress','dh_ops_messages'].forEach(k=>localStorage.removeItem(k))
     setShiftStarted(false); setShiftEnded(false); setShiftSummary(null); setJobs([]); setActiveJob(null); setLastAlert(null); setStaleSession(null); setPreShiftChecks({}); setOpsMessages([]); setView('run')
   }
@@ -653,6 +667,19 @@ export default function DriverApp() {
     const duration = start ? Math.round((end-start)/60000) : null
     setShiftSummary({ completed, total, incidents:lastAlert?1:0, duration, endTime:end.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}), notes:shiftNotes, mileage:shiftMileage, postShiftChecks, unresolved:jobs.filter(j=>j.status==='at_risk'||j.status==='part_delivered').length })
     setShiftEnded(true); setShowPostShift(false)
+    // Mark driver_progress completed in Supabase — clean exit, no stale data
+    if (driverInfo.vehicleReg || driverInfo.phone) {
+      fetch('/api/driver/end-shift', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          client_id:    driverInfo.clientId,
+          vehicle_reg:  driverInfo.vehicleReg || null,
+          driver_phone: driverInfo.phone || null,
+          reason: 'shift_completed'
+        })
+      }).catch(() => {})
+    }
     ;['dh_shift_started','dh_shift_started_at','dh_last_alert','dh_job_progress'].forEach(k=>localStorage.removeItem(k))
   }
 
@@ -1257,7 +1284,17 @@ export default function DriverApp() {
             <button onClick={()=>setView('preshift')} style={{flex:1,padding:'10px',background:'transparent',border:'1px solid rgba(255,255,255,0.06)',borderRadius:8,color:'#4a5260',fontSize:12,cursor:'pointer'}}>
               🔍 Vehicle check
             </button>
-            <button onClick={()=>{['dh_driver_info','dh_shift_started','dh_shift_started_at','dh_last_alert','dh_job_progress','dh_ops_messages'].forEach(k=>localStorage.removeItem(k));setSetupDone(false);setShiftStarted(false);setJobs([]);setActiveJob(null)}}
+            <button onClick={()=>{
+              // End shift in Supabase before changing driver — prevents stale data
+              if (driverInfo.vehicleReg || driverInfo.phone) {
+                fetch('/api/driver/end-shift', {
+                  method:'POST', headers:{'Content-Type':'application/json'},
+                  body: JSON.stringify({ client_id: driverInfo.clientId, vehicle_reg: driverInfo.vehicleReg||null, driver_phone: driverInfo.phone||null, reason:'driver_change' })
+                }).catch(()=>{})
+              }
+              ;['dh_driver_info','dh_shift_started','dh_shift_started_at','dh_last_alert','dh_job_progress','dh_ops_messages'].forEach(k=>localStorage.removeItem(k))
+              setSetupDone(false);setShiftStarted(false);setJobs([]);setActiveJob(null)
+            }}
               style={{flex:1,padding:'10px',background:'transparent',border:'1px solid rgba(255,255,255,0.06)',borderRadius:8,color:'#4a5260',fontSize:12,cursor:'pointer'}}>
               Change driver
             </button>

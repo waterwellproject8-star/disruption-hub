@@ -1052,7 +1052,8 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(false)
   const [response, setResponse] = useState('')
   const [activeShipment, setActiveShipment] = useState(null)
-  const [activeTab, setActiveTab] = useState('agent')
+  const [activeTab, setActiveTab] = useState('approvals') // 'approvals' = COMMAND tab — default landing
+  const [commandRightTab, setCommandRightTab] = useState('incidents') // 'incidents' | 'value'
   const [pendingApprovals, setPendingApprovals] = useState([])
   const [moduleRunning, setModuleRunning] = useState(null)
   const [moduleResult, setModuleResult] = useState(null)
@@ -1070,6 +1071,9 @@ export default function DashboardPage() {
   const [sessionIncidents, setSessionIncidents] = useState([])
   const [liveShipments, setLiveShipments] = useState([])
   const [whSystem, setWhSystem] = useState('webfleet')
+  const [activeDrivers, setActiveDrivers]           = useState([])
+  const [activeDriversLoading, setActiveDriversLoading] = useState(false)
+  const [selectedTestVehicle, setSelectedTestVehicle]   = useState(null)
   const [whEvent, setWhEvent] = useState('temp_alarm')
   const [whPayload, setWhPayload] = useState(null)
   const [whFiring, setWhFiring] = useState(false)
@@ -1136,16 +1140,18 @@ export default function DashboardPage() {
   }, [unlocked])
 
   useEffect(() => {
-    // Load live shipments on every mount
     fetch('/api/shipments?client_id=pearson-haulage')
       .then(r => r.json())
       .then(data => { if (data.shipments?.length > 0) setLiveShipments(data.shipments) })
       .catch(() => {})
-    // Load latest module run results
     fetch('/api/modules/latest?client_id=pearson-haulage')
       .then(r => r.json())
       .then(data => { if (data.latest) setLatestRuns(data.latest) })
       .catch(() => {})
+    // Pre-load COMMAND tab data on mount
+    loadWebhookLog()
+    loadActiveDrivers()
+    loadFleet()
   }, [])
 
   if (!unlocked) return <PinGate onUnlock={() => setUnlocked(true)} />
@@ -1476,6 +1482,17 @@ export default function DashboardPage() {
     return WEBHOOK_SYSTEMS[whSystem]?.events[whEvent]?.fields || {}
   }
 
+  async function loadActiveDrivers() {
+    setActiveDriversLoading(true)
+    try {
+      const res = await fetch('/api/driver/active?client_id=pearson-haulage')
+      if (!res.ok) return
+      const data = await res.json()
+      setActiveDrivers(data.drivers || [])
+    } catch {}
+    finally { setActiveDriversLoading(false) }
+  }
+
   async function loadFleet() {
     try {
       const res = await fetch('/api/driver/cancel-job?client_id=pearson-haulage')
@@ -1532,6 +1549,25 @@ export default function DashboardPage() {
       await loadApprovals()
     } catch {}
     finally { setCancellingJob(null) }
+  }
+
+  function selectTestVehicle(driver) {
+    setSelectedTestVehicle(driver)
+    // Inject real vehicle data into the current payload
+    const base = WEBHOOK_SYSTEMS[whSystem]?.events[whEvent]?.fields || {}
+    const now = new Date()
+    const timeStr = now.toTimeString().slice(0,5)
+    setWhPayload({
+      ...base,
+      vehicle_reg:       driver.vehicle_reg,
+      driver_name:       driver.driver_name || base.driver_name || '',
+      location:          driver.last_known_location || base.location || '',
+      current_location:  driver.last_known_location || base.current_location || '',
+      consignee:         base.consignee || '',
+      fired_at:          now.toISOString(),
+      // Keep all other defaults from the event
+    })
+    setWhResult(null)
   }
 
   async function fireWebhook() {
@@ -1672,13 +1708,13 @@ export default function DashboardPage() {
 
           {/* Tab bar */}
           <div style={{ padding:'10px 20px', borderBottom:'1px solid rgba(255,255,255,0.06)', display:'flex', alignItems:'center', gap:8 }}>
-            <button style={TAB_STYLE(activeTab==='agent')} onClick={() => setActiveTab('agent')}>AGENT</button>
-            <button style={TAB_STYLE(activeTab==='modules')} onClick={() => setActiveTab('modules')}>MODULES</button>
-            <button style={{ ...TAB_STYLE(activeTab==='approvals'), ...((pendingApprovals.length>0||fleet.length>0)?{borderColor:'rgba(239,68,68,0.4)',color:'#ef4444',background:'rgba(239,68,68,0.08)'}:{}) }} onClick={() => { setActiveTab('approvals'); loadApprovals(); loadFleet() }}>
-              APPROVALS {pendingApprovals.length > 0 ? `(${pendingApprovals.length})` : ''}
+            <button style={{ ...TAB_STYLE(activeTab==='approvals'), ...((pendingApprovals.length>0||fleet.length>0)?{borderColor:'rgba(239,68,68,0.4)',color:'#ef4444',background:'rgba(239,68,68,0.08)'}:{}) }} onClick={() => { setActiveTab('approvals'); loadApprovals(); loadFleet(); loadActiveDrivers(); loadWebhookLog() }}>
+              COMMAND {pendingApprovals.length > 0 ? `(${pendingApprovals.length})` : ''}
             </button>
+            <button style={TAB_STYLE(activeTab==='agent')} onClick={() => setActiveTab('agent')}>AGENT</button>
+            <button style={TAB_STYLE(activeTab==='modules')} onClick={() => setActiveTab('modules')}>INTELLIGENCE</button>
             <button style={TAB_STYLE(activeTab==='scenarios')} onClick={() => setActiveTab('scenarios')}>SCENARIOS</button>
-            <button style={TAB_STYLE(activeTab==='integrations')} onClick={() => { setActiveTab('integrations'); loadWebhookLog() }}>SETUP</button>
+            <button style={TAB_STYLE(activeTab==='integrations')} onClick={() => { setActiveTab('integrations'); loadWebhookLog(); loadActiveDrivers() }}>SETUP</button>
             <div style={{ marginLeft:'auto', display:'flex', alignItems:'center', gap:8 }}>
               <div style={{ width:7, height:7, borderRadius:'50%', background: loading ? '#f59e0b' : '#00e5b0', animation: loading ? 'pulse 1s infinite' : 'none' }} />
               <span style={{ fontFamily:'monospace', fontSize:10, color:'#4a5260' }}>{loading ? 'ANALYSING...' : 'AGENT READY'}</span>
@@ -1931,209 +1967,326 @@ export default function DashboardPage() {
 
           {/* ── APPROVALS TAB ──────────────────────────────────────────────── */}
           {activeTab === 'approvals' && (
-            <div style={{ flex:1, overflowY:'auto', padding:'20px' }}>
+            <div style={{ flex:1, display:'flex', overflow:'hidden', minHeight:0 }}>
 
-              {/* ── ACTIVE FLEET — always visible at top ── */}
-              <div style={{ marginBottom:20 }}>
-                <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:10 }}>
-                  <div style={{ fontSize:10, color:'#00e5b0', fontFamily:'monospace', fontWeight:700, letterSpacing:'0.08em' }}>ACTIVE FLEET</div>
-                  <button onClick={loadFleet} style={{ background:'none', border:'none', color:'#4a5260', fontSize:11, cursor:'pointer', fontFamily:'monospace' }}>↻ refresh</button>
-                </div>
-
-                {fleet.length === 0 ? (
-                  <div style={{ padding:'16px', background:'#111418', border:'1px solid rgba(255,255,255,0.06)', borderRadius:10, textAlign:'center' }}>
-                    <div style={{ fontSize:11, color:'#4a5260', marginBottom:4 }}>No drivers currently on shift</div>
-                    <div style={{ fontSize:10, color:'#4a5260', fontFamily:'monospace' }}>Fleet appears here when drivers are active</div>
+              {/* ══ LEFT — LIVE FLEET ══ */}
+              <div style={{ width:280, flexShrink:0, display:'flex', flexDirection:'column', borderRight:'2px solid rgba(255,255,255,0.06)', overflow:'hidden' }}>
+                <div style={{ background:'#0d1014', borderBottom:'1px solid rgba(255,255,255,0.06)', padding:'12px 16px', display:'flex', justifyContent:'space-between', alignItems:'center', flexShrink:0 }}>
+                  <div>
+                    <div style={{ fontSize:10, fontWeight:700, letterSpacing:'0.1em', color:'#e8eaed', fontFamily:'monospace' }}>LIVE FLEET</div>
+                    <div style={{ fontSize:9, color:'#4a5260', marginTop:2 }}>{activeDrivers.length} on shift</div>
                   </div>
-                ) : (
-                  fleet.map(vehicle => (
-                    <div key={vehicle.vehicle_reg} style={{ background:'#111418', border:'1px solid rgba(255,255,255,0.08)', borderRadius:10, marginBottom:10, overflow:'hidden' }}>
-                      <div style={{ padding:'10px 14px', borderBottom:'1px solid rgba(255,255,255,0.05)', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-                        <div>
-                          <span style={{ fontFamily:'monospace', fontSize:13, color:'#e8eaed', fontWeight:700 }}>{vehicle.vehicle_reg}</span>
-                          {vehicle.driver_name && <span style={{ fontSize:12, color:'#8a9099', marginLeft:8 }}>{vehicle.driver_name}</span>}
-                          <span style={{ fontSize:10, color:'#4a5260', marginLeft:8, fontFamily:'monospace' }}>{vehicle.jobs.length} job{vehicle.jobs.length !== 1 ? 's' : ''}</span>
-                        </div>
-                        <button
-                          onClick={() => setCancelConfirm({ vehicle_reg: vehicle.vehicle_reg, cancel_all: true })}
-                          disabled={cancellingJob === vehicle.vehicle_reg}
-                          style={{ padding:'4px 10px', borderRadius:5, border:'1px solid rgba(239,68,68,0.3)', background:'rgba(239,68,68,0.07)', color:'#ef4444', fontSize:10, cursor:'pointer', fontFamily:'monospace' }}>
-                          Cancel all
-                        </button>
-                      </div>
-                      {vehicle.jobs.map(job => {
-                        const sc = { at_risk:'#ef4444', at_collection:'#3b82f6', loaded:'#00e5b0', at_customer:'#3b82f6', delayed:'#f59e0b', disrupted:'#ef4444', 'on-track':'#00e5b0', part_delivered:'#f59e0b' }[job.status] || '#8a9099'
-                        const hasGoods = ['loaded','at_customer','part_delivered'].includes(job.status)
-                        const isCurrent = ['at_collection','loaded','at_customer'].includes(job.status)
-                        return (
-                          <div key={job.ref} style={{ padding:'9px 14px', borderBottom:'1px solid rgba(255,255,255,0.03)', background: isCurrent ? 'rgba(59,130,246,0.03)' : 'transparent' }}>
-                            <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-                              <div style={{ width:6, height:6, borderRadius:'50%', background:sc, flexShrink:0 }}/>
-                              <div style={{ flex:1, minWidth:0 }}>
-                                <span style={{ fontFamily:'monospace', fontSize:12, color:'#e8eaed', fontWeight:600 }}>{job.ref}</span>
-                                <span style={{ fontSize:10, color:sc, fontFamily:'monospace', marginLeft:8 }}>{job.status.replace(/_/g,' ').toUpperCase()}</span>
-                                {isCurrent && <span style={{ fontSize:9, color:'#3b82f6', fontFamily:'monospace', marginLeft:6 }}>ACTIVE</span>}
-                                {job.alert && <div style={{ fontSize:10, color:'#f59e0b', marginTop:2 }}>⚠ {job.alert}</div>}
-                              </div>
-                              <button
-                                onClick={() => setCancelConfirm({ vehicle_reg: vehicle.vehicle_reg, ref: job.ref, cancel_all: false, hasGoods, isCurrent })}
-                                disabled={cancellingJob === job.ref}
-                                style={{ padding:'4px 10px', borderRadius:5, border:`1px solid ${hasGoods ? 'rgba(245,158,11,0.4)' : 'rgba(239,68,68,0.2)'}`, background:'transparent', color: hasGoods ? '#f59e0b' : '#ef4444', fontSize:10, cursor:'pointer', fontFamily:'monospace', flexShrink:0 }}>
-                                {cancellingJob === job.ref ? '...' : 'Cancel'}
-                              </button>
-                            </div>
-                            {hasGoods && (
-                              <div style={{ fontSize:10, color:'#f59e0b', marginTop:4, marginLeft:16 }}>
-                                ⚠ Goods on vehicle — driver will be told to return to depot
-                              </div>
-                            )}
-                          </div>
-                        )
-                      })}
-                    </div>
-                  ))
-                )}
-              </div>
-
-              <div style={{ height:1, background:'rgba(255,255,255,0.06)', marginBottom:20 }}/>
-
-              {/* ── UNASSIGNED JOBS QUEUE ── */}
-              {unassigned.length > 0 && (
-                <div style={{ marginBottom:20 }}>
-                  <div style={{ fontSize:10, color:'#f59e0b', fontFamily:'monospace', fontWeight:700, letterSpacing:'0.08em', marginBottom:10 }}>
-                    UNASSIGNED JOBS — {unassigned.length} waiting to be reassigned
-                  </div>
-                  {unassigned.map(job => (
-                    <div key={job.ref} style={{ background:'rgba(245,158,11,0.05)', border:'1px solid rgba(245,158,11,0.2)', borderRadius:10, marginBottom:8, overflow:'hidden' }}>
-                      <div style={{ padding:'10px 14px', display:'flex', alignItems:'center', gap:10 }}>
-                        <div style={{ flex:1, minWidth:0 }}>
-                          <span style={{ fontFamily:'monospace', fontSize:13, color:'#e8eaed', fontWeight:700 }}>{job.ref}</span>
-                          <span style={{ fontSize:11, color:'#8a9099', marginLeft:8 }}>was {job.original_vehicle}{job.original_driver ? ` · ${job.original_driver}` : ''}</span>
-                          {job.reason && <div style={{ fontSize:10, color:'#f59e0b', marginTop:2 }}>↳ {job.reason}</div>}
-                        </div>
-                        {reassignJobRef === job.ref ? (
-                          <div style={{ display:'flex', gap:6, alignItems:'center' }}>
-                            <select value={reassignTo} onChange={e => setReassignTo(e.target.value)}
-                              style={{ padding:'5px 8px', background:'#0a0c0e', border:'1px solid rgba(255,255,255,0.12)', borderRadius:5, color: reassignTo ? '#e8eaed' : '#4a5260', fontSize:11, outline:'none', cursor:'pointer', fontFamily:'IBM Plex Sans' }}>
-                              <option value=''>Pick driver...</option>
-                              {fleet.map(v => (
-                                <option key={v.vehicle_reg} value={v.vehicle_reg}>
-                                  {v.vehicle_reg}{v.driver_name ? ` — ${v.driver_name}` : ''}
-                                </option>
-                              ))}
-                            </select>
-                            <button
-                              onClick={() => reassignTo && reassignUnassigned(job.ref, reassignTo, job.reason)}
-                              disabled={!reassignTo || cancellingJob === job.ref}
-                              style={{ padding:'5px 10px', borderRadius:5, border:'none', background: reassignTo ? '#00e5b0' : 'rgba(0,229,176,0.2)', color: reassignTo ? '#000' : '#4a5260', fontSize:11, fontWeight:700, cursor: reassignTo ? 'pointer' : 'default', fontFamily:'monospace', whiteSpace:'nowrap' }}>
-                              {cancellingJob === job.ref ? '...' : 'Assign →'}
-                            </button>
-                            <button onClick={() => { setReassignJobRef(null); setReassignTo('') }}
-                              style={{ padding:'5px 8px', borderRadius:5, border:'1px solid rgba(255,255,255,0.08)', background:'transparent', color:'#4a5260', fontSize:11, cursor:'pointer' }}>
-                              ✕
-                            </button>
-                          </div>
-                        ) : (
-                          <button onClick={() => { setReassignJobRef(job.ref); setReassignTo('') }}
-                            style={{ padding:'5px 12px', borderRadius:5, border:'1px solid rgba(0,229,176,0.3)', background:'rgba(0,229,176,0.06)', color:'#00e5b0', fontSize:11, cursor:'pointer', fontFamily:'monospace', whiteSpace:'nowrap' }}>
-                            Assign to driver
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                  <div style={{ height:1, background:'rgba(255,255,255,0.06)', marginBottom:20, marginTop:10 }}/>
+                  <button onClick={() => { loadActiveDrivers(); loadFleet() }} style={{ background:'none', border:'none', color:'#4a5260', fontSize:11, cursor:'pointer' }}>↻</button>
                 </div>
-              )}
 
-              {/* Session executed actions */}
-              {localApprovals.length > 0 && (
-                <div style={{ marginBottom:16 }}>
-                  <div style={{ fontSize:10, color:'#4a5260', fontFamily:'monospace', marginBottom:10 }}>// EXECUTED THIS SESSION</div>
-                  {localApprovals.map(a => (
-                    <div key={a.id} style={{ border:`1px solid ${a.border}`, borderRadius:8, background:a.bg, marginBottom:7 }}>
-                      <div style={{ padding:'10px 14px', display:'flex', alignItems:'center', gap:10 }}>
-                        <span style={{ fontSize:15 }}>{a.ico}</span>
-                        <div style={{ flex:1, minWidth:0 }}>
-                          <div style={{ fontSize:12, color:'#e8eaed', fontWeight:500 }}>{a.action_label}</div>
-                          <div style={{ fontSize:9, color:'#4a5260', fontFamily:'monospace', marginTop:2 }}>{(a.action_type||'').toUpperCase()} · sent at {a.executed_at}</div>
-                        </div>
-                        <div style={{ display:'flex', alignItems:'center', gap:5, flexShrink:0 }}>
-                          <div style={{ width:6, height:6, borderRadius:'50%', background:'#00e5b0' }} />
-                          <span style={{ fontSize:10, color:'#00e5b0', fontFamily:'monospace' }}>EXECUTED</span>
-                        </div>
-                      </div>
+                <div style={{ flex:1, overflowY:'auto' }}>
+                  {activeDrivers.length === 0 && fleet.length === 0 ? (
+                    <div style={{ padding:16, textAlign:'center' }}>
+                      <div style={{ fontSize:11, color:'#4a5260', marginBottom:4 }}>No drivers on shift</div>
+                      <div style={{ fontSize:10, color:'#4a5260', fontFamily:'monospace' }}>Start a shift in the driver app</div>
                     </div>
-                  ))}
-                  {pendingApprovals.length > 0 && <div style={{ height:1, background:'rgba(255,255,255,0.06)', margin:'12px 0' }} />}
-                </div>
-              )}
-
-              {/* Supabase records */}
-              {pendingApprovals.length > 0 ? (
-                <>
-                  <div style={{ fontSize:10, color:'#4a5260', fontFamily:'monospace', marginBottom:10 }}>// LOGGED ACTIONS — {pendingApprovals.length} record{pendingApprovals.length!==1?'s':''}</div>
-                  {pendingApprovals.map(a => {
-                    const typeMap = {
-                      call:      { bg:'rgba(59,130,246,0.07)',  border:'rgba(59,130,246,0.2)',  ico:'📞' },
-                      email:     { bg:'rgba(0,229,176,0.05)',   border:'rgba(0,229,176,0.18)',  ico:'✉' },
-                      sms:       { bg:'rgba(245,158,11,0.07)',  border:'rgba(245,158,11,0.22)', ico:'💬' },
-                      dispatch:  { bg:'rgba(168,85,247,0.06)', border:'rgba(168,85,247,0.2)',  ico:'🚛' },
-                      notify:    { bg:'rgba(0,229,176,0.05)',   border:'rgba(0,229,176,0.18)',  ico:'📣' },
-                      emergency: { bg:'rgba(239,68,68,0.07)',   border:'rgba(239,68,68,0.2)',   ico:'🚨' },
-                      reroute:   { bg:'rgba(168,85,247,0.06)', border:'rgba(168,85,247,0.2)',  ico:'🗺' },
-                      send_sms:  { bg:'rgba(245,158,11,0.07)',  border:'rgba(245,158,11,0.22)', ico:'💬' },
-                      send_email:{ bg:'rgba(0,229,176,0.05)',   border:'rgba(0,229,176,0.18)',  ico:'✉' },
-                      make_call: { bg:'rgba(59,130,246,0.07)',  border:'rgba(59,130,246,0.2)',  ico:'📞' },
-                    }
-                    const ac = typeMap[a.action_type] || { bg:'rgba(0,229,176,0.05)', border:'rgba(0,229,176,0.18)', ico:'✉' }
-                    const isExecuted = a.status === 'executed'
-                    const isPending = a.status === 'pending'
-                    const isProcessing = approvingId === a.id
-                    const timeStr = a.executed_at ? new Date(a.executed_at).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}) : ''
-                    return (
-                      <div key={a.id} style={{ border:`1px solid ${ac.border}`, borderRadius:8, background:ac.bg, marginBottom:8 }}>
-                        <div style={{ padding:'10px 14px', display:'flex', alignItems:'center', gap:10 }}>
-                          <span style={{ fontSize:15 }}>{ac.ico}</span>
-                          <div style={{ flex:1, minWidth:0 }}>
-                            <div style={{ fontSize:12, color:'#e8eaed', fontWeight:500 }}>{a.action_label}</div>
-                            <div style={{ fontSize:9, color:'#4a5260', fontFamily:'monospace', marginTop:2 }}>
-                              {(a.action_type||'').toUpperCase()}
-                              {timeStr && <span style={{ marginLeft:8 }}>{timeStr}</span>}
-                              {a.financial_value > 0 && <span style={{ marginLeft:8, color:'#00e5b0' }}>£{Number(a.financial_value).toLocaleString()}</span>}
-                            </div>
+                  ) : (
+                    (activeDrivers.length > 0 ? activeDrivers : fleet).map((v, i) => {
+                      const reg = v.vehicle_reg
+                      const name = v.driver_name || v.driver_name || 'Unknown'
+                      const loc = v.last_known_location || null
+                      const cargo = v.cargo_type || null
+                      const route = v.current_route || null
+                      const status = v.status || 'active'
+                      const statusColor = status === 'disrupted' || status === 'at_risk' ? '#ef4444' : status === 'delayed' ? '#f59e0b' : '#00e5b0'
+                      const cargoColor = cargo?.includes('pharma') ? '#a855f7' : cargo?.includes('chilled') || cargo?.includes('frozen') ? '#3b82f6' : '#4a5260'
+                      const fleetVehicle = fleet.find(fv => fv.vehicle_reg === reg)
+                      return (
+                        <div key={i} style={{ padding:'12px 16px', borderBottom:'1px solid rgba(255,255,255,0.04)', borderLeft:`3px solid ${statusColor}` }}>
+                          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:4 }}>
+                            <span style={{ fontFamily:'monospace', fontSize:12, fontWeight:700, color:'#e8eaed', letterSpacing:1 }}>{reg}</span>
+                            <span style={{ fontSize:8, padding:'2px 6px', background:`${statusColor}18`, color:statusColor, fontFamily:'monospace', fontWeight:700 }}>{status.replace(/_/g,' ').toUpperCase()}</span>
                           </div>
-                          {isExecuted ? (
-                            <div style={{ display:'flex', alignItems:'center', gap:5, flexShrink:0 }}>
-                              <div style={{ width:6, height:6, borderRadius:'50%', background:'#00e5b0' }} />
-                              <span style={{ fontSize:10, color:'#00e5b0', fontFamily:'monospace' }}>EXECUTED</span>
-                            </div>
-                          ) : isPending ? (
-                            <div style={{ display:'flex', gap:6 }}>
-                              <button onClick={() => handleApproval(a.id,'approve')} disabled={isProcessing}
-                                style={{ padding:'6px 12px', borderRadius:5, border:'none', background:'#00e5b0', color:'#000', fontWeight:600, fontSize:11, cursor:isProcessing?'default':'pointer', fontFamily:'monospace' }}>
-                                {isProcessing?'...':'✓ SEND'}
-                              </button>
-                              <button onClick={() => assessCancelAction(a.id, a.sent_at)} disabled={isProcessing}
-                                style={{ padding:'6px 10px', borderRadius:5, fontSize:11, cursor:'pointer', border:'1px solid rgba(245,158,11,0.4)', background:'rgba(245,158,11,0.06)', color:'#f59e0b', fontFamily:'monospace' }}>
-                                CANCEL
+                          <div style={{ fontSize:11, color:'#8a9099', marginBottom:3 }}>{name}</div>
+                          {loc && <div style={{ fontSize:9, color:'#4a5260', marginBottom:2 }}>📍 {loc}</div>}
+                          {cargo && <div style={{ fontSize:9, color:cargoColor }}>{cargo.includes('pharma') ? '💊' : cargo.includes('chilled') ? '❄' : '📦'} {cargo}</div>}
+                          {route && <div style={{ fontSize:9, color:'#374151', marginTop:2 }}>→ {route}</div>}
+                          {fleetVehicle && fleetVehicle.jobs?.length > 0 && (
+                            <div style={{ marginTop:6, display:'flex', gap:6 }}>
+                              <button onClick={() => setCancelConfirm({ vehicle_reg: reg, cancel_all: true })}
+                                style={{ padding:'3px 8px', borderRadius:4, border:'1px solid rgba(239,68,68,0.3)', background:'rgba(239,68,68,0.06)', color:'#ef4444', fontSize:9, cursor:'pointer', fontFamily:'monospace' }}>
+                                Cancel all
                               </button>
                             </div>
-                          ) : (
-                            <span style={{ fontSize:10, color:'#4a5260', fontFamily:'monospace' }}>{(a.status||'').toUpperCase()}</span>
                           )}
                         </div>
-                      </div>
-                    )
-                  })}
-                </>
-              ) : localApprovals.length === 0 ? (
-                <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', height:'60%', gap:12, opacity:0.3 }}>
-                  <div style={{ fontFamily:'monospace', fontSize:32, color:'#4a5260' }}>✓</div>
-                  <div style={{ fontSize:12, color:'#4a5260' }}>No actions yet</div>
-                  <div style={{ fontSize:11, color:'#4a5260', textAlign:'center', maxWidth:240 }}>Fire actions from agent analyses to see them here</div>
+                      )
+                    })
+                  )}
+
+                  {/* Unassigned queue */}
+                  {unassigned.length > 0 && (
+                    <div style={{ borderTop:'1px solid rgba(255,255,255,0.06)', padding:'10px 16px' }}>
+                      <div style={{ fontSize:9, color:'#f59e0b', fontFamily:'monospace', fontWeight:700, marginBottom:8 }}>UNASSIGNED — {unassigned.length}</div>
+                      {unassigned.map(job => (
+                        <div key={job.ref} style={{ background:'rgba(245,158,11,0.05)', border:'1px solid rgba(245,158,11,0.15)', borderRadius:6, padding:'8px 10px', marginBottom:6 }}>
+                          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:4 }}>
+                            <span style={{ fontFamily:'monospace', fontSize:11, color:'#e8eaed' }}>{job.ref}</span>
+                            <button onClick={() => { setReassignJobRef(job.ref); setReassignTo('') }}
+                              style={{ padding:'3px 8px', borderRadius:4, border:'1px solid rgba(0,229,176,0.3)', background:'rgba(0,229,176,0.06)', color:'#00e5b0', fontSize:9, cursor:'pointer', fontFamily:'monospace' }}>
+                              Assign →
+                            </button>
+                          </div>
+                          <div style={{ fontSize:9, color:'#4a5260' }}>was {job.original_vehicle}</div>
+                          {reassignJobRef === job.ref && (
+                            <div style={{ display:'flex', gap:6, marginTop:6 }}>
+                              <select value={reassignTo} onChange={e => setReassignTo(e.target.value)}
+                                style={{ flex:1, padding:'4px 6px', background:'#0a0c0e', border:'1px solid rgba(255,255,255,0.1)', borderRadius:4, color: reassignTo ? '#e8eaed' : '#4a5260', fontSize:10, outline:'none', fontFamily:'IBM Plex Sans' }}>
+                                <option value=''>Pick driver...</option>
+                                {fleet.map(v => <option key={v.vehicle_reg} value={v.vehicle_reg}>{v.vehicle_reg}{v.driver_name ? ` — ${v.driver_name}` : ''}</option>)}
+                              </select>
+                              <button onClick={() => reassignTo && reassignUnassigned(job.ref, reassignTo, job.reason)} disabled={!reassignTo}
+                                style={{ padding:'4px 8px', borderRadius:4, border:'none', background: reassignTo ? '#00e5b0' : 'rgba(0,229,176,0.2)', color: reassignTo ? '#000' : '#4a5260', fontSize:10, fontWeight:700, cursor: reassignTo ? 'pointer' : 'default', fontFamily:'monospace' }}>
+                                ✓
+                              </button>
+                              <button onClick={() => { setReassignJobRef(null); setReassignTo('') }}
+                                style={{ padding:'4px 7px', borderRadius:4, border:'1px solid rgba(255,255,255,0.08)', background:'transparent', color:'#4a5260', fontSize:10, cursor:'pointer' }}>✕</button>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
-              ) : null}
+
+                {/* Fleet footer stats */}
+                <div style={{ background:'#0d1014', borderTop:'1px solid rgba(255,255,255,0.06)', padding:'10px 16px', flexShrink:0, display:'flex', gap:16 }}>
+                  {[
+                    { n: fleet.filter(v=>v.jobs?.some(j=>j.status==='at_risk'||j.status==='disrupted')).length, l:'CRITICAL', c:'#ef4444' },
+                    { n: fleet.filter(v=>v.jobs?.some(j=>j.status==='delayed')).length, l:'DELAYED', c:'#f59e0b' },
+                    { n: activeDrivers.length, l:'ACTIVE', c:'#00e5b0' }
+                  ].map(s => (
+                    <div key={s.l} style={{ textAlign:'center' }}>
+                      <div style={{ fontSize:16, fontWeight:700, color:s.c, fontFamily:'monospace' }}>{s.n}</div>
+                      <div style={{ fontSize:8, color:'#4a5260', letterSpacing:1 }}>{s.l}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* ══ CENTRE — ACTION QUEUE ══ */}
+              <div style={{ flex:1, display:'flex', flexDirection:'column', borderRight:'2px solid rgba(255,255,255,0.06)', overflow:'hidden' }}>
+                <div style={{ background:'#0d1014', borderBottom:'1px solid rgba(255,255,255,0.06)', padding:'12px 20px', display:'flex', justifyContent:'space-between', alignItems:'center', flexShrink:0 }}>
+                  <div>
+                    <div style={{ fontSize:10, fontWeight:700, letterSpacing:'0.1em', color:'#e8eaed', fontFamily:'monospace' }}>ACTION QUEUE</div>
+                    <div style={{ fontSize:9, color:'#4a5260', marginTop:2 }}>Decisions waiting · Auto-handled · Resolved</div>
+                  </div>
+                  <div style={{ display:'flex', gap:6 }}>
+                    {[
+                      { n: pendingApprovals.filter(a=>a.status==='pending').length, l:'PENDING', c:'#f59e0b' },
+                      { n: pendingApprovals.filter(a=>a.status==='executed'||a.status==='resolved').length, l:'DONE', c:'#00e5b0' },
+                    ].map(s => (
+                      <div key={s.l} style={{ textAlign:'center', padding:'4px 10px', background:`${s.c}11`, border:`1px solid ${s.c}33` }}>
+                        <div style={{ fontSize:15, fontWeight:700, color:s.c, fontFamily:'monospace' }}>{s.n}</div>
+                        <div style={{ fontSize:8, color:`${s.c}88`, letterSpacing:1 }}>{s.l}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div style={{ flex:1, overflowY:'auto', padding:'14px 20px' }}>
+
+                  {/* Session executed */}
+                  {localApprovals.length > 0 && (
+                    <div style={{ marginBottom:12 }}>
+                      {localApprovals.map(a => (
+                        <div key={a.id} style={{ border:`1px solid ${a.border}`, borderRadius:8, background:a.bg, marginBottom:7, borderLeft:`3px solid #00e5b0` }}>
+                          <div style={{ padding:'10px 14px', display:'flex', alignItems:'center', gap:10 }}>
+                            <span style={{ fontSize:15 }}>{a.ico}</span>
+                            <div style={{ flex:1, minWidth:0 }}>
+                              <div style={{ fontSize:12, color:'#e8eaed', fontWeight:500 }}>{a.action_label}</div>
+                              <div style={{ fontSize:9, color:'#4a5260', fontFamily:'monospace', marginTop:2 }}>{(a.action_type||'').toUpperCase()} · {a.executed_at}</div>
+                            </div>
+                            <div style={{ display:'flex', alignItems:'center', gap:5 }}>
+                              <div style={{ width:6, height:6, borderRadius:'50%', background:'#00e5b0' }} />
+                              <span style={{ fontSize:9, color:'#00e5b0', fontFamily:'monospace' }}>DONE</span>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                      {pendingApprovals.length > 0 && <div style={{ height:1, background:'rgba(255,255,255,0.05)', margin:'10px 0' }} />}
+                    </div>
+                  )}
+
+                  {/* Pending + logged approvals */}
+                  {pendingApprovals.length > 0 ? (
+                    pendingApprovals.map(a => {
+                      const isPending = a.status === 'pending'
+                      const isExecuted = a.status === 'executed' || a.status === 'resolved'
+                      const isRejected = a.status === 'rejected' || a.status === 'expired'
+                      const isProcessing = approvingId === a.id
+                      const borderCol = isPending ? '#f59e0b' : isExecuted ? '#00e5b0' : '#374151'
+                      const bgCol = isPending ? 'rgba(245,158,11,0.04)' : isExecuted ? 'rgba(0,229,176,0.03)' : 'rgba(55,65,81,0.03)'
+                      const typeMap = { call:'📞', make_call:'📞', send_sms:'💬', sms:'💬', send_email:'✉', email:'✉', dispatch:'🚛', reroute:'🗺', notify:'📣', emergency:'🚨', driver_resolved:'✅' }
+                      const ico = typeMap[a.action_type] || '⚡'
+                      const timeStr = a.executed_at ? new Date(a.executed_at).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}) : a.created_at ? new Date(a.created_at).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}) : ''
+                      return (
+                        <div key={a.id} style={{ border:`1px solid ${borderCol}33`, borderLeft:`3px solid ${borderCol}`, borderRadius:8, background:bgCol, marginBottom:8 }}>
+                          <div style={{ padding:'12px 14px' }}>
+                            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:6 }}>
+                              <div style={{ display:'flex', gap:8, alignItems:'center' }}>
+                                <span style={{ fontSize:9, padding:'2px 7px', background:`${borderCol}22`, color:borderCol, fontFamily:'monospace', fontWeight:700 }}>
+                                  {isPending ? '⚠ PENDING' : isExecuted ? '✓ DONE' : isRejected ? '✕ REJECTED' : a.status?.toUpperCase()}
+                                </span>
+                                <span style={{ fontSize:9, color:'#4a5260' }}>{a.action_details?.vehicle_reg || ''}</span>
+                              </div>
+                              <span style={{ fontSize:9, color:'#374151' }}>{timeStr}</span>
+                            </div>
+                            <div style={{ fontSize:13, fontWeight:600, color:'#e8eaed', marginBottom:6 }}>{ico} {a.action_label}</div>
+                            {a.financial_value > 0 && <div style={{ fontSize:10, color:borderCol, fontWeight:600, marginBottom:8 }}>£{Number(a.financial_value).toLocaleString()}</div>}
+                            {isPending && (
+                              <div style={{ display:'flex', gap:6 }}>
+                                <button onClick={() => handleApproval(a.id,'approve')} disabled={isProcessing}
+                                  style={{ padding:'6px 16px', borderRadius:5, border:'none', background:'#00e5b0', color:'#000', fontWeight:700, fontSize:11, cursor:isProcessing?'default':'pointer', fontFamily:'monospace' }}>
+                                  {isProcessing ? '...' : 'YES'}
+                                </button>
+                                <button onClick={() => assessCancelAction(a.id, a.sent_at)} disabled={isProcessing}
+                                  style={{ padding:'6px 12px', borderRadius:5, fontSize:11, cursor:'pointer', border:'1px solid rgba(245,158,11,0.4)', background:'rgba(245,158,11,0.06)', color:'#f59e0b', fontFamily:'monospace' }}>
+                                  NO
+                                </button>
+                                <button onClick={() => { window.open('/dashboard', '_blank') }}
+                                  style={{ padding:'6px 10px', borderRadius:5, border:'1px solid rgba(255,255,255,0.08)', background:'transparent', color:'#4a5260', fontSize:11, cursor:'pointer', fontFamily:'monospace' }}>
+                                  OPEN
+                                </button>
+                              </div>
+                            )}
+                            {isExecuted && <div style={{ fontSize:9, color:'#00e5b0', fontFamily:'monospace' }}>✓ Executed {timeStr}</div>}
+                            {isRejected && <div style={{ fontSize:9, color:'#4a5260', fontFamily:'monospace' }}>Dismissed</div>}
+                          </div>
+                        </div>
+                      )
+                    })
+                  ) : localApprovals.length === 0 ? (
+                    <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', height:'50%', opacity:0.3 }}>
+                      <div style={{ fontFamily:'monospace', fontSize:32, color:'#4a5260' }}>✓</div>
+                      <div style={{ fontSize:12, color:'#4a5260', marginTop:8 }}>All clear</div>
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+
+              {/* ══ RIGHT — INCIDENT FEED + VALUE ══ */}
+              <div style={{ width:280, flexShrink:0, display:'flex', flexDirection:'column', overflow:'hidden' }}>
+
+                {/* Toggle header */}
+                <div style={{ background:'#0d1014', borderBottom:'1px solid rgba(255,255,255,0.06)', flexShrink:0, display:'flex' }}>
+                  <button onClick={() => setCommandRightTab('incidents')}
+                    style={{ flex:1, padding:'12px 0', background:'transparent', border:'none', borderBottom: commandRightTab==='incidents' ? '2px solid #00e5b0' : '2px solid transparent', color: commandRightTab==='incidents' ? '#e8eaed' : '#4a5260', fontSize:10, fontWeight:700, letterSpacing:'0.08em', cursor:'pointer', fontFamily:'monospace' }}>
+                    INCIDENTS
+                  </button>
+                  <button onClick={() => setCommandRightTab('value')}
+                    style={{ flex:1, padding:'12px 0', background:'transparent', border:'none', borderBottom: commandRightTab==='value' ? '2px solid #00e5b0' : '2px solid transparent', color: commandRightTab==='value' ? '#00e5b0' : '#4a5260', fontSize:10, fontWeight:700, letterSpacing:'0.08em', cursor:'pointer', fontFamily:'monospace' }}>
+                    VALUE ▲
+                  </button>
+                </div>
+
+                {/* Mini value banner — always visible */}
+                {(() => {
+                  const hiCrit = whLog.filter(l => l.severity === 'HIGH' || l.severity === 'CRITICAL')
+                  const totalProtected = hiCrit.reduce((s, l) => s + (l.financial_impact || 0), 0)
+                  const timeSavedMins = whLog.filter(l=>l.sms_fired).length * 12
+                  return (
+                    <div onClick={() => setCommandRightTab('value')} style={{ background:'rgba(0,229,176,0.04)', borderBottom:'1px solid rgba(0,229,176,0.12)', padding:'10px 16px', cursor:'pointer', flexShrink:0, display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                      <div>
+                        <div style={{ fontSize:8, color:'#4a5260', letterSpacing:2, marginBottom:2 }}>SLA PROTECTED</div>
+                        <div style={{ fontSize:20, fontWeight:700, color:'#00e5b0', fontFamily:'monospace', lineHeight:1 }}>£{totalProtected.toLocaleString()}</div>
+                      </div>
+                      <div style={{ textAlign:'right' }}>
+                        <div style={{ fontSize:8, color:'#4a5260', letterSpacing:2, marginBottom:2 }}>TIME SAVED</div>
+                        <div style={{ fontSize:20, fontWeight:700, color:'#00e5b0', fontFamily:'monospace', lineHeight:1 }}>{timeSavedMins >= 60 ? `${(timeSavedMins/60).toFixed(1)}h` : `${timeSavedMins}m`}</div>
+                      </div>
+                    </div>
+                  )
+                })()}
+
+                {/* INCIDENTS tab */}
+                {commandRightTab === 'incidents' && (
+                  <div style={{ flex:1, overflowY:'auto' }}>
+                    {whLog.length === 0 ? (
+                      <div style={{ padding:16, textAlign:'center', opacity:0.4 }}>
+                        <div style={{ fontSize:11, color:'#4a5260' }}>No events logged yet</div>
+                      </div>
+                    ) : whLog.map((log, i) => {
+                      const sc = log.severity==='CRITICAL'?'#ef4444':log.severity==='HIGH'?'#f59e0b':log.severity==='MEDIUM'?'#3b82f6':'#374151'
+                      const timeStr = log.created_at ? new Date(log.created_at).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}) : ''
+                      return (
+                        <div key={i} style={{ padding:'10px 16px', borderBottom:'1px solid rgba(255,255,255,0.04)', borderLeft:`3px solid ${sc}`, background: i===0 ? 'rgba(255,255,255,0.01)' : 'transparent' }}>
+                          <div style={{ display:'flex', gap:8, alignItems:'flex-start' }}>
+                            <span style={{ fontSize:8, padding:'2px 5px', background:`${sc}22`, color:sc, fontFamily:'monospace', fontWeight:700, flexShrink:0, marginTop:1 }}>{log.severity}</span>
+                            <div style={{ flex:1, minWidth:0 }}>
+                              <div style={{ fontSize:11, fontWeight:600, color: i===0 ? '#e8eaed' : '#8a9099', marginBottom:2, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
+                                {log.event_type?.replace(/_/g,' ')} · {log.payload?.vehicle_reg || ''}
+                              </div>
+                              <div style={{ fontSize:9, color:'#4a5260' }}>{log.system_name} · {timeStr}</div>
+                              {log.financial_impact > 0 && <div style={{ fontSize:9, color: i===0 ? '#f59e0b' : '#00e5b0', marginTop:2, fontWeight:600 }}>£{Number(log.financial_impact).toLocaleString()}</div>}
+                              {log.sms_fired && <div style={{ fontSize:8, color:'#00e5b0', marginTop:1 }}>✓ SMS sent</div>}
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+
+                {/* VALUE tab */}
+                {commandRightTab === 'value' && (() => {
+                  const hiCrit = whLog.filter(l => l.severity==='HIGH'||l.severity==='CRITICAL')
+                  const smsFired = whLog.filter(l => l.sms_fired)
+                  const totalProtected = hiCrit.reduce((s,l) => s + (l.financial_impact||0), 0)
+                  const payloadVerified = hiCrit.filter(l => l.financial_source === 'payload').length
+                  const aiEstimated = hiCrit.filter(l => l.financial_source === 'ai_estimate').length
+                  const timeSavedMins = smsFired.length * 12
+                  const opsValueGbp = Math.round(smsFired.length * (14.42 / 60) * 12)
+                  const driverValueGbp = Math.round(smsFired.length * (15.38 / 60) * 12)
+                  const canProject = whLog.length >= 20 // 3+ days of data
+                  const stats = [
+                    { label:'TOTAL SLA EXPOSURE PROTECTED', value:`£${totalProtected.toLocaleString()}`, sub:`${hiCrit.length} qualifying events · ${payloadVerified} payload-verified · ${aiEstimated} AI-estimated`, color:'#00e5b0' },
+                    { label:'RESPONSE TIME SAVED', value: timeSavedMins >= 60 ? `${(timeSavedMins/60).toFixed(1)}h` : `${timeSavedMins}m`, sub:`${timeSavedMins} min · 12 min/SMS-handled event`, color:'#00e5b0' },
+                    { label:'INCIDENTS LOGGED', value:String(whLog.length), sub:`${smsFired.length} ops SMS sent · ${hiCrit.length} HIGH/CRIT`, color:'#f59e0b' },
+                    { label:'OPS TIME RECOVERED', value:`£${opsValueGbp}`, sub:`£14.42/hr · 12 min per SMS event`, color:'#6366f1' },
+                    { label:'DRIVER TIME RECOVERED', value:`£${driverValueGbp}`, sub:`£15.38/hr · 12 min faster per instruction`, color:'#6366f1' },
+                  ]
+                  return (
+                    <div style={{ flex:1, overflowY:'auto', padding:'12px 16px' }}>
+                      {stats.map((s, i) => (
+                        <div key={i} style={{ background:'rgba(255,255,255,0.02)', border:`1px solid ${s.color}22`, borderLeft:`3px solid ${s.color}`, borderRadius:6, padding:'12px', marginBottom:8 }}>
+                          <div style={{ fontSize:8, color:'#4a5260', letterSpacing:'0.1em', marginBottom:6 }}>{s.label}</div>
+                          <div style={{ fontSize:24, fontWeight:700, color:s.color, fontFamily:'monospace', lineHeight:1, marginBottom:4 }}>{s.value}</div>
+                          <div style={{ fontSize:9, color:'#374151', lineHeight:1.5 }}>{s.sub}</div>
+                        </div>
+                      ))}
+                      <div style={{ padding:'10px 0', fontSize:9, color:'#374151', lineHeight:1.6, borderTop:'1px solid rgba(255,255,255,0.05)', marginTop:4 }}>
+                        {canProject
+                          ? `Annual projection: £${Math.round((totalProtected/whLog.length)*365/7*5).toLocaleString()} estimated`
+                          : 'Annual projection available after 3 days of data'
+                        }<br/>HIGH/CRITICAL only · Payload-verified figures preferred over AI estimates
+                      </div>
+                    </div>
+                  )
+                })()}
+
+                {/* Stats footer */}
+                <div style={{ background:'#0d1014', borderTop:'1px solid rgba(255,255,255,0.06)', padding:'10px 16px', flexShrink:0 }}>
+                  <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'5px 0' }}>
+                    {[
+                      ['WEBHOOKS', String(whLog.length)],
+                      ['SMS SENT', String(whLog.filter(l=>l.sms_fired).length)],
+                      ['PENDING', String(pendingApprovals.filter(a=>a.status==='pending').length)],
+                      ['EXECUTED', String(pendingApprovals.filter(a=>a.status==='executed').length)],
+                    ].map(([k,v]) => (
+                      <div key={k} style={{ display:'flex', justifyContent:'space-between', paddingRight:8 }}>
+                        <span style={{ fontSize:8, color:'#374151' }}>{k}</span>
+                        <span style={{ fontSize:8, color:'#9ca3af', fontWeight:700, fontFamily:'monospace' }}>{v}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
 
               {/* ── CANCEL JOB CONFIRM MODAL ── */}
               {cancelConfirm && (
@@ -2143,60 +2296,26 @@ export default function DashboardPage() {
                       {cancelConfirm.cancel_all ? 'CANCEL ALL JOBS' : `CANCEL JOB — ${cancelConfirm.ref}`}
                     </div>
                     <div style={{ fontSize:13, color:'#e8eaed', marginBottom:6 }}>
-                      {cancelConfirm.cancel_all
-                        ? `Remove all active jobs from ${cancelConfirm.vehicle_reg}.`
-                        : cancelConfirm.hasGoods
-                          ? `⚠ ${cancelConfirm.ref} — driver has goods on vehicle. They will be instructed to return to depot.`
-                          : `Remove ${cancelConfirm.ref} from ${cancelConfirm.vehicle_reg}.`}
+                      {cancelConfirm.cancel_all ? `Remove all active jobs from ${cancelConfirm.vehicle_reg}.` : cancelConfirm.hasGoods ? `⚠ ${cancelConfirm.ref} — driver has goods on vehicle. They will be instructed to return to depot.` : `Remove ${cancelConfirm.ref} from ${cancelConfirm.vehicle_reg}.`}
                     </div>
-                    {cancelConfirm.hasGoods && (
-                      <div style={{ padding:'10px 12px', background:'rgba(245,158,11,0.08)', border:'1px solid rgba(245,158,11,0.25)', borderRadius:7, marginBottom:10, fontSize:12, color:'#f59e0b' }}>
-                        Driver is mid-job with cargo on board. Cancelling will SMS them to return goods to depot. Make sure there is somewhere for them to return to.
-                      </div>
-                    )}
+                    {cancelConfirm.hasGoods && (<div style={{ padding:'10px 12px', background:'rgba(245,158,11,0.08)', border:'1px solid rgba(245,158,11,0.25)', borderRadius:7, marginBottom:10, fontSize:12, color:'#f59e0b' }}>Driver is mid-job with cargo on board. Cancelling will SMS them to return goods to depot.</div>)}
                     <div style={{ fontSize:12, color:'#8a9099', marginBottom:14 }}>Driver app updates within 60 seconds automatically.</div>
-
-                    {/* Reassign to dropdown */}
                     {fleet.filter(v => v.vehicle_reg !== cancelConfirm.vehicle_reg).length > 0 && (
                       <div style={{ marginBottom:12 }}>
                         <div style={{ fontSize:11, color:'#4a5260', fontFamily:'monospace', marginBottom:6 }}>REASSIGN TO ANOTHER DRIVER — optional</div>
-                        <select
-                          value={reassignTo}
-                          onChange={e => setReassignTo(e.target.value)}
-                          style={{ width:'100%', padding:'9px 12px', background:'#0a0c0e', border:'1px solid rgba(255,255,255,0.1)', borderRadius:6, color: reassignTo ? '#e8eaed' : '#4a5260', fontSize:12, outline:'none', fontFamily:'IBM Plex Sans', cursor:'pointer' }}>
+                        <select value={reassignTo} onChange={e => setReassignTo(e.target.value)} style={{ width:'100%', padding:'9px 12px', background:'#0a0c0e', border:'1px solid rgba(255,255,255,0.1)', borderRadius:6, color: reassignTo ? '#e8eaed' : '#4a5260', fontSize:12, outline:'none', fontFamily:'IBM Plex Sans', cursor:'pointer' }}>
                           <option value=''>No reassignment — just cancel</option>
-                          {fleet.filter(v => v.vehicle_reg !== cancelConfirm.vehicle_reg).map(v => (
-                            <option key={v.vehicle_reg} value={v.vehicle_reg}>
-                              {v.vehicle_reg}{v.driver_name ? ` — ${v.driver_name}` : ''} ({v.jobs.length} active job{v.jobs.length !== 1 ? 's' : ''})
-                            </option>
-                          ))}
+                          {fleet.filter(v => v.vehicle_reg !== cancelConfirm.vehicle_reg).map(v => (<option key={v.vehicle_reg} value={v.vehicle_reg}>{v.vehicle_reg}{v.driver_name ? ` — ${v.driver_name}` : ''} ({v.jobs.length} job{v.jobs.length !== 1 ? 's' : ''})</option>))}
                         </select>
-                        {reassignTo && (
-                          <div style={{ fontSize:11, color:'#00e5b0', marginTop:5 }}>
-                            ✓ Job{cancelConfirm.cancel_all ? 's' : ''} will be pushed to {reassignTo}'s app and they'll receive an SMS
-                          </div>
-                        )}
+                        {reassignTo && <div style={{ fontSize:11, color:'#00e5b0', marginTop:5 }}>✓ Job will be pushed to {reassignTo}</div>}
                       </div>
                     )}
-
-                    <input
-                      value={cancelReason}
-                      onChange={e => setCancelReason(e.target.value)}
-                      placeholder='Reason — e.g. Driver unwell, reassigned to BK22 ABC (optional)'
-                      style={{ width:'100%', padding:'10px 12px', background:'#0a0c0e', border:'1px solid rgba(255,255,255,0.1)', borderRadius:6, color:'#e8eaed', fontSize:12, outline:'none', marginBottom:14, boxSizing:'border-box', fontFamily:'IBM Plex Sans' }}
-                    />
+                    <input value={cancelReason} onChange={e => setCancelReason(e.target.value)} placeholder='Reason — optional' style={{ width:'100%', padding:'10px 12px', background:'#0a0c0e', border:'1px solid rgba(255,255,255,0.1)', borderRadius:6, color:'#e8eaed', fontSize:12, outline:'none', marginBottom:14, boxSizing:'border-box', fontFamily:'IBM Plex Sans' }} />
                     <div style={{ display:'flex', gap:8 }}>
-                      <button
-                        onClick={() => cancelJob(cancelConfirm)}
-                        disabled={!!cancellingJob}
-                        style={{ flex:1, padding:'10px', background: reassignTo ? '#00e5b0' : '#ef4444', border:'none', borderRadius:6, color: reassignTo ? '#000' : '#fff', fontWeight:600, fontSize:12, cursor:'pointer', fontFamily:'monospace' }}>
+                      <button onClick={() => cancelJob(cancelConfirm)} disabled={!!cancellingJob} style={{ flex:1, padding:'10px', background: reassignTo ? '#00e5b0' : '#ef4444', border:'none', borderRadius:6, color: reassignTo ? '#000' : '#fff', fontWeight:600, fontSize:12, cursor:'pointer', fontFamily:'monospace' }}>
                         {cancellingJob ? '...' : reassignTo ? `Reassign to ${reassignTo}` : 'Confirm cancel'}
                       </button>
-                      <button
-                        onClick={() => { setCancelConfirm(null); setCancelReason(''); setReassignTo('') }}
-                        style={{ padding:'10px 16px', background:'transparent', border:'1px solid rgba(255,255,255,0.1)', borderRadius:6, color:'#8a9099', fontSize:12, cursor:'pointer', fontFamily:'monospace' }}>
-                        Keep job
-                      </button>
+                      <button onClick={() => { setCancelConfirm(null); setCancelReason(''); setReassignTo('') }} style={{ padding:'10px 16px', background:'transparent', border:'1px solid rgba(255,255,255,0.1)', borderRadius:6, color:'#8a9099', fontSize:12, cursor:'pointer', fontFamily:'monospace' }}>Keep job</button>
                     </div>
                   </div>
                 </div>
@@ -2206,70 +2325,19 @@ export default function DashboardPage() {
               {cancelAssessment && (
                 <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.7)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:1000 }}>
                   <div style={{ background:'#111418', border:'1px solid rgba(255,255,255,0.12)', borderRadius:12, padding:'24px', maxWidth:480, width:'90%' }}>
-                    <div style={{ fontFamily:'monospace', fontSize:11, color: cancelAssessment.risk === 'NONE' ? '#00e5b0' : cancelAssessment.risk === 'LOW' ? '#f59e0b' : '#ef4444', letterSpacing:'0.08em', marginBottom:12 }}>
-                      CANCEL ASSESSMENT — {cancelAssessment.risk} RISK
-                    </div>
-                    <div style={{ fontSize:13, color:'#e8eaed', lineHeight:1.7, marginBottom:20 }}>
-                      {cancelAssessment.message}
-                    </div>
-
-                    {cancelAssessment.type === 'clean_cancel' && (
-                      <div style={{ display:'flex', gap:8 }}>
-                        <button onClick={() => executeCancelAction(cancelAssessment.approvalId, 'clean_cancel')}
-                          style={{ flex:1, padding:'10px', background:'#ef4444', border:'none', borderRadius:6, color:'#fff', fontWeight:600, fontSize:12, cursor:'pointer', fontFamily:'monospace' }}>
-                          CONFIRM CANCEL
-                        </button>
-                        <button onClick={() => setCancelAssessment(null)}
-                          style={{ padding:'10px 16px', background:'transparent', border:'1px solid rgba(255,255,255,0.12)', borderRadius:6, color:'#8a9099', fontSize:12, cursor:'pointer', fontFamily:'monospace' }}>
-                          KEEP ACTION
-                        </button>
-                      </div>
-                    )}
-
-                    {cancelAssessment.type === 'disregard_cancel' && (
-                      <div>
-                        <div style={{ padding:'10px 12px', background:'rgba(245,158,11,0.08)', border:'1px solid rgba(245,158,11,0.2)', borderRadius:6, fontSize:12, color:'#f59e0b', fontFamily:'monospace', marginBottom:14 }}>
-                          Will send to driver: "DISREGARD previous route instruction. Continue on original route."
-                        </div>
-                        <div style={{ display:'flex', gap:8 }}>
-                          <button onClick={() => executeCancelAction(cancelAssessment.approvalId, 'disregard')}
-                            style={{ flex:1, padding:'10px', background:'#f59e0b', border:'none', borderRadius:6, color:'#000', fontWeight:600, fontSize:12, cursor:'pointer', fontFamily:'monospace' }}>
-                            SEND DISREGARD + CANCEL
-                          </button>
-                          <button onClick={() => setCancelAssessment(null)}
-                            style={{ padding:'10px 16px', background:'transparent', border:'1px solid rgba(255,255,255,0.12)', borderRadius:6, color:'#8a9099', fontSize:12, cursor:'pointer', fontFamily:'monospace' }}>
-                            KEEP ACTION
-                          </button>
-                        </div>
-                      </div>
-                    )}
-
-                    {cancelAssessment.type === 'partial_revert' && (
-                      <div>
-                        <div style={{ padding:'10px 12px', background:'rgba(239,68,68,0.08)', border:'1px solid rgba(239,68,68,0.2)', borderRadius:6, fontSize:12, color:'#ef4444', fontFamily:'monospace', marginBottom:14 }}>
-                          ⚠ Driver likely already {cancelAssessment.estimatedMiles} miles into diversion. Choose carefully.
-                        </div>
-                        <div style={{ display:'flex', flexDirection:'column', gap:8, marginBottom:12 }}>
-                          {cancelAssessment.options?.map(opt => (
-                            <button key={opt.id} onClick={() => executeCancelAction(cancelAssessment.approvalId, opt.id)}
-                              style={{ padding:'10px 14px', background: opt.recommended ? 'rgba(0,229,176,0.1)' : 'rgba(255,255,255,0.04)', border: opt.recommended ? '1px solid rgba(0,229,176,0.3)' : '1px solid rgba(255,255,255,0.08)', borderRadius:6, color: opt.recommended ? '#00e5b0' : '#8a9099', fontSize:12, cursor:'pointer', textAlign:'left', fontFamily:'monospace' }}>
-                              {opt.recommended ? '✓ ' : ''}{opt.label}
-                              <div style={{ fontSize:10, color:'#4a5260', marginTop:3, fontFamily:'IBM Plex Sans' }}>{opt.description}</div>
-                            </button>
-                          ))}
-                        </div>
-                        <button onClick={() => setCancelAssessment(null)}
-                          style={{ width:'100%', padding:'8px', background:'transparent', border:'1px solid rgba(255,255,255,0.08)', borderRadius:6, color:'#4a5260', fontSize:11, cursor:'pointer', fontFamily:'monospace' }}>
-                          DISMISS — TAKE NO ACTION
-                        </button>
-                      </div>
-                    )}
+                    <div style={{ fontFamily:'monospace', fontSize:11, color: cancelAssessment.risk==='NONE'?'#00e5b0':cancelAssessment.risk==='LOW'?'#f59e0b':'#ef4444', letterSpacing:'0.08em', marginBottom:12 }}>CANCEL ASSESSMENT — {cancelAssessment.risk} RISK</div>
+                    <div style={{ fontSize:13, color:'#e8eaed', lineHeight:1.7, marginBottom:20 }}>{cancelAssessment.message}</div>
+                    {cancelAssessment.type === 'clean_cancel' && (<div style={{ display:'flex', gap:8 }}><button onClick={() => executeCancelAction(cancelAssessment.approvalId,'clean_cancel')} style={{ flex:1, padding:'10px', background:'#ef4444', border:'none', borderRadius:6, color:'#fff', fontWeight:600, fontSize:12, cursor:'pointer', fontFamily:'monospace' }}>CONFIRM CANCEL</button><button onClick={() => setCancelAssessment(null)} style={{ padding:'10px 16px', background:'transparent', border:'1px solid rgba(255,255,255,0.12)', borderRadius:6, color:'#8a9099', fontSize:12, cursor:'pointer', fontFamily:'monospace' }}>KEEP ACTION</button></div>)}
+                    {cancelAssessment.type === 'disregard_cancel' && (<div><div style={{ padding:'10px 12px', background:'rgba(245,158,11,0.08)', border:'1px solid rgba(245,158,11,0.2)', borderRadius:6, fontSize:12, color:'#f59e0b', fontFamily:'monospace', marginBottom:14 }}>Will send to driver: "DISREGARD previous route instruction."</div><div style={{ display:'flex', gap:8 }}><button onClick={() => executeCancelAction(cancelAssessment.approvalId,'disregard')} style={{ flex:1, padding:'10px', background:'#f59e0b', border:'none', borderRadius:6, color:'#000', fontWeight:600, fontSize:12, cursor:'pointer', fontFamily:'monospace' }}>SEND DISREGARD + CANCEL</button><button onClick={() => setCancelAssessment(null)} style={{ padding:'10px 16px', background:'transparent', border:'1px solid rgba(255,255,255,0.12)', borderRadius:6, color:'#8a9099', fontSize:12, cursor:'pointer', fontFamily:'monospace' }}>KEEP ACTION</button></div></div>)}
                   </div>
                 </div>
               )}
+
             </div>
           )}
-          {/* ── INTEGRATIONS TAB ───────────────────────────────────────────── */}
+
+
+
           {activeTab === 'integrations' && (() => {
             const sys = WEBHOOK_SYSTEMS[whSystem]
             const evtConfig = sys?.events[whEvent]
@@ -2279,6 +2347,53 @@ export default function DashboardPage() {
 
             return (
               <div style={{ flex:1, overflowY:'auto', padding:'20px', display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, alignItems:'start' }}>
+
+                {/* ── ACTIVE FLEET PANEL — full width above test console ── */}
+                <div style={{ gridColumn:'1 / -1', marginBottom:4 }}>
+                  <div style={{ fontSize:9, color:'#4a5260', fontFamily:'monospace', letterSpacing:'0.08em', marginBottom:10 }}>// ACTIVE FLEET — DRIVERS CURRENTLY ON SHIFT</div>
+                  {activeDriversLoading && (
+                    <div style={{ fontSize:11, color:'#4a5260', padding:'12px 14px', background:'#111418', borderRadius:8 }}>Loading active drivers...</div>
+                  )}
+                  {!activeDriversLoading && activeDrivers.length === 0 && (
+                    <div style={{ fontSize:11, color:'#4a5260', padding:'12px 14px', background:'#111418', border:'1px solid rgba(255,255,255,0.06)', borderRadius:8 }}>
+                      No drivers currently on shift. Have a driver start their shift in the driver app first.
+                    </div>
+                  )}
+                  {!activeDriversLoading && activeDrivers.length > 0 && (
+                    <div style={{ display:'flex', flexWrap:'wrap', gap:10 }}>
+                      {activeDrivers.map((driver, i) => {
+                        const isSelected = selectedTestVehicle?.vehicle_reg === driver.vehicle_reg
+                        const cargoColor = driver.cargo_type?.includes('pharma') ? '#a855f7' : driver.cargo_type?.includes('chilled') || driver.cargo_type?.includes('frozen') ? '#3b82f6' : '#4a5260'
+                        return (
+                          <div key={i} onClick={() => selectTestVehicle(driver)} style={{ padding:'12px 16px', background: isSelected ? 'rgba(0,229,176,0.06)' : '#111418', border: isSelected ? '1px solid rgba(0,229,176,0.35)' : '1px solid rgba(255,255,255,0.08)', borderRadius:9, cursor:'pointer', minWidth:220, flex:'1 1 220px', transition:'all 0.15s' }}>
+                            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:6 }}>
+                              <span style={{ fontSize:13, fontWeight:700, color: isSelected ? '#00e5b0' : '#e8eaed', fontFamily:'monospace', letterSpacing:1 }}>{driver.vehicle_reg}</span>
+                              {isSelected && <span style={{ fontSize:9, color:'#00e5b0', fontFamily:'monospace', letterSpacing:1 }}>✓ SELECTED</span>}
+                            </div>
+                            <div style={{ fontSize:11, color:'#8a9099', marginBottom:4 }}>{driver.driver_name}</div>
+                            {driver.last_known_location && (
+                              <div style={{ fontSize:10, color:'#4a5260', marginBottom:4 }}>📍 {driver.last_known_location}</div>
+                            )}
+                            {driver.cargo_type && (
+                              <div style={{ fontSize:10, color:cargoColor }}>
+                                {driver.cargo_type.includes('pharma') ? '💊' : driver.cargo_type.includes('chilled') ? '❄' : driver.cargo_type.includes('frozen') ? '🧊' : '📦'} {driver.cargo_type}
+                              </div>
+                            )}
+                            {driver.current_route && (
+                              <div style={{ fontSize:10, color:'#4a5260', marginTop:4 }}>→ {driver.current_route}</div>
+                            )}
+                            <div style={{ fontSize:9, color:'#4a5260', marginTop:6, fontFamily:'monospace' }}>
+                              {isSelected ? 'Vehicle reg + location injected into payload' : 'Click to use in test payload →'}
+                            </div>
+                          </div>
+                        )
+                      })}
+                      <button onClick={loadActiveDrivers} style={{ padding:'12px 16px', background:'transparent', border:'1px solid rgba(255,255,255,0.06)', borderRadius:9, color:'#4a5260', fontSize:11, cursor:'pointer', fontFamily:'monospace', alignSelf:'stretch', minWidth:80 }}>
+                        ↻ refresh
+                      </button>
+                    </div>
+                  )}
+                </div>
 
                 {/* ── LEFT: TEST CONSOLE ── */}
                 <div>

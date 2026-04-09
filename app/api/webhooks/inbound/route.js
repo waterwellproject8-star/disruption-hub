@@ -392,6 +392,22 @@ ${systemPrompt}`
       }
     }
 
+    // ── STORE LAST KNOWN LOCATION ────────────────────────────────────────────
+    // Pilot GPS strategy: store last known position from webhook payload
+    // Real Webfleet GPS integration comes when client connects their account
+    const payloadLocation = payload?.location || payload?.current_location || payload?.current_position || null
+    if (supabase && vehicleReg && payloadLocation) {
+      try {
+        await supabase
+          .from('driver_progress')
+          .update({ last_known_location: payloadLocation, updated_at: new Date().toISOString() })
+          .eq('vehicle_reg', vehicleReg)
+          .not('status', 'eq', 'completed')
+      } catch (e) {
+        console.log('[inbound] last_known_location update skipped:', e.message)
+      }
+    }
+
     return Response.json({
       success: true, severity, financial_impact: financialImpact,
       financial_source: confirmedFinancial !== null ? 'payload' : 'ai_estimate',
