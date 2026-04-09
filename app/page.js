@@ -1,83 +1,53 @@
 'use client'
-import { useState, useRef, useEffect } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
 
-const SCENARIOS = {
-  weather: {
-    label: 'Storm closes port',
-    input: `Storm Lilian has closed Port of Felixstowe for 48-72 hours.
-
-AFFECTED:
-- 3 containers of electronics (Samsung TVs, 400 units) — due tomorrow, retailer launch in 4 days, penalty clause £12,000/day late
-- 1 container of medical consumables — NHS contract, 18hr delivery SLA, trust has 2 days stock remaining
-- 2 containers seasonal furniture — B&Q launch in 6 days
-
-Alternative ports: Tilbury (3hrs further, available), Immingham (5hrs, available)
-Air freight for medical goods: ~£8,000 for consignment`
-  },
-  supplier: {
-    label: 'Supplier goes under',
-    input: `Primary supplier FastPack Ltd (Manchester) went into administration overnight.
-
-AFFECTED STOCK:
-- SKU-4421 Foam inserts: 200 units stock, 180/day usage — used in ALL fragile shipments
-- SKU-8832 Custom printed boxes: 0 stock, AstraZeneca quarterly dispatch in 5 days (£45,000 contract)
-- SKU-1190 Bubble wrap: 3 days supply remaining
-
-Alternatives: PackRight Leeds (3-day lead), EcoPack Birmingham (5-day, 15% more expensive)`
-  },
-  driver: {
-    label: 'Driver shortage + system down',
-    input: `Monday 06:00. Two simultaneous failures.
-
-PROBLEM 1: 12 of 34 drivers called sick. 847 parcels to deliver today including 23 next-day-guaranteed, 8 medical (dialysis equipment), 4 legal documents (court deadline 4pm).
-
-PROBLEM 2: WMS crashed at 05:30. IT says 4-6 hours to restore. 560 parcels loaded but manifests are digital-only. 287 parcels not yet allocated.
-
-Available: 22 drivers, 3 agency drivers (2hr lead, £45/hr), CitySprint on standby.`
-  }
+// ── DESIGN TOKENS ─────────────────────────────────────────────────────────────
+const T = {
+  navy:       '#080c14',
+  navyMid:    '#0d1420',
+  navyCard:   '#0f1826',
+  navyRow:    '#111927',
+  amber:      '#f5a623',
+  amberBright:'#ffb733',
+  amberDim:   'rgba(245,166,35,0.15)',
+  amberBorder:'rgba(245,166,35,0.25)',
+  border:     'rgba(255,255,255,0.07)',
+  text:       '#e8eaed',
+  textDim:    '#8a9099',
+  textFaint:  '#4a5260',
+  green:      '#22c55e',
+  red:        '#ef4444',
 }
 
-const STATS = [
-  { value: '30sec', label: 'Avg triage time' },
-  { value: '£40K+', label: 'Avg annual disruption cost avoided' },
-  { value: '85%', label: 'Of decisions made before crisis escalates' },
-  { value: '0', label: 'New software to learn' },
-]
+const FF = {
+  body:      "'Barlow', sans-serif",
+  condensed: "'Barlow Condensed', sans-serif",
+  mono:      "'IBM Plex Mono', monospace",
+}
+
+// ── HEXAGON LOGO MARK ─────────────────────────────────────────────────────────
+function HexMark({ size = 28 }) {
+  return (
+    <div style={{
+      width: size, height: size,
+      background: T.amber,
+      clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
+      flexShrink: 0,
+    }} />
+  )
+}
 
 export default function HomePage() {
-  const [messages, setMessages] = useState([])
-  const [input, setInput] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [response, setResponse] = useState('')
-  const [activeScenario, setActiveScenario] = useState(null)
-  const responseRef = useRef(null)
-  const inputRef = useRef(null)
-
-  useEffect(() => {
-    if (responseRef.current) {
-      responseRef.current.scrollTop = responseRef.current.scrollHeight
-    }
-  }, [response])
-
-  const loadScenario = (key) => {
-    setActiveScenario(key)
-    setInput(SCENARIOS[key].input)
-    inputRef.current?.focus()
-  }
 
   const handleMailto = (e) => {
     const href = e.currentTarget.getAttribute('href')
-    // Try mailto — if no mail client is configured on desktop the browser
-    // loads a blank page. We detect that by checking if the page is still
-    // visible after a short delay and open Gmail compose as fallback.
     let left = true
     const onBlur = () => { left = false }
     window.addEventListener('blur', onBlur, { once: true })
     setTimeout(() => {
       window.removeEventListener('blur', onBlur)
-      if (left) return // mail client opened, all good
-      // No mail client — build Gmail compose URL from the mailto href
+      if (left) return
       const url = new URL(href)
       const to = url.pathname
       const subject = url.searchParams.get('subject') || ''
@@ -87,468 +57,601 @@ export default function HomePage() {
     }, 500)
   }
 
-  const runAnalysis = async (text) => {
-    if (!text.trim() || loading) return
-
-    const userMessage = { role: 'user', content: text }
-    const newMessages = [...messages, userMessage]
-    setMessages(newMessages)
-    setInput('')
-    setLoading(true)
-    setResponse('')
-
-    try {
-      const res = await fetch('/api/agent', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: newMessages })
-      })
-
-      if (!res.ok) throw new Error('API error')
-
-      const reader = res.body.getReader()
-      const decoder = new TextDecoder()
-      let fullResponse = ''
-
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
-
-        const chunk = decoder.decode(value)
-        const lines = chunk.split('\n')
-
-        for (const line of lines) {
-          if (line.startsWith('data: ') && line !== 'data: [DONE]') {
-            try {
-              const data = JSON.parse(line.slice(6))
-              if (data.text) {
-                fullResponse += data.text
-                setResponse(fullResponse)
-              }
-            } catch {}
-          }
-        }
-      }
-
-      setMessages([...newMessages, { role: 'assistant', content: fullResponse }])
-    } catch (err) {
-      setResponse('Connection error — check your API key in Vercel environment variables.')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleSubmit = (e) => {
-    e.preventDefault()
-    runAnalysis(input)
-  }
-
-  const reset = () => {
-    setMessages([])
-    setResponse('')
-    setInput('')
-    setActiveScenario(null)
-  }
-
-  const formatResponse = (text) => {
-    return text
-      // Strip any raw HTML tags the AI might output
-      .replace(/<strong[^>]*>(.*?)<\/strong>/g, '$1')
-      .replace(/<span[^>]*>(.*?)<\/span>/g, '$1')
-      .replace(/<[^>]+>/g, '')
-      // Section headers
-      .replace(/^## (.*)$/gm, '<div style="display:flex;align-items:center;gap:8px;margin:20px 0 8px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.06)"><div style="height:1px;width:10px;background:#00e5b0;flex-shrink:0"></div><span style="color:#00e5b0;font-family:IBM Plex Mono,monospace;font-size:10px;letter-spacing:0.1em;font-weight:600;text-transform:uppercase">$1</span></div>')
-      // Blockquotes - callouts
-      .replace(/^> (.*)$/gm, '<div style="margin:8px 0;padding:8px 12px;background:rgba(239,68,68,0.06);border-left:3px solid #ef4444;border-radius:0 5px 5px 0;font-size:12px;color:#e8eaed;line-height:1.6">$1</div>')
-      // Severity badges
-      .replace(/^(CRITICAL|HIGH|MEDIUM|LOW)$/gm, (m) => {
-        const c = {CRITICAL:'#ef4444',HIGH:'#f59e0b',MEDIUM:'#3b82f6',LOW:'#8a9099'}[m]
-        const bg = {CRITICAL:'rgba(239,68,68,0.1)',HIGH:'rgba(245,158,11,0.1)',MEDIUM:'rgba(59,130,246,0.1)',LOW:'rgba(138,144,153,0.1)'}[m]
-        return `<span style="background:${bg};color:${c};font-family:monospace;font-size:10px;padding:2px 8px;border-radius:4px;font-weight:700">${m}</span>`
-      })
-      // Bold text
-      .replace(/\*\*(.*?)\*\*/g, '<strong style="color:#e8eaed;font-weight:600">$1</strong>')
-      // Money amounts
-      .replace(/(£[\d,]+(?:–£[\d,]+)?(?:K)?)/g, '<span style="color:#00e5b0;font-weight:600;font-family:monospace">$1</span>')
-      // Numbered actions
-      .replace(/^(\d+)\.?\s+(.+)$/gm, (match, num, text) => {
-        const urgent = text.includes('NOW') || text.includes('IMMEDIATELY') || text.includes('999')
-        const border = urgent ? 'rgba(239,68,68,0.2)' : 'rgba(255,255,255,0.06)'
-        const bg = urgent ? '#ef4444' : '#00e5b0'
-        return `<div style="display:flex;gap:10px;margin:6px 0;padding:10px 12px;background:#111418;border-radius:6px;border:1px solid ${border}"><div style="width:20px;height:20px;border-radius:50%;background:${bg};color:#000;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;margin-top:1px">${num}</div><div style="font-size:12px;color:#e8eaed;line-height:1.6;flex:1">${text}</div></div>`
-      })
-      // Bullet points
-      .replace(/^[-—]\s+(.+)$/gm, '<div style="display:flex;gap:8px;margin:3px 0;padding-left:4px"><span style="color:#00e5b0;font-size:10px;margin-top:3px;flex-shrink:0">—</span><span style="font-size:12px;color:#8a9099;line-height:1.6">$1</span></div>')
-      // Horizontal rules
-      .replace(/^---+$/gm, '<div style="height:1px;background:rgba(255,255,255,0.06);margin:12px 0"></div>')
-      // Line breaks
-      .replace(/\n/g, '<br>')
-  }
-
   return (
-    <div style={{ minHeight: '100vh', position: 'relative', zIndex: 1 }}>
+    <div style={{ background: T.navy, color: T.text, fontFamily: FF.body, overflowX: 'hidden' }}>
+
       <style>{`
-        @media (max-width: 640px) {
-          .dh-stats { flex-wrap: wrap !important; }
-          .dh-stats > div { flex: 1 1 45% !important; min-width: 140px !important; padding: 16px 12px !important; border-right: none !important; border-bottom: 1px solid var(--border) !important; }
-          .dh-nav-links { gap: 12px !important; }
-          .dh-nav-links a:not(:last-child) { display: none !important; }
-          .dh-hero { padding: 48px 20px 40px !important; }
-          .dh-section { padding: 0 20px !important; }
-          .dh-pricing-grid { grid-template-columns: 1fr !important; }
-          .dh-pilot-box { flex-direction: column !important; gap: 12px !important; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+        @keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+        .nav-link { color: ${T.textDim}; text-decoration: none; font-size: 14px; font-weight: 500; letter-spacing: 0.02em; transition: color 0.2s; font-family: ${FF.body}; }
+        .nav-link:hover { color: ${T.text}; }
+        .btn-primary { background: ${T.amber}; color: #000; border: none; padding: 11px 24px; font-family: ${FF.condensed}; font-size: 15px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; transition: all 0.2s; border-radius: 3px; }
+        .btn-primary:hover { background: ${T.amberBright}; transform: translateY(-1px); box-shadow: 0 6px 24px rgba(245,166,35,0.3); }
+        .btn-hero { background: ${T.amber}; color: #000; border: none; padding: 16px 40px; font-family: ${FF.condensed}; font-size: 18px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 10px; transition: all 0.2s; border-radius: 3px; }
+        .btn-hero:hover { background: ${T.amberBright}; transform: translateY(-2px); box-shadow: 0 10px 36px rgba(245,166,35,0.35); }
+        .btn-outline { background: transparent; color: ${T.amber}; border: 1px solid ${T.amber}; padding: 11px 24px; font-family: ${FF.condensed}; font-size: 15px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; transition: all 0.2s; border-radius: 3px; }
+        .btn-outline:hover { background: rgba(245,166,35,0.08); }
+        .btn-cta-large { background: ${T.amber}; color: #000; border: none; padding: 18px 48px; font-family: ${FF.condensed}; font-size: 19px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 10px; transition: all 0.2s; border-radius: 3px; }
+        .btn-cta-large:hover { background: ${T.amberBright}; transform: translateY(-2px); box-shadow: 0 12px 40px rgba(245,166,35,0.4); }
+        .stat-card:hover { border-color: ${T.amberBorder}; transform: translateY(-2px); }
+        .how-card:hover { border-color: ${T.amberBorder}; }
+        .pricing-card:hover { transform: translateY(-3px); }
+        @media (max-width: 768px) {
+          .nav-links-desktop { display: none !important; }
+          .stats-grid { grid-template-columns: 1fr 1fr !important; }
+          .how-grid { grid-template-columns: 1fr !important; }
+          .pricing-grid { grid-template-columns: 1fr !important; }
+          .footer-cols { flex-direction: column !important; gap: 32px !important; }
+          .hero h1 { font-size: 52px !important; }
         }
       `}</style>
 
-      {/* Nav */}
+      {/* ── NAV ──────────────────────────────────────────────────────────────── */}
       <nav style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '12px 20px', borderBottom: '1px solid rgba(255,255,255,0.06)',
-        position: 'sticky', top: 0, background: 'rgba(10,12,14,0.95)',
-        backdropFilter: 'blur(12px)', zIndex: 100
+        position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
+        background: 'rgba(8,12,20,0.96)', backdropFilter: 'blur(12px)',
+        borderBottom: `1px solid ${T.border}`,
+        height: 60, display: 'flex', alignItems: 'center',
+        justifyContent: 'space-between', padding: '0 40px',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{
-            width: 28, height: 28, background: 'var(--accent)', borderRadius: 4,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 12, fontWeight: 600, color: '#000', fontFamily: 'var(--font-mono)'
-          }}>DH</div>
-          <span style={{ fontFamily: 'var(--font-mono)', fontSize: 13, letterSpacing: '0.05em', color: 'var(--text)' }}>
-            Disruption<span style={{ color: 'var(--accent)' }}>Hub</span>
+          <HexMark size={26} />
+          <span style={{
+            fontFamily: FF.condensed, fontSize: 22, fontWeight: 800,
+            letterSpacing: '0.04em', color: '#fff', textTransform: 'uppercase',
+          }}>
+            Disruption<span style={{ color: T.amber }}>Hub</span>
           </span>
         </div>
-        <div className="dh-nav-links" style={{ display: 'flex', gap: 24, alignItems: 'center' }}>
-          <a href="#demo" style={{ color: 'var(--text2)', fontSize: 13 }}>Live demo</a>
-          <a href="#pricing" style={{ color: 'var(--text2)', fontSize: 13 }}>Pricing</a>
-          <Link href="/dashboard" style={{
-            background: 'var(--accent)', color: '#000', padding: '7px 16px',
-            borderRadius: 6, fontSize: 13, fontWeight: 600, textDecoration: 'none'
-          }}>Dashboard →</Link>
-        </div>
+
+        <ul className="nav-links-desktop" style={{ display: 'flex', alignItems: 'center', gap: 32, listStyle: 'none' }}>
+          <li><a href="#how" className="nav-link">Platform</a></li>
+          <li><a href="#pricing" className="nav-link">Pricing</a></li>
+          <li><Link href="/dashboard" className="nav-link">Dashboard</Link></li>
+        </ul>
+
+        <a
+          className="btn-primary"
+          href="mailto:hello@disruptionhub.ai?subject=Demo request — DisruptionHub&body=Hi, I'd like to book a demo of DisruptionHub for my haulage operation."
+          onClick={handleMailto}
+        >
+          Book a Demo
+        </a>
       </nav>
 
-      {/* Hero */}
-      <section className="dh-hero" style={{ padding: '80px 32px 60px', maxWidth: 900, margin: '0 auto', textAlign: 'center' }}>
+      {/* ── HERO ─────────────────────────────────────────────────────────────── */}
+      <section style={{
+        minHeight: '100vh', display: 'flex', alignItems: 'center',
+        justifyContent: 'center', textAlign: 'center',
+        padding: '120px 40px 80px', position: 'relative', overflow: 'hidden',
+      }}>
+        {/* Ambient amber glow */}
         <div style={{
-          display: 'inline-block', fontFamily: 'var(--font-mono)', fontSize: 11,
-          color: 'var(--accent)', letterSpacing: '0.12em', padding: '4px 12px',
-          border: '1px solid rgba(0,229,176,0.3)', borderRadius: 3, marginBottom: 24
-        }}>
-          AI LOGISTICS DISRUPTION INTELLIGENCE
-        </div>
-        <h1 style={{
-          fontSize: 'clamp(32px, 5vw, 54px)', fontWeight: 300, lineHeight: 1.15,
-          letterSpacing: '-0.02em', marginBottom: 20, color: 'var(--text)'
-        }}>
-          30 minutes of crisis calls.<br />
-          <span style={{ color: 'var(--accent)', fontWeight: 500 }}>Compressed to 30 seconds.</span>
-        </h1>
-        <p style={{ fontSize: 17, color: 'var(--text2)', maxWidth: 580, margin: '0 auto 36px', fontWeight: 300, lineHeight: 1.7 }}>
-          AI that analyses logistics disruptions and tells your ops team exactly what to do — before the situation compounds. No new software to learn. Live in a day.
-        </p>
-        <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
-          <a href="#demo" style={{
-            background: 'var(--accent)', color: '#000', padding: '12px 28px',
-            borderRadius: 8, fontWeight: 600, fontSize: 15, textDecoration: 'none'
-          }}>Try it live below ↓</a>
-          <a onClick={handleMailto} href="mailto:hello@disruptionhub.ai" style={{
-            border: '1px solid var(--border2)', color: 'var(--text)', padding: '12px 28px',
-            borderRadius: 8, fontSize: 15, textDecoration: 'none'
-          }}>Book a demo</a>
+          position: 'absolute', inset: 0, pointerEvents: 'none',
+          background: `
+            radial-gradient(ellipse 80% 60% at 50% 35%, rgba(245,166,35,0.07) 0%, transparent 70%),
+            radial-gradient(ellipse 50% 40% at 20% 80%, rgba(245,166,35,0.03) 0%, transparent 60%)
+          `,
+        }} />
+
+        {/* UK road network SVG */}
+        <div style={{
+          position: 'absolute', inset: 0, opacity: 0.07, pointerEvents: 'none',
+          backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 600'%3E%3Cdefs%3E%3Cfilter id='glow'%3E%3CfeGaussianBlur stdDeviation='2' result='blur'/%3E%3CfeMerge%3E%3CfeMergeNode in='blur'/%3E%3CfeMergeNode in='SourceGraphic'/%3E%3C/feMerge%3E%3C/filter%3E%3C/defs%3E%3Cg stroke='%23f5a623' stroke-width='1' fill='none' filter='url(%23glow)'%3E%3Cpath d='M400 30 L385 100 L360 165 L330 240 L305 315 L285 395 L265 470 L245 545'/%3E%3Cpath d='M400 30 L415 85 L445 150 L475 215 L505 295 L525 375 L545 445'/%3E%3Cpath d='M80 190 L160 200 L245 210 L330 222 L415 232 L495 228 L575 222 L655 215 L720 205'/%3E%3Cpath d='M130 340 L205 332 L285 323 L365 315 L445 310 L525 318 L605 328'/%3E%3Cpath d='M180 140 L255 192 L318 252 L362 315'/%3E%3Cpath d='M620 140 L555 192 L495 252 L455 315'/%3E%3Cpath d='M245 210 L285 323'/%3E%3Cpath d='M330 222 L365 315'/%3E%3Cpath d='M495 228 L445 310'/%3E%3C/g%3E%3Cg fill='%23f5a623' filter='url(%23glow)'%3E%3Ccircle cx='400' cy='30' r='4'/%3E%3Ccircle cx='305' cy='315' r='3.5'/%3E%3Ccircle cx='505' cy='295' r='3.5'/%3E%3Ccircle cx='415' cy='232' r='3'/%3E%3Ccircle cx='265' cy='470' r='3'/%3E%3Ccircle cx='525' cy='375' r='3'/%3E%3Ccircle cx='180' cy='140' r='3'/%3E%3Ccircle cx='620' cy='140' r='3'/%3E%3C/g%3E%3C/svg%3E")`,
+          backgroundSize: 'cover', backgroundPosition: 'center',
+        }} />
+
+        <div style={{ position: 'relative', zIndex: 2, maxWidth: 820 }}>
+          {/* Label */}
+          <div style={{
+            fontFamily: FF.mono, fontSize: 11, fontWeight: 500,
+            letterSpacing: '0.2em', textTransform: 'uppercase',
+            color: T.amber, marginBottom: 24,
+            display: 'inline-flex', alignItems: 'center', gap: 12,
+          }}>
+            <span style={{ width: 28, height: 1, background: T.amber, display: 'inline-block' }} />
+            AI Operations Intelligence
+            <span style={{ width: 28, height: 1, background: T.amber, display: 'inline-block' }} />
+          </div>
+
+          {/* Headline */}
+          <h1 style={{
+            fontFamily: FF.condensed,
+            fontSize: 'clamp(52px, 9vw, 92px)',
+            fontWeight: 900, lineHeight: 0.93,
+            letterSpacing: '-0.01em', textTransform: 'uppercase',
+            color: '#fff', marginBottom: 28,
+          }}>
+            Your AI Operations
+            <span style={{
+              color: T.amber, display: 'block',
+              textShadow: '0 0 40px rgba(245,166,35,0.3)',
+            }}>
+              Room for UK
+            </span>
+            Haulage
+          </h1>
+
+          {/* Subheadline */}
+          <p style={{
+            fontSize: 18, color: T.textDim,
+            maxWidth: 520, margin: '0 auto 44px',
+            lineHeight: 1.7, fontWeight: 400,
+          }}>
+            Triage disruptions in 30 seconds. Protect SLAs.
+            Save £40K+ a year. Zero new software to learn.
+          </p>
+
+          {/* CTAs */}
+          <div style={{ display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap' }}>
+            <a
+              className="btn-hero"
+              href="mailto:hello@disruptionhub.ai?subject=Pilot request — DisruptionHub&body=Hi, I'd like to start the £99 pilot for my haulage operation."
+              onClick={handleMailto}
+            >
+              Start Your Pilot
+            </a>
+            <Link href="/dashboard" className="btn-outline">
+              View Dashboard →
+            </Link>
+          </div>
+
+          {/* Social proof */}
+          <div style={{
+            marginTop: 48, display: 'flex', justifyContent: 'center',
+            alignItems: 'center', gap: 8,
+          }}>
+            <div style={{ width: 7, height: 7, borderRadius: '50%', background: T.green, animation: 'pulse 2s infinite' }} />
+            <span style={{ fontFamily: FF.mono, fontSize: 11, color: T.textFaint, letterSpacing: '0.08em' }}>
+              LIVE ON PEARSON HAULAGE — 35 VEHICLES
+            </span>
+          </div>
         </div>
       </section>
 
-      {/* Stats bar */}
-      <div className="dh-stats" style={{
-        display: 'flex', justifyContent: 'center', gap: 0,
-        borderTop: '1px solid var(--border)', borderBottom: '1px solid var(--border)',
-        margin: '0 0 60px', flexWrap: 'wrap'
+      {/* ── STATS STRIP ──────────────────────────────────────────────────────── */}
+      <div style={{
+        background: T.navyMid,
+        borderTop: `1px solid ${T.amberBorder}`,
+        borderBottom: `1px solid ${T.amberBorder}`,
+        padding: '0 40px',
       }}>
-        {STATS.map((s, i) => (
-          <div key={i} style={{
-            padding: '20px 40px', textAlign: 'center',
-            borderRight: i < STATS.length - 1 ? '1px solid var(--border)' : 'none'
-          }}>
-            <div style={{ fontSize: 24, fontWeight: 500, fontFamily: 'var(--font-mono)', color: 'var(--accent)' }}>{s.value}</div>
-            <div style={{ fontSize: 12, color: 'var(--text2)', marginTop: 4 }}>{s.label}</div>
-          </div>
-        ))}
+        <div className="stats-grid" style={{
+          maxWidth: 1100, margin: '0 auto',
+          display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)',
+        }}>
+          {[
+            { value: '30 SEC', label: 'Avg. Triage Time' },
+            { value: '£40K+', label: 'Disruption Cost Avoided / Year' },
+            { value: '85%', label: 'Decisions Before Escalation' },
+            { value: 'ZERO', label: 'New Software to Learn' },
+          ].map((s, i) => (
+            <div key={i} className="stat-card" style={{
+              padding: '44px 32px', textAlign: 'center',
+              borderRight: i < 3 ? `1px solid ${T.border}` : 'none',
+              transition: 'all 0.2s',
+            }}>
+              <div style={{
+                fontFamily: FF.condensed, fontSize: 54, fontWeight: 900,
+                color: T.amber, lineHeight: 1, letterSpacing: '-0.02em',
+                marginBottom: 10,
+                textShadow: '0 0 30px rgba(245,166,35,0.25)',
+              }}>
+                {s.value}
+              </div>
+              <div style={{
+                fontSize: 12, color: T.textDim,
+                textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 600,
+              }}>
+                {s.label}
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
 
-      {/* LIVE DEMO */}
-      <section id="demo" style={{ maxWidth: 900, margin: '0 auto 80px', padding: '0 32px' }}>
-        <div style={{ marginBottom: 24 }}>
-          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--accent)', letterSpacing: '0.1em', marginBottom: 8 }}>
-            LIVE AGENT — POWERED BY CLAUDE AI
-          </div>
-          <h2 style={{ fontSize: 26, fontWeight: 400, color: 'var(--text)', marginBottom: 8 }}>
-            Type any disruption. Get an action plan instantly.
-          </h2>
-          <p style={{ color: 'var(--text2)', fontSize: 14 }}>
-            Use a pre-built scenario or describe your own situation in plain English.
-          </p>
-        </div>
-
-        {/* Scenario buttons */}
-        <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
-          {Object.entries(SCENARIOS).map(([key, s]) => (
-            <button key={key} onClick={() => loadScenario(key)} style={{
-              padding: '7px 14px', borderRadius: 6, fontSize: 12, cursor: 'pointer',
-              fontFamily: 'var(--font-mono)', letterSpacing: '0.03em',
-              border: activeScenario === key ? '1px solid var(--accent)' : '1px solid var(--border2)',
-              background: activeScenario === key ? 'rgba(0,229,176,0.1)' : 'var(--bg2)',
-              color: activeScenario === key ? 'var(--accent)' : 'var(--text2)',
-              transition: 'all 0.15s'
-            }}>{s.label}</button>
-          ))}
-          {messages.length > 0 && (
-            <button onClick={reset} style={{
-              padding: '7px 14px', borderRadius: 6, fontSize: 12, cursor: 'pointer',
-              border: '1px solid var(--border)', background: 'transparent',
-              color: 'var(--text3)', fontFamily: 'var(--font-mono)'
-            }}>Clear ×</button>
-          )}
-        </div>
-
-        {/* Main demo interface */}
+      {/* ── HOW IT WORKS ─────────────────────────────────────────────────────── */}
+      <section id="how" style={{ padding: '100px 40px', maxWidth: 1100, margin: '0 auto' }}>
         <div style={{
-          border: '1px solid var(--border2)', borderRadius: 10,
-          background: 'var(--bg2)', overflow: 'hidden'
+          fontFamily: FF.mono, fontSize: 11, fontWeight: 600,
+          letterSpacing: '0.2em', textTransform: 'uppercase',
+          color: T.amber, textAlign: 'center', marginBottom: 16,
         }}>
-          {/* Terminal header */}
+          How It Works
+        </div>
+        <h2 style={{
+          fontFamily: FF.condensed, fontSize: 'clamp(32px, 4vw, 48px)',
+          fontWeight: 800, textTransform: 'uppercase',
+          letterSpacing: '0.02em', color: '#fff',
+          textAlign: 'center', marginBottom: 64,
+        }}>
+          Three Steps. Thirty Seconds.
+        </h2>
+
+        <div className="how-grid" style={{
+          display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)',
+          gap: 0, position: 'relative',
+        }}>
+          {/* Connector line */}
           <div style={{
-            padding: '10px 16px', borderBottom: '1px solid var(--border)',
-            display: 'flex', alignItems: 'center', gap: 8
-          }}>
-            <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#ef4444' }} />
-            <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#f59e0b' }} />
-            <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#22c55e' }} />
-            <span style={{ marginLeft: 8, fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text3)' }}>
-              disruption-agent — ops terminal
-            </span>
-            {loading && (
-              <span style={{ marginLeft: 'auto', fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--accent)' }}>
-                ● ANALYSING...
-              </span>
-            )}
-          </div>
+            position: 'absolute', top: 52, left: '25%', right: '25%',
+            height: 1,
+            background: `linear-gradient(90deg, transparent, ${T.amberBorder}, transparent)`,
+            pointerEvents: 'none',
+          }} />
 
-          {/* Input area */}
-          <form onSubmit={handleSubmit}>
-            <textarea
-              ref={inputRef}
-              value={input}
-              onChange={e => setInput(e.target.value)}
-              placeholder="Describe your disruption in plain English — weather, flight delay, stock issue, driver shortage, anything..."
-              onKeyDown={e => { if (e.key === 'Enter' && e.metaKey) runAnalysis(input) }}
-              style={{
-                width: '100%', minHeight: 120, padding: '16px',
-                background: 'transparent', border: 'none', outline: 'none',
-                color: 'var(--text)', fontFamily: 'var(--font-sans)', fontSize: 13,
-                resize: 'vertical', lineHeight: 1.6,
-              }}
-            />
-            <div style={{
-              padding: '10px 16px', borderTop: '1px solid var(--border)',
-              display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+          {[
+            {
+              num: '01', title: 'Connect',
+              desc: 'Webhook connects to Mandata, Webfleet, Microlise, Samsara — your existing systems, no new software.',
+              icon: (
+                <svg width="36" height="36" viewBox="0 0 36 36" fill="none" stroke={T.amber} strokeWidth="1.5" strokeLinecap="round">
+                  <circle cx="18" cy="18" r="3"/>
+                  <path d="M18 7v4M18 25v4M7 18h4M25 18h4"/>
+                  <circle cx="18" cy="18" r="10" strokeDasharray="3 3"/>
+                </svg>
+              ),
+            },
+            {
+              num: '02', title: 'Analyse',
+              desc: 'AI analyses disruptions in real time — severity, financial exposure, cascade risk, recommended action.',
+              icon: (
+                <svg width="36" height="36" viewBox="0 0 36 36" fill="none" stroke={T.amber} strokeWidth="1.5" strokeLinecap="round">
+                  <polyline points="6,26 13,16 19,20 26,10 30,14"/>
+                  <circle cx="30" cy="10" r="2" fill={T.amber}/>
+                </svg>
+              ),
+            },
+            {
+              num: '03', title: 'Decide',
+              desc: 'Ops gets SMS with YES/NO decision ready to execute. Reply YES — driver notified, consignee called, SLA protected.',
+              icon: (
+                <svg width="36" height="36" viewBox="0 0 36 36" fill="none" stroke={T.amber} strokeWidth="1.5" strokeLinecap="round">
+                  <rect x="8" y="8" width="20" height="14" rx="2"/>
+                  <path d="M8 22l4 5h12l4-5"/>
+                  <path d="M13 14l3 3 7-7"/>
+                </svg>
+              ),
+            },
+          ].map((step, i) => (
+            <div key={i} className="how-card" style={{
+              textAlign: 'center', padding: '40px 32px', position: 'relative', zIndex: 1,
+              background: T.navyCard,
+              border: `1px solid ${T.border}`,
+              borderRadius: 4,
+              margin: '0 8px',
+              transition: 'border-color 0.2s',
             }}>
-              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text3)' }}>
-                ⌘↵ to run · or click →
-              </span>
-              <button type="submit" disabled={!input.trim() || loading} style={{
-                background: loading ? 'var(--bg3)' : 'var(--accent)',
-                color: loading ? 'var(--text3)' : '#000',
-                border: 'none', padding: '8px 20px', borderRadius: 6,
-                fontSize: 13, fontWeight: 600, cursor: loading ? 'default' : 'pointer',
-                fontFamily: 'var(--font-sans)', transition: 'all 0.15s'
+              {/* Step number */}
+              <div style={{
+                fontFamily: FF.mono, fontSize: 10, color: T.amberBorder,
+                letterSpacing: '0.15em', marginBottom: 16,
               }}>
-                {loading ? 'Analysing...' : 'Run analysis →'}
-              </button>
-            </div>
-          </form>
+                {step.num}
+              </div>
 
-          {/* Response */}
-          {(response || loading) && (
-            <div ref={responseRef} style={{
-              borderTop: '1px solid var(--border)', padding: '20px 24px',
-              maxHeight: 520, overflowY: 'auto', background: 'var(--bg)'
-            }}>
-              {loading && !response && (
-                <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                  {[0,1,2].map(i => (
-                    <div key={i} style={{
-                      width: 6, height: 6, borderRadius: '50%', background: 'var(--accent)',
-                      animation: `pulse 1.2s ${i*0.2}s infinite`,
-                    }} />
-                  ))}
-                  <style>{`@keyframes pulse{0%,100%{opacity:0.3}50%{opacity:1}}`}</style>
+              {/* Icon box */}
+              <div style={{
+                width: 80, height: 80,
+                border: `1px solid ${T.amberBorder}`,
+                borderRadius: 4,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                margin: '0 auto 24px',
+                background: `linear-gradient(135deg, ${T.navyMid}, ${T.navyCard})`,
+                boxShadow: `0 0 20px rgba(245,166,35,0.08)`,
+              }}>
+                {step.icon}
+              </div>
+
+              {/* Arrow between cards */}
+              {i < 2 && (
+                <div style={{
+                  position: 'absolute', right: -20, top: '50%',
+                  transform: 'translateY(-50%)',
+                  color: T.amber, fontSize: 18, fontWeight: 700, zIndex: 3,
+                  letterSpacing: '-2px',
+                }}>
+                  --›
                 </div>
               )}
-              {response && (
-                <div
-                  style={{ color: 'var(--text2)', fontSize: 13, lineHeight: 1.8 }}
-                  dangerouslySetInnerHTML={{ __html: formatResponse(response) }}
-                />
-              )}
-            </div>
-          )}
-        </div>
 
-        {/* Follow-up hint */}
-        {messages.length >= 2 && (
-          <p style={{ marginTop: 10, color: 'var(--text3)', fontSize: 12, fontFamily: 'var(--font-mono)' }}>
-            // Ask a follow-up — "draft the client email", "cheapest option that hits SLA", "what's our liability here"
-          </p>
-        )}
+              <h3 style={{
+                fontFamily: FF.condensed, fontSize: 22, fontWeight: 800,
+                textTransform: 'uppercase', letterSpacing: '0.06em',
+                color: '#fff', marginBottom: 12,
+              }}>
+                {step.title}
+              </h3>
+              <p style={{ fontSize: 14, color: T.textDim, lineHeight: 1.7 }}>
+                {step.desc}
+              </p>
+            </div>
+          ))}
+        </div>
       </section>
 
-      {/* How it works */}
-      <section style={{
-        padding: '60px 32px', borderTop: '1px solid var(--border)',
-        background: 'var(--bg2)', marginBottom: 0
+      {/* ── PRICING ──────────────────────────────────────────────────────────── */}
+      <section id="pricing" style={{
+        padding: '80px 40px 100px',
+        background: T.navyMid,
+        borderTop: `1px solid ${T.border}`,
+        borderBottom: `1px solid ${T.border}`,
       }}>
-        <div style={{ maxWidth: 900, margin: '0 auto' }}>
-          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--accent)', letterSpacing: '0.1em', marginBottom: 16 }}>HOW IT WORKS</div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: 24 }}>
-            {[
-              { n: '01', t: 'Tell it what happened', d: 'Type any disruption in plain English. Weather, delay, stock failure, driver issue — no forms, no dropdowns.' },
-              { n: '02', t: 'Agent analyses instantly', d: 'Claude AI draws on 20+ years of logistics expertise baked into the system prompt. Severity, financial impact, cascade risks — all in seconds.' },
-              { n: '03', t: 'Get a structured action plan', d: '7 sections every time: who to call, what to say, how to reroute, what stock to reorder, what breaks next if you don\'t act.' },
-              { n: '04', t: 'Connect your systems', d: 'Link your TMS or WMS via webhook. Agent auto-triggers on exceptions — no manual input needed at all.' },
-            ].map(s => (
-              <div key={s.n} style={{ padding: '20px 0' }}>
-                <div style={{ fontFamily: 'var(--font-mono)', fontSize: 28, color: 'var(--border2)', marginBottom: 12 }}>{s.n}</div>
-                <div style={{ fontSize: 15, fontWeight: 500, color: 'var(--text)', marginBottom: 8 }}>{s.t}</div>
-                <div style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.6 }}>{s.d}</div>
+        <div style={{ maxWidth: 1000, margin: '0 auto' }}>
+          <div style={{
+            fontFamily: FF.mono, fontSize: 11, fontWeight: 600,
+            letterSpacing: '0.2em', textTransform: 'uppercase',
+            color: T.amber, textAlign: 'center', marginBottom: 16,
+          }}>
+            Simple Pricing
+          </div>
+          <h2 style={{
+            fontFamily: FF.condensed, fontSize: 'clamp(32px, 4vw, 48px)',
+            fontWeight: 800, textTransform: 'uppercase',
+            color: '#fff', textAlign: 'center', marginBottom: 56,
+          }}>
+            No Tiers. No Complexity.
+          </h2>
+
+          <div className="pricing-grid" style={{
+            display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)',
+            gap: 16, marginBottom: 48,
+          }}>
+
+            {/* MAIN */}
+            <div className="pricing-card" style={{
+              background: T.navyCard,
+              border: `1px solid ${T.border}`,
+              borderRadius: 4, padding: '32px 28px',
+              transition: 'transform 0.2s',
+            }}>
+              <div style={{
+                fontFamily: FF.mono, fontSize: 10, color: T.textFaint,
+                letterSpacing: '0.15em', textTransform: 'uppercase', marginBottom: 20,
+              }}>
+                Main
               </div>
-            ))}
+              <div style={{
+                fontFamily: FF.condensed, fontSize: 56, fontWeight: 900,
+                color: T.amber, lineHeight: 1, marginBottom: 4,
+                textShadow: '0 0 20px rgba(245,166,35,0.2)',
+              }}>
+                £399
+              </div>
+              <div style={{ fontSize: 13, color: T.textDim, marginBottom: 24 }}>/month</div>
+              <div style={{
+                fontFamily: FF.condensed, fontSize: 18, fontWeight: 700,
+                color: '#fff', marginBottom: 20,
+              }}>
+                Full Platform Access
+              </div>
+              <div style={{ height: 1, background: T.border, marginBottom: 20 }} />
+              {['Unlimited AI Triage', 'Real-time Alerts', 'SLA Protection', '24/7 Support', 'API Access'].map(f => (
+                <div key={f} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+                  <span style={{ color: T.green, fontSize: 13, flexShrink: 0 }}>✓</span>
+                  <span style={{ fontSize: 13, color: T.textDim }}>{f}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* FOUNDING CLIENT — highlighted */}
+            <div className="pricing-card" style={{
+              background: `linear-gradient(135deg, ${T.navyCard}, rgba(245,166,35,0.04))`,
+              border: `1px solid ${T.amberBorder}`,
+              borderRadius: 4, padding: '32px 28px',
+              position: 'relative',
+              boxShadow: `0 0 40px rgba(245,166,35,0.1), inset 0 1px 0 rgba(245,166,35,0.15)`,
+              transform: 'scale(1.02)',
+              transition: 'transform 0.2s',
+            }}>
+              {/* Top accent line */}
+              <div style={{
+                position: 'absolute', top: 0, left: 0, right: 0, height: 2,
+                background: `linear-gradient(90deg, transparent, ${T.amber}, transparent)`,
+                borderRadius: '4px 4px 0 0',
+              }} />
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20 }}>
+                <div style={{
+                  fontFamily: FF.mono, fontSize: 10, color: T.textFaint,
+                  letterSpacing: '0.15em', textTransform: 'uppercase',
+                }}>
+                  Founding Client
+                </div>
+                <div style={{
+                  background: T.red, color: '#fff',
+                  fontFamily: FF.condensed, fontSize: 10, fontWeight: 700,
+                  letterSpacing: '0.08em', textTransform: 'uppercase',
+                  padding: '2px 7px', borderRadius: 2,
+                }}>
+                  3 Spots Remaining
+                </div>
+              </div>
+              <div style={{
+                fontFamily: FF.condensed, fontSize: 56, fontWeight: 900,
+                color: T.amber, lineHeight: 1, marginBottom: 4,
+                textShadow: '0 0 30px rgba(245,166,35,0.35)',
+              }}>
+                £299
+              </div>
+              <div style={{ fontSize: 13, color: T.textDim, marginBottom: 24 }}>/month · locked for life</div>
+              <div style={{
+                fontFamily: FF.condensed, fontSize: 18, fontWeight: 700,
+                color: '#fff', marginBottom: 20,
+              }}>
+                Locked for Life
+              </div>
+              <div style={{ height: 1, background: T.amberBorder, marginBottom: 20 }} />
+              {['All Full Platform Features', 'Priority Onboarding', "Founder's Circle Access", 'Lifetime Price Lock'].map(f => (
+                <div key={f} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+                  <span style={{ color: T.amber, fontSize: 13, flexShrink: 0 }}>✓</span>
+                  <span style={{ fontSize: 13, color: T.textDim }}>{f}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* PILOT */}
+            <div className="pricing-card" style={{
+              background: T.navyCard,
+              border: `1px solid ${T.border}`,
+              borderRadius: 4, padding: '32px 28px',
+              transition: 'transform 0.2s',
+            }}>
+              <div style={{
+                fontFamily: FF.mono, fontSize: 10, color: T.textFaint,
+                letterSpacing: '0.15em', textTransform: 'uppercase', marginBottom: 20,
+              }}>
+                Pilot
+              </div>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginBottom: 4 }}>
+                <div style={{
+                  fontFamily: FF.condensed, fontSize: 56, fontWeight: 900,
+                  color: T.amber, lineHeight: 1,
+                  textShadow: '0 0 20px rgba(245,166,35,0.2)',
+                }}>
+                  £99
+                </div>
+                <div style={{
+                  fontFamily: FF.condensed, fontSize: 22, fontWeight: 700, color: T.amber,
+                }}>
+                  / 2 Weeks
+                </div>
+              </div>
+              <div style={{ height: 16 }} />
+              <div style={{
+                fontFamily: FF.condensed, fontSize: 18, fontWeight: 700,
+                color: '#fff', marginBottom: 20,
+              }}>
+                Pilot Program
+              </div>
+              <div style={{ height: 1, background: T.border, marginBottom: 20 }} />
+              {['Non-refundable after onboarding call', '2 Weeks Full Access', 'Proof of Value Report', 'Dedicated Success Manager'].map(f => (
+                <div key={f} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 10 }}>
+                  <span style={{ color: T.green, fontSize: 13, flexShrink: 0, marginTop: 1 }}>✓</span>
+                  <span style={{ fontSize: 13, color: T.textDim, lineHeight: 1.5 }}>{f}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Main CTA */}
+          <div style={{ textAlign: 'center' }}>
+            <a
+              className="btn-cta-large"
+              href="mailto:hello@disruptionhub.ai?subject=Onboarding call request — DisruptionHub pilot&body=Hi, I'd like to book my onboarding call to start the £99 pilot."
+              onClick={handleMailto}
+            >
+              Book Your Onboarding Call
+            </a>
+            <div style={{
+              marginTop: 14, fontFamily: FF.mono, fontSize: 11,
+              color: T.textFaint, letterSpacing: '0.06em',
+            }}>
+              £99 pilot · 2 weeks · bank transfer or PayPal
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Pricing */}
-      <section id="pricing" style={{ padding: '80px 32px', maxWidth: 1000, margin: '0 auto' }}>
-        <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--accent)', letterSpacing: '0.1em', marginBottom: 16 }}>PRICING</div>
-        <h2 style={{ fontSize: 26, fontWeight: 400, marginBottom: 8 }}>Simple. No contracts. Cancel anytime.</h2>
-        <p style={{ color: 'var(--text2)', marginBottom: 12, fontSize: 14 }}>One missed SLA typically costs more than a year of DisruptionHub.</p>
-
-        {/* Founding client banner */}
-        <div style={{ background: 'rgba(0,229,176,0.06)', border: '1px solid rgba(0,229,176,0.2)', borderRadius: 8, padding: '12px 20px', marginBottom: 32, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
-          <div>
-            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--accent)', letterSpacing: '0.08em' }}>FOUNDING CLIENT OFFER — 5 SPOTS ONLY</span>
-            <p style={{ fontSize: 13, color: 'var(--text2)', margin: '4px 0 0' }}>First 5 clients lock in at <strong style={{ color: 'var(--text)' }}>£299/month for life</strong> — £100 below standard, locked forever regardless of what we add. 3 spots remaining.</p>
-          </div>
-          <a onClick={handleMailto} href="mailto:hello@disruptionhub.ai?subject=Founding client enquiry" style={{ background: 'var(--accent)', color: '#000', padding: '8px 16px', borderRadius: 6, fontWeight: 600, fontSize: 12, textDecoration: 'none', whiteSpace: 'nowrap' }}>Claim your spot →</a>
-        </div>
-
-        {/* Single plan card */}
-        <div style={{ maxWidth: 680, margin: '0 auto', border: '1px solid var(--accent)', borderRadius: 10, padding: '36px', background: 'rgba(0,229,176,0.03)', position: 'relative' }}>
-          <div style={{ position: 'absolute', top: -12, left: '50%', transform: 'translateX(-50%)', background: 'var(--accent)', color: '#000', fontSize: 11, fontWeight: 600, padding: '3px 14px', borderRadius: 3, fontFamily: 'var(--font-mono)', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>EVERYTHING INCLUDED</div>
-          <div style={{ fontSize: 14, color: 'var(--text2)', marginBottom: 4 }}>DisruptionHub</div>
-          <div style={{ fontSize: 48, fontWeight: 600, fontFamily: 'var(--font-mono)', color: 'var(--text)', marginBottom: 2, letterSpacing: '-0.03em' }}>£399<span style={{ fontSize: 16, color: 'var(--text2)', fontWeight: 400 }}>/month</span></div>
-          <div style={{ fontSize: 13, color: 'var(--text2)', marginBottom: 24, lineHeight: 1.5 }}>One plan. Every feature. No decision to make.</div>
-          <div style={{ borderTop: '1px solid var(--border)', paddingTop: 22, marginBottom: 28, columns: 2, columnGap: 32 }}>
-                  <div style={{ fontSize: 13, color: 'var(--text2)', padding: '4px 0', display: 'flex', gap: 9, lineHeight: 1.5 }}><span style={{ color: 'var(--accent)', flexShrink: 0 }}>✓</span> Live disruption agent — unlimited analyses</div>
-                  <div style={{ fontSize: 13, color: 'var(--text2)', padding: '4px 0', display: 'flex', gap: 9, lineHeight: 1.5 }}><span style={{ color: 'var(--accent)', flexShrink: 0 }}>✓</span> Structured action plans in 30 seconds</div>
-                  <div style={{ fontSize: 13, color: 'var(--text2)', padding: '4px 0', display: 'flex', gap: 9, lineHeight: 1.5 }}><span style={{ color: 'var(--accent)', flexShrink: 0 }}>✓</span> Colour-coded response cards — assessment, actions, contacts, rerouting, risks, prevention</div>
-                  <div style={{ fontSize: 13, color: 'var(--text2)', padding: '4px 0', display: 'flex', gap: 9, lineHeight: 1.5 }}><span style={{ color: 'var(--accent)', flexShrink: 0 }}>✓</span> Driver app — job list, pre-shift check, GPS alerts, POD confirmation</div>
-                  <div style={{ fontSize: 13, color: 'var(--text2)', padding: '4px 0', display: 'flex', gap: 9, lineHeight: 1.5 }}><span style={{ color: 'var(--accent)', flexShrink: 0 }}>✓</span> Driver issue reporting — 32 scenarios, GPS location captured automatically</div>
-                  <div style={{ fontSize: 13, color: 'var(--text2)', padding: '4px 0', display: 'flex', gap: 9, lineHeight: 1.5 }}><span style={{ color: 'var(--accent)', flexShrink: 0 }}>✓</span> 22 intelligence modules — run manually or on schedule</div>
-                  <div style={{ fontSize: 13, color: 'var(--text2)', padding: '4px 0', display: 'flex', gap: 9, lineHeight: 1.5 }}><span style={{ color: 'var(--accent)', flexShrink: 0 }}>✓</span> Invoice recovery — carrier overcharge detection</div>
-                  <div style={{ fontSize: 13, color: 'var(--text2)', padding: '4px 0', display: 'flex', gap: 9, lineHeight: 1.5 }}><span style={{ color: 'var(--accent)', flexShrink: 0 }}>✓</span> SLA breach prediction — 2–4 hours ahead</div>
-                  <div style={{ fontSize: 13, color: 'var(--text2)', padding: '4px 0', display: 'flex', gap: 9, lineHeight: 1.5 }}><span style={{ color: 'var(--accent)', flexShrink: 0 }}>✓</span> Driver hours monitor — WTD compliance</div>
-                  <div style={{ fontSize: 13, color: 'var(--text2)', padding: '4px 0', display: 'flex', gap: 9, lineHeight: 1.5 }}><span style={{ color: 'var(--accent)', flexShrink: 0 }}>✓</span> Vehicle health alerts — predictive maintenance</div>
-                  <div style={{ fontSize: 13, color: 'var(--text2)', padding: '4px 0', display: 'flex', gap: 9, lineHeight: 1.5 }}><span style={{ color: 'var(--accent)', flexShrink: 0 }}>✓</span> Fuel optimisation — fill-now vs wait decisions</div>
-                  <div style={{ fontSize: 13, color: 'var(--text2)', padding: '4px 0', display: 'flex', gap: 9, lineHeight: 1.5 }}><span style={{ color: 'var(--accent)', flexShrink: 0 }}>✓</span> Carrier performance scoring</div>
-                  <div style={{ fontSize: 13, color: 'var(--text2)', padding: '4px 0', display: 'flex', gap: 9, lineHeight: 1.5 }}><span style={{ color: 'var(--accent)', flexShrink: 0 }}>✓</span> Regulation monitor — DVSA/DfT/HMRC alerts</div>
-                  <div style={{ fontSize: 13, color: 'var(--text2)', padding: '4px 0', display: 'flex', gap: 9, lineHeight: 1.5 }}><span style={{ color: 'var(--accent)', flexShrink: 0 }}>✓</span> Licence and DQC expiry checking</div>
-                  <div style={{ fontSize: 13, color: 'var(--text2)', padding: '4px 0', display: 'flex', gap: 9, lineHeight: 1.5 }}><span style={{ color: 'var(--accent)', flexShrink: 0 }}>✓</span> Auto-triggered analysis — driver alert fires analysis instantly</div>
-                  <div style={{ fontSize: 13, color: 'var(--text2)', padding: '4px 0', display: 'flex', gap: 9, lineHeight: 1.5 }}><span style={{ color: 'var(--accent)', flexShrink: 0 }}>✓</span> SMS wakeup — ops manager alerted on HIGH/CRITICAL severity</div>
-                  <div style={{ fontSize: 13, color: 'var(--text2)', padding: '4px 0', display: 'flex', gap: 9, lineHeight: 1.5 }}><span style={{ color: 'var(--accent)', flexShrink: 0 }}>✓</span> Approve by SMS reply — YES fires the action, no app needed</div>
-                  <div style={{ fontSize: 13, color: 'var(--text2)', padding: '4px 0', display: 'flex', gap: 9, lineHeight: 1.5 }}><span style={{ color: 'var(--accent)', flexShrink: 0 }}>✓</span> TMS webhook — Mandata/Microlise/Webfleet triggers automatic analysis</div>
-                  <div style={{ fontSize: 13, color: 'var(--text2)', padding: '4px 0', display: 'flex', gap: 9, lineHeight: 1.5 }}><span style={{ color: 'var(--accent)', flexShrink: 0 }}>✓</span> Auto-reroute instructions pushed to driver app</div>
-                  <div style={{ fontSize: 13, color: 'var(--text2)', padding: '4px 0', display: 'flex', gap: 9, lineHeight: 1.5 }}><span style={{ color: 'var(--accent)', flexShrink: 0 }}>✓</span> Cascade prevention — downstream risks flagged before they hit</div>
-                  <div style={{ fontSize: 13, color: 'var(--text2)', padding: '4px 0', display: 'flex', gap: 9, lineHeight: 1.5 }}><span style={{ color: 'var(--accent)', flexShrink: 0 }}>✓</span> Cold chain breach protocol — temperature thresholds enforced</div>
-                  <div style={{ fontSize: 13, color: 'var(--text2)', padding: '4px 0', display: 'flex', gap: 9, lineHeight: 1.5 }}><span style={{ color: 'var(--accent)', flexShrink: 0 }}>✓</span> NHS pharmaceutical delivery compliance built in</div>
-                  <div style={{ fontSize: 13, color: 'var(--text2)', padding: '4px 0', display: 'flex', gap: 9, lineHeight: 1.5 }}><span style={{ color: 'var(--accent)', flexShrink: 0 }}>✓</span> Load consolidation — daily saving opportunities</div>
-                  <div style={{ fontSize: 13, color: 'var(--text2)', padding: '4px 0', display: 'flex', gap: 9, lineHeight: 1.5 }}><span style={{ color: 'var(--accent)', flexShrink: 0 }}>✓</span> Carbon and ESG reporting</div>
-                  <div style={{ fontSize: 13, color: 'var(--text2)', padding: '4px 0', display: 'flex', gap: 9, lineHeight: 1.5 }}><span style={{ color: 'var(--accent)', flexShrink: 0 }}>✓</span> Demand forecasting — capacity planning 4 weeks ahead</div>
-                  <div style={{ fontSize: 13, color: 'var(--text2)', padding: '4px 0', display: 'flex', gap: 9, lineHeight: 1.5 }}><span style={{ color: 'var(--accent)', flexShrink: 0 }}>✓</span> Insurance claim pre-emption — incident documentation</div>
-                  <div style={{ fontSize: 13, color: 'var(--text2)', padding: '4px 0', display: 'flex', gap: 9, lineHeight: 1.5 }}><span style={{ color: 'var(--accent)', flexShrink: 0 }}>✓</span> Rate benchmarking — lane pricing vs market</div>
-                  <div style={{ fontSize: 13, color: 'var(--text2)', padding: '4px 0', display: 'flex', gap: 9, lineHeight: 1.5 }}><span style={{ color: 'var(--accent)', flexShrink: 0 }}>✓</span> Full incident history and audit trail</div>
-                  <div style={{ fontSize: 13, color: 'var(--text2)', padding: '4px 0', display: 'flex', gap: 9, lineHeight: 1.5 }}><span style={{ color: 'var(--accent)', flexShrink: 0 }}>✓</span> Custom system prompt — your carriers, routes, SLAs</div>
-          </div>
-          <a onClick={handleMailto} href="mailto:hello@disruptionhub.ai?subject=DisruptionHub pilot request" style={{ display: 'block', textAlign: 'center', background: 'var(--accent)', color: '#000', padding: '13px', borderRadius: 6, fontWeight: 600, fontSize: 14, textDecoration: 'none' }}>Start £99 pilot →</a>
-          <div style={{ textAlign: 'center', fontSize: 12, color: 'var(--text3)', marginTop: 10 }}>2-week pilot · £99 one-time · cancel anytime after</div>
-        </div>
-
-        {/* Pilot explanation */}
-        <div style={{ marginTop: 24, padding: '16px 20px', background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: 8, maxWidth: 680, margin: '24px auto 0' }}>
-          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text3)', letterSpacing: '0.08em', marginBottom: 6 }}>HOW THE PILOT WORKS</div>
-          <p style={{ fontSize: 13, color: 'var(--text2)', margin: 0 }}>Pay £99. We customise the system with your actual carriers, routes, clients, and SLA thresholds. Run it for two weeks on real disruptions. If you continue, it's £399/month — or £299/month if you're one of the 3 remaining founding clients. The £99 is non-refundable once your onboarding call has taken place.</p>
-        </div>      </section>
-
-      {/* CTA */}
-      <section style={{
-        padding: '60px 32px', textAlign: 'center',
-        borderTop: '1px solid var(--border)', background: 'var(--bg2)'
+      {/* ── FOOTER ───────────────────────────────────────────────────────────── */}
+      <footer style={{
+        background: T.navyMid,
+        borderTop: `1px solid ${T.border}`,
+        padding: '48px 40px 32px',
       }}>
-        <h2 style={{ fontSize: 28, fontWeight: 400, marginBottom: 12 }}>
-          Your worst disruption happened last week.<br />
-          <span style={{ color: 'var(--accent)' }}>What would you have saved?</span>
-        </h2>
-        <p style={{ color: 'var(--text2)', fontSize: 14, marginBottom: 28 }}>
-          Tell us your worst disruption in the last 6 months. We'll run a live analysis and show you exactly what DisruptionHub would have done. No commitment.
-        </p>
-        <a onClick={handleMailto} href="mailto:hello@disruptionhub.ai?subject=Demo request — live disruption analysis" style={{
-          background: 'var(--accent)', color: '#000', padding: '14px 32px',
-          borderRadius: 8, fontWeight: 600, fontSize: 15, textDecoration: 'none',
-          display: 'inline-block'
-        }}>Book a 20-min live demo →</a>
-      </section>
-
-      {/* Footer */}
-      <footer style={{ padding: '32px 32px 24px', borderTop: '1px solid var(--border)', background: 'var(--bg2)' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 24, maxWidth: 1000, margin: '0 auto', marginBottom: 24 }}>
+        <div className="footer-cols" style={{
+          maxWidth: 1100, margin: '0 auto',
+          display: 'flex', justifyContent: 'space-between',
+          alignItems: 'flex-start', flexWrap: 'wrap', gap: 40,
+          marginBottom: 40,
+        }}>
+          {/* Brand */}
           <div>
-            <div style={{ fontFamily: 'var(--font-mono)', fontSize: 13, color: 'var(--accent)', marginBottom: 6 }}>DisruptionHub</div>
-            <div style={{ fontSize: 12, color: 'var(--text3)', maxWidth: 260, lineHeight: 1.6 }}>AI operations intelligence for UK logistics. Helping fleet operators turn disruptions into 30-second decisions.</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+              <HexMark size={22} />
+              <span style={{
+                fontFamily: FF.condensed, fontSize: 19, fontWeight: 800,
+                letterSpacing: '0.04em', color: '#fff', textTransform: 'uppercase',
+              }}>
+                Disruption<span style={{ color: T.amber }}>Hub</span>
+              </span>
+            </div>
+            <div style={{ fontSize: 12, color: T.textDim, maxWidth: 240, lineHeight: 1.7 }}>
+              AI operations intelligence for UK haulage.
+              30-second decisions. Zero new software.
+            </div>
+            <div style={{ marginTop: 16 }}>
+              <a
+                href="mailto:hello@disruptionhub.ai"
+                onClick={handleMailto}
+                style={{ fontFamily: FF.mono, fontSize: 12, color: T.amber, textDecoration: 'none' }}
+              >
+                hello@disruptionhub.ai
+              </a>
+            </div>
           </div>
-          <div style={{ display: 'flex', gap: 48, flexWrap: 'wrap' }}>
+
+          {/* Links */}
+          <div style={{ display: 'flex', gap: 56, flexWrap: 'wrap' }}>
             <div>
-              <div style={{ fontSize: 11, color: 'var(--text3)', fontFamily: 'var(--font-mono)', letterSpacing: '0.06em', marginBottom: 10 }}>PRODUCT</div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <a href="#demo" style={{ fontSize: 12, color: 'var(--text2)', textDecoration: 'none' }}>Live demo</a>
-                <a href="#pricing" style={{ fontSize: 12, color: 'var(--text2)', textDecoration: 'none' }}>Pricing</a>
-                <Link href="/dashboard" style={{ fontSize: 12, color: 'var(--text2)', textDecoration: 'none' }}>Dashboard</Link>
+              <div style={{
+                fontFamily: FF.mono, fontSize: 10, color: T.textFaint,
+                letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 14,
+              }}>
+                Product
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <a href="#how" style={{ fontSize: 13, color: T.textDim, textDecoration: 'none' }}>Platform</a>
+                <a href="#pricing" style={{ fontSize: 13, color: T.textDim, textDecoration: 'none' }}>Pricing</a>
+                <Link href="/dashboard" style={{ fontSize: 13, color: T.textDim, textDecoration: 'none' }}>Dashboard</Link>
               </div>
             </div>
             <div>
-              <div style={{ fontSize: 11, color: 'var(--text3)', fontFamily: 'var(--font-mono)', letterSpacing: '0.06em', marginBottom: 10 }}>LEGAL</div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <Link href="/legal/terms" style={{ fontSize: 12, color: 'var(--text2)', textDecoration: 'none' }}>Terms of Service</Link>
-                <Link href="/legal/privacy" style={{ fontSize: 12, color: 'var(--text2)', textDecoration: 'none' }}>Privacy Policy</Link>
-                <Link href="/legal/acceptable-use" style={{ fontSize: 12, color: 'var(--text2)', textDecoration: 'none' }}>Acceptable Use</Link>
-                <Link href="/legal/dpa" style={{ fontSize: 12, color: 'var(--text2)', textDecoration: 'none' }}>Data Processing</Link>
+              <div style={{
+                fontFamily: FF.mono, fontSize: 10, color: T.textFaint,
+                letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 14,
+              }}>
+                Legal
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <Link href="/legal/terms" style={{ fontSize: 13, color: T.textDim, textDecoration: 'none' }}>Terms of Service</Link>
+                <Link href="/legal/privacy" style={{ fontSize: 13, color: T.textDim, textDecoration: 'none' }}>Privacy Policy</Link>
+                <Link href="/legal/acceptable-use" style={{ fontSize: 13, color: T.textDim, textDecoration: 'none' }}>Acceptable Use</Link>
+                <Link href="/legal/dpa" style={{ fontSize: 13, color: T.textDim, textDecoration: 'none' }}>Data Processing</Link>
               </div>
             </div>
             <div>
-              <div style={{ fontSize: 11, color: 'var(--text3)', fontFamily: 'var(--font-mono)', letterSpacing: '0.06em', marginBottom: 10 }}>CONTACT</div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <a onClick={handleMailto} href="mailto:hello@disruptionhub.ai" style={{ fontSize: 12, color: 'var(--text2)', textDecoration: 'none' }}>hello@disruptionhub.ai</a>
-                <a onClick={handleMailto} href="mailto:hello@disruptionhub.ai?subject=Pilot request" style={{ fontSize: 12, color: 'var(--accent)', textDecoration: 'none' }}>Start £99 pilot →</a>
+              <div style={{
+                fontFamily: FF.mono, fontSize: 10, color: T.textFaint,
+                letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 14,
+              }}>
+                Contact
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <a onClick={handleMailto} href="mailto:hello@disruptionhub.ai" style={{ fontSize: 13, color: T.textDim, textDecoration: 'none' }}>hello@disruptionhub.ai</a>
+                <a onClick={handleMailto} href="mailto:hello@disruptionhub.ai?subject=Pilot request" style={{ fontSize: 13, color: T.amber, textDecoration: 'none' }}>Start £99 pilot →</a>
               </div>
             </div>
           </div>
         </div>
-        <div style={{ borderTop: '1px solid var(--border)', paddingTop: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8, maxWidth: 1000, margin: '0 auto' }}>
-          <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text3)' }}>DisruptionHub © 2026 · Decision support only · Always verify before acting</span>
-          <div style={{ display: 'flex', gap: 16 }}>
-            <Link href="/legal" style={{ fontSize: 11, color: 'var(--text3)', textDecoration: 'none' }}>Legal</Link>
-            <Link href="/terms" style={{ fontSize: 11, color: 'var(--text3)', textDecoration: 'none' }}>Terms</Link>
-          </div>
+
+        {/* Bottom bar */}
+        <div style={{
+          borderTop: `1px solid ${T.border}`, paddingTop: 24,
+          display: 'flex', justifyContent: 'space-between',
+          alignItems: 'center', flexWrap: 'wrap', gap: 8,
+          maxWidth: 1100, margin: '0 auto',
+        }}>
+          <span style={{ fontFamily: FF.mono, fontSize: 11, color: T.textFaint }}>
+            © 2025 DisruptionHub Ltd. All rights reserved. · Decision support only · Always verify before acting.
+          </span>
+          <span style={{ fontFamily: FF.mono, fontSize: 11, color: T.textFaint }}>
+            London, UK
+          </span>
         </div>
       </footer>
+
     </div>
   )
 }

@@ -30,8 +30,6 @@ export const viewport = {
   themeColor: '#06080d',
   width: 'device-width',
   initialScale: 1,
-  maximumScale: 1,   // prevents iOS auto-zoom on tap/focus
-  userScalable: false,
   viewportFit: 'cover',
 }
 
@@ -40,6 +38,9 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <head>
         <meta name="mobile-web-app-capable" content="yes" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,700&family=Barlow+Condensed:wght@400;500;600;700;800;900&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
       </head>
       <body style={{ position: 'relative', zIndex: 1 }}>
         {children}
