@@ -127,20 +127,21 @@ export default function HomePage() {
         justifyContent: 'center', textAlign: 'center',
         padding: '120px 40px 80px', position: 'relative', overflow: 'hidden',
       }}>
-        {/* Ambient amber glow */}
+        {/* Truck photo background */}
         <div style={{
           position: 'absolute', inset: 0, pointerEvents: 'none',
-          background: `
-            radial-gradient(ellipse 80% 60% at 50% 35%, rgba(245,166,35,0.07) 0%, transparent 70%),
-            radial-gradient(ellipse 50% 40% at 20% 80%, rgba(245,166,35,0.03) 0%, transparent 60%)
-          `,
+          backgroundImage: 'url(/hero-bg.jpg)',
+          backgroundSize: 'cover', backgroundPosition: 'center right',
         }} />
-
-        {/* UK road network SVG */}
+        {/* Dark overlay — left heavy so text stays readable */}
         <div style={{
-          position: 'absolute', inset: 0, opacity: 0.07, pointerEvents: 'none',
-          backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 600'%3E%3Cdefs%3E%3Cfilter id='glow'%3E%3CfeGaussianBlur stdDeviation='2' result='blur'/%3E%3CfeMerge%3E%3CfeMergeNode in='blur'/%3E%3CfeMergeNode in='SourceGraphic'/%3E%3C/feMerge%3E%3C/filter%3E%3C/defs%3E%3Cg stroke='%23f5a623' stroke-width='1' fill='none' filter='url(%23glow)'%3E%3Cpath d='M400 30 L385 100 L360 165 L330 240 L305 315 L285 395 L265 470 L245 545'/%3E%3Cpath d='M400 30 L415 85 L445 150 L475 215 L505 295 L525 375 L545 445'/%3E%3Cpath d='M80 190 L160 200 L245 210 L330 222 L415 232 L495 228 L575 222 L655 215 L720 205'/%3E%3Cpath d='M130 340 L205 332 L285 323 L365 315 L445 310 L525 318 L605 328'/%3E%3Cpath d='M180 140 L255 192 L318 252 L362 315'/%3E%3Cpath d='M620 140 L555 192 L495 252 L455 315'/%3E%3Cpath d='M245 210 L285 323'/%3E%3Cpath d='M330 222 L365 315'/%3E%3Cpath d='M495 228 L445 310'/%3E%3C/g%3E%3Cg fill='%23f5a623' filter='url(%23glow)'%3E%3Ccircle cx='400' cy='30' r='4'/%3E%3Ccircle cx='305' cy='315' r='3.5'/%3E%3Ccircle cx='505' cy='295' r='3.5'/%3E%3Ccircle cx='415' cy='232' r='3'/%3E%3Ccircle cx='265' cy='470' r='3'/%3E%3Ccircle cx='525' cy='375' r='3'/%3E%3Ccircle cx='180' cy='140' r='3'/%3E%3Ccircle cx='620' cy='140' r='3'/%3E%3C/g%3E%3C/svg%3E")`,
-          backgroundSize: 'cover', backgroundPosition: 'center',
+          position: 'absolute', inset: 0, pointerEvents: 'none',
+          background: 'linear-gradient(90deg, rgba(8,12,20,0.92) 0%, rgba(8,12,20,0.75) 50%, rgba(8,12,20,0.4) 100%)',
+        }} />
+        {/* Amber glow accent */}
+        <div style={{
+          position: 'absolute', inset: 0, pointerEvents: 'none',
+          background: 'radial-gradient(ellipse 60% 50% at 30% 60%, rgba(245,166,35,0.06) 0%, transparent 70%)',
         }} />
 
         <div style={{ position: 'relative', zIndex: 2, maxWidth: 820 }}>
