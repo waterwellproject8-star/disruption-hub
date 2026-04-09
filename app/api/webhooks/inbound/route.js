@@ -331,7 +331,6 @@ ${systemPrompt}`
               financial_impact: financialImpact
             },
             financial_value: action.financial_value || financialImpact || 0,
-            requires_approval: true,
             status: 'pending',
             created_at: new Date().toISOString()
           })
