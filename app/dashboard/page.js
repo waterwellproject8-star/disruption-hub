@@ -1074,6 +1074,7 @@ export default function DashboardPage() {
   const [activeDrivers, setActiveDrivers]           = useState([])
   const [activeDriversLoading, setActiveDriversLoading] = useState(false)
   const [selectedTestVehicle, setSelectedTestVehicle]   = useState(null)
+  const [relevantEvents, setRelevantEvents]             = useState(null) // null = show all, array = filtered
   const [whEvent, setWhEvent] = useState('temp_alarm')
   const [whPayload, setWhPayload] = useState(null)
   const [whFiring, setWhFiring] = useState(false)
@@ -1553,21 +1554,65 @@ export default function DashboardPage() {
 
   function selectTestVehicle(driver) {
     setSelectedTestVehicle(driver)
-    // Inject real vehicle data into the current payload
-    const base = WEBHOOK_SYSTEMS[whSystem]?.events[whEvent]?.fields || {}
-    const now = new Date()
-    const timeStr = now.toTimeString().slice(0,5)
-    setWhPayload({
-      ...base,
-      vehicle_reg:       driver.vehicle_reg,
-      driver_name:       driver.driver_name || base.driver_name || '',
-      location:          driver.last_known_location || base.location || '',
-      current_location:  driver.last_known_location || base.current_location || '',
-      consignee:         base.consignee || '',
-      fired_at:          now.toISOString(),
-      // Keep all other defaults from the event
-    })
     setWhResult(null)
+
+    const cargo = (driver.cargo_type || '').toLowerCase()
+    const isColdChain  = cargo.includes('chilled') || cargo.includes('frozen') || cargo.includes('reefer')
+    const isPharma     = cargo.includes('pharma') || cargo.includes('nhs') || cargo.includes('medical')
+    const isStandard   = !isColdChain && !isPharma
+
+    // ── Auto-select best system based on cargo ────────────────────────────────
+    // Cold chain / pharma → Webfleet (temp monitoring events are critical)
+    // Standard retail     → Mandata TMS (delay and delivery events more relevant)
+    let bestSystem = 'mandata'
+    let bestEvent  = 'job_delayed'
+
+    if (isColdChain || isPharma) {
+      bestSystem = 'webfleet'
+      bestEvent  = isColdChain ? 'temp_alarm' : 'reefer_fault'
+    }
+
+    setWhSystem(bestSystem)
+    setWhEvent(bestEvent)
+
+    // ── Build relevant event list for this cargo type ─────────────────────────
+    // Always relevant — any vehicle
+    const alwaysRelevant = [
+      'panic_button', 'impact_detected', 'engine_fault', 'fuel_critical',
+      'job_delayed', 'failed_delivery', 'collection_no_show', 'driver_change',
+      'wtd_hours_warning', 'wtd_hours_breach', 'tacho_fault',
+      'harsh_braking', 'long_stop'
+    ]
+    // Cold chain specific
+    const coldChainRelevant = [
+      'temp_alarm', 'temp_probe_failure', 'reefer_fault',
+      'door_open_transit', 'off_route'
+    ]
+    // Standard only (no cold chain)
+    const standardRelevant = [
+      'route_deviation', 'multi_drop_change', 'detention_charge',
+      'pod_overdue', 'cargo_tamper', 'overweight_load'
+    ]
+
+    const relevant = new Set(alwaysRelevant)
+    if (isColdChain || isPharma) coldChainRelevant.forEach(e => relevant.add(e))
+    if (isStandard) standardRelevant.forEach(e => relevant.add(e))
+
+    setRelevantEvents(relevant)
+
+    // ── Inject vehicle data into the new event's payload ─────────────────────
+    const newBase = WEBHOOK_SYSTEMS[bestSystem]?.events[bestEvent]?.fields || {}
+    const now = new Date()
+    setWhPayload({
+      ...newBase,
+      vehicle_reg:      driver.vehicle_reg,
+      driver_name:      driver.driver_name || newBase.driver_name || '',
+      location:         driver.last_known_location || newBase.location || '',
+      current_location: driver.last_known_location || newBase.current_location || '',
+      consignee:        driver.current_route?.split('→')[1]?.trim() || newBase.consignee || '',
+      cargo_type:       driver.cargo_type || newBase.cargo_type || '',
+      fired_at:         now.toISOString(),
+    })
   }
 
   async function fireWebhook() {
@@ -2382,8 +2427,8 @@ export default function DashboardPage() {
                             {driver.current_route && (
                               <div style={{ fontSize:10, color:'#4a5260', marginTop:4 }}>→ {driver.current_route}</div>
                             )}
-                            <div style={{ fontSize:9, color:'#4a5260', marginTop:6, fontFamily:'monospace' }}>
-                              {isSelected ? 'Vehicle reg + location injected into payload' : 'Click to use in test payload →'}
+                            <div style={{ fontSize:9, color: isSelected ? '#00e5b0' : '#4a5260', marginTop:6, fontFamily:'monospace' }}>
+                              {isSelected ? '✓ Events filtered for this vehicle · payload injected' : 'Select → auto-filters relevant events'}
                             </div>
                           </div>
                         )
@@ -2424,16 +2469,54 @@ export default function DashboardPage() {
                     </div>
                   </div>
 
-                  {/* Event selector */}
+                  {/* Event selector — relevance-filtered when vehicle selected */}
                   <div style={{ marginBottom:14 }}>
-                    <div style={{ fontSize:9, fontFamily:'monospace', color:'#4a5260', letterSpacing:'0.08em', marginBottom:8 }}>SELECT EVENT TYPE</div>
+                    <div style={{ fontSize:9, fontFamily:'monospace', color:'#4a5260', letterSpacing:'0.08em', marginBottom:8 }}>
+                      SELECT EVENT TYPE
+                      {relevantEvents && selectedTestVehicle && (
+                        <span style={{ marginLeft:8, color:'#00e5b0' }}>· filtered for {selectedTestVehicle.cargo_type || selectedTestVehicle.vehicle_reg}</span>
+                      )}
+                      {relevantEvents && <button onClick={() => setRelevantEvents(null)} style={{ marginLeft:8, background:'none', border:'none', color:'#4a5260', fontSize:9, cursor:'pointer', fontFamily:'monospace' }}>show all ×</button>}
+                    </div>
                     <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
-                      {sys && Object.entries(sys.events).map(([key, evt]) => (
-                        <button key={key} onClick={() => { setWhEvent(key); setWhPayload(null); setWhResult(null) }}
-                          style={{ padding:'5px 11px', borderRadius:5, border: whEvent===key ? `1px solid ${sys.color}80` : '1px solid rgba(255,255,255,0.07)', background: whEvent===key ? `${sys.color}12` : '#111418', color: whEvent===key ? sys.color : '#8a9099', fontSize:11, cursor:'pointer', fontFamily:'monospace', transition:'all 0.15s' }}>
-                          {evt.label}
-                        </button>
-                      ))}
+                      {sys && Object.entries(sys.events).map(([key, evt]) => {
+                        const isRelevant  = !relevantEvents || relevantEvents.has(key)
+                        const isSelected  = whEvent === key
+                        const isTopPick   = relevantEvents && relevantEvents.has(key) && (key === 'temp_alarm' || key === 'reefer_fault' || key === 'job_delayed' || key === 'panic_button')
+                        return (
+                          <button key={key}
+                            onClick={() => {
+                              setWhEvent(key)
+                              // Re-inject vehicle data into new event's payload
+                              if (selectedTestVehicle) {
+                                const newBase = WEBHOOK_SYSTEMS[whSystem]?.events[key]?.fields || {}
+                                setWhPayload({
+                                  ...newBase,
+                                  vehicle_reg:      selectedTestVehicle.vehicle_reg,
+                                  driver_name:      selectedTestVehicle.driver_name || newBase.driver_name || '',
+                                  location:         selectedTestVehicle.last_known_location || newBase.location || '',
+                                  current_location: selectedTestVehicle.last_known_location || newBase.current_location || '',
+                                  cargo_type:       selectedTestVehicle.cargo_type || newBase.cargo_type || '',
+                                  fired_at:         new Date().toISOString(),
+                                })
+                              } else {
+                                setWhPayload(null)
+                              }
+                              setWhResult(null)
+                            }}
+                            style={{
+                              padding:'5px 11px', borderRadius:5, fontFamily:'monospace', transition:'all 0.15s', fontSize:11, cursor: isRelevant ? 'pointer' : 'not-allowed',
+                              border: isSelected ? `1px solid ${sys.color}80` : isTopPick ? `1px solid ${sys.color}50` : '1px solid rgba(255,255,255,0.07)',
+                              background: isSelected ? `${sys.color}12` : isTopPick ? `${sys.color}08` : '#111418',
+                              color: isSelected ? sys.color : isRelevant ? '#8a9099' : '#2a3040',
+                              opacity: isRelevant ? 1 : 0.35,
+                              position:'relative'
+                            }}>
+                            {isTopPick && !isSelected && <span style={{ position:'absolute', top:-4, right:-4, width:6, height:6, borderRadius:'50%', background:'#00e5b0' }} />}
+                            {evt.label}
+                          </button>
+                        )
+                      })}
                     </div>
                   </div>
 
