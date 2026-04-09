@@ -8,7 +8,6 @@ function getSupabase() {
   return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY)
 }
 
-// ── EXTRACT REAL FINANCIAL VALUE FROM PAYLOAD ─────────────────────────────────
 function extractPayloadFinancial(payload) {
   if (!payload) return null
   if (payload.penalty_gbp      && payload.penalty_gbp > 0)      return Number(payload.penalty_gbp)
@@ -19,7 +18,6 @@ function extractPayloadFinancial(payload) {
   return null
 }
 
-// ── RULES-BASED SEVERITY ──────────────────────────────────────────────────────
 function determineEventSeverity(eventType, payload, confirmedFinancial) {
   const alwaysCritical = ['panic_button', 'impact_detected', 'reefer_fault']
   if (alwaysCritical.includes(eventType)) return 'CRITICAL'
@@ -55,9 +53,6 @@ function determineEventSeverity(eventType, payload, confirmedFinancial) {
   return 'MEDIUM'
 }
 
-// ── PARSE AI JSON — ROBUST EXTRACTION ────────────────────────────────────────
-// FIX 1: AI sometimes prepends text e.g. "CRITICAL\n```json\n{".
-// Extract by finding first { and last } — ignores any prefix or suffix text.
 function extractJSON(rawText) {
   if (!rawText) return null
   try {
@@ -70,48 +65,25 @@ function extractJSON(rawText) {
   }
 }
 
-// ── BUILD READABLE ANALYSIS SUMMARY ──────────────────────────────────────────
-// FIX 2: Store plain-text markdown summary not raw JSON.
-// AgentResponse renders this cleanly — no JSON fences visible to user.
 function buildAnalysisSummary(parsed, eventType, severity, financialImpact) {
   if (!parsed) return `**${severity}** — ${eventType.replace(/_/g,' ')}\n\nAI analysis unavailable.`
-
   const parts = []
-
-  if (parsed.sections?.assessment) {
-    parts.push(`## Assessment\n${parsed.sections.assessment}`)
-  }
-
-  if (parsed.sections?.immediate_actions?.length) {
-    parts.push(`## Immediate Actions\n${parsed.sections.immediate_actions.map((a, i) => `${i+1}. ${a}`).join('\n')}`)
-  }
-
-  if (parsed.sections?.who_to_contact) {
-    parts.push(`## Who to Contact\n${parsed.sections.who_to_contact}`)
-  }
-
-  if (parsed.sections?.downstream_risks) {
-    parts.push(`## Downstream Risks\n${parsed.sections.downstream_risks}`)
-  }
-
-  if (financialImpact > 0) {
-    parts.push(`**Financial exposure: £${financialImpact.toLocaleString()}** · Time to resolution: ${parsed.time_to_resolution || 'unknown'}`)
-  }
-
+  if (parsed.sections?.assessment) parts.push(`## Assessment\n${parsed.sections.assessment}`)
+  if (parsed.sections?.immediate_actions?.length) parts.push(`## Immediate Actions\n${parsed.sections.immediate_actions.map((a, i) => `${i+1}. ${a}`).join('\n')}`)
+  if (parsed.sections?.who_to_contact) parts.push(`## Who to Contact\n${parsed.sections.who_to_contact}`)
+  if (parsed.sections?.downstream_risks) parts.push(`## Downstream Risks\n${parsed.sections.downstream_risks}`)
+  if (financialImpact > 0) parts.push(`**Financial exposure: £${financialImpact.toLocaleString()}** · Time to resolution: ${parsed.time_to_resolution || 'unknown'}`)
   return parts.join('\n\n') || `**${severity}** — ${eventType.replace(/_/g,' ')}`
 }
 
-// ── GET CLIENT CONFIG ─────────────────────────────────────────────────────────
 async function getClientConfig(clientId) {
   const supabase = getSupabase()
   if (!supabase) return null
-
   let { data } = await supabase
     .from('clients')
     .select('id, name, system_prompt, contact_phone, contact_name, pilot_started_at')
     .eq('id', clientId)
     .single()
-
   if (!data) {
     const res = await supabase
       .from('clients')
@@ -120,11 +92,9 @@ async function getClientConfig(clientId) {
       .single()
     data = res.data
   }
-
   return data
 }
 
-// ── SEND OPS SMS ──────────────────────────────────────────────────────────────
 async function sendOpsSMS(toPhone, body) {
   if (!process.env.TWILIO_ACCOUNT_SID || !process.env.TWILIO_AUTH_TOKEN) return false
   const { default: twilio } = await import('twilio')
@@ -132,7 +102,6 @@ async function sendOpsSMS(toPhone, body) {
   try {
     await client.messages.create({
       body,
-      // FIX 3: match Vercel env var name, with fallbacks
       from: process.env.TWILIO_PHONE_NUMBER || process.env.TWILIO_FROM_NUMBER || '+447700139349',
       to: toPhone
     })
@@ -143,16 +112,13 @@ async function sendOpsSMS(toPhone, body) {
   }
 }
 
-// ── BUILD OPS SMS BODY ────────────────────────────────────────────────────────
 function buildOpsSMS(eventType, payload, severity, financialImpact, parsedResult) {
   const reg = payload?.vehicle_reg || 'Unknown'
   const location = payload?.location || payload?.current_location || ''
   const driver = payload?.driver_name || ''
   const sevEmoji = severity === 'CRITICAL' ? '🔴' : severity === 'HIGH' ? '🟠' : '🟡'
   const eventLabel = eventType.replace(/_/g, ' ').toUpperCase()
-
   const firstAction = parsedResult?.sections?.immediate_actions?.[0] || ''
-
   const parts = [
     `${sevEmoji} DISRUPTIONHUB — ${severity}`,
     `${eventLabel} · ${reg}${driver ? ` · ${driver}` : ''}`,
@@ -161,11 +127,15 @@ function buildOpsSMS(eventType, payload, severity, financialImpact, parsedResult
     firstAction ? `Action: ${firstAction.substring(0, 100)}` : '',
     'Reply YES to execute · NO to dismiss · OPEN for dashboard'
   ].filter(Boolean)
-
   return parts.join('\n')
 }
 
-// ── MAIN HANDLER ──────────────────────────────────────────────────────────────
+// ── EVENT CATEGORIES FOR CALL ROUTING ────────────────────────────────────────
+// Delay events → consignee_delay_alert call (notify delivery contact of late arrival)
+const DELAY_EVENTS = ['job_delayed', 'route_deviation', 'night_out_required', 'failed_delivery', 'collection_no_show', 'job_cancelled']
+// Recovery events → carrier_alert call (dispatch breakdown/recovery)
+const RECOVERY_EVENTS = ['panic_button', 'reefer_fault', 'impact_detected', 'engine_fault']
+
 export async function POST(request) {
   try {
     const body = await request.json()
@@ -176,20 +146,55 @@ export async function POST(request) {
     }
 
     const supabase = getSupabase()
-
-    // 1. Client config
     const client = await getClientConfig(client_id)
     const systemPrompt = client?.system_prompt || ''
     const opsPhone = client?.contact_phone || null
     const simulated = !opsPhone
 
-    // 2. Financial from payload
     const confirmedFinancial = extractPayloadFinancial(payload)
-
-    // 3. Severity from rules
     const severity = determineEventSeverity(event_type, payload, confirmedFinancial)
 
-    // 4. AI prompt — instructs JSON only, no preamble
+    const needsConsigneeCall = DELAY_EVENTS.includes(event_type)
+    const needsCarrierCall   = RECOVERY_EVENTS.includes(event_type)
+    const vehicleReg         = payload?.vehicle_reg || ''
+    const confirmedFin       = confirmedFinancial !== null ? confirmedFinancial : 0
+
+    // ── AI PROMPT ─────────────────────────────────────────────────────────────
+    // Actions schema is built dynamically — call actions only injected when relevant
+    const callActionsSchema = needsConsigneeCall ? `,
+    {
+      "type": "call",
+      "call_type": "consignee_delay_alert",
+      "label": "Call [consignee name] — delay notification",
+      "consignee_name": "exact site name from payload consignee field e.g. Tesco DC Donington",
+      "consignee_phone": "phone number from CONSIGNEE CONTACTS in CLIENT CONTEXT matching consignee_name — blank if not found",
+      "vehicle_reg": "${vehicleReg}",
+      "delay_minutes": ${payload?.delay_minutes || 'null'},
+      "revised_eta": "calculate revised ETA string e.g. 17:15 based on current time + delay",
+      "delay_reason": "concise reason e.g. M62 congestion J26",
+      "ops_callback_phone": "${opsPhone || ''}",
+      "recipient": "consignee",
+      "content": "",
+      "priority": "immediate",
+      "auto_approve": false,
+      "financial_value": ${confirmedFin}
+    }` : (needsCarrierCall ? `,
+    {
+      "type": "call",
+      "call_type": "carrier_alert",
+      "label": "Call [carrier name] — breakdown recovery",
+      "carrier_name": "carrier name from PRIMARY CARRIER in CLIENT CONTEXT",
+      "carrier_phone": "breakdown phone number from PRIMARY CARRIER in CLIENT CONTEXT",
+      "vehicle_reg": "${vehicleReg}",
+      "incident_description": "one sentence description of the incident for voice message",
+      "ops_callback_phone": "${opsPhone || ''}",
+      "recipient": "carrier",
+      "content": "",
+      "priority": "immediate",
+      "auto_approve": false,
+      "financial_value": ${confirmedFin}
+    }` : '')
+
     const fullSystemPrompt = `You are DisruptionHub's autonomous UK logistics operations agent.
 20 years HGV freight, cold chain, NHS supply, compliance experience.
 Be direct. Give specific phone numbers, junction numbers, deadlines.
@@ -198,11 +203,11 @@ IMPORTANT: Return ONLY the JSON object below. No preamble. No markdown. No expla
 
 {
   "severity": "${severity}",
-  "financial_impact": ${confirmedFinancial !== null ? confirmedFinancial : 0},
+  "financial_impact": ${confirmedFin},
   "time_to_resolution": "string e.g. 2-4 hours",
   "affected_shipments": 1,
   "sections": {
-    "assessment": "2-3 sentence plain text",
+    "assessment": "2-3 sentence plain text assessment",
     "immediate_actions": ["action 1", "action 2", "action 3"],
     "who_to_contact": "numbered contacts with phone numbers",
     "downstream_risks": "plain text"
@@ -210,22 +215,31 @@ IMPORTANT: Return ONLY the JSON object below. No preamble. No markdown. No expla
   "actions": [
     {
       "type": "send_sms",
-      "label": "string",
-      "recipient": "string",
-      "content": "string",
+      "label": "SHORT factual label — vehicle reg, event type, location only. Never ops instructions.",
+      "recipient": "driver",
+      "content": "driver-facing instruction — plain English, what they need to do",
       "priority": "immediate",
       "auto_approve": false,
-      "financial_value": ${confirmedFinancial !== null ? confirmedFinancial : 0}
-    }
+      "financial_value": ${confirmedFin}
+    }${callActionsSchema}
   ]
 }
 
-RULES: severity must be "${severity}". financial_impact must be ${confirmedFinancial !== null ? confirmedFinancial : 'your conservative estimate'}.
+LABEL RULES — label must be SHORT and FACTUAL:
+GOOD: "BN21 XKT delayed 45min — M62 J26 — Tesco DC at risk"
+BAD: "Contact driver via cab phone and instruct reroute"
+The label is shown to ops in an SMS and dashboard card. Keep it to one line, no instructions.
+
+CALL ACTION RULES:
+- For consignee_delay_alert: look up consignee_name in the CONSIGNEE CONTACTS section of CLIENT CONTEXT. Extract the matching phone number exactly as written.
+- For carrier_alert: look up the breakdown phone from PRIMARY CARRIER in CLIENT CONTEXT.
+- If a phone number is not found in CLIENT CONTEXT, leave consignee_phone or carrier_phone as an empty string — do not invent numbers.
+
+severity must be "${severity}". financial_impact must be ${confirmedFinancial !== null ? confirmedFinancial : 'your conservative estimate based on the event'}.
 
 CLIENT CONTEXT:
 ${systemPrompt}`
 
-    // 5. Call AI
     let rawAIResponse = ''
     let parsedResult = null
     let financialImpact = confirmedFinancial || 0
@@ -240,10 +254,8 @@ ${systemPrompt}`
           content: `EVENT: ${event_type}\nSYSTEM: ${system || 'unknown'}\nPAYLOAD: ${JSON.stringify(payload, null, 2)}`
         }]
       })
-
       rawAIResponse = msg.content[0]?.text?.trim() || ''
       parsedResult = extractJSON(rawAIResponse)
-
       if (parsedResult && confirmedFinancial === null) {
         financialImpact = Math.min(parsedResult.financial_impact || 0, 50000)
       }
@@ -251,37 +263,26 @@ ${systemPrompt}`
       console.error('AI error:', aiErr.message)
     }
 
-    // 6. Build clean analysis summary
     const analysisSummary = buildAnalysisSummary(parsedResult, event_type, severity, financialImpact)
 
-    // 7. Log to webhook_log
     let logId = null
     if (supabase) {
       try {
         const { data: logRow } = await supabase
           .from('webhook_log')
           .insert({
-            client_id,
-            system_name: system || 'manual',
-            event_type,
-            payload,
-            severity,
+            client_id, system_name: system || 'manual', event_type, payload, severity,
             financial_impact: financialImpact,
             financial_source: confirmedFinancial !== null ? 'payload' : 'ai_estimate',
-            analysis: analysisSummary,
-            sms_fired: false,
-            simulated,
+            analysis: analysisSummary, sms_fired: false, simulated,
             created_at: new Date().toISOString()
           })
           .select('id')
           .single()
         logId = logRow?.id
-      } catch (err) {
-        console.error('webhook_log insert error:', err.message)
-      }
+      } catch (err) { console.error('webhook_log insert error:', err.message) }
     }
 
-    // 8. Send SMS if HIGH/CRITICAL
     let smsSent = false
     const shouldSendSMS = ['HIGH', 'CRITICAL'].includes(severity)
 
@@ -289,16 +290,13 @@ ${systemPrompt}`
       const smsBody = buildOpsSMS(event_type, payload, severity, financialImpact, parsedResult)
       smsSent = await sendOpsSMS(opsPhone, smsBody)
       if (supabase && logId) {
-        try {
-          await supabase.from('webhook_log').update({ sms_fired: smsSent }).eq('id', logId)
-        } catch {}
+        try { await supabase.from('webhook_log').update({ sms_fired: smsSent }).eq('id', logId) } catch {}
       }
     }
 
-    // 9. Write approvals
-    const vehicleReg = payload?.vehicle_reg || null
+    // ── WRITE APPROVALS ───────────────────────────────────────────────────────
     const actionsToWrite = parsedResult?.actions?.length
-      ? parsedResult.actions.slice(0, 3)
+      ? parsedResult.actions.slice(0, 4)
       : [{
           type: 'send_sms',
           label: `${severity} — ${event_type.replace(/_/g,' ')} · ${vehicleReg || 'unknown vehicle'}`,
@@ -314,7 +312,7 @@ ${systemPrompt}`
 
     if (supabase && shouldSendSMS) {
       for (const action of actionsToWrite) {
-        // NOTE: Supabase insert does NOT throw on error — must check { error } object
+        // NOTE: Supabase insert does NOT throw — always check { error } object
         const { error: approvalErr } = await supabase
           .from('approvals')
           .insert({
@@ -322,14 +320,27 @@ ${systemPrompt}`
             action_type: action.type || 'send_sms',
             action_label: action.label || `${severity} alert — ${event_type.replace(/_/g,' ')}`,
             action_details: {
-              vehicle_reg: vehicleReg,
+              // Core fields — always present
+              vehicle_reg:    vehicleReg || null,
               event_type,
               system,
-              source: 'webhook_inbound',
-              recipient: action.recipient,
-              content: action.content,
+              source:         'webhook_inbound',
+              recipient:      action.recipient,
+              content:        action.content,
               payload,
-              financial_impact: financialImpact
+              financial_impact: financialImpact,
+              ref:            payload?.job_id || payload?.booking_ref || null,
+              // Call-specific fields — populated for call action types
+              call_type:          action.call_type         || null,
+              consignee_name:     action.consignee_name    || null,
+              consignee_phone:    action.consignee_phone   || null,
+              carrier_phone:      action.carrier_phone     || null,
+              carrier_name:       action.carrier_name      || null,
+              delay_minutes:      action.delay_minutes      || null,
+              revised_eta:        action.revised_eta        || null,
+              delay_reason:       action.delay_reason       || null,
+              incident_description: action.incident_description || null,
+              ops_callback_phone: action.ops_callback_phone || opsPhone || null
             },
             financial_value: action.financial_value || financialImpact || 0,
             status: 'pending',
@@ -345,17 +356,11 @@ ${systemPrompt}`
       }
     }
 
-    // 10. Return
     return Response.json({
-      success: true,
-      severity,
-      financial_impact: financialImpact,
+      success: true, severity, financial_impact: financialImpact,
       financial_source: confirmedFinancial !== null ? 'payload' : 'ai_estimate',
-      sms_sent: smsSent,
-      simulated,
-      analysis: analysisSummary,
-      event_type,
-      vehicle_reg: vehicleReg,
+      sms_sent: smsSent, simulated, analysis: analysisSummary,
+      event_type, vehicle_reg: vehicleReg,
       actions_queued: parsedResult?.actions?.length || 0,
       approvals_written: approvalsWritten,
       approvals_error: approvalsError || undefined
@@ -367,23 +372,19 @@ ${systemPrompt}`
   }
 }
 
-// ── GET: Webhook audit log ────────────────────────────────────────────────────
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url)
     const clientId = searchParams.get('client_id')
     const limit = parseInt(searchParams.get('limit') || '30')
-
     const supabase = getSupabase()
     if (!supabase) return Response.json({ logs: [] })
-
     const { data, error } = await supabase
       .from('webhook_log')
       .select('id, system_name, event_type, severity, financial_impact, financial_source, sms_fired, simulated, payload, created_at')
       .eq('client_id', clientId)
       .order('created_at', { ascending: false })
       .limit(limit)
-
     if (error) throw error
     return Response.json({ logs: data || [] })
   } catch (err) {
