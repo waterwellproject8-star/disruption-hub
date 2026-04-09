@@ -314,7 +314,8 @@ ${systemPrompt}`
 
     if (supabase && shouldSendSMS) {
       for (const action of actionsToWrite) {
-        const { data: approvalRow, error: approvalErr } = await supabase
+        // NOTE: Supabase insert does NOT throw on error — must check { error } object
+        const { error: approvalErr } = await supabase
           .from('approvals')
           .insert({
             client_id,
@@ -334,12 +335,10 @@ ${systemPrompt}`
             status: 'pending',
             created_at: new Date().toISOString()
           })
-          .select('id')
-          .single()
 
         if (approvalErr) {
           approvalsError = approvalErr.message
-          console.error('approvals insert error:', approvalErr.message, approvalErr.code, approvalErr.details)
+          console.error('approvals insert error:', approvalErr.message, approvalErr.code)
         } else {
           approvalsWritten++
         }
