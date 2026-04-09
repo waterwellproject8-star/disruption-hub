@@ -33,7 +33,7 @@ function determineEventSeverity(eventType, payload, confirmedFinancial) {
     return 'HIGH'
   }
 
-  if (confirmedFinancial && confirmedFinancial >= 5000) return 'HIGH'
+  if (confirmedFinancial && confirmedFinancial >= 500) return 'HIGH'
 
   if (eventType === 'failed_delivery') {
     const consignee = (payload?.consignee || '').toLowerCase()
@@ -44,11 +44,10 @@ function determineEventSeverity(eventType, payload, confirmedFinancial) {
   const highSeverity = [
     'door_open_transit', 'geofence_breach', 'cargo_theft', 'job_cancelled',
     'driver_change', 'engine_fault', 'fuel_critical', 'collection_no_show',
-    'border_doc_failure', 'ulez_entry', 'night_out_required', 'route_deviation'
+    'border_doc_failure', 'ulez_entry', 'night_out_required', 'route_deviation',
+    'job_delayed', 'pod_overdue', 'detention_charge', 'multi_drop_change'
   ]
   if (highSeverity.includes(eventType)) return 'HIGH'
-
-  if (eventType === 'detention_charge' && confirmedFinancial && confirmedFinancial > 100) return 'HIGH'
 
   const lowSeverity = ['harsh_braking', 'harsh_acceleration', 'overspeed', 'idle_excess']
   if (lowSeverity.includes(eventType)) return 'LOW'
