@@ -78,13 +78,25 @@ export default function HomePage() {
         .stat-card:hover { border-color: ${T.amberBorder}; transform: translateY(-2px); }
         .how-card:hover { border-color: ${T.amberBorder}; }
         .pricing-card:hover { transform: translateY(-3px); }
+        /* Hero — left on desktop */
+        .hero-section { justify-content: flex-start; }
+        .hero-content { text-align: left; }
+        .hero-sub { margin-left: 0; }
+        .hero-ctas { justify-content: flex-start; }
+        .hero-badge { justify-content: flex-start; }
+
         @media (max-width: 768px) {
           .nav-links-desktop { display: none !important; }
           .stats-grid { grid-template-columns: 1fr 1fr !important; }
           .how-grid { grid-template-columns: 1fr !important; }
           .pricing-grid { grid-template-columns: 1fr !important; }
           .footer-cols { flex-direction: column !important; gap: 32px !important; }
-          .hero h1 { font-size: 52px !important; }
+          /* Hero — center on mobile */
+          .hero-section { justify-content: center; }
+          .hero-content { text-align: center; }
+          .hero-sub { margin: 0 auto 44px !important; }
+          .hero-ctas { justify-content: center; }
+          .hero-badge { justify-content: center; }
         }
       `}</style>
 
@@ -122,9 +134,8 @@ export default function HomePage() {
       </nav>
 
       {/* ── HERO ─────────────────────────────────────────────────────────────── */}
-      <section style={{
+      <section className="hero-section" style={{
         minHeight: '100vh', display: 'flex', alignItems: 'center',
-        justifyContent: 'center', textAlign: 'center',
         padding: '120px 40px 80px', position: 'relative', overflow: 'hidden',
       }}>
         {/* Truck photo background */}
@@ -133,18 +144,18 @@ export default function HomePage() {
           backgroundImage: 'url(/hero-bg.jpg)',
           backgroundSize: 'cover', backgroundPosition: 'center right',
         }} />
-        {/* Dark overlay — left heavy so text stays readable */}
+        {/* Dark overlay — heavy left so text pops, fades right to show trucks */}
         <div style={{
           position: 'absolute', inset: 0, pointerEvents: 'none',
-          background: 'linear-gradient(90deg, rgba(8,12,20,0.92) 0%, rgba(8,12,20,0.75) 50%, rgba(8,12,20,0.4) 100%)',
+          background: 'linear-gradient(90deg, rgba(8,12,20,0.95) 0%, rgba(8,12,20,0.85) 35%, rgba(8,12,20,0.5) 65%, rgba(8,12,20,0.15) 100%)',
         }} />
-        {/* Amber glow accent */}
+        {/* Amber glow */}
         <div style={{
           position: 'absolute', inset: 0, pointerEvents: 'none',
-          background: 'radial-gradient(ellipse 60% 50% at 30% 60%, rgba(245,166,35,0.06) 0%, transparent 70%)',
+          background: 'radial-gradient(ellipse 50% 60% at 20% 55%, rgba(245,166,35,0.07) 0%, transparent 70%)',
         }} />
 
-        <div style={{ position: 'relative', zIndex: 2, maxWidth: 820 }}>
+        <div className="hero-content" style={{ position: 'relative', zIndex: 2, maxWidth: 680 }}>
           {/* Label */}
           <div style={{
             fontFamily: FF.mono, fontSize: 11, fontWeight: 500,
@@ -175,9 +186,9 @@ export default function HomePage() {
           </h1>
 
           {/* Subheadline */}
-          <p style={{
+          <p className="hero-sub" style={{
             fontSize: 18, color: T.textDim,
-            maxWidth: 520, margin: '0 auto 44px',
+            maxWidth: 520, margin: '0 0 44px',
             lineHeight: 1.7, fontWeight: 400,
           }}>
             Triage disruptions in 30 seconds. Protect SLAs.
@@ -185,7 +196,7 @@ export default function HomePage() {
           </p>
 
           {/* CTAs */}
-          <div style={{ display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap' }}>
+          <div className="hero-ctas" style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
             <a
               className="btn-hero"
               href="mailto:hello@disruptionhub.ai?subject=Pilot request — DisruptionHub&body=Hi, I'd like to start the £99 pilot for my haulage operation."
@@ -199,8 +210,8 @@ export default function HomePage() {
           </div>
 
           {/* Social proof */}
-          <div style={{
-            marginTop: 48, display: 'flex', justifyContent: 'center',
+          <div className="hero-badge" style={{
+            marginTop: 48, display: 'flex',
             alignItems: 'center', gap: 8,
           }}>
             <div style={{ width: 7, height: 7, borderRadius: '50%', background: T.green, animation: 'pulse 2s infinite' }} />
