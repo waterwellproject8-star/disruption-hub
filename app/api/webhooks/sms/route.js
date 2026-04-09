@@ -82,9 +82,18 @@ function buildCarrierVoiceMessage({ carrierName, vehicleReg, clientName, inciden
 
 function extractPhoneNumber(text) {
   if (!text) return null
-  const match = text.match(/\b(0800[\s\d]{8,12}|07[\d\s]{9,11}|01[\d\s]{9,11}|02[\d\s]{9,11})\b/)
+  const match = text.match(/\b(0800[\s\d]{8,12}|07[\d\s]{9,11}|01[\d\s]{9,11}|02[\d\s]{9,11}|\+44[\s\d]{10,12})\b/)
   if (!match) return null
   return match[1].replace(/\s/g, '')
+}
+
+function toE164UK(phone) {
+  if (!phone) return null
+  const digits = phone.replace(/\s+/g, '').replace(/[^\d+]/g, '')
+  if (digits.startsWith('+44')) return digits
+  if (digits.startsWith('0'))   return '+44' + digits.slice(1)
+  if (digits.startsWith('44'))  return '+' + digits
+  return null
 }
 
 // Build a driver-facing instruction from webhook event data
@@ -404,10 +413,81 @@ export async function POST(request) {
       }
 
       // ── CALL / EMERGENCY ──────────────────────────────────────────────────
-      if (actionType === 'call' || actionType === 'emergency') {
-        const carrierPhone = details.carrier_phone
+      if (actionType === 'call' || actionType === 'make_call' || actionType === 'emergency') {
+
+        // Detect call type — prefer explicit field, infer from presence of consignee fields
+        // Defaults to carrier_alert if nothing indicates a consignee call
+        const callType = details.call_type ||
+          (details.consignee_name || details.consignee_phone ? 'consignee_delay_alert' : 'carrier_alert')
+
+        // ── CONSIGNEE DELAY ALERT ─────────────────────────────────────────────
+        if (callType === 'consignee_delay_alert') {
+          // Resolve consignee phone — explicit field first, then match consignee_name
+          // in system_prompt CONSIGNEE CONTACTS, then generic extraction from system_prompt
+          let rawConsigneePhone = details.consignee_phone || null
+
+          if (!rawConsigneePhone && details.consignee_name && client.system_prompt) {
+            for (const line of client.system_prompt.split('\n')) {
+              if (line.toLowerCase().includes(details.consignee_name.toLowerCase())) {
+                rawConsigneePhone = extractPhoneNumber(line)
+                if (rawConsigneePhone) break
+              }
+            }
+          }
+
+          if (!rawConsigneePhone) {
+            rawConsigneePhone = extractPhoneNumber(client.system_prompt)
+          }
+
+          const consigneePhone = toE164UK(rawConsigneePhone)
+          console.log('[DH Voice] consignee_delay_alert raw:', rawConsigneePhone, '→ E.164:', consigneePhone)
+
+          if (consigneePhone) {
+            const spokenReg      = details.vehicle_reg ? details.vehicle_reg.replace(/\s/g,'').split('').join(', ') : null
+            const spokenOpsPhone = client.contact_phone ? client.contact_phone.replace(/\s/g,'').split('').join(', ') : null
+
+            const parts = [`Hello. This is an automated message from ${contactName || 'your supplier'}.`]
+            if (details.consignee_name) parts.push(`This message is for the goods in team at ${details.consignee_name}.`)
+            parts.push(spokenReg
+              ? `Your delivery from vehicle ${spokenReg} is running late and will not arrive at the scheduled time.`
+              : `Your scheduled delivery is running late.`)
+            if (details.delay_minutes) parts.push(`The delay is approximately ${details.delay_minutes} minutes.`)
+            if (details.revised_eta)   parts.push(`Revised estimated arrival is ${details.revised_eta}.`)
+            if (details.delay_reason)  parts.push(`Reason: ${String(details.delay_reason).substring(0,150)}.`)
+            parts.push(spokenOpsPhone
+              ? `To arrange a revised delivery slot, please call our operations team on ${spokenOpsPhone}.`
+              : `Please contact our operations team to arrange a revised slot.`)
+            if (details.ref) parts.push(`Reference number: ${details.ref}.`)
+            parts.push(`Thank you. This was an automated message from DisruptionHub.`)
+
+            const voiceMessage = parts.join(' ')
+            const callResult = await makeCall(consigneePhone, voiceMessage)
+
+            const driverPhone = await resolveDriverPhone()
+            const driverMsg = `DisruptionHub OPS${details.ref ? ` — ${details.ref}` : ''}\n\nOps approved. ${details.consignee_name || 'Consignee'} being called automatically.\nContinue to destination. Reply DONE when acknowledged.`
+            await writeInstructionToApp(driverMsg)
+            if (driverPhone) await sendSMS(driverPhone, driverMsg).catch(() => {})
+
+            if (callResult.success) return twimlReply(`DH: Calling ${details.consignee_name || consigneePhone}. Driver notified.`)
+            if (callResult.simulated) return twimlReply(`DH: Call ${details.consignee_name || 'consignee'} manually: ${rawConsigneePhone}`)
+            return twimlReply(`DH: Call failed (${callResult.error || 'unknown'}) — dial ${rawConsigneePhone} manually.`)
+          }
+
+          // No consignee phone found
+          const driverPhone = await resolveDriverPhone()
+          const driverMsg = `DisruptionHub OPS${details.ref ? ` — ${details.ref}` : ''}\n\nOps approved delay. No consignee contact on file — ops will call directly.\nContinue to destination. Reply DONE.`
+          await writeInstructionToApp(driverMsg)
+          if (driverPhone) await sendSMS(driverPhone, driverMsg).catch(() => {})
+          return twimlReply(`DH: Approved. No consignee phone for ${details.consignee_name || 'this delivery'} — call them manually.`)
+        }
+
+        // ── CARRIER / RECOVERY ALERT ──────────────────────────────────────────
+        const rawCarrierPhone = details.carrier_phone
           || extractPhoneNumber(actionLabel)
           || extractPhoneNumber(client.system_prompt)
+
+        const carrierPhone = toE164UK(rawCarrierPhone)
+        console.log('[DH Voice] carrier_alert raw:', rawCarrierPhone, '→ E.164:', carrierPhone)
 
         if (carrierPhone) {
           const { data: recentIncidents } = await db
@@ -417,36 +497,35 @@ export async function POST(request) {
             .order('created_at', { ascending: false })
             .limit(1)
 
-          const voiceMessage = buildCarrierVoiceMessage({
-            carrierName: details.carrier_name || 'the carrier',
-            vehicleReg: details.vehicle_reg,
-            clientName: contactName,
-            incidentDescription: recentIncidents?.[0]?.user_input?.substring(0, 150),
-            opsPhone: client.contact_phone,
-            ref: details.ref || recentIncidents?.[0]?.ref
-          })
+          const spokenReg      = details.vehicle_reg ? details.vehicle_reg.replace(/\s/g,'').split('').join(', ') : 'unknown'
+          const spokenOpsPhone = client.contact_phone ? client.contact_phone.replace(/\s/g,'').split('').join(', ') : null
+          const ref = details.ref || recentIncidents?.[0]?.ref || ''
+
+          const voiceMessage = [
+            `This is an automated alert from DisruptionHub on behalf of ${contactName || 'your client'}.`,
+            `Vehicle registration ${spokenReg}${ref ? `, job reference ${ref},` : ''} requires immediate assistance.`,
+            recentIncidents?.[0]?.user_input ? recentIncidents[0].user_input.substring(0,150) + '.' : 'Please check your dispatch system.',
+            spokenOpsPhone ? `Please call the operations manager urgently on ${spokenOpsPhone}.` : 'Please contact the operations manager urgently.',
+            `This is an automated message from DisruptionHub.`
+          ].join(' ')
 
           const callResult = await makeCall(carrierPhone, voiceMessage)
           const driverPhone = await resolveDriverPhone()
           const driverMsg = `DisruptionHub OPS${details.ref ? ` — ${details.ref}` : ''}\n\nOps approved. Carrier being contacted now.\nStay safe. Help is coming.`
           await writeInstructionToApp(driverMsg)
-          if (driverPhone) {
-            await sendSMS(driverPhone, driverMsg).catch(() => {})
-          }
+          if (driverPhone) await sendSMS(driverPhone, driverMsg).catch(() => {})
 
-          if (callResult.success) return twimlReply(`DH: Calling ${details.carrier_name || carrierPhone}. Driver notified.`)
-          if (callResult.simulated) return twimlReply(`DH: Call ${details.carrier_name || 'carrier'} manually: ${carrierPhone}`)
-          return twimlReply(`DH: Approved. Call failed — dial ${carrierPhone} manually.`)
+          if (callResult.success) return twimlReply(`DH: Calling ${details.carrier_name || rawCarrierPhone}. Driver notified.`)
+          if (callResult.simulated) return twimlReply(`DH: Call ${details.carrier_name || 'carrier'} manually: ${rawCarrierPhone}`)
+          return twimlReply(`DH: Call failed (${callResult.error || 'unknown'}) — dial ${rawCarrierPhone} manually.`)
         }
 
+        // No phone found for either call type
         const driverPhone = await resolveDriverPhone()
         const helpMsg = `DisruptionHub OPS${details.ref ? ` — ${details.ref}` : ''}\n\nOps approved. Help being arranged. Stay safe.`
         await writeInstructionToApp(helpMsg)
-        if (driverPhone) {
-          const result = await sendSMS(driverPhone, helpMsg)
-          return twimlReply(result.success ? 'DH: Driver notified. No carrier phone on file.' : 'DH: Approved. No carrier phone — arrange manually.')
-        }
-        return twimlReply('DH: Approved. No carrier or driver phone — action manually.')
+        if (driverPhone) await sendSMS(driverPhone, helpMsg).catch(() => {})
+        return twimlReply('DH: Approved. No contact phone on file — action manually.')
       }
 
       // Unknown action type
