@@ -297,14 +297,27 @@ ${systemPrompt}`
     }
 
     // 9. Write approvals
+    // If AI returned no actions, create a default one so ops YES reply works
     const vehicleReg = payload?.vehicle_reg || null
-    if (supabase && shouldSendSMS && parsedResult?.actions?.length) {
+    const actionsToWrite = parsedResult?.actions?.length
+      ? parsedResult.actions.slice(0, 3)
+      : [{
+          type: 'send_sms',
+          label: `${severity} — ${event_type.replace(/_/g,' ')} · ${vehicleReg || 'unknown vehicle'}`,
+          recipient: 'driver',
+          content: analysisSummary.split('\n').slice(0,2).join(' '),
+          priority: 'immediate',
+          auto_approve: false,
+          financial_value: financialImpact
+        }]
+
+    if (supabase && shouldSendSMS) {
       try {
-        for (const action of parsedResult.actions.slice(0, 3)) {
+        for (const action of actionsToWrite) {
           await supabase.from('approvals').insert({
             client_id,
-            action_type: action.type || 'notify',
-            action_label: action.label || 'AI recommended action',
+            action_type: action.type || 'send_sms',
+            action_label: action.label || `${severity} alert — ${event_type.replace(/_/g,' ')}`,
             action_details: {
               vehicle_reg: vehicleReg,
               event_type,
