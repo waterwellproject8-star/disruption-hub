@@ -2222,7 +2222,7 @@ export default function DashboardPage() {
 
                               </div>
                             )}
-                            {isExecuted && <div style={{ fontSize:9, color:'#00e5b0', fontFamily:'monospace' }}>✓ Executed {timeStr}</div>}
+                            {isExecuted && <div style={{ fontSize:9, color:'#00e5b0', fontFamily:'monospace' }}>✓ Actioned {timeStr} — no further action needed</div>}
                             {isRejected && <div style={{ fontSize:9, color:'#4a5260', fontFamily:'monospace' }}>Dismissed</div>}
                           </div>
                         </div>

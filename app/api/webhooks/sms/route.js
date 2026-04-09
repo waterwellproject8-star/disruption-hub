@@ -315,6 +315,49 @@ export async function POST(request) {
       return twimlReply(`DH Last 3:\n${lines.join('\n')}`)
     }
 
+    // ── NEXT ACTION SMS HELPER ───────────────────────────────────────────────
+    // After executing an action, sends the next queued pending action to ops
+    // This creates a sequential decision flow — ops handles one thing at a time
+    async function sendNextPendingActionSMS() {
+      try {
+        const { data: nextActions } = await db
+          .from('approvals')
+          .select('*')
+          .eq('client_id', clientId)
+          .eq('status', 'pending')
+          .order('created_at', { ascending: 'asc' })
+          .limit(1)
+
+        if (!nextActions?.length) return // nothing queued
+
+        const next = nextActions[0]
+        const nextType = next.action_type || ''
+        const nextDetails = next.action_details || {}
+        const nextLabel = next.action_label || ''
+        const sevEmoji = '🟠' // default — inbound route sets severity on label
+        const reg = nextDetails.vehicle_reg || ''
+        const consignee = nextDetails.consignee_name || nextDetails.payload?.consignee || ''
+        const financial = next.financial_value > 0 ? `\n£${Number(next.financial_value).toLocaleString()} exposure` : ''
+
+        let actionLine = ''
+        if (['call','make_call'].includes(nextType) && nextDetails.call_type === 'consignee_delay_alert') {
+          actionLine = `YES = call ${consignee || 'consignee'} automatically`
+        } else if (['call','make_call'].includes(nextType)) {
+          actionLine = `YES = call carrier for recovery`
+        } else if (['sms','send_sms','notify','reroute'].includes(nextType)) {
+          actionLine = `YES = notify driver`
+        } else {
+          actionLine = `YES = execute next action`
+        }
+
+        const smsBody = `${sevEmoji} NEXT ACTION${reg ? ` — ${reg}` : ''}${financial}\n${actionLine}\nReply YES · NO`
+
+        await sendSMS(opsPhone, smsBody)
+      } catch (e) {
+        console.log('[sendNextPendingActionSMS] error:', e.message)
+      }
+    }
+
     // ── YES ─────────────────────────────────────────────────────────────────
     if (body === 'YES' || body === 'Y' || body === 'APPROVE') {
       const { data: approvals } = await db
@@ -409,13 +452,15 @@ export async function POST(request) {
         await writeInstructionToApp(msg)
         if (driverPhone) {
           const result = await sendSMS(driverPhone, msg)
+          await sendNextPendingActionSMS()
           return twimlReply(result.success ? 'DH: Driver notified. Recovery confirmed.' : 'DH: Approved. Call driver directly — SMS failed.')
         }
+        await sendNextPendingActionSMS()
         return twimlReply('DH: Approved. No driver phone — call them directly.')
       }
 
       // ── SMS / REROUTE / NOTIFY ────────────────────────────────────────────
-      if (actionType === 'sms' || actionType === 'reroute' || actionType === 'notify') {
+      if (['sms', 'send_sms', 'reroute', 'notify'].includes(actionType)) {
         const driverPhone = await resolveDriverPhone()
 
         // Build proper driver-facing instruction
@@ -430,8 +475,10 @@ export async function POST(request) {
 
         if (driverPhone) {
           const result = await sendSMS(driverPhone, instruction)
+          await sendNextPendingActionSMS()
           return twimlReply(result.success ? 'DH: Driver notified. Check dashboard.' : 'DH: Approved. Send instruction to driver manually.')
         }
+        await sendNextPendingActionSMS()
         return twimlReply('DH: Approved. No driver phone — send instruction manually.')
       }
 
@@ -488,6 +535,7 @@ export async function POST(request) {
             await writeInstructionToApp(driverMsg)
             if (driverPhone) await sendSMS(driverPhone, driverMsg).catch(() => {})
 
+            await sendNextPendingActionSMS()
             if (callResult.success) return twimlReply(`DH: Calling ${details.consignee_name || consigneePhone}. Driver notified.`)
             if (callResult.simulated) return twimlReply(`DH: Call ${details.consignee_name || 'consignee'} manually: ${rawConsigneePhone}`)
             return twimlReply(`DH: Call failed (${callResult.error || 'unknown'}) — dial ${rawConsigneePhone} manually.`)

@@ -57,7 +57,8 @@ async function makeCall(to, twimlMessage) {
 
 function extractPhoneNumber(text) {
   if (!text) return null
-  const match = text.match(/\b(0800[\s\d]{8,12}|07[\d\s]{9,11}|01[\d\s]{9,11}|02[\d\s]{9,11})\b/)
+  // Match +44 international, 07/01/02/0800 UK formats
+  const match = text.match(/(\+44[\s\d]{10,12}|\b0800[\s\d]{8,12}|\b07[\d\s]{9,11}|\b01[\d\s]{9,11}|\b02[\d\s]{9,11})/)
   if (!match) return null
   return match[1].replace(/\s/g, '')
 }

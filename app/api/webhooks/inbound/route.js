@@ -375,15 +375,13 @@ ${systemPrompt}`
 
         approvalsWritten++
 
-        // Send targeted SMS for this action — tells ops exactly what YES will do
-        if (opsPhone && !simulated) {
+        // Only SMS the FIRST action immediately
+        // Subsequent actions are queued as pending — their SMS fires after the first is executed
+        // This gives ops a sequential decision flow rather than simultaneous messages
+        if (i === 0 && opsPhone && !simulated) {
           const smsBody = buildActionSMS(event_type, payload, severity, financialImpact, action)
           const sent = await sendOpsSMS(opsPhone, smsBody)
           if (sent) smsSent = true
-          // Small delay between messages so they arrive in order
-          if (i < actionsToWrite.length - 1) {
-            await new Promise(resolve => setTimeout(resolve, 1500))
-          }
         }
       }
 
