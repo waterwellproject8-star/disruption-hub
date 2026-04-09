@@ -1706,6 +1706,12 @@ export default function DashboardPage() {
           .dh-nav-right { gap: 8px; }
           .dh-client-name { display: none; }
           .dh-tabs { padding: 8px 10px; gap: 4px; }
+          /* COMMAND tab — stack panels vertically on mobile */
+          .dh-command { flex-direction: column !important; overflow-y: auto !important; overflow-x: hidden !important; }
+          .dh-cmd-left { width: 100% !important; max-width: 100% !important; border-right: none !important; border-bottom: 2px solid rgba(255,255,255,0.06) !important; overflow: visible !important; flex-shrink: 0 !important; }
+          .dh-cmd-left .dh-fleet-inner { max-height: 280px; overflow-y: auto; }
+          .dh-cmd-centre { flex: none !important; width: 100% !important; border-right: none !important; border-bottom: 2px solid rgba(255,255,255,0.06) !important; overflow: visible !important; min-height: 300px; }
+          .dh-cmd-right { width: 100% !important; max-height: none !important; overflow: visible !important; }
         }
       `}</style>
 
@@ -2053,10 +2059,10 @@ export default function DashboardPage() {
 
           {/* ── APPROVALS TAB ──────────────────────────────────────────────── */}
           {activeTab === 'approvals' && (
-            <div style={{ flex:1, display:'flex', overflow:'hidden', minHeight:0 }}>
+            <div className="dh-command" style={{ flex:1, display:'flex', overflow:'hidden', minHeight:0 }}>
 
               {/* ══ LEFT — LIVE FLEET ══ */}
-              <div style={{ width:280, flexShrink:0, display:'flex', flexDirection:'column', borderRight:'2px solid rgba(255,255,255,0.06)', overflow:'hidden' }}>
+              <div className="dh-cmd-left" style={{ width:280, flexShrink:0, display:'flex', flexDirection:'column', borderRight:'2px solid rgba(255,255,255,0.06)', overflow:'hidden' }}>
                 <div style={{ background:'#0d1420', borderBottom:'1px solid rgba(255,255,255,0.06)', padding:'12px 16px', display:'flex', justifyContent:'space-between', alignItems:'center', flexShrink:0 }}>
                   <div>
                     <div style={{ fontSize:10, fontWeight:700, letterSpacing:'0.1em', color:'#e8eaed', fontFamily:'monospace' }}>LIVE FLEET</div>
@@ -2156,7 +2162,7 @@ export default function DashboardPage() {
               </div>
 
               {/* ══ CENTRE — ACTION QUEUE ══ */}
-              <div style={{ flex:1, display:'flex', flexDirection:'column', borderRight:'2px solid rgba(255,255,255,0.06)', overflow:'hidden' }}>
+              <div className="dh-cmd-centre" style={{ flex:1, display:'flex', flexDirection:'column', borderRight:'2px solid rgba(255,255,255,0.06)', overflow:'hidden' }}>
                 <div style={{ background:'#0d1420', borderBottom:'1px solid rgba(255,255,255,0.06)', padding:'12px 20px', display:'flex', justifyContent:'space-between', alignItems:'center', flexShrink:0 }}>
                   <div>
                     <div style={{ fontSize:10, fontWeight:700, letterSpacing:'0.1em', color:'#e8eaed', fontFamily:'monospace' }}>ACTION QUEUE</div>
@@ -2254,7 +2260,7 @@ export default function DashboardPage() {
               </div>
 
               {/* ══ RIGHT — INCIDENT FEED + VALUE ══ */}
-              <div style={{ width:280, flexShrink:0, display:'flex', flexDirection:'column', overflow:'hidden' }}>
+              <div className="dh-cmd-right" style={{ width:280, flexShrink:0, display:'flex', flexDirection:'column', overflow:'hidden' }}>
 
                 {/* Toggle header */}
                 <div style={{ background:'#0d1420', borderBottom:'1px solid rgba(255,255,255,0.06)', flexShrink:0, display:'flex' }}>

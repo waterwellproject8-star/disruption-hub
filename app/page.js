@@ -80,6 +80,10 @@ export default function HomePage() {
         .pricing-card:hover { transform: translateY(-3px); }
         /* Hero — centre-left on desktop */
         .hero-section { justify-content: flex-start; padding-left: max(5%, calc(50vw - 680px)); }
+        .hero-truck-bg { background-position: 70% center; }
+        @media (max-width: 768px) {
+          .hero-truck-bg { background-position: 60% center !important; }
+        }
         .hero-content { text-align: left; }
         .hero-sub { margin-left: 0; }
         .hero-ctas { justify-content: flex-start; }
@@ -92,10 +96,10 @@ export default function HomePage() {
           .pricing-grid { grid-template-columns: 1fr !important; }
           .footer-cols { flex-direction: column !important; gap: 32px !important; }
           /* Hero — center on mobile */
-          .hero-section { justify-content: center; }
-          .hero-content { text-align: center; }
-          .hero-sub { margin: 0 auto 44px !important; }
-          .hero-ctas { justify-content: center; }
+          .hero-section { justify-content: center; padding: 80px 20px 60px !important; }
+          .hero-content { text-align: center; max-width: 100% !important; }
+          .hero-sub { margin: 0 auto 32px !important; font-size: 16px !important; }
+          .hero-ctas { justify-content: center; flex-direction: column; align-items: center; }
           .hero-badge { justify-content: center; }
         }
       `}</style>
@@ -139,7 +143,7 @@ export default function HomePage() {
         padding: '120px 5% 80px', position: 'relative', overflow: 'hidden',
       }}>
         {/* Truck photo background */}
-        <div style={{
+        <div className="hero-truck-bg" style={{
           position: 'absolute', inset: 0, pointerEvents: 'none',
           backgroundImage: 'url(/hero-bg.jpg)',
           backgroundSize: 'cover', backgroundPosition: '70% center',
