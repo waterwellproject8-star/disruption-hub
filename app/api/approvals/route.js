@@ -181,13 +181,12 @@ export async function POST(request) {
       if (details.driver_phone) return details.driver_phone
 
       try {
-        // 2. Look up by vehicle_reg — most reliable for webhook-triggered approvals
+        // 2. Look up by vehicle_reg — driver_progress has no client_id column
         if (details.vehicle_reg) {
           const { data: byReg } = await db
             .from('driver_progress')
             .select('driver_phone')
-            .eq('client_id', clientId)
-            .eq('vehicle_reg', details.vehicle_reg)
+            .eq('vehicle_reg', details.vehicle_reg.trim())
             .not('driver_phone', 'is', null)
             .order('updated_at', { ascending: false })
             .limit(1)
@@ -199,7 +198,6 @@ export async function POST(request) {
         const { data: progress } = await db
           .from('driver_progress')
           .select('driver_phone')
-          .eq('client_id', clientId)
           .not('driver_phone', 'is', null)
           .order('updated_at', { ascending: false })
           .limit(1)
@@ -214,13 +212,26 @@ export async function POST(request) {
       if (driverPhone) {
         const msg = `DisruptionHub OPS UPDATE${details.ref ? ` — ${details.ref}` : ''}\n\nOps confirmed. Recovery/assistance dispatched.\nStay with vehicle. Help is coming.`
         const result = await sendSMS(driverPhone, msg)
+
+        if (details.vehicle_reg) {
+          try {
+            await db
+              .from('driver_progress')
+              .update({
+                alert: `OPS_MSG: Recovery dispatched. Stay with vehicle.`,
+                updated_at: new Date().toISOString()
+              })
+              .eq('vehicle_reg', details.vehicle_reg.trim())
+          } catch {}
+        }
+
         return Response.json({ success: true, action: 'executed', driver_notified: result.success, phase: 2 })
       }
       return Response.json({ success: true, action: 'executed', driver_notified: false, note: 'No driver phone — call directly' })
     }
 
     // ── SMS / REROUTE / NOTIFY — instruction to driver ───────────────────
-    if (actionType === 'sms' || actionType === 'reroute' || actionType === 'notify') {
+    if (['sms', 'send_sms', 'reroute', 'notify', 'send_email'].includes(actionType)) {
       const driverPhone = await resolveDriverPhone()
       if (driverPhone) {
         const smsText = [
@@ -231,13 +242,27 @@ export async function POST(request) {
           'Reply DONE when complete.'
         ].join('\n')
         const result = await sendSMS(driverPhone, smsText)
+
+        // Write OPS_MSG to driver_progress so app banner shows
+        if (details.vehicle_reg) {
+          try {
+            await db
+              .from('driver_progress')
+              .update({
+                alert: `OPS_MSG: ${actionLabel}`,
+                updated_at: new Date().toISOString()
+              })
+              .eq('vehicle_reg', details.vehicle_reg.trim())
+          } catch {}
+        }
+
         return Response.json({ success: true, action: 'executed', driver_notified: result.success, phase: 2 })
       }
       return Response.json({ success: true, action: 'executed', driver_notified: false, note: 'No driver phone on file' })
     }
 
-    // ── CALL / EMERGENCY — Phase 3 voice call to carrier ────────────────
-    if (actionType === 'call' || actionType === 'emergency') {
+    // ── CALL / EMERGENCY / MAKE_CALL — Phase 3 voice call to carrier ────
+    if (['call', 'emergency', 'make_call'].includes(actionType)) {
       const carrierPhone = details.carrier_phone
         || extractPhoneNumber(actionLabel)
         || extractPhoneNumber(client?.system_prompt)
