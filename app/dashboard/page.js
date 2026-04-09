@@ -1797,7 +1797,7 @@ export default function DashboardPage() {
               <div style={{ borderTop:'1px solid rgba(255,255,255,0.06)', padding:'12px 20px', background:'#0d1420' }}>
                 <div style={{ display:'flex', gap:8 }}>
                   <input value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => { if(e.key==='Enter') runAnalysis(input) }} placeholder="Type a disruption or follow-up question..."
-                    style={{ flex:1, background:'#0f1826', border:'1px solid rgba(255,255,255,0.08)', borderRadius:6, padding:'10px 13px', color:'#e8eaed', fontFamily:Barlow, fontSize:12, outline:'none' }} />
+                    style={{ flex:1, background:'#0f1826', border:'1px solid rgba(255,255,255,0.08)', borderRadius:6, padding:'10px 13px', color:'#e8eaed', fontFamily:'Barlow', fontSize:12, outline:'none' }} />
                   <button onClick={() => runAnalysis(input)} disabled={!input.trim()||loading}
                     style={{ background:loading?'#0f1826':'#f5a623', color:'#000', border:'none', padding:'10px 18px', borderRadius:6, fontWeight:600, fontSize:12, cursor:loading?'default':'pointer', whiteSpace:'nowrap' }}>
                     {loading ? '...' : 'Analyse →'}
@@ -1806,7 +1806,7 @@ export default function DashboardPage() {
                 <div style={{ marginTop:8, display:'flex', gap:6, flexWrap:'wrap' }}>
                   {['Draft client email','Cheapest reroute','What\'s our liability?','Reorder recommendations'].map(q => (
                     <button key={q} onClick={() => { setInput(q); runAnalysis(q) }}
-                      style={{ fontSize:10, color:'#4a5260', background:'none', border:'1px solid rgba(255,255,255,0.06)', borderRadius:4, padding:'3px 8px', cursor:'pointer', fontFamily:Barlow }}>{q}</button>
+                      style={{ fontSize:10, color:'#4a5260', background:'none', border:'1px solid rgba(255,255,255,0.06)', borderRadius:4, padding:'3px 8px', cursor:'pointer', fontFamily:'Barlow' }}>{q}</button>
                   ))}
                 </div>
               </div>
@@ -2055,7 +2055,7 @@ export default function DashboardPage() {
                         {reassignJobRef === job.ref ? (
                           <div style={{ display:'flex', gap:6, alignItems:'center' }}>
                             <select value={reassignTo} onChange={e => setReassignTo(e.target.value)}
-                              style={{ padding:'5px 8px', background:'#080c14', border:'1px solid rgba(255,255,255,0.12)', borderRadius:5, color: reassignTo ? '#e8eaed' : '#4a5260', fontSize:11, outline:'none', cursor:'pointer', fontFamily:Barlow }}>
+                              style={{ padding:'5px 8px', background:'#080c14', border:'1px solid rgba(255,255,255,0.12)', borderRadius:5, color: reassignTo ? '#e8eaed' : '#4a5260', fontSize:11, outline:'none', cursor:'pointer', fontFamily:'Barlow' }}>
                               <option value=''>Pick driver...</option>
                               {fleet.map(v => (
                                 <option key={v.vehicle_reg} value={v.vehicle_reg}>
@@ -2209,7 +2209,7 @@ export default function DashboardPage() {
                         <select
                           value={reassignTo}
                           onChange={e => setReassignTo(e.target.value)}
-                          style={{ width:'100%', padding:'9px 12px', background:'#080c14', border:'1px solid rgba(255,255,255,0.1)', borderRadius:6, color: reassignTo ? '#e8eaed' : '#4a5260', fontSize:12, outline:'none', fontFamily:Barlow, cursor:'pointer' }}>
+                          style={{ width:'100%', padding:'9px 12px', background:'#080c14', border:'1px solid rgba(255,255,255,0.1)', borderRadius:6, color: reassignTo ? '#e8eaed' : '#4a5260', fontSize:12, outline:'none', fontFamily:'Barlow', cursor:'pointer' }}>
                           <option value=''>No reassignment — just cancel</option>
                           {fleet.filter(v => v.vehicle_reg !== cancelConfirm.vehicle_reg).map(v => (
                             <option key={v.vehicle_reg} value={v.vehicle_reg}>
@@ -2229,7 +2229,7 @@ export default function DashboardPage() {
                       value={cancelReason}
                       onChange={e => setCancelReason(e.target.value)}
                       placeholder='Reason — e.g. Driver unwell, reassigned to BK22 ABC (optional)'
-                      style={{ width:'100%', padding:'10px 12px', background:'#080c14', border:'1px solid rgba(255,255,255,0.1)', borderRadius:6, color:'#e8eaed', fontSize:12, outline:'none', marginBottom:14, boxSizing:'border-box', fontFamily:Barlow }}
+                      style={{ width:'100%', padding:'10px 12px', background:'#080c14', border:'1px solid rgba(255,255,255,0.1)', borderRadius:6, color:'#e8eaed', fontSize:12, outline:'none', marginBottom:14, boxSizing:'border-box', fontFamily:'Barlow' }}
                     />
                     <div style={{ display:'flex', gap:8 }}>
                       <button
@@ -2300,7 +2300,7 @@ export default function DashboardPage() {
                             <button key={opt.id} onClick={() => executeCancelAction(cancelAssessment.approvalId, opt.id)}
                               style={{ padding:'10px 14px', background: opt.recommended ? 'rgba(245,166,35,0.1)' : 'rgba(255,255,255,0.04)', border: opt.recommended ? '1px solid rgba(245,166,35,0.3)' : '1px solid rgba(255,255,255,0.08)', borderRadius:6, color: opt.recommended ? '#f5a623' : '#8a9099', fontSize:12, cursor:'pointer', textAlign:'left', fontFamily:'monospace' }}>
                               {opt.recommended ? '✓ ' : ''}{opt.label}
-                              <div style={{ fontSize:10, color:'#4a5260', marginTop:3, fontFamily:Barlow }}>{opt.description}</div>
+                              <div style={{ fontSize:10, color:'#4a5260', marginTop:3, fontFamily:'Barlow' }}>{opt.description}</div>
                             </button>
                           ))}
                         </div>
