@@ -204,10 +204,30 @@ export default function DriverApp() {
   }, [])
 
   // ── OPS-INITIATED JOB POLL — checks every 60s for cancelled or newly assigned jobs ──
+  // Also refreshes ETAs every 5 minutes so shipment times stay accurate
+  const etaRefreshCount = useRef(0)
   useEffect(() => {
     if (!shiftStarted || !driverInfo.clientId || !driverInfo.vehicleReg) return
 
     const checkForOpsChanges = async () => {
+      // Refresh ETAs every 5 polls (5 minutes) — prevents stale ETAs from shift start
+      etaRefreshCount.current += 1
+      if (etaRefreshCount.current % 5 === 0) {
+        try {
+          const fresh = await fetch(`/api/shipments?client_id=${driverInfo.clientId}`)
+          if (fresh.ok) {
+            const freshData = await fresh.json()
+            const freshShipments = freshData.shipments || []
+            if (freshShipments.length > 0) {
+              setJobs(prev => prev.map(j => {
+                const updated = freshShipments.find(s => s.ref === j.ref)
+                // Only update ETA and sla_window — preserve driver's progress status
+                return updated ? { ...j, eta: updated.eta, sla_window: updated.sla_window } : j
+              }))
+            }
+          }
+        } catch {}
+      }
       try {
         const res = await fetch(`/api/driver/progress?client_id=${driverInfo.clientId}&vehicle_reg=${encodeURIComponent(driverInfo.vehicleReg)}`)
         if (!res.ok) return
@@ -293,6 +313,7 @@ export default function DriverApp() {
       } catch {}
     }
 
+    checkForOpsChanges() // Run immediately on shift start
     const interval = setInterval(checkForOpsChanges, 60000)
     return () => clearInterval(interval)
   }, [shiftStarted, driverInfo.clientId, driverInfo.vehicleReg])

@@ -2219,10 +2219,7 @@ export default function DashboardPage() {
                                   style={{ padding:'6px 12px', borderRadius:5, fontSize:11, cursor:'pointer', border:'1px solid rgba(245,158,11,0.4)', background:'rgba(245,158,11,0.06)', color:'#f59e0b', fontFamily:'monospace' }}>
                                   NO
                                 </button>
-                                <button onClick={() => { window.open('/dashboard', '_blank') }}
-                                  style={{ padding:'6px 10px', borderRadius:5, border:'1px solid rgba(255,255,255,0.08)', background:'transparent', color:'#4a5260', fontSize:11, cursor:'pointer', fontFamily:'monospace' }}>
-                                  OPEN
-                                </button>
+
                               </div>
                             )}
                             {isExecuted && <div style={{ fontSize:9, color:'#00e5b0', fontFamily:'monospace' }}>✓ Executed {timeStr}</div>}
