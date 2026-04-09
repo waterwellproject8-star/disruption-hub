@@ -352,7 +352,7 @@ export async function POST(request) {
 
         const smsBody = `${sevEmoji} NEXT ACTION${reg ? ` — ${reg}` : ''}${financial}\n${actionLine}\nReply YES · NO`
 
-        await sendSMS(opsPhone, smsBody)
+        await sendSMS(client.contact_phone || from, smsBody)
       } catch (e) {
         console.log('[sendNextPendingActionSMS] error:', e.message)
       }
