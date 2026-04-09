@@ -325,6 +325,7 @@ ${systemPrompt}`
               vehicle_reg: vehicleReg,
               event_type,
               system,
+              source: 'webhook_inbound',
               recipient: action.recipient,
               content: action.content,
               payload,

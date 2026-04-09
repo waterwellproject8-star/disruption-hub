@@ -187,7 +187,7 @@ export async function POST(request) {
   try {
     const formData = await request.formData()
     const body = formData.get('Body')?.trim().toUpperCase() || ''
-    const from = (formData.get('From') || '').replace(/\s/g, '')
+    const from = formData.get('From') || ''
 
     const db = getDB()
     if (!db) return twimlReply('DH: System error. Open disruptionhub.ai')
@@ -240,6 +240,7 @@ export async function POST(request) {
           return twimlReply('DH: Reply DONE when your instruction is complete.')
         }
       } catch (e) {
+        console.error('[SMS] error:', e.message)
       }
 
       return twimlReply('DH: Number not recognised. Visit disruptionhub.ai')
@@ -365,7 +366,6 @@ export async function POST(request) {
               alert: `OPS_MSG:${instruction}`,
               updated_at: new Date().toISOString()
             })
-            .eq('client_id', clientId)
             .eq('vehicle_reg', details.vehicle_reg)
             .not('status', 'eq', 'completed')
         } catch {}
@@ -384,7 +384,7 @@ export async function POST(request) {
       }
 
       // ── SMS / REROUTE / NOTIFY ────────────────────────────────────────────
-      if (actionType === 'sms' || actionType === 'reroute' || actionType === 'notify') {
+      if (actionType === 'sms' || actionType === 'send_sms' || actionType === 'reroute' || actionType === 'notify' || actionType === 'send_email') {
         const driverPhone = await resolveDriverPhone()
 
         // Build proper driver-facing instruction
@@ -405,7 +405,7 @@ export async function POST(request) {
       }
 
       // ── CALL / EMERGENCY ──────────────────────────────────────────────────
-      if (actionType === 'call' || actionType === 'emergency') {
+      if (actionType === 'call' || actionType === 'make_call' || actionType === 'emergency') {
         const carrierPhone = details.carrier_phone
           || extractPhoneNumber(actionLabel)
           || extractPhoneNumber(client.system_prompt)
