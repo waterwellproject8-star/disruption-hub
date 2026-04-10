@@ -72,10 +72,19 @@ Rules:
 - Chilled above 5C = cold chain breach in headline
 - Frozen above -15C = CRITICAL in headline`
 
-
-
 export async function POST(request) {
   try {
+    // ── AUTH CHECK ──────────────────────────────────────────────────
+    // Blocks unauthenticated calls that would run up Anthropic API costs
+    const dhKey = request.headers.get('x-dh-key')
+    if (dhKey !== process.env.DH_INTERNAL_KEY) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' }
+      })
+    }
+    // ───────────────────────────────────────────────────────────────
+
     const { messages, client_system_prompt, driver_mode } = await request.json()
 
     if (!messages || !Array.isArray(messages)) {
@@ -85,7 +94,6 @@ export async function POST(request) {
       })
     }
 
-    // Use driver prompt when in driver mode
     const finalSystemPrompt = driver_mode
       ? DRIVER_SYSTEM_PROMPT
       : client_system_prompt

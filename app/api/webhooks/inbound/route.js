@@ -161,6 +161,14 @@ const RECOVERY_EVENTS = ['panic_button', 'reefer_fault', 'impact_detected', 'eng
 
 export async function POST(request) {
   try {
+    // ── AUTH CHECK ──────────────────────────────────────────────────
+    // Blocks unauthenticated webhook calls that would trigger AI + SMS costs
+    const dhKey = request.headers.get('x-dh-key')
+    if (dhKey !== process.env.DH_INTERNAL_KEY) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+    // ───────────────────────────────────────────────────────────────
+
     const body = await request.json()
     const { system, event_type, payload, client_id } = body
 

@@ -411,6 +411,13 @@ const DEMO_RESULTS = {
 // POST /api/modules
 export async function POST(request) {
   try {
+    // ── AUTH CHECK ──────────────────────────────────────────────────
+    const dhKey = request.headers.get('x-dh-key')
+    if (dhKey !== process.env.DH_INTERNAL_KEY) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+    // ───────────────────────────────────────────────────────────────
+
     const body = await request.json()
     const { module, data, client_id } = body
 
