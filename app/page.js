@@ -258,7 +258,7 @@ export default function HomePage() {
                   marginLeft: 3,
                 }} />
               </div>
-              Watch 20-second demo
+              Watch 29-second demo
             </button>
           </div>
 
