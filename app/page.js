@@ -34,6 +34,7 @@ function HexMark({ size = 28 }) {
       background: T.amber,
       clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
       flexShrink: 0,
+      filter: 'drop-shadow(0 0 8px rgba(245,166,35,0.7)) drop-shadow(0 0 16px rgba(245,166,35,0.35))',
     }} />
   )
 }
@@ -67,12 +68,22 @@ export default function HomePage() {
         html { scroll-behavior: smooth; }
         @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
         @keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes marquee { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
+        .ticker-track { animation: marquee 30s linear infinite; display:inline-flex; gap:48px; white-space:nowrap; }
+        .ticker-track:hover { animation-play-state: paused; }
+        .amber-glow { text-shadow: 0 0 30px rgba(245,166,35,0.65), 0 0 60px rgba(245,166,35,0.3); }
+        .amber-btn-glow { box-shadow: 0 0 25px rgba(245,166,35,0.5), 0 0 50px rgba(245,166,35,0.2) !important; }
+        .amber-btn-glow:hover { box-shadow: 0 0 35px rgba(245,166,35,0.7), 0 0 70px rgba(245,166,35,0.35) !important; transform: translateY(-2px); }
+        .stat-card-hover:hover { transform: translateY(-3px); transition: all 0.2s; }
+        .stat-card-hover:hover .stat-val { text-shadow: 0 0 40px rgba(245,166,35,0.8), 0 0 80px rgba(245,166,35,0.4); }
+        .how-card-hover:hover { border-color: rgba(245,166,35,0.5) !important; box-shadow: 0 0 20px rgba(245,166,35,0.15), inset 0 0 20px rgba(245,166,35,0.04); }
+        .hex-glow { filter: drop-shadow(0 0 8px rgba(245,166,35,0.7)) drop-shadow(0 0 16px rgba(245,166,35,0.35)); }
         .nav-link { color: ${T.textDim}; text-decoration: none; font-size: 14px; font-weight: 500; letter-spacing: 0.02em; transition: color 0.2s; font-family: ${FF.body}; }
         .nav-link:hover { color: ${T.text}; }
         .btn-primary { background: ${T.amber}; color: #000; border: none; padding: 11px 24px; font-family: ${FF.condensed}; font-size: 15px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; transition: all 0.2s; border-radius: 3px; }
         .btn-primary:hover { background: ${T.amberBright}; transform: translateY(-1px); box-shadow: 0 6px 24px rgba(245,166,35,0.3); }
-        .btn-hero { background: ${T.amber}; color: #000; border: none; padding: 16px 40px; font-family: ${FF.condensed}; font-size: 18px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 10px; transition: all 0.2s; border-radius: 3px; }
-        .btn-hero:hover { background: ${T.amberBright}; transform: translateY(-2px); box-shadow: 0 10px 36px rgba(245,166,35,0.35); }
+        .btn-hero { background: ${T.amber}; color: #000; border: none; padding: 16px 40px; font-family: ${FF.condensed}; font-size: 18px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 10px; transition: all 0.2s; border-radius: 3px; box-shadow: 0 0 25px rgba(245,166,35,0.5), 0 0 50px rgba(245,166,35,0.2); }
+        .btn-hero:hover { background: ${T.amberBright}; transform: translateY(-2px); box-shadow: 0 0 35px rgba(245,166,35,0.7), 0 0 70px rgba(245,166,35,0.35); }
         .btn-outline { background: transparent; color: ${T.amber}; border: 1px solid ${T.amber}; padding: 11px 24px; font-family: ${FF.condensed}; font-size: 15px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; transition: all 0.2s; border-radius: 3px; }
         .btn-outline:hover { background: rgba(245,166,35,0.08); }
         .btn-cta-large { background: ${T.amber}; color: #000; border: none; padding: 18px 48px; font-family: ${FF.condensed}; font-size: 19px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 10px; transition: all 0.2s; border-radius: 3px; }
@@ -171,8 +182,9 @@ export default function HomePage() {
             letterSpacing: '0.2em', textTransform: 'uppercase',
             color: T.amber, marginBottom: 24,
             display: 'inline-flex', alignItems: 'center', gap: 12,
+            textShadow: '0 0 20px rgba(245,166,35,0.6)',
           }}>
-            <span style={{ width: 28, height: 1, background: T.amber, display: 'inline-block' }} />
+            <span style={{ width: 28, height: 1, background: T.amber, display: 'inline-block', boxShadow: '0 0 8px rgba(245,166,35,0.8)' }} />
             AI Operations Intelligence
             <span style={{ width: 28, height: 1, background: T.amber, display: 'inline-block' }} />
           </div>
@@ -188,7 +200,7 @@ export default function HomePage() {
             Your Ops Never Sleep.
             <span style={{
               color: T.amber, display: 'block',
-              textShadow: '0 0 40px rgba(245,166,35,0.3)',
+              textShadow: '0 0 30px rgba(245,166,35,0.65), 0 0 60px rgba(245,166,35,0.3), 0 0 100px rgba(245,166,35,0.15)',
             }}>
               Neither Does Ours.
             </span>
@@ -280,16 +292,17 @@ export default function HomePage() {
             { value: '85%', label: 'Decisions Before Escalation' },
             { value: 'ZERO', label: 'New Software to Learn' },
           ].map((s, i) => (
-            <div key={i} className="stat-card" style={{
+            <div key={i} className="stat-card stat-card-hover" style={{
               padding: '44px 32px', textAlign: 'center',
               borderRight: i < 3 ? `1px solid ${T.border}` : 'none',
-              transition: 'all 0.2s',
+              transition: 'all 0.2s', cursor: 'default',
             }}>
-              <div style={{
+              <div className="stat-val" style={{
                 fontFamily: FF.condensed, fontSize: 54, fontWeight: 900,
                 color: T.amber, lineHeight: 1, letterSpacing: '-0.02em',
                 marginBottom: 10,
-                textShadow: '0 0 30px rgba(245,166,35,0.25)',
+                textShadow: '0 0 30px rgba(245,166,35,0.5), 0 0 60px rgba(245,166,35,0.25)',
+                transition: 'text-shadow 0.2s',
               }}>
                 {s.value}
               </div>
@@ -301,6 +314,23 @@ export default function HomePage() {
               </div>
             </div>
           ))}
+        </div>
+      </div>
+
+      {/* ── LIVE INCIDENT TICKER ─────────────────────────────────────────────── */}
+      <div style={{ background: '#0d1420', borderBottom: '1px solid rgba(255,255,255,0.05)', padding: '14px 0', overflow: 'hidden' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 0 }}>
+          <div style={{ paddingLeft: 32, flexShrink: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#22c55e', animation: 'pulse 2s infinite' }} />
+            <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 9, color: '#4a5260', letterSpacing: '0.15em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>LIVE FEED</span>
+          </div>
+          <div style={{ flex: 1, overflow: 'hidden' }}>
+            <div className="ticker-track" style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: '#f5a623', letterSpacing: '0.1em', textTransform: 'uppercase', textShadow: '0 0 15px rgba(245,166,35,0.5)' }}>
+              {['REEFER FAULT · M62 J27 · RESOLVED IN 28s','TEMP ALARM · NHS LOAD · SLA PROTECTED £2,400','DRIVER HOURS · CASCADE PREVENTED · £900 SAVED','PANIC BUTTON · DRIVER SAFE · OPS NOTIFIED IN 12s','JOB DELAYED · TESCO DC · AUTO-REROUTED · £1,200 PROTECTED','REEFER FAULT · M62 J27 · RESOLVED IN 28s','TEMP ALARM · NHS LOAD · SLA PROTECTED £2,400','DRIVER HOURS · CASCADE PREVENTED · £900 SAVED','PANIC BUTTON · DRIVER SAFE · OPS NOTIFIED IN 12s','JOB DELAYED · TESCO DC · AUTO-REROUTED · £1,200 PROTECTED'].map((item, i) => (
+                <span key={i} style={{ flexShrink: 0 }}>⬥ {item}</span>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
 
@@ -368,13 +398,13 @@ export default function HomePage() {
               ),
             },
           ].map((step, i) => (
-            <div key={i} className="how-card" style={{
+            <div key={i} className="how-card how-card-hover" style={{
               textAlign: 'center', padding: '40px 32px', position: 'relative', zIndex: 1,
               background: T.navyCard,
               border: `1px solid ${T.border}`,
               borderRadius: 4,
               margin: '0 8px',
-              transition: 'border-color 0.2s',
+              transition: 'all 0.2s',
             }}>
               {/* Step number */}
               <div style={{
@@ -392,7 +422,7 @@ export default function HomePage() {
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 margin: '0 auto 24px',
                 background: `linear-gradient(135deg, ${T.navyMid}, ${T.navyCard})`,
-                boxShadow: `0 0 20px rgba(245,166,35,0.08)`,
+                boxShadow: '0 0 20px rgba(245,166,35,0.15), inset 0 0 10px rgba(245,166,35,0.05)',
               }}>
                 {step.icon}
               </div>
@@ -494,14 +524,15 @@ export default function HomePage() {
               border: `1px solid ${T.amberBorder}`,
               borderRadius: 4, padding: '32px 28px',
               position: 'relative',
-              boxShadow: `0 0 40px rgba(245,166,35,0.1), inset 0 1px 0 rgba(245,166,35,0.15)`,
+              boxShadow: `0 0 40px rgba(245,166,35,0.25), 0 0 80px rgba(245,166,35,0.1), inset 0 1px 0 rgba(245,166,35,0.2)`,
               transform: 'scale(1.02)',
               transition: 'transform 0.2s',
             }}>
               {/* Top accent line */}
               <div style={{
                 position: 'absolute', top: 0, left: 0, right: 0, height: 2,
-                background: `linear-gradient(90deg, transparent, ${T.amber}, transparent)`,
+                background: `linear-gradient(90deg, transparent, #f5a623, transparent)`,
+              boxShadow: '0 0 20px rgba(245,166,35,0.8)',
                 borderRadius: '4px 4px 0 0',
               }} />
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20 }}>
@@ -523,7 +554,7 @@ export default function HomePage() {
               <div style={{
                 fontFamily: FF.condensed, fontSize: 56, fontWeight: 900,
                 color: T.amber, lineHeight: 1, marginBottom: 4,
-                textShadow: '0 0 30px rgba(245,166,35,0.35)',
+                textShadow: '0 0 30px rgba(245,166,35,0.7), 0 0 60px rgba(245,166,35,0.35)',
               }}>
                 £299
               </div>
@@ -590,7 +621,7 @@ export default function HomePage() {
           {/* Main CTA */}
           <div style={{ textAlign: 'center' }}>
             <a
-              className="btn-cta-large"
+              className="btn-cta-large amber-btn-glow"
               href="mailto:hello@disruptionhub.ai?subject=Onboarding call request — DisruptionHub pilot&body=Hi, I'd like to book my onboarding call to start the £99 pilot."
               onClick={handleMailto}
             >
