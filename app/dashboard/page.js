@@ -1156,7 +1156,7 @@ export default function DashboardPage() {
       .then(r => r.json())
       .then(data => { if (data.shipments?.length > 0) setLiveShipments(data.shipments) })
       .catch(() => {})
-    fetch('/api/modules/latest?client_id=pearson-haulage')
+    fetch('/api/modules/latest?client_id=pearson-haulage', { headers: { 'x-dh-key': process.env.NEXT_PUBLIC_DH_KEY } })
       .then(r => r.json())
       .then(data => { if (data.latest) setLatestRuns(data.latest) })
       .catch(() => {})
@@ -1198,7 +1198,7 @@ export default function DashboardPage() {
     try {
       const res = await fetch('/api/agent', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'x-dh-key': process.env.NEXT_PUBLIC_DH_KEY },
         body: JSON.stringify({ messages: newMessages })
       })
       const reader = res.body.getReader()
@@ -1267,7 +1267,7 @@ export default function DashboardPage() {
     try {
       const res = await fetch('/api/modules', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'x-dh-key': process.env.NEXT_PUBLIC_DH_KEY },
         body: JSON.stringify({ module: moduleId, data: { trigger: 'manual', timestamp: new Date().toISOString() } })
       })
       const data = await res.json()
@@ -1481,7 +1481,7 @@ export default function DashboardPage() {
   async function loadWebhookLog() {
     setWhLogLoading(true)
     try {
-      const res = await fetch('/api/webhooks/inbound?client_id=pearson-haulage&limit=30')
+      const res = await fetch('/api/webhooks/inbound?client_id=pearson-haulage&limit=30', { headers: { 'x-dh-key': process.env.NEXT_PUBLIC_DH_KEY } })
       if (!res.ok) return
       const data = await res.json()
       setWhLog(data.logs || [])
@@ -1647,7 +1647,7 @@ export default function DashboardPage() {
     try {
       const res = await fetch('/api/webhooks/inbound', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'x-dh-key': process.env.NEXT_PUBLIC_DH_KEY },
         body: JSON.stringify({
           system: whSystem,
           event_type: whEvent,
