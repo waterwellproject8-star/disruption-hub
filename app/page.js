@@ -704,7 +704,6 @@ export default function HomePage() {
         </div>
       </footer>
 
-    </div>
 
       {/* ── VIDEO MODAL ── */}
       {videoOpen && (
@@ -721,7 +720,6 @@ export default function HomePage() {
             onClick={e => e.stopPropagation()}
             style={{ position: 'relative', width: '100%', maxWidth: 960 }}
           >
-            {/* Close button */}
             <button
               onClick={() => setVideoOpen(false)}
               style={{
@@ -733,7 +731,6 @@ export default function HomePage() {
             >
               ESC / CLOSE ✕
             </button>
-            {/* Video */}
             <video
               src="/demo.mp4"
               controls
@@ -747,5 +744,7 @@ export default function HomePage() {
           </div>
         </div>
       )}
+
+    </div>
   )
 }
