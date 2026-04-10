@@ -40,6 +40,8 @@ function HexMark({ size = 28 }) {
 
 export default function HomePage() {
 
+  const [videoOpen, setVideoOpen] = useState(false)
+
   const handleMailto = (e) => {
     const href = e.currentTarget.getAttribute('href')
     let left = true
@@ -214,6 +216,38 @@ export default function HomePage() {
             <Link href="/dashboard" className="btn-outline">
               View Dashboard →
             </Link>
+          </div>
+
+          {/* Watch Demo button */}
+          <div className="hero-ctas" style={{ marginTop: 20 }}>
+            <button
+              onClick={() => setVideoOpen(true)}
+              style={{
+                background: 'transparent', border: 'none', cursor: 'pointer',
+                display: 'inline-flex', alignItems: 'center', gap: 10,
+                color: '#8a9099', fontFamily: "'Barlow Condensed', sans-serif",
+                fontSize: 15, fontWeight: 600, letterSpacing: '0.06em',
+                textTransform: 'uppercase', padding: '8px 0',
+              }}
+              onMouseEnter={e => e.currentTarget.style.color = '#f5a623'}
+              onMouseLeave={e => e.currentTarget.style.color = '#8a9099'}
+            >
+              <div style={{
+                width: 36, height: 36, borderRadius: '50%',
+                border: '1px solid rgba(245,166,35,0.3)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                flexShrink: 0,
+              }}>
+                <div style={{
+                  width: 0, height: 0,
+                  borderTop: '7px solid transparent',
+                  borderBottom: '7px solid transparent',
+                  borderLeft: '12px solid #f5a623',
+                  marginLeft: 3,
+                }} />
+              </div>
+              Watch 20-second demo
+            </button>
           </div>
 
           {/* Social proof */}
@@ -671,5 +705,47 @@ export default function HomePage() {
       </footer>
 
     </div>
+
+      {/* ── VIDEO MODAL ── */}
+      {videoOpen && (
+        <div
+          onClick={() => setVideoOpen(false)}
+          style={{
+            position: 'fixed', inset: 0, zIndex: 999,
+            background: 'rgba(0,0,0,0.92)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            padding: 24,
+          }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{ position: 'relative', width: '100%', maxWidth: 960 }}
+          >
+            {/* Close button */}
+            <button
+              onClick={() => setVideoOpen(false)}
+              style={{
+                position: 'absolute', top: -44, right: 0,
+                background: 'none', border: 'none', cursor: 'pointer',
+                color: T.textDim, fontSize: 13, fontFamily: FF.mono,
+                letterSpacing: '0.08em', display: 'flex', alignItems: 'center', gap: 6,
+              }}
+            >
+              ESC / CLOSE ✕
+            </button>
+            {/* Video */}
+            <video
+              src="/demo.mp4"
+              controls
+              autoPlay
+              style={{
+                width: '100%', borderRadius: 4,
+                border: `1px solid ${T.amberBorder}`,
+                display: 'block',
+              }}
+            />
+          </div>
+        </div>
+      )}
   )
 }
