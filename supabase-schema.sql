@@ -147,3 +147,39 @@ ALTER TABLE approvals
 CREATE INDEX IF NOT EXISTS approvals_escalation_lookup
   ON approvals (status, escalation_at)
   WHERE escalated_at IS NULL;
+
+-- ── END OF SHIFT REPORTS (added 2026-04-11) ────────────────────────
+-- Compliance-grade record of each shift's close-out data: mileage,
+-- notes, post-shift vehicle checks, job counts. Written by
+-- /api/driver/end-shift on shift submission.
+-- Run in Supabase SQL editor; repo file is advisory.
+CREATE TABLE IF NOT EXISTS end_of_shift_reports (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  client_id TEXT,
+  vehicle_reg TEXT,
+  driver_name TEXT,
+  driver_phone TEXT,
+  started_at TIMESTAMPTZ,
+  ended_at TIMESTAMPTZ,
+  duration_minutes INTEGER,
+  mileage TEXT,
+  notes TEXT,
+  post_shift_checks JSONB DEFAULT '{}'::jsonb,
+  jobs_completed INTEGER,
+  jobs_total INTEGER,
+  incidents_count INTEGER DEFAULT 0,
+  unresolved_count INTEGER DEFAULT 0,
+  fuel_level TEXT,
+  defects_flagged BOOLEAN DEFAULT false,
+  defect_details TEXT,
+  reason TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_end_of_shift_reports_vehicle
+  ON end_of_shift_reports (client_id, vehicle_reg, ended_at DESC);
+
+CREATE INDEX IF NOT EXISTS idx_end_of_shift_reports_driver
+  ON end_of_shift_reports (driver_phone, ended_at DESC);
+
+ALTER TABLE end_of_shift_reports ENABLE ROW LEVEL SECURITY;

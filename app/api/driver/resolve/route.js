@@ -68,7 +68,7 @@ In one sentence: give a revised ETA with 1.5x buffer applied, and state in plain
     // Update incident in Supabase as resolved
     if (db) {
       // Log resolution event to incidents
-      await db.from('incidents').insert({
+      const { error: incidentErr } = await db.from('incidents').insert({
         client_id,
         user_input: `RESOLVED: ${resolution} — ${driver_name} (${vehicle_reg}) — ${location_description || ''}`,
         ai_response: revisedEta,
@@ -76,18 +76,20 @@ In one sentence: give a revised ETA with 1.5x buffer applied, and state in plain
         financial_impact: 0,
         ref: ref || 'DRIVER-RESOLVE'
       })
+      if (incidentErr) console.error('resolve incident insert:', incidentErr.message, incidentErr.code)
 
       // Update any pending approvals for this vehicle to resolved
       if (ref) {
-        await db.from('approvals')
+        const { error: pendingErr } = await db.from('approvals')
           .update({ status: 'resolved' })
           .eq('client_id', client_id)
           .eq('status', 'pending')
-          .like('action_details->>ref', ref)
+          .eq('action_details->>ref', ref)
+        if (pendingErr) console.error('resolve pending update:', pendingErr.message, pendingErr.code)
       }
 
       // Insert a visible resolve record into approvals so ops dashboard shows it
-      await db.from('approvals').insert({
+      const { error: resolveErr } = await db.from('approvals').insert({
         client_id,
         action_type: 'notify',
         action_label: `✅ ${vehicle_reg} — ${driver_name} back on track · ${resolution}${revisedEta ? ' · ' + revisedEta.substring(0, 100) : ''}`,
@@ -97,6 +99,7 @@ In one sentence: give a revised ETA with 1.5x buffer applied, and state in plain
         approved_by: 'driver',
         executed_at: new Date().toISOString()
       })
+      if (resolveErr) console.error('resolve approval insert:', resolveErr.message, resolveErr.code)
     }
 
     // SMS ops manager

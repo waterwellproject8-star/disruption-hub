@@ -776,7 +776,11 @@ export default function DriverApp() {
     const start = shiftStartTime.current
     const end = new Date()
     const duration = start ? Math.round((end-start)/60000) : null
-    setShiftSummary({ completed, total, incidents:lastAlert?1:0, duration, endTime:end.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}), notes:shiftNotes, mileage:shiftMileage, postShiftChecks, unresolved:jobs.filter(j=>j.status==='at_risk'||j.status==='part_delivered').length })
+    const unresolved = jobs.filter(j=>j.status==='at_risk'||j.status==='part_delivered').length
+    const summary = { completed, total, incidents:lastAlert?1:0, duration, endTime:end.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}), notes:shiftNotes, mileage:shiftMileage, postShiftChecks, unresolved }
+    setShiftSummary(summary)
+    // Persist locally so a network failure during submit doesn't lose the report
+    try { localStorage.setItem('dh_last_shift_summary', JSON.stringify({ ...summary, savedAt: end.toISOString(), vehicleReg: driverInfo.vehicleReg, driverName: driverInfo.name })) } catch {}
     setShiftEnded(true); setShowPostShift(false)
     // Mark driver_progress completed in Supabase — clean exit, no stale data
     if (driverInfo.vehicleReg || driverInfo.phone) {
@@ -787,7 +791,21 @@ export default function DriverApp() {
           client_id:    driverInfo.clientId,
           vehicle_reg:  driverInfo.vehicleReg || null,
           driver_phone: driverInfo.phone || null,
-          reason: 'shift_completed'
+          driver_name:  driverInfo.name || null,
+          reason: 'shift_completed',
+          started_at:  start ? start.toISOString() : null,
+          ended_at:    end.toISOString(),
+          duration_minutes: duration,
+          mileage: shiftMileage,
+          notes: shiftNotes || null,
+          post_shift_checks: postShiftChecks,
+          jobs_completed: completed,
+          jobs_total: total,
+          incidents_count: lastAlert ? 1 : 0,
+          unresolved_count: unresolved,
+          fuel_level: null,
+          defects_flagged: false,
+          defect_details: null
         })
       }).catch(() => {})
     }
