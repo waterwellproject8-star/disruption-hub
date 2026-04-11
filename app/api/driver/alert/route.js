@@ -105,6 +105,7 @@ function buildOpsSMS({ severity, vehicle_reg, human_description, financialImpact
     reroute:   'YES=reroute driver',
     call:      'YES=call carrier',
     emergency: 'YES=emergency confirmed',
+    preshift:  'YES=clear driver to depart',
   }[detectedType] || 'YES'
 
   return `DH ${sev} ${vehicle_reg || ''}\n${situation}\n${money}${yesLabel} / NO / OPEN`
@@ -234,7 +235,8 @@ Provide immediate disruption analysis and action plan.`
     // Use issue_type (passed from driver app) for precise action detection
     // Fall back to human_description text matching
     const issueContext = issue_type || human_description || ''
-    const detectedType = detectActionType(issueContext, firstAction)
+    let detectedType = detectActionType(issueContext, firstAction)
+    if (force_alert && force_financial_zero) detectedType = 'preshift'
 
     if (db) {
       // Log incident
@@ -250,7 +252,8 @@ Provide immediate disruption analysis and action plan.`
       } catch(e) { console.error('incident insert:', e.message) }
 
       // Create approval for HIGH/CRITICAL
-      if (firstAction && (severity === 'CRITICAL' || severity === 'HIGH' || force_alert)) {
+      // Skip for pre-shift defects — the pre-shift-specific branch below handles those
+      if (firstAction && (severity === 'CRITICAL' || severity === 'HIGH' || force_alert) && !(force_alert && force_financial_zero)) {
         try {
           await db.from('approvals').insert({
             client_id,
