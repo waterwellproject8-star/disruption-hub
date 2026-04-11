@@ -517,9 +517,8 @@ export default function DriverApp() {
       const res = await fetch('/api/driver/resolve',{method:'POST',headers:{'Content-Type':'application/json'},
         body:JSON.stringify({client_id:driverInfo.clientId,driver_name:driverInfo.name,vehicle_reg:driverInfo.vehicleReg,ref:job?.ref,resolution:reason,location_description:gpsDescription,route:job?.route,sla_window:job?.sla_window,original_issue:panelIssue?.id})})
       const data = await res.json()
-      setJobs(prev=>{const u=prev.map(j=>j.ref===job?.ref?{...j,status:'on-track',alert:null}:j);saveJobProgress(u);return u})
-      if (activeJob?.ref===job?.ref) setActiveJob(p=>({...p,status:'on-track',alert:null}))
-      pushProgressToSupabase(job?.ref,'on-track',null)
+      setJobs(prev=>{const u=prev.map(j=>j.status==='at_risk'?{...j,status:'on-track',alert:null}:j);saveJobProgress(u);u.filter(j=>j.status==='on-track'&&j.ref!=='SHIFT_START').forEach(j=>pushProgressToSupabase(j.ref,'on-track',null));return u})
+      if (activeJob) setActiveJob(p=>({...p,status:'on-track',alert:null}))
       setResolvedEta(data.revised_eta||'')
       setPanelState('resolved')
     } catch { setPanelState('resolved') }
