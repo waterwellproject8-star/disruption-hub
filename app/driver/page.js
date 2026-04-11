@@ -364,7 +364,7 @@ export default function DriverApp() {
       method:'POST', headers:{'Content-Type':'application/json'},
       // Always include driver_phone so resolveDriverPhone() in ops routes can find this driver
       body: JSON.stringify({ client_id:driverInfo.clientId, vehicle_reg:driverInfo.vehicleReg, driver_name:driverInfo.name, driver_phone:driverInfo.phone||null, ref, status, alert:alert||null, pod: pod||null })
-    }).then(r => r.json()).then(d => console.log('PROGRESS RESPONSE:', JSON.stringify(d))).catch(()=>{})
+    }).catch(()=>{})
   }
 
   async function loadJobs(info) {
