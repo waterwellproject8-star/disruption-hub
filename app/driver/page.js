@@ -327,6 +327,9 @@ export default function DriverApp() {
               try { localStorage.setItem('dh_ops_messages', JSON.stringify(updated)) } catch {}
               return updated
             })
+            // Ops has responded — cancel the escalation timer and mark acknowledged
+            setOpsAcknowledged(true)
+            setEscalationTimer(prev => { if (prev) clearTimeout(prev); return null })
           }
         }
 
@@ -612,6 +615,7 @@ export default function DriverApp() {
     }).catch(()=>{})
 
     if (emergencyIds.includes(panelIssue?.id)) {
+      setOpsAcknowledged(false) // Reset for this new incident
       const timer = setTimeout(()=>{
         setOpsAcknowledged(prev => {
           if (!prev) showToast('⚠ Ops not yet responded — try calling directly','error')
