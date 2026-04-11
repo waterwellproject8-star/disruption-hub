@@ -11,10 +11,6 @@
     {
       "path": "/api/scheduled/run",
       "schedule": "0 5 * * *"
-    },
-    {
-      "path": "/api/actions/escalate",
-      "schedule": "*/5 * * * *"
     }
   ]
 }
