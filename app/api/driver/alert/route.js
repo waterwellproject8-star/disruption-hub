@@ -240,65 +240,62 @@ Provide immediate disruption analysis and action plan.`
 
     if (db) {
       // Log incident
-      try {
-        await db.from('incidents').insert({
-          client_id,
-          user_input: analysisPrompt,
-          ai_response: fullResponse,
-          severity,
-          financial_impact: financialImpact,
-          ref: ref || 'DRIVER-ALERT'
-        })
-      } catch(e) { console.error('incident insert:', e.message) }
+      const { error: incidentErr } = await db.from('incidents').insert({
+        client_id,
+        user_input: analysisPrompt,
+        ai_response: fullResponse,
+        severity,
+        financial_impact: financialImpact,
+        ref: ref || 'DRIVER-ALERT'
+      })
+      if (incidentErr) console.error('incident insert:', incidentErr.message, incidentErr.code)
 
       // Create approval for HIGH/CRITICAL
       // Skip for pre-shift defects — the pre-shift-specific branch below handles those
       if (firstAction && (severity === 'CRITICAL' || severity === 'HIGH' || force_alert) && !(force_alert && force_financial_zero)) {
-        try {
-          await db.from('approvals').insert({
-            client_id,
-            action_type: detectedType,
-            action_label: firstAction.substring(0, 200),
-            action_details: {
-              vehicle_reg,
-              ref: ref || 'DRIVER-ALERT',
-              driver_name: driver_name || null,
-              driver_phone: driver_phone || null,
-              carrier_name: extractCarrierName(fullResponse),
-              carrier_phone: extractCarrierPhone(systemPrompt),
-              script: firstAction,
-              source: 'driver_alert',
-              issue_context: issueContext.substring(0, 100),
-              severity
-            },
-            financial_value: force_financial_zero ? 0 : financialImpact,
-            status: 'pending',
-            escalation_at: new Date(Date.now() + 15 * 60 * 1000).toISOString()
-          })
-        } catch(e) { console.error('approval insert:', e.message) }
+        const { error: approvalErr } = await db.from('approvals').insert({
+          client_id,
+          action_type: detectedType,
+          action_label: firstAction.substring(0, 200),
+          action_details: {
+            vehicle_reg,
+            ref: ref || 'DRIVER-ALERT',
+            driver_name: driver_name || null,
+            driver_phone: driver_phone || null,
+            carrier_name: extractCarrierName(fullResponse),
+            carrier_phone: extractCarrierPhone(systemPrompt),
+            script: firstAction,
+            source: 'driver_alert',
+            issue_context: issueContext.substring(0, 100),
+            severity
+          },
+          financial_value: force_financial_zero ? 0 : financialImpact,
+          status: 'pending',
+          escalation_at: new Date(Date.now() + 15 * 60 * 1000).toISOString()
+        })
+        if (approvalErr) console.error('approval insert:', approvalErr.message, approvalErr.code)
       }
 
       // Pre-shift defect — action_type is 'sms' so YES sends instruction to driver
       if (force_alert && force_financial_zero) {
-        try {
-          await db.from('approvals').insert({
-            client_id,
-            action_type: 'sms',
-            action_label: `Pre-shift defect: ${human_description?.replace('Pre-shift fail: ', '') || 'vehicle issue'} — ${driver_name || 'driver'} (${vehicle_reg}) awaiting ops decision`,
-            action_details: {
-              vehicle_reg,
-              ref: 'PRE-SHIFT',
-              driver_name: driver_name || null,
-              driver_phone: driver_phone || null,
-              script: `OPS CLEARED: ${vehicle_reg} confirmed safe to depart. Start your shift.`,
-              source: 'preshift_check',
-              severity: 'HIGH'
-            },
-            financial_value: 0,
-            status: 'pending',
-            escalation_at: new Date(Date.now() + 15 * 60 * 1000).toISOString()
-          })
-        } catch(e) { console.error('preshift approval insert:', e.message) }
+        const { error: preshiftErr } = await db.from('approvals').insert({
+          client_id,
+          action_type: 'sms',
+          action_label: `Pre-shift defect: ${human_description?.replace('Pre-shift fail: ', '') || 'vehicle issue'} — ${driver_name || 'driver'} (${vehicle_reg}) awaiting ops decision`,
+          action_details: {
+            vehicle_reg,
+            ref: 'PRE-SHIFT',
+            driver_name: driver_name || null,
+            driver_phone: driver_phone || null,
+            script: `OPS CLEARED: ${vehicle_reg} confirmed safe to depart. Start your shift.`,
+            source: 'preshift_check',
+            severity: 'HIGH'
+          },
+          financial_value: 0,
+          status: 'pending',
+          escalation_at: new Date(Date.now() + 15 * 60 * 1000).toISOString()
+        })
+        if (preshiftErr) console.error('preshift approval insert:', preshiftErr.message, preshiftErr.code)
       }
     }
 
