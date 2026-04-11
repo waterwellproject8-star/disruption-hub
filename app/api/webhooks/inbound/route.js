@@ -146,6 +146,8 @@ function buildActionSMS(eventType, payload, severity, financialImpact, action) {
     line4 = `YES = call ${name} for recovery`
   } else if (actionType === 'call') {
     line4 = 'YES = make automated call'
+  } else if (actionType === 'emergency') {
+    line4 = 'YES = emergency dispatch + 999 if needed'
   } else {
     line4 = 'YES = execute action'
   }
@@ -332,6 +334,14 @@ ${systemPrompt}`
           auto_approve: false,
           financial_value: financialImpact
         }]
+
+    // Life-safety events — force the first action type to 'emergency' so the
+    // ops SMS YES label reads as a life-safety dispatch, not "notify driver".
+    // Claude's first action for panic_button tends to default to 'send_sms'.
+    const LIFE_SAFETY_EVENTS = ['panic_button', 'impact_detected']
+    if (LIFE_SAFETY_EVENTS.includes(event_type) && actionsToWrite[0]) {
+      actionsToWrite[0] = { ...actionsToWrite[0], type: 'emergency' }
+    }
 
     let approvalsWritten = 0
     let approvalsError = null
