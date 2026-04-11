@@ -268,10 +268,12 @@ Provide immediate disruption analysis and action plan.`
               carrier_phone: extractCarrierPhone(systemPrompt),
               script: firstAction,
               source: 'driver_alert',
-              issue_context: issueContext.substring(0, 100)
+              issue_context: issueContext.substring(0, 100),
+              severity
             },
             financial_value: force_financial_zero ? 0 : financialImpact,
-            status: 'pending'
+            status: 'pending',
+            escalation_at: new Date(Date.now() + 15 * 60 * 1000).toISOString()
           })
         } catch(e) { console.error('approval insert:', e.message) }
       }
@@ -289,10 +291,12 @@ Provide immediate disruption analysis and action plan.`
               driver_name: driver_name || null,
               driver_phone: driver_phone || null,
               script: `OPS CLEARED: ${vehicle_reg} confirmed safe to depart. Start your shift.`,
-              source: 'preshift_check'
+              source: 'preshift_check',
+              severity: 'HIGH'
             },
             financial_value: 0,
-            status: 'pending'
+            status: 'pending',
+            escalation_at: new Date(Date.now() + 15 * 60 * 1000).toISOString()
           })
         } catch(e) { console.error('preshift approval insert:', e.message) }
       }

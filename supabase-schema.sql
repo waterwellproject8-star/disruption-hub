@@ -133,3 +133,17 @@ CREATE INDEX idx_approvals_client ON approvals(client_id);
 CREATE INDEX idx_module_runs_client ON module_runs(client_id);
 CREATE INDEX idx_incidents_client ON incidents(client_id);
 CREATE INDEX idx_action_log_client ON action_log(client_id);
+
+-- ── SECONDARY CONTACT ESCALATION (added 2026-04-11) ────────────────
+-- Run in Supabase SQL editor; repo file is advisory.
+ALTER TABLE clients
+  ADD COLUMN IF NOT EXISTS secondary_contact_name TEXT,
+  ADD COLUMN IF NOT EXISTS secondary_contact_phone TEXT;
+
+ALTER TABLE approvals
+  ADD COLUMN IF NOT EXISTS escalation_at TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS escalated_at TIMESTAMPTZ;
+
+CREATE INDEX IF NOT EXISTS approvals_escalation_lookup
+  ON approvals (status, escalation_at)
+  WHERE escalated_at IS NULL;

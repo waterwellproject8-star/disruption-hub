@@ -1,15 +1,20 @@
 {
   "functions": {
-    "app/api/agent/route.js":           { "maxDuration": 30 },
-    "app/api/modules/route.js":         { "maxDuration": 30 },
-    "app/api/scenarios/route.js":       { "maxDuration": 30 },
-    "app/api/driver/alert/route.js":    { "maxDuration": 30 },
-    "app/api/scheduled/run/route.js":   { "maxDuration": 60 }
+    "app/api/agent/route.js":             { "maxDuration": 30 },
+    "app/api/modules/route.js":           { "maxDuration": 30 },
+    "app/api/scenarios/route.js":         { "maxDuration": 30 },
+    "app/api/driver/alert/route.js":      { "maxDuration": 30 },
+    "app/api/scheduled/run/route.js":     { "maxDuration": 60 },
+    "app/api/actions/escalate/route.js":  { "maxDuration": 30 }
   },
   "crons": [
     {
       "path": "/api/scheduled/run",
       "schedule": "0 5 * * *"
+    },
+    {
+      "path": "/api/actions/escalate",
+      "schedule": "*/5 * * * *"
     }
   ]
 }

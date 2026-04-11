@@ -368,10 +368,12 @@ ${systemPrompt}`
               revised_eta:        action.revised_eta         || null,
               delay_reason:       action.delay_reason        || null,
               incident_description: action.incident_description || null,
-              ops_callback_phone: action.ops_callback_phone || opsPhone || null
+              ops_callback_phone: action.ops_callback_phone || opsPhone || null,
+              severity
             },
             financial_value: action.financial_value || financialImpact || 0,
             status: 'pending',
+            escalation_at: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
             created_at: new Date().toISOString()
           })
 
