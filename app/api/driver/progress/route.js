@@ -9,7 +9,7 @@ function getDB() {
 
 export async function POST(request) {
   try {
-    const { client_id, vehicle_reg, driver_name, driver_phone, ref, status, alert } = await request.json()
+    const { client_id, vehicle_reg, driver_name, driver_phone, ref, status, alert, pod } = await request.json()
 
     if (!client_id || !vehicle_reg || !ref || !status) {
       return Response.json({ error: 'client_id, vehicle_reg, ref, status required' }, { status: 400 })
@@ -26,17 +26,27 @@ export async function POST(request) {
       ref,
       status,
       alert: alert || null,
+      pod: pod || null,
       updated_at: new Date().toISOString(),
     }, {
       onConflict: 'client_id,vehicle_reg,ref'
     })
 
     if (error) {
+      // If pod column doesn't exist yet, retry without it
+      if (error.message?.includes('pod')) {
+        const { error: ePod } = await db.from('driver_progress').upsert({
+          client_id, vehicle_reg, driver_name: driver_name || null, driver_phone: driver_phone || null,
+          ref, status, alert: alert || null, updated_at: new Date().toISOString(),
+        }, { onConflict: 'client_id,vehicle_reg,ref' })
+        if (ePod) return Response.json({ success: false, error: ePod.message })
+        return Response.json({ success: true, saved: true, note: 'pod_column_missing' })
+      }
       // If driver_phone column doesn't exist yet, retry without it
       if (error.message?.includes('driver_phone')) {
         const { error: e2 } = await db.from('driver_progress').upsert({
           client_id, vehicle_reg, driver_name: driver_name || null,
-          ref, status, alert: alert || null, updated_at: new Date().toISOString(),
+          ref, status, alert: alert || null, pod: pod || null, updated_at: new Date().toISOString(),
         }, { onConflict: 'client_id,vehicle_reg,ref' })
         if (e2) return Response.json({ success: false, error: e2.message })
         return Response.json({ success: true, saved: true, note: 'phone_column_missing' })

@@ -358,12 +358,12 @@ export default function DriverApp() {
     return jobs.map(j => rem[j.ref] ? {...j,...rem[j.ref]} : local[j.ref] ? {...j,...local[j.ref]} : j)
   }
 
-  function pushProgressToSupabase(ref, status, alert) {
+  function pushProgressToSupabase(ref, status, alert, pod=null) {
     if (!driverInfo.clientId || !driverInfo.vehicleReg || !ref) return
     fetch('/api/driver/progress', {
       method:'POST', headers:{'Content-Type':'application/json'},
       // Always include driver_phone so resolveDriverPhone() in ops routes can find this driver
-      body: JSON.stringify({ client_id:driverInfo.clientId, vehicle_reg:driverInfo.vehicleReg, driver_name:driverInfo.name, driver_phone:driverInfo.phone||null, ref, status, alert:alert||null })
+      body: JSON.stringify({ client_id:driverInfo.clientId, vehicle_reg:driverInfo.vehicleReg, driver_name:driverInfo.name, driver_phone:driverInfo.phone||null, ref, status, alert:alert||null, pod: pod||null })
     }).catch(()=>{})
   }
 
@@ -469,7 +469,7 @@ export default function DriverApp() {
       return prev
     })
     if (lastAlert) { setLastAlert(null); localStorage.removeItem('dh_last_alert') }
-    pushProgressToSupabase(job.ref, 'completed', null)
+    pushProgressToSupabase(job.ref, 'completed', null, podOption)
     clearTimeout(undoTimer.current); clearInterval(countdownTimer.current)
     setPendingUndo({job,prevStatus})
     setUndoCountdown(5)
