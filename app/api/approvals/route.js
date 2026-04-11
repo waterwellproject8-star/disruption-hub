@@ -235,10 +235,11 @@ export async function POST(request) {
     if (['sms', 'send_sms', 'reroute', 'notify', 'send_email'].includes(actionType)) {
       const driverPhone = await resolveDriverPhone()
       if (driverPhone) {
+        const instructionText = details.script || actionLabel
         const smsText = [
           `DisruptionHub OPS INSTRUCTION${details.ref ? ` — ${details.ref}` : ''}`,
           '',
-          actionLabel,
+          instructionText,
           '',
           'Reply DONE when complete.'
         ].join('\n')
@@ -250,7 +251,7 @@ export async function POST(request) {
             await db
               .from('driver_progress')
               .update({
-                alert: `OPS_MSG: ${actionLabel}`,
+                alert: `OPS_MSG: ${details.script || actionLabel}`,
                 updated_at: new Date().toISOString()
               })
               .eq('vehicle_reg', details.vehicle_reg.trim())

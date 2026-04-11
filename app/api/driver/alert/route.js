@@ -288,7 +288,7 @@ Provide immediate disruption analysis and action plan.`
               ref: 'PRE-SHIFT',
               driver_name: driver_name || null,
               driver_phone: driver_phone || null,
-              script: `OPS DECISION: Pre-shift defects flagged on ${vehicle_reg}. Either confirm safe to depart or arrange inspection before dispatch.`,
+              script: `OPS CLEARED: ${vehicle_reg} confirmed safe to depart. Start your shift.`,
               source: 'preshift_check'
             },
             financial_value: 0,
