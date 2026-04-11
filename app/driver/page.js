@@ -227,7 +227,7 @@ export default function DriverApp() {
   // Also refreshes ETAs every 5 minutes so shipment times stay accurate
   const etaRefreshCount = useRef(0)
   useEffect(() => {
-    if (!shiftStarted || !driverInfo.clientId || !driverInfo.vehicleReg) return
+    if ((!shiftStarted && !defectBlocked) || !driverInfo.clientId || !driverInfo.vehicleReg) return
 
     const checkForOpsChanges = async () => {
       // Refresh ETAs every 5 polls (5 minutes) — prevents stale ETAs from shift start
@@ -330,6 +330,14 @@ export default function DriverApp() {
             // Ops has responded — cancel the escalation timer and mark acknowledged
             setOpsAcknowledged(true)
             setEscalationTimer(prev => { if (prev) clearTimeout(prev); return null })
+            if (defectBlocked) {
+              setDefectBlocked(false)
+              setShiftStarted(true)
+              setView('run')
+              localStorage.setItem('dh_shift_started','true')
+              localStorage.setItem('dh_shift_started_at', String(Date.now()))
+              loadJobs(driverInfo)
+            }
           }
         }
 
@@ -339,7 +347,7 @@ export default function DriverApp() {
     checkForOpsChanges() // Run immediately on shift start
     const interval = setInterval(checkForOpsChanges, 60000)
     return () => clearInterval(interval)
-  }, [shiftStarted, driverInfo.clientId, driverInfo.vehicleReg])
+  }, [shiftStarted, defectBlocked, driverInfo.clientId, driverInfo.vehicleReg])
 
   const showToast = (msg, type='ok') => { setToast({msg,type}); setTimeout(()=>setToast(null),3500) }
 
@@ -678,6 +686,21 @@ export default function DriverApp() {
       fetch('/api/driver/alert',{method:'POST',headers:{'Content-Type':'application/json'},
         body:JSON.stringify({client_id:driverInfo.clientId,driver_name:driverInfo.name,driver_phone:driverInfo.phone||null,vehicle_reg:driverInfo.vehicleReg,issue_description:`PRE-SHIFT VEHICLE DEFECT. Driver ${driverInfo.name} (${driverInfo.vehicleReg}) flagged issues: ${failedLabels.join(', ')}. Vehicle may not be roadworthy.`,human_description:`⚠ Vehicle defects: ${failedLabels.join(', ')}`,location_description:'At depot — pre-departure',force_alert:true,force_financial_zero:true})
       }).catch(()=>{})
+
+      // Write a defect-blocked SHIFT_START row so ops has something to UPDATE with OPS_MSG
+      fetch('/api/driver/progress', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          client_id:    driverInfo.clientId,
+          vehicle_reg:  driverInfo.vehicleReg,
+          driver_name:  driverInfo.name,
+          driver_phone: driverInfo.phone || null,
+          ref:    'SHIFT_START',
+          status: 'defect_blocked',
+          alert:  null
+        })
+      }).catch(() => {})
     } else {
       // Clear old job progress from localStorage BEFORE loading jobs
       // Prevents mergeJobProgress reading stale completed statuses and auto-firing clearSession
@@ -967,7 +990,7 @@ export default function DriverApp() {
               <div style={{fontSize:13,color:'#8a9099',marginBottom:10}}>Ops has been alerted. Wait for confirmation before departing.</div>
               <button onClick={()=>{setDefectBlocked(false);setShiftStarted(true);setView('run');loadJobs(driverInfo)}}
                 style={{width:'100%',padding:11,background:'transparent',border:'1px solid rgba(239,68,68,0.3)',borderRadius:7,color:'#ef4444',fontSize:13,cursor:'pointer'}}>
-                Ops confirmed — depart anyway
+                Override — depart without ops clearance
               </button>
             </div>
           )}
