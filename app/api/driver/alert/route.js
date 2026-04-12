@@ -73,23 +73,22 @@ Temperature rules:
 - Frozen (−18°C to −22°C): alarm above −15°C = critical
 - Pharmaceutical: disclose any breach to consignee before delivery`
 
-function extractAllActions(text) {
+function extractFirstAction(text) {
   const lines = text.split('\n')
-  const raw = []
+  const actions = []
   for (const line of lines) {
     const match = line.match(/^([123])\.?\s+(.{15,120})/)
     if (match) {
       const action = match[2].replace(/\*\*/g, '').split('—')[0].trim().substring(0, 100)
-      raw.push(action)
+      actions.push(action)
     }
   }
+  // Skip boilerplate that shouldn't appear in the SMS action line
   const boilerplate = /confirm.*location|exact.*vehicle.*location|verify.*position|notify.*ops|contact.*ops|inform.*ops|alert.*ops|ops.*manager.*already/i
-  return raw.filter(a => !boilerplate.test(a)).slice(0, 3)
-}
-
-function extractFirstAction(text) {
-  const all = extractAllActions(text)
-  return all[0] || null
+  for (const action of actions) {
+    if (!boilerplate.test(action)) return action
+  }
+  return actions[0] || null
 }
 
 // Build a clean ops SMS — what happened, exposure, what YES does
@@ -231,8 +230,7 @@ Provide immediate disruption analysis and action plan.`
     const moneyMatch = fullResponse.match(/£([\d,]+)/)
     const financialImpact = moneyMatch ? parseInt(moneyMatch[1].replace(/,/g, '')) : 0
 
-    const allActions = extractAllActions(fullResponse)
-    const firstAction = allActions[0] || null
+    const firstAction = extractFirstAction(fullResponse)
 
     // Use issue_type (passed from driver app) for precise action detection
     // Fall back to human_description text matching
@@ -252,38 +250,30 @@ Provide immediate disruption analysis and action plan.`
       })
       if (incidentErr) console.error('incident insert:', incidentErr.message, incidentErr.code)
 
-      // Create one approval per action for HIGH/CRITICAL
+      // Create approval for HIGH/CRITICAL
       // Skip for pre-shift defects — the pre-shift-specific branch below handles those
-      if (allActions.length > 0 && (severity === 'CRITICAL' || severity === 'HIGH' || force_alert) && !(force_alert && force_financial_zero)) {
-        const LIFE_SAFETY_ISSUES = ['breakdown', 'medical', 'accident', 'vehicle_theft', 'theft_threat']
-        const isLifeSafety = LIFE_SAFETY_ISSUES.some(ls => issueContext.toLowerCase().includes(ls))
-        for (let i = 0; i < allActions.length; i++) {
-          const actionText = allActions[i]
-          let actionType = detectActionType(issueContext, actionText)
-          if (i === 0 && isLifeSafety) actionType = 'emergency'
-          const { error: approvalErr } = await db.from('approvals').insert({
-            client_id,
-            action_type: actionType,
-            action_label: actionText.substring(0, 200),
-            action_details: {
-              vehicle_reg,
-              ref: ref || 'DRIVER-ALERT',
-              driver_name: driver_name || null,
-              driver_phone: driver_phone || null,
-              carrier_name: extractCarrierName(fullResponse),
-              carrier_phone: extractCarrierPhone(systemPrompt),
-              script: actionText,
-              source: 'driver_alert',
-              issue_context: issueContext.substring(0, 100),
-              severity,
-              action_index: i
-            },
-            financial_value: i === 0 ? (force_financial_zero ? 0 : financialImpact) : 0,
-            status: 'pending',
-            escalation_at: new Date(Date.now() + 15 * 60 * 1000).toISOString()
-          })
-          if (approvalErr) console.error(`approval insert [${i}]:`, approvalErr.message, approvalErr.code)
-        }
+      if (firstAction && (severity === 'CRITICAL' || severity === 'HIGH' || force_alert) && !(force_alert && force_financial_zero)) {
+        const { error: approvalErr } = await db.from('approvals').insert({
+          client_id,
+          action_type: detectedType,
+          action_label: firstAction.substring(0, 200),
+          action_details: {
+            vehicle_reg,
+            ref: ref || 'DRIVER-ALERT',
+            driver_name: driver_name || null,
+            driver_phone: driver_phone || null,
+            carrier_name: extractCarrierName(fullResponse),
+            carrier_phone: extractCarrierPhone(systemPrompt),
+            script: firstAction,
+            source: 'driver_alert',
+            issue_context: issueContext.substring(0, 100),
+            severity
+          },
+          financial_value: force_financial_zero ? 0 : financialImpact,
+          status: 'pending',
+          escalation_at: new Date(Date.now() + 15 * 60 * 1000).toISOString()
+        })
+        if (approvalErr) console.error('approval insert:', approvalErr.message, approvalErr.code)
       }
 
       // Pre-shift defect — action_type is 'sms' so YES sends instruction to driver
@@ -331,8 +321,7 @@ Provide immediate disruption analysis and action plan.`
       financial_impact: financialImpact,
       analysis: fullResponse,
       sms_sent: smsSent,
-      action_type: detectedType,
-      actions_queued: allActions.length
+      action_type: detectedType
     })
 
   } catch (error) {
