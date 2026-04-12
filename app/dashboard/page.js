@@ -1068,6 +1068,9 @@ export default function DashboardPage() {
   const [pendingApprovals, setPendingApprovals] = useState([])
   const [dashToast, setDashToast] = useState(null)
   const [emailPickerMailto, setEmailPickerMailto] = useState(null)
+  const [invoices, setInvoices] = useState([])
+  const [csvRows, setCsvRows] = useState(null)
+  const [manualInv, setManualInv] = useState({ carrier:'', invoice_ref:'', invoice_date:'', line_items:[{job_ref:'',description:'',charged:'',agreed_rate:''}] })
   const [moduleRunning, setModuleRunning] = useState(null)
   const [moduleResult, setModuleResult] = useState(null)
   const [activeModuleName, setActiveModuleName] = useState(null)
@@ -1256,6 +1259,37 @@ export default function DashboardPage() {
       } catch {}
     } catch { setResponse('Connection error. Check your API key.') }
     finally { setLoading(false) }
+  }
+
+  async function loadInvoices() {
+    try {
+      const res = await fetch('/api/invoices?client_id=pearson-haulage')
+      if (!res.ok) return
+      const data = await res.json()
+      setInvoices(data.invoices || [])
+    } catch {}
+  }
+
+  function parseCsv(text) {
+    const lines = text.trim().split('\n')
+    if (lines.length < 2) return []
+    const headers = lines[0].split(',').map(h => h.trim().toLowerCase().replace(/\s+/g, '_'))
+    return lines.slice(1).map(line => {
+      const vals = line.split(',').map(v => v.trim())
+      const obj = {}
+      headers.forEach((h, i) => { obj[h] = vals[i] || '' })
+      return obj
+    }).filter(r => r.carrier || r.invoice_ref)
+  }
+
+  function groupCsvToInvoices(rows) {
+    const groups = {}
+    for (const r of rows) {
+      const key = `${r.carrier}|${r.invoice_ref}`
+      if (!groups[key]) groups[key] = { carrier: r.carrier, invoice_ref: r.invoice_ref, invoice_date: r.invoice_date || null, line_items: [], source: 'csv_upload' }
+      groups[key].line_items.push({ job_ref: r.job_ref || '', description: r.description || '', charged: Number(r.charged) || 0, agreed_rate: Number(r.agreed_rate) || 0, delta: Math.max(0, (Number(r.charged) || 0) - (Number(r.agreed_rate) || 0)) })
+    }
+    return Object.values(groups)
   }
 
   const analyseShipment = (s) => {
@@ -1877,6 +1911,7 @@ export default function DashboardPage() {
             </button>
             <button style={TAB_STYLE(activeTab==='agent')} onClick={() => setActiveTab('agent')}>AGENT</button>
             <button style={TAB_STYLE(activeTab==='modules')} onClick={() => setActiveTab('modules')}>INTELLIGENCE</button>
+            <button style={TAB_STYLE(activeTab==='invoices')} onClick={() => { setActiveTab('invoices'); loadInvoices() }}>INVOICES</button>
             <button style={TAB_STYLE(activeTab==='scenarios')} onClick={() => setActiveTab('scenarios')}>SCENARIOS</button>
             <button style={TAB_STYLE(activeTab==='integrations')} onClick={() => { setActiveTab('integrations'); loadWebhookLog(); loadActiveDrivers() }}>SETUP</button>
             <div style={{ marginLeft:'auto', display:'flex', alignItems:'center', gap:8 }}>
@@ -2075,6 +2110,150 @@ export default function DashboardPage() {
                   ? <div style={{ padding:'12px 14px', background:'rgba(239,68,68,0.08)', border:'1px solid rgba(239,68,68,0.2)', borderRadius:8, fontFamily:'monospace', fontSize:11, color:'#ef4444' }}>Error: {moduleResult.error}</div>
                   : <ModuleResult result={moduleResult} moduleName={activeModuleName} />
               )}
+            </div>
+          )}
+
+          {/* ── INVOICES TAB ──────────────────────────────────────────────── */}
+          {activeTab === 'invoices' && (
+            <div style={{ flex:1, overflowY:'auto', padding:'20px' }}>
+              {/* Section A — CSV Upload */}
+              <div style={{ marginBottom:24 }}>
+                <div style={{ fontSize:10, color:'#4a5260', fontFamily:'monospace', letterSpacing:'0.08em', marginBottom:10 }}>UPLOAD CSV</div>
+                <div style={{ padding:20, border:'2px dashed rgba(245,166,35,0.2)', borderRadius:12, textAlign:'center', cursor:'pointer', background:'rgba(245,166,35,0.02)' }}
+                  onClick={() => document.getElementById('csv-upload')?.click()}
+                  onDragOver={e => e.preventDefault()}
+                  onDrop={e => { e.preventDefault(); const f=e.dataTransfer.files[0]; if(f) { const r=new FileReader(); r.onload=ev=>setCsvRows(parseCsv(ev.target.result)); r.readAsText(f) } }}>
+                  <input id="csv-upload" type="file" accept=".csv" style={{ display:'none' }} onChange={e => { const f=e.target.files[0]; if(f) { const r=new FileReader(); r.onload=ev=>setCsvRows(parseCsv(ev.target.result)); r.readAsText(f) } }} />
+                  <div style={{ fontSize:13, color:'#8a9099' }}>Drop a CSV here or click to browse</div>
+                  <div style={{ fontSize:10, color:'#4a5260', marginTop:4 }}>Columns: carrier, invoice_ref, invoice_date, job_ref, description, charged, agreed_rate</div>
+                </div>
+                {csvRows && csvRows.length > 0 && (
+                  <div style={{ marginTop:12 }}>
+                    <div style={{ fontSize:11, color:'#f5a623', marginBottom:6 }}>{csvRows.length} rows parsed — {groupCsvToInvoices(csvRows).length} invoices</div>
+                    <div style={{ maxHeight:200, overflowY:'auto', border:'1px solid rgba(255,255,255,0.06)', borderRadius:8 }}>
+                      <table style={{ width:'100%', fontSize:10, color:'#8a9099', borderCollapse:'collapse' }}>
+                        <thead><tr style={{ background:'rgba(245,166,35,0.05)' }}>
+                          {['Carrier','Ref','Job','Charged','Agreed','Delta'].map(h => <th key={h} style={{ padding:'6px 8px', textAlign:'left', color:'#4a5260', fontWeight:600 }}>{h}</th>)}
+                        </tr></thead>
+                        <tbody>{csvRows.slice(0,20).map((r,i) => (
+                          <tr key={i} style={{ borderTop:'1px solid rgba(255,255,255,0.03)' }}>
+                            <td style={{ padding:'5px 8px' }}>{r.carrier}</td>
+                            <td style={{ padding:'5px 8px', fontFamily:'monospace' }}>{r.invoice_ref}</td>
+                            <td style={{ padding:'5px 8px' }}>{r.job_ref}</td>
+                            <td style={{ padding:'5px 8px' }}>£{r.charged}</td>
+                            <td style={{ padding:'5px 8px' }}>£{r.agreed_rate}</td>
+                            <td style={{ padding:'5px 8px', color: Number(r.charged)>Number(r.agreed_rate)?'#ef4444':'#8a9099' }}>£{Math.max(0,Number(r.charged)-Number(r.agreed_rate)).toFixed(2)}</td>
+                          </tr>
+                        ))}</tbody>
+                      </table>
+                      {csvRows.length > 20 && <div style={{ padding:6, fontSize:10, color:'#4a5260', textAlign:'center' }}>+ {csvRows.length - 20} more rows</div>}
+                    </div>
+                    <div style={{ display:'flex', gap:8, marginTop:10 }}>
+                      <button onClick={async () => {
+                        const grouped = groupCsvToInvoices(csvRows)
+                        try {
+                          const res = await fetch('/api/invoices', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ client_id:'pearson-haulage', invoices:grouped }) })
+                          const data = await res.json()
+                          if (data.success) { showDashToast(`${data.inserted} invoices uploaded`); setCsvRows(null); loadInvoices() }
+                          else showDashToast(data.error || 'Upload failed', 'error')
+                        } catch { showDashToast('Upload failed', 'error') }
+                      }} style={{ padding:'8px 16px', background:'#f5a623', border:'none', borderRadius:7, color:'#000', fontWeight:600, fontSize:12, cursor:'pointer' }}>Submit {groupCsvToInvoices(csvRows).length} invoices</button>
+                      <button onClick={() => setCsvRows(null)} style={{ padding:'8px 16px', background:'transparent', border:'1px solid rgba(255,255,255,0.1)', borderRadius:7, color:'#4a5260', fontSize:12, cursor:'pointer' }}>Clear</button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Section B — Manual Entry */}
+              <div style={{ marginBottom:24 }}>
+                <div style={{ fontSize:10, color:'#4a5260', fontFamily:'monospace', letterSpacing:'0.08em', marginBottom:10 }}>MANUAL ENTRY</div>
+                <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:8, marginBottom:10 }}>
+                  <input value={manualInv.carrier} onChange={e=>setManualInv(p=>({...p,carrier:e.target.value}))} placeholder="Carrier name" style={{ padding:10, background:'#0f1826', border:'1px solid rgba(255,255,255,0.1)', borderRadius:8, color:'#e8eaed', fontSize:13, outline:'none' }} />
+                  <input value={manualInv.invoice_ref} onChange={e=>setManualInv(p=>({...p,invoice_ref:e.target.value}))} placeholder="Invoice ref" style={{ padding:10, background:'#0f1826', border:'1px solid rgba(255,255,255,0.1)', borderRadius:8, color:'#e8eaed', fontSize:13, outline:'none', fontFamily:'monospace' }} />
+                  <input type="date" value={manualInv.invoice_date} onChange={e=>setManualInv(p=>({...p,invoice_date:e.target.value}))} style={{ padding:10, background:'#0f1826', border:'1px solid rgba(255,255,255,0.1)', borderRadius:8, color:'#e8eaed', fontSize:13, outline:'none' }} />
+                </div>
+                <div style={{ fontSize:10, color:'#4a5260', marginBottom:6 }}>LINE ITEMS</div>
+                {manualInv.line_items.map((li, i) => (
+                  <div key={i} style={{ display:'grid', gridTemplateColumns:'1fr 2fr 1fr 1fr auto', gap:6, marginBottom:6 }}>
+                    <input value={li.job_ref} onChange={e=>{const u=[...manualInv.line_items];u[i]={...u[i],job_ref:e.target.value};setManualInv(p=>({...p,line_items:u}))}} placeholder="Job ref" style={{ padding:8, background:'#0f1826', border:'1px solid rgba(255,255,255,0.08)', borderRadius:6, color:'#e8eaed', fontSize:11, outline:'none', fontFamily:'monospace' }} />
+                    <input value={li.description} onChange={e=>{const u=[...manualInv.line_items];u[i]={...u[i],description:e.target.value};setManualInv(p=>({...p,line_items:u}))}} placeholder="Description" style={{ padding:8, background:'#0f1826', border:'1px solid rgba(255,255,255,0.08)', borderRadius:6, color:'#e8eaed', fontSize:11, outline:'none' }} />
+                    <input value={li.charged} onChange={e=>{const u=[...manualInv.line_items];u[i]={...u[i],charged:e.target.value};setManualInv(p=>({...p,line_items:u}))}} placeholder="£ charged" inputMode="decimal" style={{ padding:8, background:'#0f1826', border:'1px solid rgba(255,255,255,0.08)', borderRadius:6, color:'#e8eaed', fontSize:11, outline:'none', fontFamily:'monospace' }} />
+                    <input value={li.agreed_rate} onChange={e=>{const u=[...manualInv.line_items];u[i]={...u[i],agreed_rate:e.target.value};setManualInv(p=>({...p,line_items:u}))}} placeholder="£ agreed" inputMode="decimal" style={{ padding:8, background:'#0f1826', border:'1px solid rgba(255,255,255,0.08)', borderRadius:6, color:'#e8eaed', fontSize:11, outline:'none', fontFamily:'monospace' }} />
+                    <button onClick={()=>{const u=manualInv.line_items.filter((_,j)=>j!==i);setManualInv(p=>({...p,line_items:u.length?u:[{job_ref:'',description:'',charged:'',agreed_rate:''}]}))}} style={{ padding:'4px 8px', background:'transparent', border:'1px solid rgba(239,68,68,0.2)', borderRadius:4, color:'#ef4444', fontSize:10, cursor:'pointer' }}>✕</button>
+                  </div>
+                ))}
+                <div style={{ display:'flex', gap:8, marginTop:8 }}>
+                  <button onClick={()=>setManualInv(p=>({...p,line_items:[...p.line_items,{job_ref:'',description:'',charged:'',agreed_rate:''}]}))} style={{ padding:'6px 12px', background:'transparent', border:'1px solid rgba(245,166,35,0.2)', borderRadius:6, color:'#f5a623', fontSize:11, cursor:'pointer' }}>+ Add line</button>
+                  <button onClick={async () => {
+                    if (!manualInv.carrier || !manualInv.invoice_ref) { showDashToast('Carrier and invoice ref required', 'error'); return }
+                    const items = manualInv.line_items.map(li => ({ ...li, charged: Number(li.charged) || 0, agreed_rate: Number(li.agreed_rate) || 0, delta: Math.max(0, (Number(li.charged)||0) - (Number(li.agreed_rate)||0)) }))
+                    try {
+                      const res = await fetch('/api/invoices', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ client_id:'pearson-haulage', carrier:manualInv.carrier, invoice_ref:manualInv.invoice_ref, invoice_date:manualInv.invoice_date||null, line_items:items, source:'manual' }) })
+                      const data = await res.json()
+                      if (data.success) { showDashToast('Invoice added'); setManualInv({ carrier:'', invoice_ref:'', invoice_date:'', line_items:[{job_ref:'',description:'',charged:'',agreed_rate:''}] }); loadInvoices() }
+                      else showDashToast(data.error || 'Failed', 'error')
+                    } catch { showDashToast('Failed', 'error') }
+                  }} style={{ padding:'6px 16px', background:'#f5a623', border:'none', borderRadius:6, color:'#000', fontWeight:600, fontSize:11, cursor:'pointer' }}>Submit invoice</button>
+                </div>
+                {manualInv.line_items.some(li => Number(li.charged) > Number(li.agreed_rate)) && (
+                  <div style={{ marginTop:8, fontSize:11, color:'#ef4444' }}>
+                    Total overcharge: £{manualInv.line_items.reduce((s,li) => s + Math.max(0, (Number(li.charged)||0) - (Number(li.agreed_rate)||0)), 0).toFixed(2)}
+                  </div>
+                )}
+              </div>
+
+              {/* Section C — Invoice List */}
+              <div>
+                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10 }}>
+                  <div style={{ fontSize:10, color:'#4a5260', fontFamily:'monospace', letterSpacing:'0.08em' }}>ALL INVOICES ({invoices.length})</div>
+                  <button onClick={loadInvoices} style={{ background:'none', border:'none', color:'#4a5260', fontSize:11, cursor:'pointer' }}>↻ Refresh</button>
+                </div>
+                {invoices.length === 0 ? (
+                  <div style={{ padding:20, textAlign:'center', color:'#4a5260', fontSize:12 }}>No invoices yet. Upload a CSV or add one manually.</div>
+                ) : invoices.map(inv => {
+                  const statusColors = { pending_review:'#f59e0b', disputed:'#ef4444', resolved:'#22c55e', approved:'#f5a623' }
+                  const hasOvercharge = (inv.total_overcharge || 0) > 0
+                  return (
+                    <div key={inv.id} style={{ padding:'12px 14px', border:`1px solid ${hasOvercharge ? 'rgba(239,68,68,0.2)' : 'rgba(255,255,255,0.06)'}`, borderLeft:`3px solid ${statusColors[inv.status] || '#4a5260'}`, borderRadius:8, background: hasOvercharge ? 'rgba(239,68,68,0.03)' : '#0f1826', marginBottom:8 }}>
+                      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:4 }}>
+                        <div>
+                          <span style={{ fontSize:12, color:'#e8eaed', fontWeight:600 }}>{inv.carrier}</span>
+                          <span style={{ fontSize:11, color:'#4a5260', fontFamily:'monospace', marginLeft:8 }}>{inv.invoice_ref}</span>
+                        </div>
+                        <span style={{ fontSize:9, padding:'2px 7px', background:`${statusColors[inv.status]}22`, color:statusColors[inv.status], fontFamily:'monospace', fontWeight:700, borderRadius:3 }}>{inv.status?.replace(/_/g,' ').toUpperCase()}</span>
+                      </div>
+                      <div style={{ display:'flex', gap:14, fontSize:10, color:'#8a9099', marginBottom:6 }}>
+                        <span>Charged: £{(inv.total_charged||0).toLocaleString()}</span>
+                        <span>Agreed: £{(inv.total_agreed||0).toLocaleString()}</span>
+                        {hasOvercharge && <span style={{ color:'#ef4444', fontWeight:600 }}>Overcharge: £{(inv.total_overcharge||0).toLocaleString()}</span>}
+                        <span>{inv.source?.replace(/_/g,' ')}</span>
+                        {inv.invoice_date && <span>{inv.invoice_date}</span>}
+                      </div>
+                      <div style={{ display:'flex', gap:6 }}>
+                        {inv.status === 'pending_review' && hasOvercharge && (
+                          <button onClick={() => {
+                            const items = inv.line_items || []
+                            const subject = `Invoice Dispute — ${inv.carrier} — £${(inv.total_overcharge||0).toLocaleString()} overcharge identified`
+                            const body = [`Dear ${inv.carrier} Accounts Team,`,'',`We are writing to formally dispute invoice ${inv.invoice_ref}${inv.invoice_date ? ` dated ${inv.invoice_date}` : ''} where charges exceed our contracted rates:`,'',
+                              ...items.filter(li=>(Number(li.charged)||0)>(Number(li.agreed_rate)||0)).flatMap(li=>[`Job: ${li.job_ref||'N/A'}`,`Description: ${li.description||'N/A'}`,`Charged: £${li.charged}`,`Agreed: £${li.agreed_rate}`,`Overcharge: £${li.delta || ((Number(li.charged)||0)-(Number(li.agreed_rate)||0)).toFixed(2)}`,''])
+                              ,`Total disputed: £${(inv.total_overcharge||0).toLocaleString()}`,'','We request a credit note for the full disputed amount within 14 days.','','Kind regards,','Pearson Haulage Operations','via DisruptionHub'].join('\n')
+                            setEmailPickerMailto(`mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`)
+                            fetch('/api/invoices', { method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ id:inv.id, status:'disputed' }) }).then(()=>loadInvoices()).catch(()=>{})
+                          }} style={{ padding:'4px 10px', background:'rgba(239,68,68,0.08)', border:'1px solid rgba(239,68,68,0.25)', borderRadius:5, color:'#ef4444', fontSize:10, fontWeight:600, cursor:'pointer' }}>✉ Dispute</button>
+                        )}
+                        {inv.status === 'pending_review' && !hasOvercharge && (
+                          <button onClick={() => { fetch('/api/invoices', { method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ id:inv.id, status:'approved' }) }).then(()=>{showDashToast('Invoice approved');loadInvoices()}).catch(()=>{}) }}
+                            style={{ padding:'4px 10px', background:'rgba(245,166,35,0.08)', border:'1px solid rgba(245,166,35,0.2)', borderRadius:5, color:'#f5a623', fontSize:10, fontWeight:600, cursor:'pointer' }}>✓ Approve</button>
+                        )}
+                        {inv.status === 'disputed' && (
+                          <button onClick={() => { fetch('/api/invoices', { method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ id:inv.id, status:'resolved' }) }).then(()=>{showDashToast('Marked resolved');loadInvoices()}).catch(()=>{}) }}
+                            style={{ padding:'4px 10px', background:'rgba(34,197,94,0.08)', border:'1px solid rgba(34,197,94,0.2)', borderRadius:5, color:'#22c55e', fontSize:10, fontWeight:600, cursor:'pointer' }}>✓ Resolved</button>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
             </div>
           )}
 

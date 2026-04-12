@@ -445,6 +445,28 @@ ${systemPrompt}`
       }
     }
 
+    // Carrier overcharge — also write to the invoices table
+    if (event_type === 'carrier_overcharge' && supabase) {
+      try {
+        const carrierName = payload?.carrier_name || payload?.carrier || 'Unknown'
+        const invRef = payload?.invoice_ref || 'N/A'
+        const charged = Number(payload?.invoiced_amount_gbp) || 0
+        const agreed = Number(payload?.agreed_rate_gbp) || 0
+        const delta = Math.max(0, charged - agreed)
+        await supabase.from('invoices').insert({
+          client_id,
+          carrier: carrierName,
+          invoice_ref: invRef,
+          line_items: [{ job_ref: payload?.job_ref || '', description: `Overcharge detected via ${system || 'TMS'} webhook`, charged, agreed_rate: agreed, delta }],
+          total_charged: charged,
+          total_agreed: agreed,
+          total_overcharge: delta,
+          status: 'pending_review',
+          source: 'tms_webhook'
+        })
+      } catch (e) { console.error('[inbound] invoice insert:', e.message) }
+    }
+
     return Response.json({
       success: true, severity, financial_impact: financialImpact,
       financial_source: confirmedFinancial !== null ? 'payload' : 'ai_estimate',

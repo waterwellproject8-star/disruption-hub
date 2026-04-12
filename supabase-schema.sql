@@ -103,19 +103,25 @@ CREATE TABLE drivers (
 );
 
 -- ── INVOICES ───────────────────────────────────────────────────────
+-- NOTE: original v2 invoices table replaced — run DROP TABLE IF EXISTS invoices
+-- then this CREATE in Supabase SQL editor.
 CREATE TABLE invoices (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  client_id UUID REFERENCES clients(id),
-  carrier TEXT,
-  invoice_ref TEXT,
-  amount_charged NUMERIC,
-  amount_expected NUMERIC,
-  discrepancy NUMERIC,
-  dispute_status TEXT DEFAULT 'none', -- none | disputed | resolved | recovered
-  dispute_amount NUMERIC,
-  recovered_amount NUMERIC,
-  created_at TIMESTAMPTZ DEFAULT NOW()
+  client_id TEXT NOT NULL,
+  carrier TEXT NOT NULL,
+  invoice_ref TEXT NOT NULL,
+  invoice_date DATE,
+  line_items JSONB,
+  total_charged NUMERIC,
+  total_agreed NUMERIC,
+  total_overcharge NUMERIC,
+  status TEXT DEFAULT 'pending_review',
+  source TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+CREATE INDEX idx_invoices_client ON invoices (client_id, created_at DESC);
+CREATE INDEX idx_invoices_status ON invoices (client_id, status);
 
 -- ── ROW LEVEL SECURITY ─────────────────────────────────────────────
 ALTER TABLE clients ENABLE ROW LEVEL SECURITY;
