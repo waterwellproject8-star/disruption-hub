@@ -1070,6 +1070,7 @@ export default function DashboardPage() {
   const [emailPickerMailto, setEmailPickerMailto] = useState(null)
   const [invoices, setInvoices] = useState([])
   const [csvRows, setCsvRows] = useState(null)
+  const [csvDragActive, setCsvDragActive] = useState(false)
   const [manualInv, setManualInv] = useState({ carrier:'', invoice_ref:'', invoice_date:'', line_items:[{job_ref:'',description:'',charged:'',agreed_rate:''}] })
   const [moduleRunning, setModuleRunning] = useState(null)
   const [moduleResult, setModuleResult] = useState(null)
@@ -2119,11 +2120,13 @@ export default function DashboardPage() {
               {/* Section A — CSV Upload */}
               <div style={{ marginBottom:24 }}>
                 <div style={{ fontSize:10, color:'#4a5260', fontFamily:'monospace', letterSpacing:'0.08em', marginBottom:10 }}>UPLOAD CSV</div>
-                <div style={{ padding:20, border:'2px dashed rgba(245,166,35,0.2)', borderRadius:12, textAlign:'center', cursor:'pointer', background:'rgba(245,166,35,0.02)' }}
+                <div style={{ padding:20, border:csvDragActive?'2px solid #f5a623':'2px dashed rgba(245,166,35,0.2)', borderRadius:12, textAlign:'center', cursor:'pointer', background:csvDragActive?'rgba(245,166,35,0.08)':'rgba(245,166,35,0.02)', transition:'all 0.15s' }}
                   onClick={() => document.getElementById('csv-upload')?.click()}
-                  onDragOver={e => e.preventDefault()}
-                  onDrop={e => { e.preventDefault(); const f=e.dataTransfer.files[0]; if(f) { const r=new FileReader(); r.onload=ev=>setCsvRows(parseCsv(ev.target.result)); r.readAsText(f) } }}>
-                  <input id="csv-upload" type="file" accept=".csv" style={{ display:'none' }} onChange={e => { const f=e.target.files[0]; if(f) { const r=new FileReader(); r.onload=ev=>setCsvRows(parseCsv(ev.target.result)); r.readAsText(f) } }} />
+                  onDragOver={e => { e.preventDefault(); e.stopPropagation() }}
+                  onDragEnter={e => { e.preventDefault(); e.stopPropagation(); setCsvDragActive(true) }}
+                  onDragLeave={e => { e.preventDefault(); e.stopPropagation(); setCsvDragActive(false) }}
+                  onDrop={e => { e.preventDefault(); e.stopPropagation(); setCsvDragActive(false); const f=e.dataTransfer?.files?.[0]; console.log('CSV DROP:', f?.name, f?.size, f?.type); if(f) { const r=new FileReader(); r.onload=ev=>setCsvRows(parseCsv(ev.target.result)); r.readAsText(f) } }}>
+                  <input id="csv-upload" type="file" accept=".csv,.txt,text/csv,text/plain" style={{ display:'none' }} onChange={e => { const f=e.target.files?.[0]; console.log('CSV SELECT:', f?.name, f?.size, f?.type); if(f) { const r=new FileReader(); r.onload=ev=>setCsvRows(parseCsv(ev.target.result)); r.readAsText(f) } }} />
                   <div style={{ fontSize:13, color:'#8a9099' }}>Drop a CSV here or click to browse</div>
                   <div style={{ fontSize:10, color:'#4a5260', marginTop:4 }}>Columns: carrier, invoice_ref, invoice_date, job_ref, description, charged, agreed_rate</div>
                 </div>
