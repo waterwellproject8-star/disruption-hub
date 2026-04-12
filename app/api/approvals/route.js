@@ -93,7 +93,7 @@ export async function GET(request) {
       .from('approvals')
       .select('*')
       .eq('client_id', client_id)
-      .in('status', ['pending', 'executed', 'rejected'])
+      .in('status', ['pending', 'executed', 'rejected', 'expired'])
       .order('created_at', { ascending: false })
       .limit(50)
 

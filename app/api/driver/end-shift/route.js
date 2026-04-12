@@ -114,12 +114,18 @@ export async function POST(request) {
     // Expire any pending approvals for this vehicle so they don't sit in the ops queue
     // overnight and don't trigger spurious escalation SMSs for resolved incidents
     if (client_id && vehicle_reg) {
-      const { error: expireErr } = await db.from('approvals')
-        .update({ status: 'expired' })
+      const { data: staleApprovals } = await db.from('approvals')
+        .select('id, action_label')
         .eq('client_id', client_id)
         .eq('status', 'pending')
         .contains('action_details', { vehicle_reg: vehicle_reg })
-      if (expireErr) console.error('[end-shift] approval expiry error:', expireErr.message, expireErr.code)
+
+      for (const a of (staleApprovals || [])) {
+        const { error: expireErr } = await db.from('approvals')
+          .update({ status: 'expired', action_label: `SHIFT ENDED — ${a.action_label}` })
+          .eq('id', a.id)
+        if (expireErr) console.error('[end-shift] approval expiry error:', expireErr.message, expireErr.code)
+      }
     }
 
     return Response.json({

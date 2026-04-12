@@ -1147,7 +1147,9 @@ export default function DashboardPage() {
   useEffect(() => {
     if (!unlocked) return
     loadApprovals()
-    const i = setInterval(loadApprovals, 30000)
+    loadActiveDrivers()
+    loadFleet()
+    const i = setInterval(() => { loadApprovals(); loadActiveDrivers(); loadFleet() }, 30000)
     return () => clearInterval(i)
   }, [unlocked])
 
