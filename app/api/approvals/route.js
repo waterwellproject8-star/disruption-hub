@@ -225,6 +225,23 @@ export async function POST(request) {
               })
               .eq('vehicle_reg', details.vehicle_reg.trim())
           } catch {}
+
+          // Trigger second SMS for pending consignee delay notification
+          try {
+            const { data: consigneeApproval } = await db.from('approvals')
+              .select('id, action_label, action_details')
+              .eq('client_id', clientId)
+              .eq('status', 'pending')
+              .contains('action_details', { vehicle_reg: details.vehicle_reg.trim(), call_type: 'consignee_delay_alert' })
+              .order('created_at', { ascending: false })
+              .limit(1)
+              .maybeSingle()
+            if (consigneeApproval && client?.contact_phone) {
+              const cName = consigneeApproval.action_details?.consignee_name || 'consignee'
+              await sendSMS(client.contact_phone, `DH: Recovery confirmed for ${details.vehicle_reg}.\nConsignee: ${cName}\nReply YES to call them automatically\nReply NO to skip`)
+              await db.from('approvals').update({ action_label: `${consigneeApproval.action_label} (SMS sent)` }).eq('id', consigneeApproval.id)
+            }
+          } catch {}
         }
 
         return Response.json({ success: true, action: 'executed', driver_notified: result.success, phase: 2 })
