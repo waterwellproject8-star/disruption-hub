@@ -45,6 +45,18 @@ export async function POST(request) {
     const now = new Date().toISOString()
     const endReason = reason || 'shift_ended'
 
+    let rowsUpdated = 0
+    let unresolvedJobs = []
+
+    // Snapshot at_risk / part_delivered jobs before the bulk update wipes their status
+    if (vehicle_reg) {
+      const { data: atRiskRows } = await db.from('driver_progress')
+        .select('ref, status, alert, updated_at')
+        .eq('vehicle_reg', vehicle_reg)
+        .in('status', ['at_risk', 'part_delivered'])
+      unresolvedJobs = (atRiskRows || []).map(r => ({ ref: r.ref, status: r.status, alert: r.alert, last_update: r.updated_at }))
+    }
+
     // Persist the end-of-shift compliance record before updating driver_progress
     const { error: reportErr } = await db.from('end_of_shift_reports').insert({
       client_id: client_id || null,
@@ -69,18 +81,6 @@ export async function POST(request) {
     })
     if (reportErr) console.error('[end-shift] report insert:', reportErr.message, reportErr.code)
     const reportSaved = !reportErr
-
-    let rowsUpdated = 0
-    let unresolvedJobs = []
-
-    // Snapshot at_risk / part_delivered jobs before the bulk update wipes their status
-    if (vehicle_reg) {
-      const { data: atRiskRows } = await db.from('driver_progress')
-        .select('ref, status, alert, updated_at')
-        .eq('vehicle_reg', vehicle_reg)
-        .in('status', ['at_risk', 'part_delivered'])
-      unresolvedJobs = (atRiskRows || []).map(r => ({ ref: r.ref, status: r.status, alert: r.alert, last_update: r.updated_at }))
-    }
 
     // Mark active rows by vehicle_reg
     if (vehicle_reg) {
