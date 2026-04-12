@@ -1731,9 +1731,10 @@ export default function DashboardPage() {
     <div style={{ minHeight:'100vh', display:'flex', flexDirection:'column', fontFamily:'Barlow, sans-serif', background:'#080c14', color:'#e8eaed' }}>
       {dashToast && <div style={{position:'fixed',top:16,left:'50%',transform:'translateX(-50%)',padding:'10px 20px',borderRadius:8,background:dashToast.type==='error'?'rgba(239,68,68,0.95)':'rgba(245,166,35,0.95)',color:'#fff',fontSize:13,fontWeight:600,zIndex:9999,boxShadow:'0 4px 12px rgba(0,0,0,0.3)'}}>{dashToast.msg}</div>}
       {emailPickerMailto && (() => {
-        const params = new URL(emailPickerMailto.replace('mailto:?','https://x.com/?'))
-        const subject = decodeURIComponent(params.searchParams.get('subject') || '')
-        const body = decodeURIComponent(params.searchParams.get('body') || '')
+        const subjectMatch = emailPickerMailto.match(/subject=([^&]*)/)
+        const bodyMatch = emailPickerMailto.match(/body=(.*)$/)
+        const subject = subjectMatch ? decodeURIComponent(subjectMatch[1]) : ''
+        const body = bodyMatch ? decodeURIComponent(bodyMatch[1]) : ''
         return (
           <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.8)',zIndex:9998,display:'flex',alignItems:'center',justifyContent:'center',padding:24}} onClick={()=>setEmailPickerMailto(null)}>
             <div style={{width:'100%',maxWidth:380,background:'#0f1826',borderRadius:14,padding:24,border:'1px solid rgba(245,166,35,0.2)',boxShadow:'0 8px 32px rgba(0,0,0,0.5)'}} onClick={e=>e.stopPropagation()}>
