@@ -191,22 +191,6 @@ export async function POST(request) {
       return Response.json({ error: 'issue_description is required' }, { status: 400 })
     }
 
-    // Dedup — skip if a pending approval already exists for this vehicle in the last 5 minutes
-    const db = getDB()
-    if (db && vehicle_reg && client_id) {
-      const since = new Date(Date.now() - 5 * 60 * 1000).toISOString()
-      const { data: recent } = await db.from('approvals')
-        .select('id')
-        .eq('client_id', client_id)
-        .eq('status', 'pending')
-        .contains('action_details', { vehicle_reg })
-        .gt('created_at', since)
-        .limit(1)
-      if (recent?.length > 0) {
-        return Response.json({ success: true, deduplicated: true, existing_id: recent[0].id })
-      }
-    }
-
     // Safety scenarios always warrant at minimum HIGH — AI can underrate these
     const alwaysHighIssues = ['vehicle_theft', 'theft_threat', 'accident', 'medical', 'breakdown']
     const forceHighSeverity = issue_type && alwaysHighIssues.includes(issue_type)
@@ -227,6 +211,21 @@ Provide immediate disruption analysis and action plan.`
     let systemPrompt = null
     let contactPhone = null
     const db = getDB()
+
+    // Dedup — skip if a pending approval already exists for this vehicle in the last 5 minutes
+    if (db && vehicle_reg && client_id) {
+      const since = new Date(Date.now() - 5 * 60 * 1000).toISOString()
+      const { data: recent } = await db.from('approvals')
+        .select('id')
+        .eq('client_id', client_id)
+        .eq('status', 'pending')
+        .contains('action_details', { vehicle_reg })
+        .gt('created_at', since)
+        .limit(1)
+      if (recent?.length > 0) {
+        return Response.json({ success: true, deduplicated: true, existing_id: recent[0].id })
+      }
+    }
 
     if (db && client_id) {
       const { data } = await db
