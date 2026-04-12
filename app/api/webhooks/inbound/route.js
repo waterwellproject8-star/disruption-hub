@@ -31,13 +31,13 @@ function determineEventSeverity(eventType, payload, confirmedFinancial) {
     return 'HIGH'
   }
 
-  if (confirmedFinancial && confirmedFinancial >= 500) return 'HIGH'
-
   if (eventType === 'failed_delivery') {
     const consignee = (payload?.consignee || '').toLowerCase()
     if (consignee.includes('nhs') || consignee.includes('hospital') || consignee.includes('pharma')) return 'CRITICAL'
     return 'HIGH'
   }
+
+  if (confirmedFinancial && confirmedFinancial >= 500) return 'HIGH'
 
   const highSeverity = [
     'door_open_transit', 'geofence_breach', 'cargo_theft', 'job_cancelled',
