@@ -1068,6 +1068,8 @@ export default function DashboardPage() {
   const [pendingApprovals, setPendingApprovals] = useState([])
   const [dashToast, setDashToast] = useState(null)
   const [emailPickerMailto, setEmailPickerMailto] = useState(null)
+  const [emailPickerInvoiceId, setEmailPickerInvoiceId] = useState(null)
+  const [emailPickerSent, setEmailPickerSent] = useState(false)
   const [invoices, setInvoices] = useState([])
   const [csvRows, setCsvRows] = useState(null)
   const [csvDragActive, setCsvDragActive] = useState(false)
@@ -1777,24 +1779,43 @@ export default function DashboardPage() {
         const bodyMatch = emailPickerMailto.match(/body=(.*)$/)
         const subject = subjectMatch ? decodeURIComponent(subjectMatch[1]) : ''
         const body = bodyMatch ? decodeURIComponent(bodyMatch[1]) : ''
+        const closeModal = () => { setEmailPickerMailto(null); setEmailPickerInvoiceId(null); setEmailPickerSent(false) }
+        const markSent = () => { setEmailPickerSent(true) }
         return (
-          <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.8)',zIndex:9998,display:'flex',alignItems:'center',justifyContent:'center',padding:24}} onClick={()=>setEmailPickerMailto(null)}>
+          <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.8)',zIndex:9998,display:'flex',alignItems:'center',justifyContent:'center',padding:24}} onClick={closeModal}>
             <div style={{width:'100%',maxWidth:380,background:'#0f1826',borderRadius:14,padding:24,border:'1px solid rgba(245,166,35,0.2)',boxShadow:'0 8px 32px rgba(0,0,0,0.5)'}} onClick={e=>e.stopPropagation()}>
-              <div style={{fontSize:16,fontWeight:700,color:'#e8eaed',marginBottom:4}}>Send dispute email</div>
-              <div style={{fontSize:12,color:'#4a5260',marginBottom:18}}>{subject}</div>
-              <button onClick={()=>{window.open(`https://mail.google.com/mail/?view=cm&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`,'_blank');setEmailPickerMailto(null)}}
-                style={{width:'100%',padding:13,background:'rgba(245,166,35,0.08)',border:'1px solid rgba(245,166,35,0.25)',borderRadius:10,color:'#f5a623',fontSize:14,fontWeight:600,cursor:'pointer',marginBottom:8,textAlign:'left'}}>
-                📧 Open in Gmail
-              </button>
-              <button onClick={()=>{window.location.href=emailPickerMailto;setEmailPickerMailto(null)}}
-                style={{width:'100%',padding:13,background:'rgba(245,166,35,0.08)',border:'1px solid rgba(245,166,35,0.25)',borderRadius:10,color:'#f5a623',fontSize:14,fontWeight:600,cursor:'pointer',marginBottom:8,textAlign:'left'}}>
-                ✉ Open in Apple Mail
-              </button>
-              <button onClick={async()=>{try{await navigator.clipboard.writeText(`Subject: ${subject}\n\n${body}`);showDashToast('Copied to clipboard')}catch{showDashToast('Copy failed','error')};setEmailPickerMailto(null)}}
-                style={{width:'100%',padding:13,background:'rgba(245,166,35,0.08)',border:'1px solid rgba(245,166,35,0.25)',borderRadius:10,color:'#f5a623',fontSize:14,fontWeight:600,cursor:'pointer',marginBottom:8,textAlign:'left'}}>
-                📋 Copy to clipboard
-              </button>
-              <button onClick={()=>setEmailPickerMailto(null)} style={{width:'100%',padding:10,background:'transparent',border:'none',color:'#4a5260',fontSize:12,cursor:'pointer',marginTop:4}}>Cancel</button>
+              {!emailPickerSent ? (<>
+                <div style={{fontSize:16,fontWeight:700,color:'#e8eaed',marginBottom:4}}>Send dispute email</div>
+                <div style={{fontSize:12,color:'#4a5260',marginBottom:18}}>{subject}</div>
+                <button onClick={()=>{window.open(`https://mail.google.com/mail/?view=cm&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`,'_blank');markSent()}}
+                  style={{width:'100%',padding:13,background:'rgba(245,166,35,0.08)',border:'1px solid rgba(245,166,35,0.25)',borderRadius:10,color:'#f5a623',fontSize:14,fontWeight:600,cursor:'pointer',marginBottom:8,textAlign:'left'}}>
+                  📧 Open in Gmail
+                </button>
+                <button onClick={()=>{window.location.href=emailPickerMailto;markSent()}}
+                  style={{width:'100%',padding:13,background:'rgba(245,166,35,0.08)',border:'1px solid rgba(245,166,35,0.25)',borderRadius:10,color:'#f5a623',fontSize:14,fontWeight:600,cursor:'pointer',marginBottom:8,textAlign:'left'}}>
+                  ✉ Open in Apple Mail
+                </button>
+                <button onClick={async()=>{try{await navigator.clipboard.writeText(`Subject: ${subject}\n\n${body}`);showDashToast('Copied to clipboard')}catch{showDashToast('Copy failed','error')};markSent()}}
+                  style={{width:'100%',padding:13,background:'rgba(245,166,35,0.08)',border:'1px solid rgba(245,166,35,0.25)',borderRadius:10,color:'#f5a623',fontSize:14,fontWeight:600,cursor:'pointer',marginBottom:8,textAlign:'left'}}>
+                  📋 Copy to clipboard
+                </button>
+                <button onClick={closeModal} style={{width:'100%',padding:10,background:'transparent',border:'none',color:'#4a5260',fontSize:12,cursor:'pointer',marginTop:4}}>Cancel</button>
+              </>) : (<>
+                <div style={{fontSize:16,fontWeight:700,color:'#e8eaed',marginBottom:6}}>Did you send the email?</div>
+                <div style={{fontSize:12,color:'#8a9099',marginBottom:18}}>Only mark as disputed if you actually sent or saved the email.</div>
+                <button onClick={()=>{
+                  if (emailPickerInvoiceId) fetch('/api/invoices',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:emailPickerInvoiceId,status:'disputed'})}).then(()=>{showDashToast('Invoice marked as disputed');loadInvoices()}).catch(()=>{})
+                  closeModal()
+                }} style={{width:'100%',padding:13,background:'#f5a623',border:'none',borderRadius:10,color:'#000',fontSize:14,fontWeight:700,cursor:'pointer',marginBottom:8}}>
+                  Yes — mark as disputed
+                </button>
+                <button onClick={()=>{showDashToast('Invoice kept as pending');closeModal()}}
+                  style={{width:'100%',padding:13,background:'transparent',border:'1px solid rgba(255,255,255,0.1)',borderRadius:10,color:'#8a9099',fontSize:14,fontWeight:500,cursor:'pointer',marginBottom:8}}>
+                  No — I'll send later
+                </button>
+                <button onClick={()=>{setEmailPickerSent(false)}}
+                  style={{width:'100%',padding:10,background:'transparent',border:'none',color:'#f5a623',fontSize:12,cursor:'pointer'}}>← Back to email options</button>
+              </>)}
             </div>
           </div>
         )
@@ -2248,7 +2269,8 @@ export default function DashboardPage() {
                               ...items.filter(li=>(Number(li.charged)||0)>(Number(li.agreed_rate)||0)).flatMap(li=>[`Job: ${li.job_ref||'N/A'}`,`Description: ${li.description||'N/A'}`,`Charged: £${li.charged}`,`Agreed: £${li.agreed_rate}`,`Overcharge: £${li.delta || ((Number(li.charged)||0)-(Number(li.agreed_rate)||0)).toFixed(2)}`,''])
                               ,`Total disputed: £${(inv.total_overcharge||0).toLocaleString()}`,'','We request a credit note for the full disputed amount within 14 days.','','Kind regards,','Pearson Haulage Operations','via DisruptionHub'].join('\n')
                             setEmailPickerMailto(`mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`)
-                            fetch('/api/invoices', { method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ id:inv.id, status:'disputed' }) }).then(()=>loadInvoices()).catch(()=>{})
+                            setEmailPickerInvoiceId(inv.id)
+                            setEmailPickerSent(false)
                           }} style={{ padding:'4px 10px', background:'rgba(239,68,68,0.08)', border:'1px solid rgba(239,68,68,0.25)', borderRadius:5, color:'#ef4444', fontSize:10, fontWeight:600, cursor:'pointer' }}>✉ Dispute</button>
                         )}
                         {inv.status === 'pending_review' && !hasOvercharge && (
