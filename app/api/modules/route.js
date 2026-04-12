@@ -1,5 +1,13 @@
+import { createClient } from '@supabase/supabase-js'
 import { runModule } from '../../../lib/anthropic.js'
 import { logModuleRun, queueAction, getClientConfig } from '../../../lib/supabase.js'
+
+function getDB() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (!url || !key || url.includes('placeholder')) return null
+  return createClient(url, key)
+}
 
 // ── DEMO RESULTS ──────────────────────────────────────────────────────────────
 // Returned instantly when no real client data is connected.
@@ -446,6 +454,28 @@ export async function POST(request) {
       result = DEMO_RESULTS[module]
       if (!result) {
         result = { severity: 'LOW', financial_impact: 0, sections: { assessment: `${module} module — connect client data to activate.`, immediate_actions: [] }, actions: [] }
+      }
+      result.data_source = 'demo'
+
+      // DVSA enrichment — if real dvsa_records exist, overlay them onto vehicle_health results
+      if (module === 'vehicle_health' && client_id) {
+        try {
+          const db = getDB()
+          if (db) {
+            const { data: dvsaRows } = await db.from('dvsa_records').select('*').eq('client_id', client_id)
+            if (dvsaRows && dvsaRows.length > 0) {
+              result.data_source = 'live'
+              result.dvsa_records = dvsaRows.map(r => {
+                const daysToMot = r.mot_expiry ? Math.ceil((new Date(r.mot_expiry) - Date.now()) / 86400000) : null
+                return { ...r, days_to_mot: daysToMot, mot_risk: daysToMot !== null && daysToMot <= 30 ? 'CRITICAL' : daysToMot !== null && daysToMot <= 60 ? 'WARNING' : 'OK' }
+              })
+              const urgent = result.dvsa_records.filter(r => r.mot_risk === 'CRITICAL')
+              if (urgent.length > 0) {
+                result.dvsa_alert = `${urgent.length} vehicle${urgent.length > 1 ? 's' : ''} with MOT expiring within 30 days: ${urgent.map(r => r.vehicle_reg).join(', ')}`
+              }
+            }
+          }
+        } catch {}
       }
     }
 

@@ -102,11 +102,21 @@ export default function HomePage() {
         .hero-ctas { justify-content: flex-start; }
         .hero-badge { justify-content: flex-start; }
 
+        @media (min-width: 769px) and (max-width: 1024px) {
+          .pricing-grid { grid-template-columns: repeat(2, 1fr) !important; }
+          .enterprise-card { flex-direction: column !important; align-items: flex-start !important; }
+          .enterprise-card .enterprise-divider { display: none !important; }
+          .enterprise-card .enterprise-cta { width: 100% !important; text-align: center !important; }
+        }
         @media (max-width: 768px) {
           .nav-links-desktop { display: none !important; }
           .stats-grid { grid-template-columns: 1fr 1fr !important; }
           .how-grid { grid-template-columns: 1fr !important; }
-          .pricing-grid { grid-template-columns: 1fr 1fr !important; }
+          .pricing-grid { grid-template-columns: 1fr !important; }
+          .enterprise-card { flex-direction: column !important; align-items: stretch !important; }
+          .enterprise-card .enterprise-divider { display: none !important; }
+          .enterprise-card .enterprise-features { grid-template-columns: 1fr !important; }
+          .enterprise-card .enterprise-cta { width: 100% !important; text-align: center !important; }
           .footer-cols { flex-direction: column !important; gap: 32px !important; }
           /* Hero — center on mobile */
           .hero-section { justify-content: center; padding: 80px 20px 60px !important; }
@@ -269,7 +279,7 @@ export default function HomePage() {
           }}>
             <div style={{ width: 7, height: 7, borderRadius: '50%', background: T.green, animation: 'pulse 2s infinite' }} />
             <span style={{ fontFamily: FF.mono, fontSize: 11, color: T.textFaint, letterSpacing: '0.08em' }}>
-              LIVE ON PEARSON HAULAGE — 35 VEHICLES
+              LIVE PLATFORM — DEMO AVAILABLE
             </span>
           </div>
         </div>
@@ -655,7 +665,7 @@ export default function HomePage() {
           </div>
 
           {/* ENTERPRISE — full width below the 4-column grid */}
-          <div className="pricing-card" style={{
+          <div className="pricing-card enterprise-card" style={{
             background: T.navyCard,
             border: `1px solid ${T.border}`,
             borderRadius: 4, padding: '32px 36px',
@@ -679,8 +689,8 @@ export default function HomePage() {
               </div>
               <div style={{ fontSize: 13, color: T.textDim, lineHeight: 1.5 }}>51+ vehicles · multi-depot<br />complex integrations</div>
             </div>
-            <div style={{ height: 80, width: 1, background: T.border, flexShrink: 0 }} />
-            <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 28px', minWidth: 280 }}>
+            <div className="enterprise-divider" style={{ height: 80, width: 1, background: T.border, flexShrink: 0 }} />
+            <div className="enterprise-features" style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 28px', minWidth: 200 }}>
               {['Everything in Growth', 'Multi-depot Support', 'Custom Integrations', 'Dedicated Engineering', 'SLA Guarantee', 'White-label Options'].map(f => (
                 <div key={f} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   <span style={{ color: T.green, fontSize: 13, flexShrink: 0 }}>✓</span>
@@ -689,7 +699,7 @@ export default function HomePage() {
               ))}
             </div>
             <a
-              className="amber-btn-glow"
+              className="amber-btn-glow enterprise-cta"
               href="mailto:hello@disruptionhub.ai?subject=Enterprise enquiry — DisruptionHub&body=Hi, I'd like to discuss enterprise pricing for my fleet."
               onClick={handleMailto}
               style={{
@@ -700,7 +710,7 @@ export default function HomePage() {
                 textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0,
               }}
             >
-              Get a Quote →
+              Book a Call →
             </a>
           </div>
 

@@ -1077,6 +1077,9 @@ export default function DashboardPage() {
   const [csvDragActive, setCsvDragActive] = useState(false)
   const dragCounter = useRef(0)
   const [manualInv, setManualInv] = useState({ carrier:'', invoice_ref:'', invoice_date:'', line_items:[{job_ref:'',description:'',charged:'',agreed_rate:''}] })
+  const [dvsaRecords, setDvsaRecords] = useState([])
+  const [dvsaManual, setDvsaManual] = useState({ vehicle_reg:'', mot_expiry:'', tax_expiry:'', operator_licence:'', last_inspection_date:'', last_inspection_result:'' })
+  const [dvsaCsvRows, setDvsaCsvRows] = useState(null)
   const [moduleRunning, setModuleRunning] = useState(null)
   const [moduleResult, setModuleResult] = useState(null)
   const [activeModuleName, setActiveModuleName] = useState(null)
@@ -1274,6 +1277,29 @@ export default function DashboardPage() {
       const data = await res.json()
       setInvoices(data.invoices || [])
     } catch {}
+  }
+
+  async function loadDvsa() {
+    try {
+      const res = await fetch(`/api/dvsa?client_id=${ACTIVE_CLIENT_ID}`)
+      if (!res.ok) return
+      const data = await res.json()
+      setDvsaRecords(data.records || [])
+    } catch {}
+  }
+
+  function parseDvsaCsv(text) {
+    const lines = text.trim().split(/\r?\n/)
+    if (lines.length < 2) return []
+    const rawHeaders = lines[0].split(',').map(h => h.trim())
+    const headers = rawHeaders.map(h => h.toLowerCase().replace(/[^a-z0-9]/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, ''))
+    const aliasMap = { reg:'vehicle_reg', registration:'vehicle_reg', vrm:'vehicle_reg', mot:'mot_expiry', mot_due:'mot_expiry', tax:'tax_expiry', tax_due:'tax_expiry', licence:'operator_licence', o_licence:'operator_licence', inspection:'last_inspection_date', inspection_date:'last_inspection_date', result:'last_inspection_result', inspection_result:'last_inspection_result' }
+    return lines.slice(1).filter(l => l.trim()).map(line => {
+      const vals = line.split(',').map(v => v.trim())
+      const obj = {}
+      headers.forEach((h, i) => { obj[aliasMap[h] || h] = vals[i] || '' })
+      return obj
+    }).filter(r => r.vehicle_reg)
   }
 
   function parseCsv(text) {
@@ -2040,6 +2066,94 @@ export default function DashboardPage() {
           {/* ── MODULES TAB ────────────────────────────────────────────────── */}
           {activeTab === 'modules' && (
             <div style={{ flex:1, overflowY:'auto', padding:'20px' }}>
+
+              {/* ── DVSA COMPLIANCE SECTION ─────────────────────────────────── */}
+              <div style={{ marginBottom:24, padding:16, background:'#0a0e16', border:'1px solid rgba(255,255,255,0.06)', borderRadius:10 }}>
+                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:12 }}>
+                  <div style={{ fontSize:10, color:'#f5a623', fontFamily:'monospace', letterSpacing:'0.1em', fontWeight:700 }}>DVSA FLEET COMPLIANCE</div>
+                  <button onClick={loadDvsa} style={{ background:'none', border:'none', color:'#4a5260', fontSize:10, cursor:'pointer' }}>↻ Refresh</button>
+                </div>
+
+                {/* Upload CSV */}
+                <div style={{ padding:14, border:'1px dashed rgba(245,166,35,0.15)', borderRadius:8, textAlign:'center', cursor:'pointer', background:'rgba(245,166,35,0.02)', marginBottom:10 }}
+                  onClick={() => document.getElementById('dvsa-csv-upload')?.click()}
+                  onDragOver={e => { e.preventDefault(); e.stopPropagation() }}
+                  onDrop={e => { e.preventDefault(); e.stopPropagation(); const f=e.dataTransfer?.files?.[0]; if(f) { const r=new FileReader(); r.onload=ev=>{setDvsaCsvRows(parseDvsaCsv(ev.target.result))}; r.readAsText(f) } }}>
+                  <input id="dvsa-csv-upload" type="file" accept=".csv,.txt,text/csv,text/plain" style={{ display:'none' }} onChange={e => { const f=e.target.files?.[0]; if(f) { const r=new FileReader(); r.onload=ev=>{setDvsaCsvRows(parseDvsaCsv(ev.target.result))}; r.readAsText(f) } }} />
+                  <div style={{ fontSize:11, color:'#8a9099' }}>Drop DVSA CSV or click to upload</div>
+                  <div style={{ fontSize:9, color:'#4a5260', marginTop:3 }}>Columns: vehicle_reg, mot_expiry, tax_expiry, operator_licence, last_inspection_date, last_inspection_result</div>
+                </div>
+                {dvsaCsvRows && dvsaCsvRows.length > 0 && (
+                  <div style={{ marginBottom:10 }}>
+                    <div style={{ fontSize:10, color:'#f5a623', marginBottom:4 }}>{dvsaCsvRows.length} vehicles parsed</div>
+                    <div style={{ display:'flex', gap:6 }}>
+                      <button onClick={async () => {
+                        try {
+                          const res = await fetch('/api/dvsa', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ client_id:ACTIVE_CLIENT_ID, records:dvsaCsvRows }) })
+                          const data = await res.json()
+                          if (data.success) { showDashToast(`${data.upserted} vehicles uploaded`); setDvsaCsvRows(null); loadDvsa() }
+                          else showDashToast(data.error || 'Upload failed', 'error')
+                        } catch { showDashToast('Upload failed', 'error') }
+                      }} style={{ padding:'5px 12px', background:'#f5a623', border:'none', borderRadius:5, color:'#000', fontWeight:600, fontSize:10, cursor:'pointer' }}>Submit</button>
+                      <button onClick={() => setDvsaCsvRows(null)} style={{ padding:'5px 12px', background:'transparent', border:'1px solid rgba(255,255,255,0.1)', borderRadius:5, color:'#4a5260', fontSize:10, cursor:'pointer' }}>Clear</button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Manual entry */}
+                <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:6, marginBottom:8 }}>
+                  <input value={dvsaManual.vehicle_reg} onChange={e=>setDvsaManual(p=>({...p,vehicle_reg:e.target.value.toUpperCase()}))} placeholder="Vehicle reg" style={{ padding:7, background:'#0f1826', border:'1px solid rgba(255,255,255,0.08)', borderRadius:6, color:'#e8eaed', fontSize:11, outline:'none', fontFamily:'monospace' }} />
+                  <input type="date" value={dvsaManual.mot_expiry} onChange={e=>setDvsaManual(p=>({...p,mot_expiry:e.target.value}))} placeholder="MOT expiry" style={{ padding:7, background:'#0f1826', border:'1px solid rgba(255,255,255,0.08)', borderRadius:6, color:'#e8eaed', fontSize:11, outline:'none' }} />
+                  <input type="date" value={dvsaManual.tax_expiry} onChange={e=>setDvsaManual(p=>({...p,tax_expiry:e.target.value}))} placeholder="Tax expiry" style={{ padding:7, background:'#0f1826', border:'1px solid rgba(255,255,255,0.08)', borderRadius:6, color:'#e8eaed', fontSize:11, outline:'none' }} />
+                </div>
+                <div style={{ display:'flex', gap:6, marginBottom:10 }}>
+                  <input value={dvsaManual.operator_licence} onChange={e=>setDvsaManual(p=>({...p,operator_licence:e.target.value}))} placeholder="O-licence" style={{ flex:1, padding:7, background:'#0f1826', border:'1px solid rgba(255,255,255,0.08)', borderRadius:6, color:'#e8eaed', fontSize:11, outline:'none' }} />
+                  <input type="date" value={dvsaManual.last_inspection_date} onChange={e=>setDvsaManual(p=>({...p,last_inspection_date:e.target.value}))} style={{ flex:1, padding:7, background:'#0f1826', border:'1px solid rgba(255,255,255,0.08)', borderRadius:6, color:'#e8eaed', fontSize:11, outline:'none' }} />
+                  <select value={dvsaManual.last_inspection_result} onChange={e=>setDvsaManual(p=>({...p,last_inspection_result:e.target.value}))} style={{ flex:1, padding:7, background:'#0f1826', border:'1px solid rgba(255,255,255,0.08)', borderRadius:6, color:'#e8eaed', fontSize:11, outline:'none' }}>
+                    <option value="">Result...</option>
+                    <option value="pass">Pass</option>
+                    <option value="fail">Fail</option>
+                    <option value="advisory">Advisory</option>
+                  </select>
+                  <button onClick={async () => {
+                    if (!dvsaManual.vehicle_reg) { showDashToast('Vehicle reg required', 'error'); return }
+                    try {
+                      const res = await fetch('/api/dvsa', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ client_id:ACTIVE_CLIENT_ID, ...dvsaManual, source:'manual' }) })
+                      const data = await res.json()
+                      if (data.success) { showDashToast('Vehicle added'); setDvsaManual({ vehicle_reg:'', mot_expiry:'', tax_expiry:'', operator_licence:'', last_inspection_date:'', last_inspection_result:'' }); loadDvsa() }
+                      else showDashToast(data.error || 'Failed', 'error')
+                    } catch { showDashToast('Failed', 'error') }
+                  }} style={{ padding:'5px 12px', background:'#f5a623', border:'none', borderRadius:5, color:'#000', fontWeight:600, fontSize:10, cursor:'pointer', whiteSpace:'nowrap' }}>+ Add</button>
+                </div>
+
+                {/* Fleet compliance table */}
+                {dvsaRecords.length > 0 ? (
+                  <div style={{ overflowX:'auto', border:'1px solid rgba(255,255,255,0.06)', borderRadius:6 }}>
+                    <table style={{ width:'100%', fontSize:10, color:'#8a9099', borderCollapse:'collapse' }}>
+                      <thead><tr style={{ background:'rgba(245,166,35,0.05)' }}>
+                        {['Vehicle','MOT Expiry','Tax Expiry','Last Inspection','Result','Days to MOT'].map(h => <th key={h} style={{ padding:'6px 8px', textAlign:'left', color:'#4a5260', fontWeight:600, whiteSpace:'nowrap' }}>{h}</th>)}
+                      </tr></thead>
+                      <tbody>{dvsaRecords.map((r,i) => {
+                        const daysToMot = r.mot_expiry ? Math.ceil((new Date(r.mot_expiry) - Date.now()) / 86400000) : null
+                        const motColor = daysToMot === null ? '#4a5260' : daysToMot <= 30 ? '#ef4444' : daysToMot <= 60 ? '#f59e0b' : '#22c55e'
+                        return (
+                          <tr key={i} style={{ borderTop:'1px solid rgba(255,255,255,0.03)', background: daysToMot !== null && daysToMot <= 30 ? 'rgba(239,68,68,0.04)' : 'transparent' }}>
+                            <td style={{ padding:'5px 8px', fontFamily:'monospace', color:'#e8eaed', fontWeight:600 }}>{r.vehicle_reg}</td>
+                            <td style={{ padding:'5px 8px', color:motColor }}>{r.mot_expiry || '—'}</td>
+                            <td style={{ padding:'5px 8px' }}>{r.tax_expiry || '—'}</td>
+                            <td style={{ padding:'5px 8px' }}>{r.last_inspection_date || '—'}</td>
+                            <td style={{ padding:'5px 8px', color: r.last_inspection_result === 'fail' ? '#ef4444' : r.last_inspection_result === 'advisory' ? '#f59e0b' : '#22c55e' }}>{r.last_inspection_result || '—'}</td>
+                            <td style={{ padding:'5px 8px', fontFamily:'monospace', fontWeight:700, color:motColor }}>{daysToMot !== null ? daysToMot : '—'}</td>
+                          </tr>
+                        )
+                      })}</tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <div style={{ padding:12, textAlign:'center', color:'#4a5260', fontSize:10 }}>No DVSA records. Upload a CSV or add vehicles manually.</div>
+                )}
+              </div>
+
               <div style={{ fontSize:10, color:'#4a5260', fontFamily:'monospace', marginBottom:6 }}>// INTELLIGENCE MODULES — auto-scan runs at 05:00 daily · click any to run now</div>
               <div style={{ display:'flex', gap:12, marginBottom:14, flexWrap:'wrap' }}>
                 {Object.values(latestRuns).some(r=>r.has_issues) && (

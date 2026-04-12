@@ -209,3 +209,25 @@ ALTER TABLE driver_progress
 CREATE UNIQUE INDEX IF NOT EXISTS driver_progress_client_vehicle_ref_phone_key
   ON driver_progress (client_id, vehicle_reg, ref, driver_phone)
   NULLS NOT DISTINCT;
+
+-- ── DVSA RECORDS (added 2026-04-12) ─────────────────────────────────
+-- Vehicle compliance data — MOT/tax expiry, inspection results, defects.
+-- Populated via CSV upload, manual entry, or DVSA API (when connected).
+-- Run in Supabase SQL editor; repo file is advisory.
+CREATE TABLE IF NOT EXISTS dvsa_records (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  client_id TEXT NOT NULL,
+  vehicle_reg TEXT NOT NULL,
+  mot_expiry DATE,
+  tax_expiry DATE,
+  operator_licence TEXT,
+  last_inspection_date DATE,
+  last_inspection_result TEXT,
+  defects JSONB,
+  source TEXT DEFAULT 'manual',
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_dvsa_client ON dvsa_records (client_id, vehicle_reg);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_dvsa_upsert ON dvsa_records (client_id, vehicle_reg);
+ALTER TABLE dvsa_records ENABLE ROW LEVEL SECURITY;
