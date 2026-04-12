@@ -1371,9 +1371,43 @@ export default function DashboardPage() {
     if (!result) return []
     const actions = []
 
-    // Invoice — dispute actions
+    // Invoice — dispute actions with pre-composed email
     if (result.discrepancies?.length > 0) {
-      actions.push({ id:'inv-dispute', label:`Dispute ${result.discrepancies.length} overcharge${result.discrepancies.length>1?'s':''} — recover £${(result.total_overcharge||0).toLocaleString()}`, type:'email', icon:'✉' })
+      const carrierGroups = {}
+      result.discrepancies.forEach(d => {
+        if (!carrierGroups[d.carrier]) carrierGroups[d.carrier] = []
+        carrierGroups[d.carrier].push(d)
+      })
+      for (const [carrier, items] of Object.entries(carrierGroups)) {
+        const totalDelta = items.reduce((sum, d) => sum + (d.delta || 0), 0)
+        const subject = `Invoice Dispute — ${carrier} — £${totalDelta.toLocaleString()} overcharge identified`
+        const body = [
+          `Dear ${carrier} Accounts Team,`,
+          '',
+          `We are writing to formally dispute the following invoice${items.length > 1 ? 's' : ''} where charges exceed our contracted rates:`,
+          '',
+          ...items.flatMap(d => [
+            `Invoice: ${d.invoice_ref}`,
+            `Issue: ${(d.issue_type || 'overcharge').replace(/_/g, ' ')}`,
+            `Amount invoiced: £${(d.charged || 0).toLocaleString()}`,
+            `Agreed/expected rate: £${(d.expected || 0).toLocaleString()}`,
+            `Overcharge: £${(d.delta || 0).toLocaleString()}`,
+            `Evidence: ${d.evidence || 'See attached'}`,
+            ''
+          ]),
+          `Total disputed: £${totalDelta.toLocaleString()}`,
+          '',
+          'We request a credit note for the full disputed amount within 14 days. If you believe these charges are correct, please provide supporting documentation including the applicable rate card and any agreed surcharge variations.',
+          '',
+          'Please treat this as a formal dispute under our contract terms.',
+          '',
+          'Kind regards,',
+          'Pearson Haulage Operations',
+          'via DisruptionHub'
+        ].join('\n')
+        const mailto = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
+        actions.push({ id:`inv-dispute-${carrier.replace(/\s/g,'-')}`, label:`Dispute ${carrier} — recover £${totalDelta.toLocaleString()}`, type:'email', icon:'✉', mailto })
+      }
     }
     // SLA — reroute instructions
     if (result.at_risk_deliveries?.length > 0) {
@@ -1419,8 +1453,9 @@ export default function DashboardPage() {
     }))
   }
 
-  async function fireAction(actionId, actionLabel, actionType) {
+  async function fireAction(actionId, actionLabel, actionType, mailto) {
     setActionStates(prev => ({ ...prev, [actionId]: 'firing' }))
+    if (mailto) window.open(mailto, '_blank')
     await new Promise(r => setTimeout(r, 1200))
     setActionStates(prev => ({ ...prev, [actionId]: 'done' }))
 
@@ -1872,7 +1907,7 @@ export default function DashboardPage() {
                               </div>
                             ) : (
                               <button
-                                onClick={() => fireAction(action.id, action.label, action.type)}
+                                onClick={() => fireAction(action.id, action.label, action.type, action.mailto)}
                                 disabled={isFiring}
                                 style={{ padding:'5px 12px', background: isFiring ? 'transparent' : '#f5a623', color: isFiring ? '#f5a623' : '#000', border: isFiring ? '1px solid rgba(245,166,35,0.3)' : 'none', borderRadius:5, fontSize:10, fontWeight:600, cursor: isFiring ? 'default' : 'pointer', fontFamily:'monospace', flexShrink:0, minWidth:60, transition:'all 0.2s' }}>
                                 {isFiring ? '...' : 'FIRE →'}
@@ -1995,7 +2030,7 @@ export default function DashboardPage() {
                               <span style={{ fontSize:10, color:'#f5a623', fontFamily:'monospace' }}>SENT</span>
                             </div>
                           ) : (
-                            <button onClick={() => fireAction(action.id, action.label, action.type)} disabled={isFiring}
+                            <button onClick={() => fireAction(action.id, action.label, action.type, action.mailto)} disabled={isFiring}
                               style={{ padding:'5px 12px', background: isFiring ? 'transparent' : '#f5a623', color: isFiring ? '#f5a623' : '#000', border: isFiring ? '1px solid rgba(245,166,35,0.3)' : 'none', borderRadius:5, fontSize:10, fontWeight:600, cursor: isFiring ? 'default' : 'pointer', fontFamily:'monospace', flexShrink:0, minWidth:60, transition:'all 0.2s' }}>
                               {isFiring ? '...' : 'FIRE →'}
                             </button>
