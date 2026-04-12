@@ -54,10 +54,14 @@ export async function POST(request) {
         }
 
         const severity = approval.action_details?.severity || 'HIGH'
-        const label = (approval.action_label || '').substring(0, 80)
+        const vehicleReg = approval.action_details?.vehicle_reg
+        const eventType = approval.action_details?.event_type
+        const line2 = vehicleReg && eventType
+          ? `${vehicleReg} — ${eventType.replace(/_/g, ' ').toUpperCase()}`
+          : (approval.action_label || '').substring(0, 60)
         const smsBody = [
           `DH ESCALATION — ${severity}`,
-          label,
+          line2,
           'Primary ops not responded >15min',
           'YES to action / NO to dismiss'
         ].join('\n')
