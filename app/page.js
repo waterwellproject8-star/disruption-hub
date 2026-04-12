@@ -220,7 +220,7 @@ export default function HomePage() {
           <div className="hero-ctas" style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
             <a
               className="btn-hero"
-              href="mailto:hello@disruptionhub.ai?subject=Pilot request — DisruptionHub&body=Hi, I'd like to start the £99 pilot for my haulage operation."
+              href="mailto:hello@disruptionhub.ai?subject=Pilot request — DisruptionHub&body=Hi, I'd like to start the £149 pilot for my haulage operation."
               onClick={handleMailto}
             >
               Start Your Pilot
@@ -474,105 +474,13 @@ export default function HomePage() {
             fontWeight: 800, textTransform: 'uppercase',
             color: '#fff', textAlign: 'center', marginBottom: 56,
           }}>
-            No Tiers. No Complexity.
+            Start Small. Scale Fast.
           </h2>
 
           <div className="pricing-grid" style={{
-            display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)',
+            display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
             gap: 16, marginBottom: 48,
           }}>
-
-            {/* MAIN */}
-            <div className="pricing-card" style={{
-              background: T.navyCard,
-              border: `1px solid ${T.border}`,
-              borderRadius: 4, padding: '32px 28px',
-              transition: 'transform 0.2s',
-            }}>
-              <div style={{
-                fontFamily: FF.mono, fontSize: 10, color: T.textFaint,
-                letterSpacing: '0.15em', textTransform: 'uppercase', marginBottom: 20,
-              }}>
-                Main
-              </div>
-              <div style={{
-                fontFamily: FF.condensed, fontSize: 56, fontWeight: 900,
-                color: T.amber, lineHeight: 1, marginBottom: 4,
-                textShadow: '0 0 20px rgba(245,166,35,0.2)',
-              }}>
-                £399
-              </div>
-              <div style={{ fontSize: 13, color: T.textDim, marginBottom: 24 }}>/month</div>
-              <div style={{
-                fontFamily: FF.condensed, fontSize: 18, fontWeight: 700,
-                color: '#fff', marginBottom: 20,
-              }}>
-                Full Platform Access
-              </div>
-              <div style={{ height: 1, background: T.border, marginBottom: 20 }} />
-              {['Unlimited AI Triage', 'Real-time Alerts', 'SLA Protection', '24/7 Support', 'API Access'].map(f => (
-                <div key={f} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-                  <span style={{ color: T.green, fontSize: 13, flexShrink: 0 }}>✓</span>
-                  <span style={{ fontSize: 13, color: T.textDim }}>{f}</span>
-                </div>
-              ))}
-            </div>
-
-            {/* FOUNDING CLIENT — highlighted */}
-            <div className="pricing-card" style={{
-              background: `linear-gradient(135deg, ${T.navyCard}, rgba(245,166,35,0.04))`,
-              border: `1px solid ${T.amberBorder}`,
-              borderRadius: 4, padding: '32px 28px',
-              position: 'relative',
-              boxShadow: `0 0 40px rgba(245,166,35,0.25), 0 0 80px rgba(245,166,35,0.1), inset 0 1px 0 rgba(245,166,35,0.2)`,
-              transform: 'scale(1.02)',
-              transition: 'transform 0.2s',
-            }}>
-              {/* Top accent line */}
-              <div style={{
-                position: 'absolute', top: 0, left: 0, right: 0, height: 2,
-                background: `linear-gradient(90deg, transparent, #f5a623, transparent)`,
-              boxShadow: '0 0 20px rgba(245,166,35,0.8)',
-                borderRadius: '4px 4px 0 0',
-              }} />
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20 }}>
-                <div style={{
-                  fontFamily: FF.mono, fontSize: 10, color: T.textFaint,
-                  letterSpacing: '0.15em', textTransform: 'uppercase',
-                }}>
-                  Founding Client
-                </div>
-                <div style={{
-                  background: T.red, color: '#fff',
-                  fontFamily: FF.condensed, fontSize: 10, fontWeight: 700,
-                  letterSpacing: '0.08em', textTransform: 'uppercase',
-                  padding: '2px 7px', borderRadius: 2,
-                }}>
-                  3 Spots Remaining
-                </div>
-              </div>
-              <div style={{
-                fontFamily: FF.condensed, fontSize: 56, fontWeight: 900,
-                color: T.amber, lineHeight: 1, marginBottom: 4,
-                textShadow: '0 0 30px rgba(245,166,35,0.7), 0 0 60px rgba(245,166,35,0.35)',
-              }}>
-                £299
-              </div>
-              <div style={{ fontSize: 13, color: T.textDim, marginBottom: 24 }}>/month · locked for life</div>
-              <div style={{
-                fontFamily: FF.condensed, fontSize: 18, fontWeight: 700,
-                color: '#fff', marginBottom: 20,
-              }}>
-                Locked for Life
-              </div>
-              <div style={{ height: 1, background: T.amberBorder, marginBottom: 20 }} />
-              {['All Full Platform Features', 'Priority Onboarding', "Founder's Circle Access", 'Lifetime Price Lock'].map(f => (
-                <div key={f} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-                  <span style={{ color: T.amber, fontSize: 13, flexShrink: 0 }}>✓</span>
-                  <span style={{ fontSize: 13, color: T.textDim }}>{f}</span>
-                </div>
-              ))}
-            </div>
 
             {/* PILOT */}
             <div className="pricing-card" style={{
@@ -589,16 +497,16 @@ export default function HomePage() {
               </div>
               <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginBottom: 4 }}>
                 <div style={{
-                  fontFamily: FF.condensed, fontSize: 56, fontWeight: 900,
+                  fontFamily: FF.condensed, fontSize: 48, fontWeight: 900,
                   color: T.amber, lineHeight: 1,
                   textShadow: '0 0 20px rgba(245,166,35,0.2)',
                 }}>
-                  £99
+                  £149
                 </div>
                 <div style={{
-                  fontFamily: FF.condensed, fontSize: 22, fontWeight: 700, color: T.amber,
+                  fontFamily: FF.condensed, fontSize: 20, fontWeight: 700, color: T.amber,
                 }}>
-                  / 2 Weeks
+                  / 30 days
                 </div>
               </div>
               <div style={{ height: 16 }} />
@@ -606,13 +514,176 @@ export default function HomePage() {
                 fontFamily: FF.condensed, fontSize: 18, fontWeight: 700,
                 color: '#fff', marginBottom: 20,
               }}>
-                Pilot Program
+                Prove the Value
               </div>
               <div style={{ height: 1, background: T.border, marginBottom: 20 }} />
-              {['Non-refundable after onboarding call', '2 Weeks Full Access', 'Proof of Value Report', 'Dedicated Success Manager'].map(f => (
+              {['Non-refundable after onboarding call', '30 Days Full Access', 'Proof of Value Report', 'Dedicated Success Manager'].map(f => (
                 <div key={f} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 10 }}>
                   <span style={{ color: T.green, fontSize: 13, flexShrink: 0, marginTop: 1 }}>✓</span>
                   <span style={{ fontSize: 13, color: T.textDim, lineHeight: 1.5 }}>{f}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* FOUNDING COHORT — highlighted */}
+            <div className="pricing-card" style={{
+              background: `linear-gradient(135deg, ${T.navyCard}, rgba(245,166,35,0.04))`,
+              border: `1px solid ${T.amberBorder}`,
+              borderRadius: 4, padding: '32px 28px',
+              position: 'relative',
+              boxShadow: `0 0 40px rgba(245,166,35,0.25), 0 0 80px rgba(245,166,35,0.1), inset 0 1px 0 rgba(245,166,35,0.2)`,
+              transform: 'scale(1.02)',
+              transition: 'transform 0.2s',
+            }}>
+              <div style={{
+                position: 'absolute', top: 0, left: 0, right: 0, height: 2,
+                background: `linear-gradient(90deg, transparent, #f5a623, transparent)`,
+                boxShadow: '0 0 20px rgba(245,166,35,0.8)',
+                borderRadius: '4px 4px 0 0',
+              }} />
+              <div style={{
+                fontFamily: FF.mono, fontSize: 10, color: T.textFaint,
+                letterSpacing: '0.15em', textTransform: 'uppercase', marginBottom: 20,
+              }}>
+                Founding Cohort
+              </div>
+              <div style={{
+                fontFamily: FF.condensed, fontSize: 48, fontWeight: 900,
+                color: T.amber, lineHeight: 1, marginBottom: 4,
+                textShadow: '0 0 30px rgba(245,166,35,0.7), 0 0 60px rgba(245,166,35,0.35)',
+              }}>
+                £349
+              </div>
+              <div style={{ fontSize: 13, color: T.textDim, marginBottom: 24 }}>/month · locked for life</div>
+              <div style={{
+                fontFamily: FF.condensed, fontSize: 18, fontWeight: 700,
+                color: '#fff', marginBottom: 20,
+              }}>
+                Locked for Life
+              </div>
+              <div style={{ height: 1, background: T.amberBorder, marginBottom: 20 }} />
+              {['All Full Platform Features', 'Priority Onboarding', "Founder's Circle Access", 'Lifetime Price Lock'].map(f => (
+                <div key={f} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+                  <span style={{ color: T.amber, fontSize: 13, flexShrink: 0 }}>✓</span>
+                  <span style={{ fontSize: 13, color: T.textDim }}>{f}</span>
+                </div>
+              ))}
+              <div style={{ marginTop: 12, fontSize: 11, color: T.textFaint, lineHeight: 1.6 }}>
+                5 founding spots — once filled, this rate closes permanently. No exceptions.
+              </div>
+            </div>
+
+            {/* STANDARD */}
+            <div className="pricing-card" style={{
+              background: T.navyCard,
+              border: `1px solid ${T.border}`,
+              borderRadius: 4, padding: '32px 28px',
+              transition: 'transform 0.2s',
+            }}>
+              <div style={{
+                fontFamily: FF.mono, fontSize: 10, color: T.textFaint,
+                letterSpacing: '0.15em', textTransform: 'uppercase', marginBottom: 20,
+              }}>
+                Standard
+              </div>
+              <div style={{
+                fontFamily: FF.condensed, fontSize: 48, fontWeight: 900,
+                color: T.amber, lineHeight: 1, marginBottom: 4,
+                textShadow: '0 0 20px rgba(245,166,35,0.2)',
+              }}>
+                £499
+              </div>
+              <div style={{ fontSize: 13, color: T.textDim, marginBottom: 24 }}>/month · up to 30 vehicles</div>
+              <div style={{
+                fontFamily: FF.condensed, fontSize: 18, fontWeight: 700,
+                color: '#fff', marginBottom: 20,
+              }}>
+                Full Platform Access
+              </div>
+              <div style={{ height: 1, background: T.border, marginBottom: 20 }} />
+              {['Unlimited AI Triage', 'Real-time Alerts', 'SLA Protection', '24/7 Support', 'API Access'].map(f => (
+                <div key={f} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+                  <span style={{ color: T.green, fontSize: 13, flexShrink: 0 }}>✓</span>
+                  <span style={{ fontSize: 13, color: T.textDim }}>{f}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* GROWTH */}
+            <div className="pricing-card" style={{
+              background: T.navyCard,
+              border: `1px solid ${T.border}`,
+              borderRadius: 4, padding: '32px 28px',
+              transition: 'transform 0.2s',
+            }}>
+              <div style={{
+                fontFamily: FF.mono, fontSize: 10, color: T.textFaint,
+                letterSpacing: '0.15em', textTransform: 'uppercase', marginBottom: 20,
+              }}>
+                Growth
+              </div>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginBottom: 4 }}>
+                <div style={{
+                  fontFamily: FF.condensed, fontSize: 48, fontWeight: 900,
+                  color: T.amber, lineHeight: 1,
+                  textShadow: '0 0 20px rgba(245,166,35,0.2)',
+                }}>
+                  £499
+                </div>
+                <div style={{
+                  fontFamily: FF.condensed, fontSize: 18, fontWeight: 700, color: T.amber,
+                }}>
+                  + £8/vehicle
+                </div>
+              </div>
+              <div style={{ fontSize: 13, color: T.textDim, marginBottom: 24 }}>above 30 vehicles · e.g. 40 vehicles = £579/mo</div>
+              <div style={{
+                fontFamily: FF.condensed, fontSize: 18, fontWeight: 700,
+                color: '#fff', marginBottom: 20,
+              }}>
+                Scale Without Limits
+              </div>
+              <div style={{ height: 1, background: T.border, marginBottom: 20 }} />
+              {['Everything in Standard', 'Unlimited Vehicles', 'Volume Pricing', 'Dedicated Account Manager'].map(f => (
+                <div key={f} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+                  <span style={{ color: T.green, fontSize: 13, flexShrink: 0 }}>✓</span>
+                  <span style={{ fontSize: 13, color: T.textDim }}>{f}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* ENTERPRISE */}
+            <div className="pricing-card" style={{
+              background: T.navyCard,
+              border: `1px solid ${T.border}`,
+              borderRadius: 4, padding: '32px 28px',
+              transition: 'transform 0.2s',
+            }}>
+              <div style={{
+                fontFamily: FF.mono, fontSize: 10, color: T.textFaint,
+                letterSpacing: '0.15em', textTransform: 'uppercase', marginBottom: 20,
+              }}>
+                Enterprise
+              </div>
+              <div style={{
+                fontFamily: FF.condensed, fontSize: 48, fontWeight: 900,
+                color: T.amber, lineHeight: 1, marginBottom: 4,
+                textShadow: '0 0 20px rgba(245,166,35,0.2)',
+              }}>
+                Custom
+              </div>
+              <div style={{ fontSize: 13, color: T.textDim, marginBottom: 24 }}>51+ vehicles · multi-depot · complex integrations</div>
+              <div style={{
+                fontFamily: FF.condensed, fontSize: 18, fontWeight: 700,
+                color: '#fff', marginBottom: 20,
+              }}>
+                Tailored to Your Fleet
+              </div>
+              <div style={{ height: 1, background: T.border, marginBottom: 20 }} />
+              {['Everything in Growth', 'Multi-depot Support', 'Custom Integrations', 'Dedicated Engineering', 'SLA Guarantee'].map(f => (
+                <div key={f} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+                  <span style={{ color: T.green, fontSize: 13, flexShrink: 0 }}>✓</span>
+                  <span style={{ fontSize: 13, color: T.textDim }}>{f}</span>
                 </div>
               ))}
             </div>
@@ -622,7 +693,7 @@ export default function HomePage() {
           <div style={{ textAlign: 'center' }}>
             <a
               className="btn-cta-large amber-btn-glow"
-              href="mailto:hello@disruptionhub.ai?subject=Onboarding call request — DisruptionHub pilot&body=Hi, I'd like to book my onboarding call to start the £99 pilot."
+              href="mailto:hello@disruptionhub.ai?subject=Onboarding call request — DisruptionHub pilot&body=Hi, I'd like to book my onboarding call to start the £149 pilot."
               onClick={handleMailto}
             >
               Book Your Onboarding Call
@@ -631,7 +702,7 @@ export default function HomePage() {
               marginTop: 14, fontFamily: FF.mono, fontSize: 11,
               color: T.textFaint, letterSpacing: '0.06em',
             }}>
-              £99 pilot · 2 weeks · bank transfer or PayPal
+              £149 pilot · 30 days · bank transfer or PayPal
             </div>
           </div>
         </div>
@@ -713,7 +784,7 @@ export default function HomePage() {
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 <a onClick={handleMailto} href="mailto:hello@disruptionhub.ai" style={{ fontSize: 13, color: T.textDim, textDecoration: 'none' }}>hello@disruptionhub.ai</a>
-                <a onClick={handleMailto} href="mailto:hello@disruptionhub.ai?subject=Pilot request" style={{ fontSize: 13, color: T.amber, textDecoration: 'none' }}>Start £99 pilot →</a>
+                <a onClick={handleMailto} href="mailto:hello@disruptionhub.ai?subject=Pilot request" style={{ fontSize: 13, color: T.amber, textDecoration: 'none' }}>Start £149 pilot →</a>
               </div>
             </div>
           </div>
