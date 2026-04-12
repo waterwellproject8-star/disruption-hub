@@ -106,7 +106,7 @@ export default function HomePage() {
           .nav-links-desktop { display: none !important; }
           .stats-grid { grid-template-columns: 1fr 1fr !important; }
           .how-grid { grid-template-columns: 1fr !important; }
-          .pricing-grid { grid-template-columns: 1fr !important; }
+          .pricing-grid { grid-template-columns: 1fr 1fr !important; }
           .footer-cols { flex-direction: column !important; gap: 32px !important; }
           /* Hero — center on mobile */
           .hero-section { justify-content: center; padding: 80px 20px 60px !important; }
@@ -478,8 +478,8 @@ export default function HomePage() {
           </h2>
 
           <div className="pricing-grid" style={{
-            display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-            gap: 16, marginBottom: 48,
+            display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)',
+            gap: 16, marginBottom: 16,
           }}>
 
             {/* PILOT */}
@@ -652,41 +652,56 @@ export default function HomePage() {
               ))}
             </div>
 
-            {/* ENTERPRISE */}
-            <div className="pricing-card" style={{
-              background: T.navyCard,
-              border: `1px solid ${T.border}`,
-              borderRadius: 4, padding: '32px 28px',
-              transition: 'transform 0.2s',
-            }}>
+          </div>
+
+          {/* ENTERPRISE — full width below the 4-column grid */}
+          <div className="pricing-card" style={{
+            background: T.navyCard,
+            border: `1px solid ${T.border}`,
+            borderRadius: 4, padding: '32px 36px',
+            marginBottom: 48,
+            display: 'flex', alignItems: 'center', gap: 40, flexWrap: 'wrap',
+            transition: 'transform 0.2s',
+          }}>
+            <div style={{ flex: '0 0 220px' }}>
               <div style={{
                 fontFamily: FF.mono, fontSize: 10, color: T.textFaint,
-                letterSpacing: '0.15em', textTransform: 'uppercase', marginBottom: 20,
+                letterSpacing: '0.15em', textTransform: 'uppercase', marginBottom: 14,
               }}>
                 Enterprise
               </div>
               <div style={{
                 fontFamily: FF.condensed, fontSize: 48, fontWeight: 900,
-                color: T.amber, lineHeight: 1, marginBottom: 4,
+                color: T.amber, lineHeight: 1, marginBottom: 6,
                 textShadow: '0 0 20px rgba(245,166,35,0.2)',
               }}>
                 Custom
               </div>
-              <div style={{ fontSize: 13, color: T.textDim, marginBottom: 24 }}>51+ vehicles · multi-depot · complex integrations</div>
-              <div style={{
-                fontFamily: FF.condensed, fontSize: 18, fontWeight: 700,
-                color: '#fff', marginBottom: 20,
-              }}>
-                Tailored to Your Fleet
-              </div>
-              <div style={{ height: 1, background: T.border, marginBottom: 20 }} />
-              {['Everything in Growth', 'Multi-depot Support', 'Custom Integrations', 'Dedicated Engineering', 'SLA Guarantee'].map(f => (
-                <div key={f} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+              <div style={{ fontSize: 13, color: T.textDim, lineHeight: 1.5 }}>51+ vehicles · multi-depot<br />complex integrations</div>
+            </div>
+            <div style={{ height: 80, width: 1, background: T.border, flexShrink: 0 }} />
+            <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 28px', minWidth: 280 }}>
+              {['Everything in Growth', 'Multi-depot Support', 'Custom Integrations', 'Dedicated Engineering', 'SLA Guarantee', 'White-label Options'].map(f => (
+                <div key={f} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   <span style={{ color: T.green, fontSize: 13, flexShrink: 0 }}>✓</span>
                   <span style={{ fontSize: 13, color: T.textDim }}>{f}</span>
                 </div>
               ))}
             </div>
+            <a
+              className="amber-btn-glow"
+              href="mailto:hello@disruptionhub.ai?subject=Enterprise enquiry — DisruptionHub&body=Hi, I'd like to discuss enterprise pricing for my fleet."
+              onClick={handleMailto}
+              style={{
+                display: 'inline-block', padding: '14px 28px',
+                background: T.amber, color: '#000', borderRadius: 4,
+                fontFamily: FF.condensed, fontSize: 16, fontWeight: 700,
+                textTransform: 'uppercase', letterSpacing: '0.06em',
+                textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0,
+              }}
+            >
+              Get a Quote →
+            </a>
           </div>
 
           {/* Main CTA */}
