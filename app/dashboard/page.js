@@ -1066,6 +1066,7 @@ export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState('approvals') // 'approvals' = COMMAND tab — default landing
   const [commandRightTab, setCommandRightTab] = useState('incidents') // 'incidents' | 'value'
   const [pendingApprovals, setPendingApprovals] = useState([])
+  const [dashToast, setDashToast] = useState(null)
   const [moduleRunning, setModuleRunning] = useState(null)
   const [moduleResult, setModuleResult] = useState(null)
   const [activeModuleName, setActiveModuleName] = useState(null)
@@ -1287,16 +1288,21 @@ export default function DashboardPage() {
     }
   }
 
+  function showDashToast(msg, type='ok') { setDashToast({msg,type}); setTimeout(()=>setDashToast(null),4000) }
+
   async function handleApproval(approvalId, action) {
     setApprovingId(approvalId)
     try {
-      await fetch('/api/approvals', {
+      const res = await fetch('/api/approvals', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ approval_id: approvalId, action, approved_by: 'ops_manager' })
       })
+      if (res.status === 409) showDashToast('Action expired — too old to execute', 'error')
+      else if (!res.ok) showDashToast('Action failed — check logs', 'error')
+      else showDashToast(action === 'approve' ? '✓ Action executed' : '✕ Action rejected')
       await loadApprovals()
-    } catch {}
+    } catch { showDashToast('Network error', 'error') }
     finally { setApprovingId(null) }
   }
 
@@ -1687,6 +1693,7 @@ export default function DashboardPage() {
 
   return (
     <div style={{ minHeight:'100vh', display:'flex', flexDirection:'column', fontFamily:'Barlow, sans-serif', background:'#080c14', color:'#e8eaed' }}>
+      {dashToast && <div style={{position:'fixed',top:16,left:'50%',transform:'translateX(-50%)',padding:'10px 20px',borderRadius:8,background:dashToast.type==='error'?'rgba(239,68,68,0.95)':'rgba(245,166,35,0.95)',color:'#fff',fontSize:13,fontWeight:600,zIndex:9999,boxShadow:'0 4px 12px rgba(0,0,0,0.3)'}}>{dashToast.msg}</div>}
       <style>{`
         @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
         @keyframes spin{to{transform:rotate(360deg)}}

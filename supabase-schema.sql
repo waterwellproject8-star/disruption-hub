@@ -183,3 +183,23 @@ CREATE INDEX IF NOT EXISTS idx_end_of_shift_reports_driver
   ON end_of_shift_reports (driver_phone, ended_at DESC);
 
 ALTER TABLE end_of_shift_reports ENABLE ROW LEVEL SECURITY;
+
+-- ── UNRESOLVED JOBS COLUMN (added 2026-04-12) ──────────────────────
+-- Stores the at_risk / part_delivered job snapshots captured before
+-- the end-shift bulk update wipes their status.
+-- Run in Supabase SQL editor; repo file is advisory.
+ALTER TABLE end_of_shift_reports
+  ADD COLUMN IF NOT EXISTS unresolved_jobs JSONB;
+
+-- ── DRIVER PROGRESS UNIQUE KEY FIX (added 2026-04-12) ───────────────
+-- Original key (client_id, vehicle_reg, ref) causes collisions when
+-- two drivers share a vehicle. Adding driver_phone to the key lets
+-- each driver own their own progress rows.
+-- NULLS NOT DISTINCT ensures null phones still deduplicate correctly.
+-- Run in Supabase SQL editor; repo file is advisory.
+ALTER TABLE driver_progress
+  DROP CONSTRAINT IF EXISTS driver_progress_client_id_vehicle_reg_ref_key;
+
+CREATE UNIQUE INDEX IF NOT EXISTS driver_progress_client_vehicle_ref_phone_key
+  ON driver_progress (client_id, vehicle_reg, ref, driver_phone)
+  NULLS NOT DISTINCT;

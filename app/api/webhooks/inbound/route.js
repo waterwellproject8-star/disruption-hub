@@ -179,6 +179,22 @@ export async function POST(request) {
     }
 
     const supabase = getSupabase()
+
+    // Deduplication — skip if an identical event was logged in the last 60 seconds
+    if (supabase) {
+      const dedupReg = payload?.vehicle_reg || ''
+      const since = new Date(Date.now() - 60 * 1000).toISOString()
+      const { data: recent } = await supabase.from('webhook_log')
+        .select('id')
+        .eq('client_id', client_id)
+        .eq('event_type', event_type)
+        .eq('payload->>vehicle_reg', dedupReg)
+        .gt('created_at', since)
+        .limit(1)
+      if (recent?.length > 0) {
+        return Response.json({ success: true, deduplicated: true, existing_id: recent[0].id })
+      }
+    }
     const client = await getClientConfig(client_id)
     const systemPrompt = client?.system_prompt || ''
     const opsPhone = client?.contact_phone || null

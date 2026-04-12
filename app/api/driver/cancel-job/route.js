@@ -63,7 +63,7 @@ export async function POST(request) {
           ref, status: 'on-track',
           alert: `Assigned by ops${reason ? ` — ${reason}` : ''}`,
           updated_at: new Date().toISOString()
-        }, { onConflict: 'client_id,vehicle_reg,ref' })
+        }, { onConflict: 'client_id,vehicle_reg,ref,driver_phone' })
       } catch(e) { console.error('reassign upsert:', e.message) }
 
       let newDriverNotified = false
@@ -123,7 +123,7 @@ export async function POST(request) {
             ref: jobRef, status: 'on-track',
             alert: `Assigned by ops from ${vehicle_reg}${reason ? ` — ${reason}` : ''}`,
             updated_at: new Date().toISOString()
-          }, { onConflict: 'client_id,vehicle_reg,ref' })
+          }, { onConflict: 'client_id,vehicle_reg,ref,driver_phone' })
         } catch(e) { console.error('reassign upsert:', e.message) }
       }
     }

@@ -332,6 +332,12 @@ export default function DriverApp() {
     return () => clearInterval(interval)
   }, [shiftStarted, defectBlocked, driverInfo.clientId, driverInfo.vehicleReg])
 
+  useEffect(() => {
+    const warn = e => { e.preventDefault(); e.returnValue = '' }
+    if (shiftStarted) window.addEventListener('beforeunload', warn)
+    return () => window.removeEventListener('beforeunload', warn)
+  }, [shiftStarted])
+
   const showToast = (msg, type='ok') => { setToast({msg,type}); setTimeout(()=>setToast(null),3500) }
 
   function saveJobProgress(updatedJobs) {
@@ -355,7 +361,7 @@ export default function DriverApp() {
       method:'POST', headers:{'Content-Type':'application/json'},
       // Always include driver_phone so resolveDriverPhone() in ops routes can find this driver
       body: JSON.stringify({ client_id:driverInfo.clientId, vehicle_reg:driverInfo.vehicleReg, driver_name:driverInfo.name, driver_phone:driverInfo.phone||null, ref, status, alert:alert||null, pod: pod||null })
-    }).catch(()=>{})
+    }).catch(()=>showToast('⚠ Sync failed','error'))
   }
 
   async function loadJobs(info) {
@@ -793,7 +799,7 @@ export default function DriverApp() {
           defect_details: null
         })
       }).then(res => {
-        if (res.ok) ['dh_shift_started','dh_shift_started_at','dh_last_alert','dh_job_progress'].forEach(k=>localStorage.removeItem(k))
+        if (res.ok) ['dh_shift_started','dh_shift_started_at','dh_last_alert','dh_job_progress','dh_postshift_draft'].forEach(k=>localStorage.removeItem(k))
       }).catch(() => {})
     } else {
       ['dh_shift_started','dh_shift_started_at','dh_last_alert','dh_job_progress'].forEach(k=>localStorage.removeItem(k))
@@ -1012,7 +1018,11 @@ export default function DriverApp() {
   }
 
   // ── POST-SHIFT CHECK ──────────────────────────────────────────────────────
-  if (showPostShift) return (
+  if (showPostShift) {
+    if (!shiftMileage && !shiftNotes) {
+      try { const draft=JSON.parse(localStorage.getItem('dh_postshift_draft')||'{}'); if(draft.mileage)setShiftMileage(draft.mileage); if(draft.notes)setShiftNotes(draft.notes) } catch {}
+    }
+    return (
     <div style={{minHeight:'100vh',background:'#080c14',color:'#e8eaed',fontFamily:'Barlow,sans-serif',paddingBottom:40}}>
       <div style={{padding:'14px 16px',borderBottom:'1px solid rgba(255,255,255,0.06)'}}>
         <div style={{fontSize:16,fontWeight:600}}>Return Check</div>
@@ -1036,10 +1046,10 @@ export default function DriverApp() {
           <div style={{fontSize:13,color:mileageError?'#ef4444':'#8a9099',marginBottom:6,fontWeight:mileageError?600:400}}>
             Mileage at end of shift {mileageError&&'— required ⚠'}
           </div>
-          <input value={shiftMileage} onChange={e=>{setShiftMileage(e.target.value);setMileageError(false)}} placeholder='e.g. 48,320' inputMode='numeric'
+          <input value={shiftMileage} onChange={e=>{setShiftMileage(e.target.value);setMileageError(false);try{localStorage.setItem('dh_postshift_draft',JSON.stringify({mileage:e.target.value,notes:shiftNotes}))}catch{}}} placeholder='e.g. 48,320' inputMode='numeric'
             style={{width:'100%',padding:'12px',background:'#0f1826',border:`1px solid ${mileageError?'rgba(239,68,68,0.6)':'rgba(255,255,255,0.1)'}`,borderRadius:8,color:'#e8eaed',fontSize:15,outline:'none',boxSizing:'border-box',marginBottom:14,transition:'border 0.2s'}}/>
           <div style={{fontSize:13,color:'#8a9099',marginBottom:6}}>Shift notes (optional)</div>
-          <textarea value={shiftNotes} onChange={e=>setShiftNotes(e.target.value)} rows={3} placeholder='Any notes for ops — customer issues, delays, anything to flag...'
+          <textarea value={shiftNotes} onChange={e=>{setShiftNotes(e.target.value);try{localStorage.setItem('dh_postshift_draft',JSON.stringify({mileage:shiftMileage,notes:e.target.value}))}catch{}}} rows={3} placeholder='Any notes for ops — customer issues, delays, anything to flag...'
             style={{width:'100%',padding:'12px',background:'#0f1826',border:'1px solid rgba(255,255,255,0.1)',borderRadius:8,color:'#e8eaed',fontSize:14,outline:'none',resize:'none',boxSizing:'border-box',lineHeight:1.6}}/>
         </div>
         {Object.values(postShiftChecks).some(v=>v===false)&&(

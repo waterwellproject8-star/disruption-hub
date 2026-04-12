@@ -29,7 +29,7 @@ export async function POST(request) {
       pod: pod || null,
       updated_at: new Date().toISOString(),
     }, {
-      onConflict: 'client_id,vehicle_reg,ref'
+      onConflict: 'client_id,vehicle_reg,ref,driver_phone'
     })
 
     if (error) {

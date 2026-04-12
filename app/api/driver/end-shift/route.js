@@ -61,6 +61,7 @@ export async function POST(request) {
       jobs_total: jobs_total ?? null,
       incidents_count: incidents_count ?? 0,
       unresolved_count: unresolved_count ?? 0,
+      unresolved_jobs: unresolvedJobs.length > 0 ? unresolvedJobs : null,
       fuel_level: fuel_level || null,
       defects_flagged: defects_flagged ?? false,
       defect_details: defect_details || null,
@@ -70,9 +71,18 @@ export async function POST(request) {
     const reportSaved = !reportErr
 
     let rowsUpdated = 0
+    let unresolvedJobs = []
+
+    // Snapshot at_risk / part_delivered jobs before the bulk update wipes their status
+    if (vehicle_reg) {
+      const { data: atRiskRows } = await db.from('driver_progress')
+        .select('ref, status, alert, updated_at')
+        .eq('vehicle_reg', vehicle_reg)
+        .in('status', ['at_risk', 'part_delivered'])
+      unresolvedJobs = (atRiskRows || []).map(r => ({ ref: r.ref, status: r.status, alert: r.alert, last_update: r.updated_at }))
+    }
 
     // Mark active rows by vehicle_reg
-    // NOTE: driver_progress has no client_id column — never filter by it here
     if (vehicle_reg) {
       const { data, error } = await db
         .from('driver_progress')
@@ -128,10 +138,27 @@ export async function POST(request) {
       }
     }
 
+    // Notify ops if there were unresolved jobs at shift end
+    if (client_id && unresolvedJobs.length > 0) {
+      const refs = unresolvedJobs.map(j => j.ref).join(', ')
+      const { error: notifyErr } = await db.from('approvals').insert({
+        client_id,
+        action_type: 'notify',
+        action_label: `⚠ SHIFT ENDED WITH UNRESOLVED JOBS — ${vehicle_reg || 'unknown'}: ${refs}`,
+        action_details: { vehicle_reg, driver_name: driver_name || null, source: 'end_shift_unresolved', unresolved_jobs: unresolvedJobs },
+        financial_value: 0,
+        status: 'executed',
+        approved_by: 'system',
+        executed_at: now
+      })
+      if (notifyErr) console.error('[end-shift] unresolved notify error:', notifyErr.message, notifyErr.code)
+    }
+
     return Response.json({
       success: true,
       rows_updated: rowsUpdated,
       report_saved: reportSaved,
+      unresolved_jobs: unresolvedJobs,
       vehicle_reg,
       driver_phone,
       reason: endReason,
