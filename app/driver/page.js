@@ -1394,13 +1394,16 @@ export default function DriverApp() {
                 <div key={group.id} style={{marginBottom:4}}>
                   <div style={{padding:'5px 16px',fontSize:9,color:group.color,fontFamily:'monospace',fontWeight:700,letterSpacing:'0.1em'}}>{group.label}</div>
                   <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:7,padding:'0 12px 8px'}}>
-                    {group.issues.map(issue=>(
-                      <button key={issue.id} onClick={()=>openIssue(issue)}
-                        style={{padding:'12px 10px',borderRadius:9,background:'#0f1826',border:'1px solid rgba(255,255,255,0.07)',display:'flex',alignItems:'center',gap:9,cursor:'pointer',outline:'none',textAlign:'left'}}>
+                    {group.issues.map(issue=>{
+                      const alertActive = !!lastAlert || panelState === 'sent' || panelState === 'result' || panelState === 'resolving_loading'
+                      return (
+                      <button key={issue.id} onClick={()=>!alertActive&&openIssue(issue)} disabled={alertActive}
+                        style={{padding:'12px 10px',borderRadius:9,background:'#0f1826',border:'1px solid rgba(255,255,255,0.07)',display:'flex',alignItems:'center',gap:9,cursor:alertActive?'default':'pointer',outline:'none',textAlign:'left',opacity:alertActive?0.4:1}}>
                         <span style={{fontSize:20,flexShrink:0}}>{issue.icon}</span>
                         <span style={{fontSize:13,color:'#e8eaed',lineHeight:1.3}}>{issue.label}</span>
                       </button>
-                    ))}
+                      )
+                    })}
                   </div>
                 </div>
               ))}
@@ -1435,20 +1438,31 @@ export default function DriverApp() {
       )}
 
       {/* STICKY BAR */}
-      <div style={{position:'fixed',bottom:0,left:0,right:0,padding:'9px 12px 22px',background:'rgba(10,12,14,0.97)',borderTop:'1px solid rgba(255,255,255,0.06)',backdropFilter:'blur(10px)',zIndex:100,display:'grid',gridTemplateColumns:'5fr 3fr 3fr',gap:8}}>
-        <button onClick={()=>openIssue({id:'breakdown',label:'Breakdown',icon:'🚨',needsText:true,placeholder:'What happened?'})}
-          style={{padding:'13px',background:'#ef4444',border:'none',borderRadius:10,color:'#fff',fontWeight:700,fontSize:14,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:7}}>
-          🚨 BREAKDOWN
-        </button>
-        <button onClick={()=>openIssue({id:'medical',label:'Medical Emergency',icon:'🚑',needsText:false})}
-          style={{padding:'13px',background:'rgba(239,68,68,0.1)',border:'1px solid rgba(239,68,68,0.3)',borderRadius:10,color:'#ef4444',fontWeight:600,fontSize:11,cursor:'pointer',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:2}}>
-          <span style={{fontSize:18}}>🚑</span><span>Medical</span>
-        </button>
-        <button onClick={()=>openIssue({id:'cant_complete',label:"Can't Complete",icon:'⛔',needsText:true,placeholder:"Reason — e.g. hours up"})}
-          style={{padding:'13px',background:'rgba(239,68,68,0.06)',border:'1px solid rgba(239,68,68,0.2)',borderRadius:10,color:'#ef4444',fontWeight:600,fontSize:11,cursor:'pointer',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:2}}>
-          <span style={{fontSize:18}}>⛔</span><span>Can't Complete</span>
-        </button>
-      </div>
+      {(() => {
+        const alertActive = !!lastAlert || panelState === 'sent' || panelState === 'result' || panelState === 'resolving_loading'
+        return (
+        <div style={{position:'fixed',bottom:0,left:0,right:0,padding:'9px 12px 22px',background:'rgba(10,12,14,0.97)',borderTop:'1px solid rgba(255,255,255,0.06)',backdropFilter:'blur(10px)',zIndex:100,display:'grid',gridTemplateColumns:'5fr 3fr 3fr',gap:8}}>
+          {alertActive ? (
+            <div style={{padding:'13px',background:'rgba(239,68,68,0.08)',border:'1px solid rgba(239,68,68,0.2)',borderRadius:10,color:'#ef4444',fontWeight:600,fontSize:12,display:'flex',alignItems:'center',justifyContent:'center',gridColumn:'1 / -1',gap:6}}>
+              ⚠ Alert already active — resolve current issue first
+            </div>
+          ) : (<>
+            <button onClick={()=>openIssue({id:'breakdown',label:'Breakdown',icon:'🚨',needsText:true,placeholder:'What happened?'})}
+              style={{padding:'13px',background:'#ef4444',border:'none',borderRadius:10,color:'#fff',fontWeight:700,fontSize:14,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:7}}>
+              🚨 BREAKDOWN
+            </button>
+            <button onClick={()=>openIssue({id:'medical',label:'Medical Emergency',icon:'🚑',needsText:false})}
+              style={{padding:'13px',background:'rgba(239,68,68,0.1)',border:'1px solid rgba(239,68,68,0.3)',borderRadius:10,color:'#ef4444',fontWeight:600,fontSize:11,cursor:'pointer',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:2}}>
+              <span style={{fontSize:18}}>🚑</span><span>Medical</span>
+            </button>
+            <button onClick={()=>openIssue({id:'cant_complete',label:"Can't Complete",icon:'⛔',needsText:true,placeholder:"Reason — e.g. hours up"})}
+              style={{padding:'13px',background:'rgba(239,68,68,0.06)',border:'1px solid rgba(239,68,68,0.2)',borderRadius:10,color:'#ef4444',fontWeight:600,fontSize:11,cursor:'pointer',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:2}}>
+              <span style={{fontSize:18}}>⛔</span><span>Can't Complete</span>
+            </button>
+          </>)}
+        </div>
+        )
+      })()}
 
       {/* ISSUE PANEL */}
       {panelOpen&&(
