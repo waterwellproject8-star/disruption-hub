@@ -775,7 +775,6 @@ export default function DriverApp() {
     try { localStorage.setItem('dh_last_shift_summary', JSON.stringify({ ...summary, savedAt: end.toISOString(), vehicleReg: driverInfo.vehicleReg, driverName: driverInfo.name })) } catch {}
     setShiftEnded(true); setShowPostShift(false)
     // Mark driver_progress completed in Supabase — clean exit, no stale data
-    console.log('END SHIFT DEBUG:', JSON.stringify({ vehicleReg: driverInfo.vehicleReg, phone: driverInfo.phone, clientId: driverInfo.clientId }))
     if (driverInfo.vehicleReg || driverInfo.phone) {
       fetch('/api/driver/end-shift', {
         method: 'POST',
