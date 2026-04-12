@@ -1067,6 +1067,7 @@ export default function DashboardPage() {
   const [commandRightTab, setCommandRightTab] = useState('incidents') // 'incidents' | 'value'
   const [pendingApprovals, setPendingApprovals] = useState([])
   const [dashToast, setDashToast] = useState(null)
+  const [emailPickerMailto, setEmailPickerMailto] = useState(null)
   const [moduleRunning, setModuleRunning] = useState(null)
   const [moduleResult, setModuleResult] = useState(null)
   const [activeModuleName, setActiveModuleName] = useState(null)
@@ -1455,7 +1456,7 @@ export default function DashboardPage() {
 
   async function fireAction(actionId, actionLabel, actionType, mailto) {
     setActionStates(prev => ({ ...prev, [actionId]: 'firing' }))
-    if (mailto) window.open(mailto, '_blank')
+    if (mailto) setEmailPickerMailto(mailto)
     await new Promise(r => setTimeout(r, 1200))
     setActionStates(prev => ({ ...prev, [actionId]: 'done' }))
 
@@ -1729,6 +1730,32 @@ export default function DashboardPage() {
   return (
     <div style={{ minHeight:'100vh', display:'flex', flexDirection:'column', fontFamily:'Barlow, sans-serif', background:'#080c14', color:'#e8eaed' }}>
       {dashToast && <div style={{position:'fixed',top:16,left:'50%',transform:'translateX(-50%)',padding:'10px 20px',borderRadius:8,background:dashToast.type==='error'?'rgba(239,68,68,0.95)':'rgba(245,166,35,0.95)',color:'#fff',fontSize:13,fontWeight:600,zIndex:9999,boxShadow:'0 4px 12px rgba(0,0,0,0.3)'}}>{dashToast.msg}</div>}
+      {emailPickerMailto && (() => {
+        const params = new URL(emailPickerMailto.replace('mailto:?','https://x.com/?'))
+        const subject = decodeURIComponent(params.searchParams.get('subject') || '')
+        const body = decodeURIComponent(params.searchParams.get('body') || '')
+        return (
+          <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.8)',zIndex:9998,display:'flex',alignItems:'center',justifyContent:'center',padding:24}} onClick={()=>setEmailPickerMailto(null)}>
+            <div style={{width:'100%',maxWidth:380,background:'#0f1826',borderRadius:14,padding:24,border:'1px solid rgba(245,166,35,0.2)',boxShadow:'0 8px 32px rgba(0,0,0,0.5)'}} onClick={e=>e.stopPropagation()}>
+              <div style={{fontSize:16,fontWeight:700,color:'#e8eaed',marginBottom:4}}>Send dispute email</div>
+              <div style={{fontSize:12,color:'#4a5260',marginBottom:18}}>{subject}</div>
+              <button onClick={()=>{window.open(`https://mail.google.com/mail/?view=cm&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`,'_blank');setEmailPickerMailto(null)}}
+                style={{width:'100%',padding:13,background:'rgba(245,166,35,0.08)',border:'1px solid rgba(245,166,35,0.25)',borderRadius:10,color:'#f5a623',fontSize:14,fontWeight:600,cursor:'pointer',marginBottom:8,textAlign:'left'}}>
+                📧 Open in Gmail
+              </button>
+              <button onClick={()=>{window.location.href=emailPickerMailto;setEmailPickerMailto(null)}}
+                style={{width:'100%',padding:13,background:'rgba(245,166,35,0.08)',border:'1px solid rgba(245,166,35,0.25)',borderRadius:10,color:'#f5a623',fontSize:14,fontWeight:600,cursor:'pointer',marginBottom:8,textAlign:'left'}}>
+                ✉ Open in Apple Mail
+              </button>
+              <button onClick={async()=>{try{await navigator.clipboard.writeText(`Subject: ${subject}\n\n${body}`);showDashToast('Copied to clipboard')}catch{showDashToast('Copy failed','error')};setEmailPickerMailto(null)}}
+                style={{width:'100%',padding:13,background:'rgba(245,166,35,0.08)',border:'1px solid rgba(245,166,35,0.25)',borderRadius:10,color:'#f5a623',fontSize:14,fontWeight:600,cursor:'pointer',marginBottom:8,textAlign:'left'}}>
+                📋 Copy to clipboard
+              </button>
+              <button onClick={()=>setEmailPickerMailto(null)} style={{width:'100%',padding:10,background:'transparent',border:'none',color:'#4a5260',fontSize:12,cursor:'pointer',marginTop:4}}>Cancel</button>
+            </div>
+          </div>
+        )
+      })()}
       <style>{`
         @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
         @keyframes spin{to{transform:rotate(360deg)}}
