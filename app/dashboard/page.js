@@ -2125,8 +2125,8 @@ export default function DashboardPage() {
                   onDragOver={e => { e.preventDefault(); e.stopPropagation() }}
                   onDragEnter={e => { e.preventDefault(); e.stopPropagation(); setCsvDragActive(true) }}
                   onDragLeave={e => { e.preventDefault(); e.stopPropagation(); setCsvDragActive(false) }}
-                  onDrop={e => { e.preventDefault(); e.stopPropagation(); setCsvDragActive(false); const f=e.dataTransfer?.files?.[0]; console.log('CSV DROP:', f?.name, f?.size, f?.type); if(f) { const r=new FileReader(); r.onload=ev=>setCsvRows(parseCsv(ev.target.result)); r.readAsText(f) } }}>
-                  <input id="csv-upload" type="file" accept=".csv,.txt,text/csv,text/plain" style={{ display:'none' }} onChange={e => { const f=e.target.files?.[0]; console.log('CSV SELECT:', f?.name, f?.size, f?.type); if(f) { const r=new FileReader(); r.onload=ev=>setCsvRows(parseCsv(ev.target.result)); r.readAsText(f) } }} />
+                  onDrop={e => { e.preventDefault(); e.stopPropagation(); setCsvDragActive(false); const f=e.dataTransfer?.files?.[0]; console.log('CSV DROP:', f?.name, f?.size, f?.type); if(f) { const r=new FileReader(); r.onload=ev=>{const parsed=parseCsv(ev.target.result);console.log('CSV PARSED:',parsed.length,'rows',parsed.slice(0,2));setCsvRows(parsed)}; r.readAsText(f) } }}>
+                  <input id="csv-upload" type="file" accept=".csv,.txt,text/csv,text/plain" style={{ display:'none' }} onChange={e => { const f=e.target.files?.[0]; console.log('CSV SELECT:', f?.name, f?.size, f?.type); if(f) { const r=new FileReader(); r.onload=ev=>{const parsed=parseCsv(ev.target.result);console.log('CSV PARSED:',parsed.length,'rows',parsed.slice(0,2));setCsvRows(parsed)}; r.readAsText(f) } }} />
                   <div style={{ fontSize:13, color:'#8a9099' }}>Drop a CSV here or click to browse</div>
                   <div style={{ fontSize:10, color:'#4a5260', marginTop:4 }}>Columns: carrier, invoice_ref, invoice_date, job_ref, description, charged, agreed_rate</div>
                 </div>
