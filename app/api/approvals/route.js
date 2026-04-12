@@ -28,14 +28,15 @@ async function sendSMS(to, body) {
   }
 }
 
-async function makeCall(to, twimlMessage) {
+async function makeCall(to, twimlMessage, rawTwiml) {
   const sid   = process.env.TWILIO_ACCOUNT_SID
   const token = process.env.TWILIO_AUTH_TOKEN
   const from  = process.env.TWILIO_PHONE_NUMBER
   if (!sid || !token || !from || sid.includes('placeholder') || sid.startsWith('AC_')) {
-    return { success: false, simulated: true }
+    console.log('[Twilio Voice - not configured] To:', to)
+    return { success: false, reason: 'not_configured', simulated: true }
   }
-  const twiml = `<?xml version="1.0" encoding="UTF-8"?><Response><Pause length="1"/><Say voice="alice" language="en-GB">${twimlMessage}</Say><Pause length="1"/><Say voice="alice" language="en-GB">I will repeat that.</Say><Pause length="1"/><Say voice="alice" language="en-GB">${twimlMessage}</Say><Pause length="1"/><Say voice="alice" language="en-GB">End of message from DisruptionHub.</Say></Response>`
+  const twiml = rawTwiml || `<?xml version="1.0" encoding="UTF-8"?><Response><Pause length="1"/><Say voice="Polly.Amy" language="en-GB">${twimlMessage}</Say><Pause length="1"/><Say voice="Polly.Amy" language="en-GB">I will repeat that.</Say><Pause length="1"/><Say voice="Polly.Amy" language="en-GB">${twimlMessage}</Say></Response>`
   try {
     const res = await fetch(
       `https://api.twilio.com/2010-04-01/Accounts/${sid}/Calls.json`,
@@ -261,6 +262,68 @@ export async function POST(request) {
         return Response.json({ success: true, action: 'executed', driver_notified: result.success, phase: 2 })
       }
       return Response.json({ success: true, action: 'executed', driver_notified: false, note: 'No driver phone on file' })
+    }
+
+    // ── CONSIGNEE DELAY ALERT — one-way notification call ──────────────
+    if (['call', 'emergency', 'make_call'].includes(actionType) && details.call_type === 'consignee_delay_alert') {
+      let rawConsigneePhone = details.consignee_phone || null
+      if (!rawConsigneePhone && details.consignee_name && client?.system_prompt) {
+        for (const line of client.system_prompt.split('\n')) {
+          if (line.toLowerCase().includes(details.consignee_name.toLowerCase())) {
+            rawConsigneePhone = extractPhoneNumber(line)
+            if (rawConsigneePhone) break
+          }
+        }
+      }
+      if (!rawConsigneePhone && client?.system_prompt) {
+        rawConsigneePhone = extractPhoneNumber(client.system_prompt)
+      }
+      if (rawConsigneePhone) {
+        const spokenReg = details.vehicle_reg ? details.vehicle_reg.replace(/\s/g, '').split('').join(', ') : null
+        const spellOut = s => s ? s.replace(/[^a-zA-Z0-9]/g, '').split('').join(', ') : ''
+        const contactName = client?.contact_name || 'your supplier'
+        const parts = [`Hello. This is an automated delivery update from ${contactName}.`]
+        if (details.consignee_name) parts.push(`This message is for the goods in team at ${details.consignee_name}.`)
+        parts.push(spokenReg
+          ? `Vehicle ${spokenReg} is running approximately ${details.delay_minutes || 'some'} minutes late.`
+          : `Your scheduled delivery is running late.`)
+        if (details.revised_eta) parts.push(`Revised estimated arrival is ${details.revised_eta}.`)
+        if (details.delay_reason) parts.push(`Reason: ${String(details.delay_reason).substring(0, 120)}.`)
+        if (details.ref) parts.push(`Delivery reference: ${spellOut(details.ref)}.`)
+        parts.push(`No action is required from you. Thank you.`)
+
+        const safe = parts.join(' ').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
+        const twiml = `<?xml version="1.0" encoding="UTF-8"?><Response><Say voice="Polly.Amy" language="en-GB">${safe}</Say><Pause length="1"/><Say voice="Polly.Amy" language="en-GB">I will repeat that message.</Say><Pause length="1"/><Say voice="Polly.Amy" language="en-GB">${safe}</Say></Response>`
+        const callResult = await makeCall(rawConsigneePhone, null, twiml)
+
+        if (details.vehicle_reg) {
+          try {
+            await db.from('driver_progress').update({
+              alert: `OPS_MSG: Consignee ${details.consignee_name || ''} being notified of delay`,
+              updated_at: new Date().toISOString()
+            }).eq('vehicle_reg', details.vehicle_reg.trim())
+          } catch {}
+        }
+
+        const driverPhone = await resolveDriverPhone()
+        if (driverPhone) {
+          await sendSMS(driverPhone, `DisruptionHub OPS${details.ref ? ` — ${details.ref}` : ''}\n\nOps approved. ${details.consignee_name || 'Consignee'} being called automatically.\nContinue to destination.`).catch(() => {})
+        }
+
+        return Response.json({
+          success: true, action: 'executed',
+          call_result: callResult.success ? 'placed' : callResult.simulated ? 'simulated' : 'failed',
+          consignee: details.consignee_name || rawConsigneePhone,
+          driver_notified: !!driverPhone,
+          phase: 3
+        })
+      }
+      // No consignee phone — notify driver, ops calls manually
+      const driverPhone = await resolveDriverPhone()
+      if (driverPhone) {
+        await sendSMS(driverPhone, `DisruptionHub OPS${details.ref ? ` — ${details.ref}` : ''}\n\nOps approved delay notification. No consignee phone on file — ops will call directly.\nContinue to destination.`).catch(() => {})
+      }
+      return Response.json({ success: true, action: 'executed', driver_notified: !!driverPhone, note: `No consignee phone for ${details.consignee_name || 'this delivery'} — call manually` })
     }
 
     // ── CALL / EMERGENCY / MAKE_CALL — Phase 3 voice call to carrier ────

@@ -274,6 +274,48 @@ Provide immediate disruption analysis and action plan.`
           escalation_at: new Date(Date.now() + 15 * 60 * 1000).toISOString()
         })
         if (approvalErr) console.error('approval insert:', approvalErr.message, approvalErr.code)
+
+        // Create second approval for consignee delay notification
+        // Sits as a pending card in COMMAND tab — ops fires it after handling recovery
+        if (severity === 'CRITICAL' || severity === 'HIGH') {
+          let consigneeName = null
+          let consigneePhone = null
+          if (ref) {
+            try {
+              const { data: shipment } = await db.from('shipments')
+                .select('consignee, consignee_phone')
+                .eq('client_id', client_id)
+                .eq('ref', ref)
+                .maybeSingle()
+              if (shipment) {
+                consigneeName = shipment.consignee || null
+                consigneePhone = shipment.consignee_phone || null
+              }
+            } catch {}
+          }
+          const { error: consigneeErr } = await db.from('approvals').insert({
+            client_id,
+            action_type: 'call',
+            action_label: `Notify ${consigneeName || 'consignee'} of delay — automated call`,
+            action_details: {
+              vehicle_reg,
+              ref: ref || 'DRIVER-ALERT',
+              driver_name: driver_name || null,
+              driver_phone: driver_phone || null,
+              call_type: 'consignee_delay_alert',
+              consignee_name: consigneeName,
+              consignee_phone: consigneePhone,
+              delay_reason: human_description || issueContext || null,
+              delay_minutes: null,
+              source: 'driver_alert',
+              severity
+            },
+            financial_value: 0,
+            status: 'pending',
+            escalation_at: new Date(Date.now() + 20 * 60 * 1000).toISOString()
+          })
+          if (consigneeErr) console.error('consignee approval insert:', consigneeErr.message, consigneeErr.code)
+        }
       }
 
       // Pre-shift defect — action_type is 'sms' so YES sends instruction to driver
