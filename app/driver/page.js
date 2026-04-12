@@ -503,6 +503,7 @@ export default function DriverApp() {
 
   async function resolveIssue(reason) {
     setPanelState('resolving_loading')
+    await new Promise(r => setTimeout(r, 3000))
     const job = activeJob
     try {
       const res = await fetch('/api/driver/resolve',{method:'POST',headers:{'Content-Type':'application/json'},
@@ -605,7 +606,8 @@ export default function DriverApp() {
     }).catch(()=>{})
 
     if (emergencyIds.includes(panelIssue?.id)) {
-      setOpsAcknowledged(false) // Reset for this new incident
+      setOpsAcknowledged(false)
+      setEscalationTimer(prev => { if (prev) clearTimeout(prev); return null })
       const timer = setTimeout(()=>{
         setOpsAcknowledged(prev => {
           if (!prev) showToast('⚠ Ops not yet responded — try calling directly','error')
@@ -790,9 +792,12 @@ export default function DriverApp() {
           defects_flagged: false,
           defect_details: null
         })
+      }).then(res => {
+        if (res.ok) ['dh_shift_started','dh_shift_started_at','dh_last_alert','dh_job_progress'].forEach(k=>localStorage.removeItem(k))
       }).catch(() => {})
+    } else {
+      ['dh_shift_started','dh_shift_started_at','dh_last_alert','dh_job_progress'].forEach(k=>localStorage.removeItem(k))
     }
-    ;['dh_shift_started','dh_shift_started_at','dh_last_alert','dh_job_progress'].forEach(k=>localStorage.removeItem(k))
   }
 
   function preShift() {

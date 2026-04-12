@@ -143,8 +143,8 @@ export async function POST(request) {
 
     if (!approval) return Response.json({ error: 'Approval not found' }, { status: 404 })
 
-    if (approval.status === 'executed') {
-      return Response.json({ success: true, action: 'already_executed' })
+    if (approval.status === 'executed' || approval.status === 'resolved' || approval.status === 'expired') {
+      return Response.json({ success: true, action: 'already_handled' })
     }
 
     // 4-hour expiry check (matches SMS webhook behaviour)
