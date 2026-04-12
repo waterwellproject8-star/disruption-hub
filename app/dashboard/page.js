@@ -1051,6 +1051,8 @@ function ScenarioResult({ result }) {
 }
 
 // ── MAIN DASHBOARD ─────────────────────────────────────────────────────────
+const ACTIVE_CLIENT_ID = process.env.NEXT_PUBLIC_CLIENT_ID || 'pearson-haulage'
+
 export default function DashboardPage() {
   const [unlocked, setUnlocked] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -1163,11 +1165,11 @@ export default function DashboardPage() {
   }, [unlocked])
 
   useEffect(() => {
-    fetch('/api/shipments?client_id=pearson-haulage')
+    fetch(`/api/shipments?client_id=${ACTIVE_CLIENT_ID}`)
       .then(r => r.json())
       .then(data => { if (data.shipments?.length > 0) setLiveShipments(data.shipments) })
       .catch(() => {})
-    fetch('/api/modules/latest?client_id=pearson-haulage', { headers: { 'x-dh-key': process.env.NEXT_PUBLIC_DH_KEY } })
+    fetch(`/api/modules/latest?client_id=${ACTIVE_CLIENT_ID}`, { headers: { 'x-dh-key': process.env.NEXT_PUBLIC_DH_KEY } })
       .then(r => r.json())
       .then(data => { if (data.latest) setLatestRuns(data.latest) })
       .catch(() => {})
@@ -1181,7 +1183,7 @@ export default function DashboardPage() {
 
   async function loadApprovals() {
     try {
-      const res = await fetch('/api/approvals?client_id=pearson-haulage')
+      const res = await fetch(`/api/approvals?client_id=${ACTIVE_CLIENT_ID}`)
       if (!res.ok) return
       const data = await res.json()
       setPendingApprovals(data.approvals || [])
@@ -1190,7 +1192,7 @@ export default function DashboardPage() {
 
   async function loadShipments() {
     try {
-      const res = await fetch('/api/shipments?client_id=pearson-haulage')
+      const res = await fetch(`/api/shipments?client_id=${ACTIVE_CLIENT_ID}`)
       if (!res.ok) return
       const data = await res.json()
       if (data.shipments?.length > 0) setLiveShipments(data.shipments)
@@ -1252,7 +1254,7 @@ export default function DashboardPage() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            client_id: 'pearson-haulage',
+            client_id: ACTIVE_CLIENT_ID,
             user_input: newMessages[newMessages.length-1]?.content || '',
             ai_response: full,
             severity: sev,
@@ -1267,7 +1269,7 @@ export default function DashboardPage() {
 
   async function loadInvoices() {
     try {
-      const res = await fetch('/api/invoices?client_id=pearson-haulage')
+      const res = await fetch(`/api/invoices?client_id=${ACTIVE_CLIENT_ID}`)
       if (!res.ok) return
       const data = await res.json()
       setInvoices(data.invoices || [])
@@ -1535,7 +1537,7 @@ export default function DashboardPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           id: actionId,
-          client_id: 'pearson-haulage',
+          client_id: ACTIVE_CLIENT_ID,
           action_type: actionType,
           action_label: actionLabel,
           status: 'executed',
@@ -1568,7 +1570,7 @@ export default function DashboardPage() {
   async function loadWebhookLog() {
     setWhLogLoading(true)
     try {
-      const res = await fetch('/api/webhooks/inbound?client_id=pearson-haulage&limit=30', { headers: { 'x-dh-key': process.env.NEXT_PUBLIC_DH_KEY } })
+      const res = await fetch(`/api/webhooks/inbound?client_id=${ACTIVE_CLIENT_ID}&limit=30`, { headers: { 'x-dh-key': process.env.NEXT_PUBLIC_DH_KEY } })
       if (!res.ok) return
       const data = await res.json()
       setWhLog(data.logs || [])
@@ -1584,7 +1586,7 @@ export default function DashboardPage() {
   async function loadActiveDrivers() {
     setActiveDriversLoading(true)
     try {
-      const res = await fetch('/api/driver/active?client_id=pearson-haulage')
+      const res = await fetch(`/api/driver/active?client_id=${ACTIVE_CLIENT_ID}`)
       if (!res.ok) return
       const data = await res.json()
       setActiveDrivers(data.drivers || [])
@@ -1594,7 +1596,7 @@ export default function DashboardPage() {
 
   async function loadFleet() {
     try {
-      const res = await fetch('/api/driver/cancel-job?client_id=pearson-haulage')
+      const res = await fetch(`/api/driver/cancel-job?client_id=${ACTIVE_CLIENT_ID}`)
       if (!res.ok) return
       const data = await res.json()
       setFleet(data.fleet || [])
@@ -1609,7 +1611,7 @@ export default function DashboardPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          client_id: 'pearson-haulage',
+          client_id: ACTIVE_CLIENT_ID,
           ref,
           reassign_to: toVehicle,
           reassign_only: true,
@@ -1631,7 +1633,7 @@ export default function DashboardPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          client_id: 'pearson-haulage',
+          client_id: ACTIVE_CLIENT_ID,
           vehicle_reg,
           ref: ref || undefined,
           cancel_all: cancel_all || false,
@@ -1739,7 +1741,7 @@ export default function DashboardPage() {
           system: whSystem,
           event_type: whEvent,
           payload: getWhPayload(),
-          client_id: 'pearson-haulage'
+          client_id: ACTIVE_CLIENT_ID
         })
       })
       const data = await res.json()
@@ -1760,7 +1762,7 @@ export default function DashboardPage() {
     // so a fresh webhook fire works cleanly without logging out of driver app
     try {
       // Clear all approvals for this client
-      await fetch('/api/approvals/reset?client_id=pearson-haulage', { method: 'POST' })
+      await fetch(`/api/approvals/reset?client_id=${ACTIVE_CLIENT_ID}`, { method: 'POST' })
       // Reload dashboard state
       await Promise.all([loadApprovals(), loadWebhookLog(), loadActiveDrivers()])
       setWhResult(null)
@@ -2182,7 +2184,7 @@ export default function DashboardPage() {
                       <button onClick={async () => {
                         const grouped = groupCsvToInvoices(csvRows)
                         try {
-                          const res = await fetch('/api/invoices', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ client_id:'pearson-haulage', invoices:grouped }) })
+                          const res = await fetch('/api/invoices', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ client_id:ACTIVE_CLIENT_ID, invoices:grouped }) })
                           const data = await res.json()
                           if (data.success) { showDashToast(`${data.inserted} invoices uploaded`); setCsvRows(null); loadInvoices() }
                           else showDashToast(data.error || 'Upload failed', 'error')
@@ -2218,7 +2220,7 @@ export default function DashboardPage() {
                     if (!manualInv.carrier || !manualInv.invoice_ref) { showDashToast('Carrier and invoice ref required', 'error'); return }
                     const items = manualInv.line_items.map(li => ({ ...li, charged: Number(li.charged) || 0, agreed_rate: Number(li.agreed_rate) || 0, delta: Math.max(0, (Number(li.charged)||0) - (Number(li.agreed_rate)||0)) }))
                     try {
-                      const res = await fetch('/api/invoices', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ client_id:'pearson-haulage', carrier:manualInv.carrier, invoice_ref:manualInv.invoice_ref, invoice_date:manualInv.invoice_date||null, line_items:items, source:'manual' }) })
+                      const res = await fetch('/api/invoices', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ client_id:ACTIVE_CLIENT_ID, carrier:manualInv.carrier, invoice_ref:manualInv.invoice_ref, invoice_date:manualInv.invoice_date||null, line_items:items, source:'manual' }) })
                       const data = await res.json()
                       if (data.success) { showDashToast('Invoice added'); setManualInv({ carrier:'', invoice_ref:'', invoice_date:'', line_items:[{job_ref:'',description:'',charged:'',agreed_rate:''}] }); loadInvoices() }
                       else showDashToast(data.error || 'Failed', 'error')
