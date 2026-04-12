@@ -196,8 +196,11 @@ export async function POST(request) {
       }
     }
     const client = await getClientConfig(client_id)
-    const systemPrompt = client?.system_prompt || ''
-    const opsPhone = client?.contact_phone || null
+    if (!client) {
+      return Response.json({ error: 'Unknown client_id', client_id }, { status: 404 })
+    }
+    const systemPrompt = client.system_prompt || ''
+    const opsPhone = client.contact_phone || null
     const simulated = !opsPhone
 
     const confirmedFinancial = extractPayloadFinancial(payload)

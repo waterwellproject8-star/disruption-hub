@@ -70,7 +70,17 @@ export async function POST(request) {
         await db.from('approvals').update({ escalated_at: nowIso }).eq('id', approval.id)
 
         if (result?.success) summary.escalated++
-        else summary.errors.push({ id: approval.id, reason: result?.reason || 'sms_failed' })
+        else {
+          summary.errors.push({ id: approval.id, reason: result?.reason || 'sms_failed' })
+          await db.from('incidents').insert({
+            client_id: approval.client_id,
+            user_input: `Escalation SMS failed for approval ${approval.id} — secondary contact ${secondaryPhone} unreachable`,
+            ai_response: JSON.stringify(result || {}),
+            severity: 'LOW',
+            financial_impact: 0,
+            ref: `ESCALATION-FAIL-${approval.id.substring(0,8)}`
+          }).catch(() => {})
+        }
       } catch (e) {
         summary.errors.push({ id: approval.id, error: e.message })
       }

@@ -138,6 +138,24 @@ export async function POST(request) {
       }
     }
 
+    // Clean up orphaned approvals with null vehicle_reg (older than 1 hour)
+    if (client_id) {
+      const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString()
+      const { data: orphans } = await db.from('approvals')
+        .select('id, action_label')
+        .eq('client_id', client_id)
+        .eq('status', 'pending')
+        .is('action_details->>vehicle_reg', null)
+        .lt('created_at', oneHourAgo)
+
+      for (const a of (orphans || [])) {
+        const { error: orphanErr } = await db.from('approvals')
+          .update({ status: 'expired', action_label: `SHIFT ENDED — ${a.action_label}` })
+          .eq('id', a.id)
+        if (orphanErr) console.error('[end-shift] orphan expiry error:', orphanErr.message, orphanErr.code)
+      }
+    }
+
     // Notify ops if there were unresolved jobs at shift end
     if (client_id && unresolvedJobs.length > 0) {
       const refs = unresolvedJobs.map(j => j.ref).join(', ')
