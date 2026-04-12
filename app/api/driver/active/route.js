@@ -27,7 +27,7 @@ export async function GET(request) {
       .select('vehicle_reg, driver_name, driver_phone, status, alert, last_known_location, ref, updated_at')
       .not('status', 'eq', 'completed')
       .not('driver_phone', 'is', null)
-      .gt('shift_started_at', new Date(Date.now() - 16 * 60 * 60 * 1000).toISOString())
+      .gt('updated_at', new Date(Date.now() - 16 * 60 * 60 * 1000).toISOString())
       .order('updated_at', { ascending: false })
 
     if (error) {

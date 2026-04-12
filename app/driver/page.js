@@ -188,23 +188,6 @@ export default function DriverApp() {
           let lastAlertTime = null
           if (savedAlert) { try { lastAlertTime = JSON.parse(savedAlert).time } catch {} }
 
-          // Auto-expire: immediately mark Supabase driver_progress rows as completed
-          // Prevents ghost driver appearing in ops Live Fleet while stale session screen is shown
-          // Driver can still tap "Continue previous session" for overnight/trunking runs
-          const expiredInfo = (() => { try { return JSON.parse(saved) } catch { return null } })()
-          if (expiredInfo?.clientId) {
-            fetch('/api/driver/end-shift', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                client_id:    expiredInfo.clientId,
-                vehicle_reg:  expiredInfo.vehicleReg || null,
-                driver_phone: expiredInfo.phone || null,
-                reason: 'shift_expired_16h'
-              })
-            }).catch(() => {})
-          }
-
           setStaleSession({ startedAt: new Date(parseInt(shiftStartedAt)).toLocaleString('en-GB',{weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}), hoursAgo: Math.round(hoursAgo), lastAlertTime })
           setLoading(false); return
         }
