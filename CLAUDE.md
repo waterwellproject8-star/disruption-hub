@@ -272,7 +272,27 @@ Environment: copy needed variables from Section 5 into `.env.local` at the proje
 
 ---
 
-## 9. When In Doubt
+## 9. Change Rules (mandatory before every edit)
+
+1. **Before touching any file, read it fully first.** Do not edit code you have not read in this session.
+2. **Before pushing, mentally trace the complete flow end to end** for any feature you touched. If you changed how an approval is created, trace it through executeAction, SMS reply, and dashboard rendering.
+3. **Never change `action_type` values** without checking every place that action_type is handled downstream: `approvals/route.js` executeAction branches, `webhooks/sms/route.js` YES handler, `buildActionSMS` in `webhooks/inbound/route.js`, and `buildOpsSMS` in `driver/alert/route.js`.
+4. **Never add multi-action loops** without confirming that every downstream handler (executeAction, SMS route, dashboard render) can process each action type correctly. The multi-action commit `71172cf` broke the breakdown flow by forcing `action_type: 'emergency'` which triggered Twilio calls to the wrong number.
+5. **If a fix touches more than 2 files**, list every downstream impact before applying. State which flows are affected and confirm no regressions.
+
+---
+
+## 10. Testing Checklist (run mentally before every push)
+
+- **Driver breakdown flow:** alert → ops SMS → YES reply → OPS_MSG to driver → consignee card appears → YES → consignee call fires to correct phone with correct script
+- **Webhook flow:** inbound event → severity classification → approval created → ops SMS → YES → executeAction → correct action_type handler → correct phone number
+- **End of shift:** post-shift form → mileage mandatory → submit → end_of_shift_reports row in Supabase → driver_progress rows set to completed → localStorage cleared only after server confirms
+- **Approvals:** pending → execute → correct action_type handler fires (dispatch → SMS to driver, sms → SMS to driver, call+consignee_delay_alert → Polly.Amy call to consignee, call+carrier_alert → call to carrier)
+- **Phone numbers:** `extractCarrierPhone` prefers 0800 over 07; consignee phone comes from `action_details.consignee_phone` or system_prompt lookup; never call the ops manager's own number
+
+---
+
+## 11. When In Doubt
 
 - Read the file before changing it. Do not refactor code you have not read.
 - Do not add speculative features, logging, or abstractions beyond what the task asks.
