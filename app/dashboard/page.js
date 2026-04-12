@@ -1071,6 +1071,7 @@ export default function DashboardPage() {
   const [invoices, setInvoices] = useState([])
   const [csvRows, setCsvRows] = useState(null)
   const [csvDragActive, setCsvDragActive] = useState(false)
+  const dragCounter = useRef(0)
   const [manualInv, setManualInv] = useState({ carrier:'', invoice_ref:'', invoice_date:'', line_items:[{job_ref:'',description:'',charged:'',agreed_rate:''}] })
   const [moduleRunning, setModuleRunning] = useState(null)
   const [moduleResult, setModuleResult] = useState(null)
@@ -1272,13 +1273,19 @@ export default function DashboardPage() {
   }
 
   function parseCsv(text) {
-    const lines = text.trim().split('\n')
+    const lines = text.trim().split(/\r?\n/)
     if (lines.length < 2) return []
-    const headers = lines[0].split(',').map(h => h.trim().toLowerCase().replace(/\s+/g, '_'))
-    return lines.slice(1).map(line => {
+    const rawHeaders = lines[0].split(',').map(h => h.trim())
+    const headers = rawHeaders.map(h => h.toLowerCase().replace(/[^a-z0-9]/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, ''))
+    console.log('CSV HEADERS raw:', rawHeaders, 'normalised:', headers)
+    const aliasMap = { supplier:'carrier', carrier_name:'carrier', vendor:'carrier', inv_ref:'invoice_ref', invoice_number:'invoice_ref', invoice_no:'invoice_ref', ref:'invoice_ref', date:'invoice_date', inv_date:'invoice_date', amount:'charged', amount_charged:'charged', invoiced:'charged', rate:'agreed_rate', agreed:'agreed_rate', expected:'agreed_rate', contracted_rate:'agreed_rate', job:'job_ref', reference:'job_ref', desc:'description', item:'description' }
+    return lines.slice(1).filter(l => l.trim()).map(line => {
       const vals = line.split(',').map(v => v.trim())
       const obj = {}
-      headers.forEach((h, i) => { obj[h] = vals[i] || '' })
+      headers.forEach((h, i) => {
+        const key = aliasMap[h] || h
+        obj[key] = vals[i] || ''
+      })
       return obj
     }).filter(r => r.carrier || r.invoice_ref)
   }
@@ -2123,9 +2130,9 @@ export default function DashboardPage() {
                 <div style={{ padding:20, border:csvDragActive?'2px solid #f5a623':'2px dashed rgba(245,166,35,0.2)', borderRadius:12, textAlign:'center', cursor:'pointer', background:csvDragActive?'rgba(245,166,35,0.08)':'rgba(245,166,35,0.02)', transition:'all 0.15s' }}
                   onClick={() => document.getElementById('csv-upload')?.click()}
                   onDragOver={e => { e.preventDefault(); e.stopPropagation() }}
-                  onDragEnter={e => { e.preventDefault(); e.stopPropagation(); setCsvDragActive(true) }}
-                  onDragLeave={e => { e.preventDefault(); e.stopPropagation(); setCsvDragActive(false) }}
-                  onDrop={e => { e.preventDefault(); e.stopPropagation(); setCsvDragActive(false); const f=e.dataTransfer?.files?.[0]; console.log('CSV DROP:', f?.name, f?.size, f?.type); if(f) { const r=new FileReader(); r.onload=ev=>{const parsed=parseCsv(ev.target.result);console.log('CSV PARSED:',parsed.length,'rows',parsed.slice(0,2));setCsvRows(parsed)}; r.readAsText(f) } }}>
+                  onDragEnter={e => { e.preventDefault(); e.stopPropagation(); dragCounter.current++; setCsvDragActive(true) }}
+                  onDragLeave={e => { e.preventDefault(); e.stopPropagation(); dragCounter.current--; if (dragCounter.current <= 0) { dragCounter.current=0; setCsvDragActive(false) } }}
+                  onDrop={e => { e.preventDefault(); e.stopPropagation(); dragCounter.current=0; setCsvDragActive(false); const f=e.dataTransfer?.files?.[0]; console.log('CSV DROP:', f?.name, f?.size, f?.type); if(f) { const r=new FileReader(); r.onload=ev=>{const parsed=parseCsv(ev.target.result);console.log('CSV PARSED:',parsed.length,'rows',JSON.stringify(parsed.slice(0,2)));setCsvRows(parsed)}; r.readAsText(f) } }}>
                   <input id="csv-upload" type="file" accept=".csv,.txt,text/csv,text/plain" style={{ display:'none' }} onChange={e => { const f=e.target.files?.[0]; console.log('CSV SELECT:', f?.name, f?.size, f?.type); if(f) { const r=new FileReader(); r.onload=ev=>{const parsed=parseCsv(ev.target.result);console.log('CSV PARSED:',parsed.length,'rows',parsed.slice(0,2));setCsvRows(parsed)}; r.readAsText(f) } }} />
                   <div style={{ fontSize:13, color:'#8a9099' }}>Drop a CSV here or click to browse</div>
                   <div style={{ fontSize:10, color:'#4a5260', marginTop:4 }}>Columns: carrier, invoice_ref, invoice_date, job_ref, description, charged, agreed_rate</div>
