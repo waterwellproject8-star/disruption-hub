@@ -1060,7 +1060,7 @@ export default function DriverApp() {
         </button>
       </div>
     </div>
-  )
+  )}
 
   // ── SHIFT SUMMARY ─────────────────────────────────────────────────────────
   if (shiftEnded && shiftSummary) return (
