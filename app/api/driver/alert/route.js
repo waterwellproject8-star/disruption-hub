@@ -150,6 +150,24 @@ function detectActionType(issueType, firstAction) {
   return 'sms'
 }
 
+const extractDelayMinutes = (text) => {
+  const patterns = [
+    /(\d+)\s*(?:to\s*\d+)?\s*hours?/i,
+    /(\d+)\s*(?:to\s*\d+)?\s*(?:minutes?|mins?)/i,
+    /(\d+)hr/i
+  ]
+  for (const p of patterns) {
+    const m = text.match(p)
+    if (m) {
+      const n = parseInt(m[1])
+      if (n >= 1 && n <= 600) {
+        return /hour|hr/i.test(p.source) ? n * 60 : n
+      }
+    }
+  }
+  return 60
+}
+
 export async function POST(request) {
   try {
     const body = await request.json()
@@ -306,7 +324,7 @@ Provide immediate disruption analysis and action plan.`
               consignee_name: consigneeName,
               consignee_phone: consigneePhone,
               delay_reason: human_description || issueContext || null,
-              delay_minutes: (() => { const m = fullResponse.match(/(\d+)[\s-]*(?:to[\s-]*\d+)?[\s-]*(hour|minute|hr|min)/i); if (!m) return 60; const n = parseInt(m[1]); return /hour|hr/i.test(m[2]) ? n * 60 : n })(),
+              delay_minutes: extractDelayMinutes(fullResponse),
               source: 'driver_alert',
               severity
             },
