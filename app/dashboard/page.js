@@ -225,7 +225,7 @@ const WEBHOOK_SYSTEMS = {
 
 
 const TAB_STYLE = (active) => ({
-  padding: '6px 16px', borderRadius: 3, fontSize: 11, cursor: 'pointer',
+  padding: '6px 16px', borderRadius: 3, fontSize: 12, cursor: 'pointer',
   fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: '0.06em',
   fontWeight: active ? 700 : 500, textTransform: 'uppercase',
   border: active ? '1px solid #f5a623' : '1px solid rgba(255,255,255,0.08)',
@@ -378,7 +378,7 @@ function AgentResponse({ text }) {
         }
         items.push(
           <div key={k++} style={{display:'flex',gap:10,margin:'5px 0',padding:'10px 12px',background:'rgba(0,0,0,0.2)',borderRadius:6,border:'1px solid rgba(255,255,255,0.06)'}}>
-            <div style={{width:22,height:22,borderRadius:'50%',background:dotBg,color:dotText,display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,fontWeight:700,flexShrink:0,marginTop:1}}>{num}</div>
+            <div style={{width:22,height:22,borderRadius:'50%',background:dotBg,color:dotText,display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:700,flexShrink:0,marginTop:1}}>{num}</div>
             <div style={{fontSize:12,color:'#e8eaed',lineHeight:1.7,flex:1}} dangerouslySetInnerHTML={{__html:fmt(content)}}/>
           </div>
         )
@@ -448,7 +448,7 @@ function AgentResponse({ text }) {
 function MetricBadge({ label, value, color = '#f5a623', prefix = '' }) {
   return (
     <div style={{ padding:'6px 14px', borderRadius:6, background:`${color}10`, border:`1px solid ${color}25` }}>
-      <div style={{ fontSize:9, color:'#4a5260', fontFamily:'monospace', marginBottom:2 }}>{label}</div>
+      <div style={{ fontSize:11, color:'#4a5260', fontFamily:'monospace', marginBottom:2 }}>{label}</div>
       <div style={{ fontSize:14, fontWeight:700, color, fontFamily:'monospace' }}>{prefix}{typeof value === 'number' ? value.toLocaleString() : value}</div>
     </div>
   )
@@ -457,7 +457,7 @@ function MetricBadge({ label, value, color = '#f5a623', prefix = '' }) {
 function SectionBlock({ label, children, labelColor = '#4a5260' }) {
   return (
     <div style={{ padding:'12px 14px', borderBottom:'1px solid rgba(255,255,255,0.04)' }}>
-      <div style={{ fontSize:9, fontFamily:'monospace', color:labelColor, letterSpacing:'0.08em', marginBottom:8 }}>{label}</div>
+      <div style={{ fontSize:11, fontFamily:'monospace', color:labelColor, letterSpacing:'0.08em', marginBottom:8 }}>{label}</div>
       {children}
     </div>
   )
@@ -466,7 +466,7 @@ function SectionBlock({ label, children, labelColor = '#4a5260' }) {
 function ActionCard({ text, index, urgent }) {
   return (
     <div style={{ display:'flex', gap:10, marginBottom:6, padding:'8px 10px', background:'#0f1826', borderRadius:5, border: urgent ? '1px solid rgba(239,68,68,0.2)' : '1px solid rgba(255,255,255,0.06)' }}>
-      <div style={{ width:18, height:18, borderRadius:'50%', background: urgent ? '#ef4444' : '#f5a623', color:'#000', display:'flex', alignItems:'center', justifyContent:'center', fontSize:9, fontWeight:700, flexShrink:0, marginTop:1 }}>{index + 1}</div>
+      <div style={{ width:18, height:18, borderRadius:'50%', background: urgent ? '#ef4444' : '#f5a623', color:'#000', display:'flex', alignItems:'center', justifyContent:'center', fontSize:11, fontWeight:700, flexShrink:0, marginTop:1 }}>{index + 1}</div>
       <div style={{ fontSize:11, color:'#e8eaed', lineHeight:1.6 }}>{text}</div>
     </div>
   )
@@ -484,7 +484,7 @@ function KV({ k, v, valueColor = '#e8eaed' }) {
   if (v === null || v === undefined || v === '') return null
   return (
     <div style={{ display:'flex', gap:6, marginBottom:3, flexWrap:'wrap' }}>
-      <span style={{ fontSize:10, color:'#4a5260', fontFamily:'monospace', flexShrink:0 }}>{k.replace(/_/g,' ').toUpperCase()}:</span>
+      <span style={{ fontSize:11, color:'#4a5260', fontFamily:'monospace', flexShrink:0 }}>{k.replace(/_/g,' ').toUpperCase()}:</span>
       <span style={{ fontSize:11, color:valueColor }}>{String(v)}</span>
     </div>
   )
@@ -571,7 +571,7 @@ function ModuleResult({ result, moduleName }) {
                   <span style={{ fontSize:11, color:'#e8eaed', fontFamily:'monospace' }}>{d.invoice_ref} — {d.carrier}</span>
                   <span style={{ fontSize:12, color:'#f5a623', fontFamily:'monospace', fontWeight:700 }}>+£{(d.delta||0).toLocaleString()}</span>
                 </div>
-                <div style={{ fontSize:10, color:'#8a9099' }}>{d.issue_type?.replace(/_/g,' ').toUpperCase()}</div>
+                <div style={{ fontSize:11, color:'#8a9099' }}>{d.issue_type?.replace(/_/g,' ').toUpperCase()}</div>
                 <div style={{ fontSize:11, color:'#8a9099', marginTop:3 }}>{d.evidence}</div>
               </ItemCard>
             ))}
@@ -588,11 +588,11 @@ function ModuleResult({ result, moduleName }) {
                   <span style={{ fontSize:11, color: c.recommendation==='terminate'?'#ef4444':c.recommendation==='renegotiate'?'#f59e0b':'#f5a623', fontFamily:'monospace', fontWeight:700 }}>{c.recommendation?.toUpperCase()}</span>
                 </div>
                 <div style={{ display:'flex', gap:12, flexWrap:'wrap' }}>
-                  <span style={{ fontSize:10, color: c.on_time_rate < c.contract_threshold_otr ? '#ef4444' : '#8a9099' }}>OTR: {c.on_time_rate}% (min {c.contract_threshold_otr}%)</span>
-                  <span style={{ fontSize:10, color:'#8a9099' }}>Damage: {c.damage_rate}%</span>
-                  {c.sla_breach_cost > 0 && <span style={{ fontSize:10, color:'#f59e0b' }}>Breach cost: £{c.sla_breach_cost?.toLocaleString()}</span>}
+                  <span style={{ fontSize:11, color: c.on_time_rate < c.contract_threshold_otr ? '#ef4444' : '#8a9099' }}>OTR: {c.on_time_rate}% (min {c.contract_threshold_otr}%)</span>
+                  <span style={{ fontSize:11, color:'#8a9099' }}>Damage: {c.damage_rate}%</span>
+                  {c.sla_breach_cost > 0 && <span style={{ fontSize:11, color:'#f59e0b' }}>Breach cost: £{c.sla_breach_cost?.toLocaleString()}</span>}
                 </div>
-                <div style={{ fontSize:10, color:'#4a5260', marginTop:4 }}>{c.evidence_summary}</div>
+                <div style={{ fontSize:11, color:'#4a5260', marginTop:4 }}>{c.evidence_summary}</div>
               </ItemCard>
             ))}
           </SectionBlock>
@@ -605,11 +605,11 @@ function ModuleResult({ result, moduleName }) {
               <ItemCard key={i} bg={d.breach_risk||d.risk_level==='HIGH' ? 'rgba(239,68,68,0.05)' : 'rgba(245,158,11,0.04)'} border={d.breach_risk||d.risk_level==='HIGH' ? 'rgba(239,68,68,0.15)' : 'rgba(245,158,11,0.15)'}>
                 <div style={{ display:'flex', justifyContent:'space-between', marginBottom:4 }}>
                   <span style={{ fontSize:12, color:'#e8eaed', fontWeight:500 }}>{d.name} — {d.vehicle_reg || d.vehicle}</span>
-                  {d.risk_level && <span style={{ fontSize:10, color: d.risk_level==='HIGH'?'#ef4444':'#f59e0b', fontFamily:'monospace', fontWeight:700 }}>{d.risk_level}</span>}
+                  {d.risk_level && <span style={{ fontSize:11, color: d.risk_level==='HIGH'?'#ef4444':'#f59e0b', fontFamily:'monospace', fontWeight:700 }}>{d.risk_level}</span>}
                 </div>
                 <div style={{ fontSize:11, color:'#f59e0b' }}>{d.specific_instruction || d.recommended_interventions?.[0]}</div>
-                {d.signals?.map((s,si) => <div key={si} style={{ fontSize:10, color:'#4a5260', marginTop:2 }}>— {s}</div>)}
-                {d.breach_risk && <div style={{ fontSize:10, color:'#ef4444', marginTop:3 }}>Hours worked: {d.hours_worked} / {d.wtd_limit} limit · {d.remaining_hours}h remaining</div>}
+                {d.signals?.map((s,si) => <div key={si} style={{ fontSize:11, color:'#4a5260', marginTop:2 }}>— {s}</div>)}
+                {d.breach_risk && <div style={{ fontSize:11, color:'#ef4444', marginTop:3 }}>Hours worked: {d.hours_worked} / {d.wtd_limit} limit · {d.remaining_hours}h remaining</div>}
               </ItemCard>
             ))}
           </SectionBlock>
@@ -625,8 +625,8 @@ function ModuleResult({ result, moduleName }) {
                   <span style={{ fontSize:11, color:'#ef4444', fontFamily:'monospace' }}>{v.failure_probability}% failure risk</span>
                 </div>
                 <div style={{ fontSize:11, color:'#f59e0b', marginBottom:3 }}>{v.preventive_fix}</div>
-                <div style={{ fontSize:10, color:'#4a5260' }}>Breakdown cost if ignored: £{v.breakdown_cost?.toLocaleString()} · Preventive fix: £{v.preventive_cost?.toLocaleString()}</div>
-                <div style={{ fontSize:10, color:'#8a9099', marginTop:2 }}>Optimal slot: {v.optimal_service_slot}</div>
+                <div style={{ fontSize:11, color:'#4a5260' }}>Breakdown cost if ignored: £{v.breakdown_cost?.toLocaleString()} · Preventive fix: £{v.preventive_cost?.toLocaleString()}</div>
+                <div style={{ fontSize:11, color:'#8a9099', marginTop:2 }}>Optimal slot: {v.optimal_service_slot}</div>
               </ItemCard>
             ))}
           </SectionBlock>
@@ -641,7 +641,7 @@ function ModuleResult({ result, moduleName }) {
                   <span style={{ fontSize:12, color:'#e8eaed', fontWeight:500 }}>{d.ref} — {d.client}</span>
                   <span style={{ fontSize:11, color: d.breach_probability > 80 ? '#ef4444' : '#f59e0b', fontFamily:'monospace' }}>{d.breach_probability}% breach risk</span>
                 </div>
-                <div style={{ fontSize:10, color:'#8a9099' }}>SLA closes: {d.sla_window_closes} · Current ETA: {d.current_eta} · Penalty: £{d.penalty_if_breached?.toLocaleString()}</div>
+                <div style={{ fontSize:11, color:'#8a9099' }}>SLA closes: {d.sla_window_closes} · Current ETA: {d.current_eta} · Penalty: £{d.penalty_if_breached?.toLocaleString()}</div>
                 {d.reroute_saves_sla && <div style={{ fontSize:11, color:'#f5a623', marginTop:4 }}>✓ REROUTE AVAILABLE: {d.reroute_instruction}</div>}
                 {!d.reroute_saves_sla && <div style={{ fontSize:11, color:'#ef4444', marginTop:4 }}>{d.reroute_instruction}</div>}
               </ItemCard>
@@ -659,7 +659,7 @@ function ModuleResult({ result, moduleName }) {
                   <span style={{ fontSize:11, color:'#e8eaed' }}>{v.reg} — {v.driver}</span>
                   <span style={{ fontSize:11, color:'#f5a623', fontFamily:'monospace' }}>Save £{v.saving?.toFixed(2)}</span>
                 </div>
-                <div style={{ fontSize:10, color:'#8a9099', marginTop:2 }}>{v.current_level_pct}% fuel · {v.nearest_fuel_stop}</div>
+                <div style={{ fontSize:11, color:'#8a9099', marginTop:2 }}>{v.current_level_pct}% fuel · {v.nearest_fuel_stop}</div>
               </ItemCard>
             ))}
           </SectionBlock>
@@ -672,7 +672,7 @@ function ModuleResult({ result, moduleName }) {
               <ItemCard key={i} bg="rgba(239,68,68,0.07)" border="rgba(239,68,68,0.2)">
                 <div style={{ display:'flex', justifyContent:'space-between', marginBottom:4 }}>
                   <span style={{ fontSize:11, color:'#e8eaed', fontFamily:'monospace' }}>{f.job_ref} — {f.assigned_driver}</span>
-                  <span style={{ fontSize:10, color:'#ef4444', fontFamily:'monospace' }}>BLOCKED</span>
+                  <span style={{ fontSize:11, color:'#ef4444', fontFamily:'monospace' }}>BLOCKED</span>
                 </div>
                 <div style={{ fontSize:11, color:'#f59e0b' }}>{f.failure_reason?.replace(/_/g,' ').toUpperCase()}</div>
                 <div style={{ fontSize:11, color:'#8a9099', marginTop:3 }}>{f.resolution}</div>
@@ -687,7 +687,7 @@ function ModuleResult({ result, moduleName }) {
             {r.flags.map((f,i) => (
               <ItemCard key={i} bg="rgba(239,68,68,0.05)" border="rgba(239,68,68,0.15)">
                 <div style={{ fontSize:12, color:'#e8eaed', fontWeight:500, marginBottom:4 }}>{f.driver} — {f.vehicle}</div>
-                <div style={{ fontSize:10, color:'#ef4444', fontFamily:'monospace', marginBottom:6 }}>{f.action_required}</div>
+                <div style={{ fontSize:11, color:'#ef4444', fontFamily:'monospace', marginBottom:6 }}>{f.action_required}</div>
                 {f.issues?.map((iss,ii) => (
                   <div key={ii} style={{ fontSize:11, color: iss.severity==='CRITICAL'?'#ef4444':'#f59e0b', marginBottom:2 }}>— {iss.detail}</div>
                 ))}
@@ -703,11 +703,11 @@ function ModuleResult({ result, moduleName }) {
               <ItemCard key={i} bg={c.urgency==='IMMEDIATE'?'rgba(239,68,68,0.05)':'rgba(245,158,11,0.04)'} border={c.urgency==='IMMEDIATE'?'rgba(239,68,68,0.15)':'rgba(245,158,11,0.15)'}>
                 <div style={{ display:'flex', justifyContent:'space-between', marginBottom:4 }}>
                   <span style={{ fontSize:11, color:'#e8eaed', fontWeight:500 }}>{c.title}</span>
-                  <span style={{ fontSize:10, color: c.urgency==='IMMEDIATE'?'#ef4444':'#f59e0b', fontFamily:'monospace' }}>{c.urgency?.replace(/_/g,' ')}</span>
+                  <span style={{ fontSize:11, color: c.urgency==='IMMEDIATE'?'#ef4444':'#f59e0b', fontFamily:'monospace' }}>{c.urgency?.replace(/_/g,' ')}</span>
                 </div>
                 <div style={{ fontSize:11, color:'#8a9099', marginBottom:4 }}>{c.impact_description}</div>
                 <div style={{ fontSize:11, color:'#f5a623' }}>Action: {c.compliance_action}</div>
-                {c.penalty_if_ignored > 0 && <div style={{ fontSize:10, color:'#ef4444', marginTop:3 }}>Penalty if ignored: £{c.penalty_if_ignored?.toLocaleString()}</div>}
+                {c.penalty_if_ignored > 0 && <div style={{ fontSize:11, color:'#ef4444', marginTop:3 }}>Penalty if ignored: £{c.penalty_if_ignored?.toLocaleString()}</div>}
               </ItemCard>
             ))}
           </SectionBlock>
@@ -722,7 +722,7 @@ function ModuleResult({ result, moduleName }) {
                   <span style={{ fontSize:11, color:'#e8eaed', fontWeight:500, flex:1, marginRight:8 }}>{t.title}</span>
                   <span style={{ fontSize:11, color:'#a855f7', fontFamily:'monospace', flexShrink:0 }}>{t.win_probability}% win</span>
                 </div>
-                <div style={{ fontSize:10, color:'#8a9099', marginBottom:3 }}>{t.buyer} · Value: £{t.value?.toLocaleString()} · Deadline: {t.deadline_days} days</div>
+                <div style={{ fontSize:11, color:'#8a9099', marginBottom:3 }}>{t.buyer} · Value: £{t.value?.toLocaleString()} · Deadline: {t.deadline_days} days</div>
                 <div style={{ fontSize:11, color:'#8a9099' }}>{t.briefing}</div>
               </ItemCard>
             ))}
@@ -738,7 +738,7 @@ function ModuleResult({ result, moduleName }) {
                   <span style={{ fontSize:11, color:'#e8eaed', fontWeight:500 }}>{o.route_a} + {o.route_b}</span>
                   <span style={{ fontSize:11, color:'#f5a623', fontFamily:'monospace' }}>Save £{o.total_saving?.toLocaleString()}</span>
                 </div>
-                <div style={{ fontSize:10, color:'#8a9099', marginBottom:3 }}>{o.feasibility} · {o.vehicles_saved} vehicle saved · {o.combined_utilisation_pct}% utilisation</div>
+                <div style={{ fontSize:11, color:'#8a9099', marginBottom:3 }}>{o.feasibility} · {o.vehicles_saved} vehicle saved · {o.combined_utilisation_pct}% utilisation</div>
                 <div style={{ fontSize:11, color:'#8a9099' }}>{o.new_schedule}</div>
               </ItemCard>
             ))}
@@ -753,9 +753,9 @@ function ModuleResult({ result, moduleName }) {
               <ItemCard key={i} bg={l.status==='underpriced'?'rgba(239,68,68,0.04)':'rgba(245,166,35,0.03)'}>
                 <div style={{ display:'flex', justifyContent:'space-between', marginBottom:3 }}>
                   <span style={{ fontSize:11, color:'#e8eaed', fontWeight:500 }}>{l.lane}</span>
-                  <span style={{ fontSize:10, color: l.status==='underpriced'?'#ef4444':'#f5a623', fontFamily:'monospace' }}>{l.status?.toUpperCase()}</span>
+                  <span style={{ fontSize:11, color: l.status==='underpriced'?'#ef4444':'#f5a623', fontFamily:'monospace' }}>{l.status?.toUpperCase()}</span>
                 </div>
-                <div style={{ fontSize:10, color:'#8a9099' }}>Current: £{l.current_rate_per_mile}/mi · Market: £{l.market_rate_per_mile}/mi · Gap: £{l.annual_revenue_gap?.toLocaleString()}/yr</div>
+                <div style={{ fontSize:11, color:'#8a9099' }}>Current: £{l.current_rate_per_mile}/mi · Market: £{l.market_rate_per_mile}/mi · Gap: £{l.annual_revenue_gap?.toLocaleString()}/yr</div>
               </ItemCard>
             ))}
           </SectionBlock>
@@ -770,8 +770,8 @@ function ModuleResult({ result, moduleName }) {
                   <span style={{ fontSize:11, color:'#e8eaed', fontWeight:500 }}>{f.week}</span>
                   <span style={{ fontSize:11, color: f.capacity_gap > 0 ? '#ef4444' : '#f5a623', fontFamily:'monospace' }}>{f.capacity_gap > 0 ? `${f.capacity_gap} jobs over capacity` : 'Within capacity'}</span>
                 </div>
-                {f.preparation_actions?.map((a,ai) => <div key={ai} style={{ fontSize:10, color:'#8a9099', marginBottom:1 }}>— {a}</div>)}
-                {f.saving_by_planning > 0 && <div style={{ fontSize:10, color:'#f5a623', marginTop:3 }}>Plan now and save: £{f.saving_by_planning?.toLocaleString()}</div>}
+                {f.preparation_actions?.map((a,ai) => <div key={ai} style={{ fontSize:11, color:'#8a9099', marginBottom:1 }}>— {a}</div>)}
+                {f.saving_by_planning > 0 && <div style={{ fontSize:11, color:'#f5a623', marginTop:3 }}>Plan now and save: £{f.saving_by_planning?.toLocaleString()}</div>}
               </ItemCard>
             ))}
           </SectionBlock>
@@ -781,7 +781,7 @@ function ModuleResult({ result, moduleName }) {
         {r.annual_report?.narrative && (
           <SectionBlock label="ESG SUMMARY">
             <div style={{ fontSize:12, color:'#8a9099', lineHeight:1.7, marginBottom:8 }}>{r.annual_report.narrative}</div>
-            <div style={{ fontSize:10, color:'#4a5260' }}>Methodology: {r.annual_report.methodology}</div>
+            <div style={{ fontSize:11, color:'#4a5260' }}>Methodology: {r.annual_report.methodology}</div>
           </SectionBlock>
         )}
         {r.optimisation_opportunities?.length > 0 && (
@@ -789,7 +789,7 @@ function ModuleResult({ result, moduleName }) {
             {r.optimisation_opportunities.map((o,i) => (
               <ItemCard key={i}>
                 <div style={{ fontSize:11, color:'#e8eaed', marginBottom:3 }}>{o.description}</div>
-                <div style={{ fontSize:10, color:'#f5a623' }}>-{o.emission_reduction_pct}% emissions · Save £{o.cost_saving?.toLocaleString()}/yr</div>
+                <div style={{ fontSize:11, color:'#f5a623' }}>-{o.emission_reduction_pct}% emissions · Save £{o.cost_saving?.toLocaleString()}/yr</div>
               </ItemCard>
             ))}
           </SectionBlock>
@@ -815,28 +815,28 @@ function ModuleResult({ result, moduleName }) {
               <ItemCard key={i} bg={f.urgency==='IMMEDIATE'?'rgba(239,68,68,0.07)':'rgba(245,158,11,0.05)'} border={f.urgency==='IMMEDIATE'?'rgba(239,68,68,0.2)':'rgba(245,158,11,0.2)'}>
                 <div style={{ display:'flex', justifyContent:'space-between', marginBottom:4 }}>
                   <span style={{ fontSize:12, color:'#e8eaed', fontWeight:500 }}>{f.vehicle_reg} — {f.driver}</span>
-                  <span style={{ fontSize:10, color:f.urgency==='IMMEDIATE'?'#ef4444':'#f59e0b', fontFamily:'monospace', fontWeight:700 }}>{f.urgency?.replace(/_/g,' ')}</span>
+                  <span style={{ fontSize:11, color:f.urgency==='IMMEDIATE'?'#ef4444':'#f59e0b', fontFamily:'monospace', fontWeight:700 }}>{f.urgency?.replace(/_/g,' ')}</span>
                 </div>
                 <div style={{ fontSize:11, color:'#f59e0b', marginBottom:4 }}>{f.flag_type?.replace(/_/g,' ').toUpperCase()} · {f.location}</div>
                 <div style={{ fontSize:11, color:'#8a9099', marginBottom:f.secure_parking_options?.length>0?8:0 }}>{f.action_required}</div>
                 {f.cargo_value > 0 && (
-                  <div style={{ fontSize:10, color:'#ef4444', marginBottom:f.secure_parking_options?.length>0?8:0 }}>
+                  <div style={{ fontSize:11, color:'#ef4444', marginBottom:f.secure_parking_options?.length>0?8:0 }}>
                     Cargo at risk: £{f.cargo_value.toLocaleString()}
                   </div>
                 )}
                 {f.secure_parking_options?.length > 0 && (
                   <div>
-                    <div style={{ fontSize:9, color:'#f5a623', fontFamily:'monospace', letterSpacing:'0.06em', marginBottom:5 }}>SECURE PARKING OPTIONS — DIVERT NOW</div>
+                    <div style={{ fontSize:11, color:'#f5a623', fontFamily:'monospace', letterSpacing:'0.06em', marginBottom:5 }}>SECURE PARKING OPTIONS — DIVERT NOW</div>
                     {f.secure_parking_options.map((p,pi) => (
                       <div key={pi} style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', padding:'7px 9px', background:'rgba(245,166,35,0.05)', border:'1px solid rgba(245,166,35,0.15)', borderRadius:5, marginBottom:4 }}>
                         <div style={{ flex:1 }}>
                           <div style={{ fontSize:11, color:'#e8eaed', fontWeight:500, marginBottom:2 }}>{p.name}</div>
-                          <div style={{ fontSize:10, color:'#8a9099' }}>{p.direction} · {p.distance_miles} miles</div>
-                          {p.note && <div style={{ fontSize:10, color:'#f59e0b', marginTop:2 }}>{p.note}</div>}
+                          <div style={{ fontSize:11, color:'#8a9099' }}>{p.direction} · {p.distance_miles} miles</div>
+                          {p.note && <div style={{ fontSize:11, color:'#f59e0b', marginTop:2 }}>{p.note}</div>}
                           <div style={{ display:'flex', gap:8, marginTop:3 }}>
-                            {p.accredited && <span style={{ fontSize:9, color:'#f5a623', fontFamily:'monospace' }}>✓ ACCREDITED</span>}
-                            {p.cctv && <span style={{ fontSize:9, color:'#8a9099', fontFamily:'monospace' }}>CCTV</span>}
-                            {p.security_patrol && <span style={{ fontSize:9, color:'#8a9099', fontFamily:'monospace' }}>SECURITY PATROL</span>}
+                            {p.accredited && <span style={{ fontSize:11, color:'#f5a623', fontFamily:'monospace' }}>✓ ACCREDITED</span>}
+                            {p.cctv && <span style={{ fontSize:11, color:'#8a9099', fontFamily:'monospace' }}>CCTV</span>}
+                            {p.security_patrol && <span style={{ fontSize:11, color:'#8a9099', fontFamily:'monospace' }}>SECURITY PATROL</span>}
                           </div>
                         </div>
                         <div style={{ fontSize:16, fontWeight:700, color:'#f5a623', fontFamily:'monospace', marginLeft:12, flexShrink:0 }}>
@@ -855,9 +855,9 @@ function ModuleResult({ result, moduleName }) {
             <ItemCard bg="rgba(245,166,35,0.04)" border="rgba(245,166,35,0.15)">
               <div style={{ fontSize:11, color:'#e8eaed', marginBottom:6 }}>{r.secure_parking_policy.policy}</div>
               <div style={{ display:'flex', gap:16, flexWrap:'wrap' }}>
-                <div><span style={{ fontSize:10, color:'#4a5260' }}>Annual cost: </span><span style={{ fontSize:11, color:'#f59e0b', fontWeight:600 }}>£{r.secure_parking_policy.annual_cost_estimate?.toLocaleString()}</span></div>
-                <div><span style={{ fontSize:10, color:'#4a5260' }}>Risk mitigated: </span><span style={{ fontSize:11, color:'#f5a623', fontWeight:600 }}>£{r.secure_parking_policy.annual_theft_risk_mitigated?.toLocaleString()}</span></div>
-                <div><span style={{ fontSize:10, color:'#4a5260' }}>ROI: </span><span style={{ fontSize:11, color:'#f5a623', fontWeight:600 }}>{r.secure_parking_policy.roi}</span></div>
+                <div><span style={{ fontSize:11, color:'#4a5260' }}>Annual cost: </span><span style={{ fontSize:11, color:'#f59e0b', fontWeight:600 }}>£{r.secure_parking_policy.annual_cost_estimate?.toLocaleString()}</span></div>
+                <div><span style={{ fontSize:11, color:'#4a5260' }}>Risk mitigated: </span><span style={{ fontSize:11, color:'#f5a623', fontWeight:600 }}>£{r.secure_parking_policy.annual_theft_risk_mitigated?.toLocaleString()}</span></div>
+                <div><span style={{ fontSize:11, color:'#4a5260' }}>ROI: </span><span style={{ fontSize:11, color:'#f5a623', fontWeight:600 }}>{r.secure_parking_policy.roi}</span></div>
               </div>
             </ItemCard>
           </SectionBlock>
@@ -881,11 +881,11 @@ function ModuleResult({ result, moduleName }) {
               <ItemCard key={i} bg="rgba(239,68,68,0.05)" border="rgba(239,68,68,0.18)">
                 <div style={{ display:'flex', justifyContent:'space-between', marginBottom:4 }}>
                   <span style={{ fontSize:11, color:'#e8eaed', fontWeight:500 }}>{s.entity}</span>
-                  <span style={{ fontSize:10, color:'#ef4444', fontFamily:'monospace' }}>{s.type?.replace(/_/g,' ').toUpperCase()}</span>
+                  <span style={{ fontSize:11, color:'#ef4444', fontFamily:'monospace' }}>{s.type?.replace(/_/g,' ').toUpperCase()}</span>
                 </div>
                 <div style={{ fontSize:11, color:'#8a9099', marginBottom:4 }}>{s.evidence}</div>
                 <div style={{ fontSize:11, color:'#f5a623' }}>Action: {s.action}</div>
-                {s.financial_exposure > 0 && <div style={{ fontSize:10, color:'#ef4444', marginTop:3 }}>Exposure: £{s.financial_exposure.toLocaleString()} · Confidence: {s.confidence}</div>}
+                {s.financial_exposure > 0 && <div style={{ fontSize:11, color:'#ef4444', marginTop:3 }}>Exposure: £{s.financial_exposure.toLocaleString()} · Confidence: {s.confidence}</div>}
               </ItemCard>
             ))}
           </SectionBlock>
@@ -902,10 +902,10 @@ function ModuleResult({ result, moduleName }) {
                     <span style={{ fontSize:12, color:'#e8eaed', fontWeight:500 }}>{s.name}</span>
                     <div style={{ display:'flex', alignItems:'center', gap:8 }}>
                       <span style={{ fontSize:16, fontWeight:700, color:scoreColor, fontFamily:'monospace' }}>{s.overall_score}</span>
-                      <span style={{ fontSize:10, color:s.recommendation==='terminate'?'#ef4444':s.recommendation==='use_with_caution'?'#f59e0b':'#f5a623', fontFamily:'monospace', fontWeight:700 }}>{s.recommendation?.replace(/_/g,' ').toUpperCase()}</span>
+                      <span style={{ fontSize:11, color:s.recommendation==='terminate'?'#ef4444':s.recommendation==='use_with_caution'?'#f59e0b':'#f5a623', fontFamily:'monospace', fontWeight:700 }}>{s.recommendation?.replace(/_/g,' ').toUpperCase()}</span>
                     </div>
                   </div>
-                  {s.flags?.map((f,fi) => <div key={fi} style={{ fontSize:10, color:'#f59e0b', marginBottom:2 }}>— {f}</div>)}
+                  {s.flags?.map((f,fi) => <div key={fi} style={{ fontSize:11, color:'#f59e0b', marginBottom:2 }}>— {f}</div>)}
                 </ItemCard>
               )
             })}
@@ -922,8 +922,8 @@ function ModuleResult({ result, moduleName }) {
                   <span style={{ fontSize:11, color:'#e8eaed', fontWeight:500 }}>{w.week}</span>
                   <span style={{ fontSize:12, color:w.net<0?'#ef4444':'#f5a623', fontFamily:'monospace', fontWeight:700 }}>{w.net<0?'-':'+'}£{Math.abs(w.net).toLocaleString()}</span>
                 </div>
-                {w.alert && <div style={{ fontSize:10, color:'#f59e0b', marginBottom:4 }}>{w.alert}</div>}
-                {w.risk_items?.map((ri,ri_i) => <div key={ri_i} style={{ fontSize:10, color:'#4a5260', marginBottom:1 }}>— {ri.description}: £{ri.amount.toLocaleString()} due {ri.due_date}</div>)}
+                {w.alert && <div style={{ fontSize:11, color:'#f59e0b', marginBottom:4 }}>{w.alert}</div>}
+                {w.risk_items?.map((ri,ri_i) => <div key={ri_i} style={{ fontSize:11, color:'#4a5260', marginBottom:1 }}>— {ri.description}: £{ri.amount.toLocaleString()} due {ri.due_date}</div>)}
               </ItemCard>
             ))}
           </SectionBlock>
@@ -939,11 +939,11 @@ function ModuleResult({ result, moduleName }) {
                   <span style={{ fontSize:12, color:'#e8eaed', fontWeight:500 }}>{c.client}</span>
                   <div style={{ display:'flex', alignItems:'center', gap:8 }}>
                     <span style={{ fontSize:12, color:c.churn_risk==='HIGH'||c.churn_risk==='CRITICAL'?'#ef4444':'#f5a623', fontFamily:'monospace', fontWeight:700 }}>{c.churn_probability_pct}%</span>
-                    <span style={{ fontSize:10, color:c.churn_risk==='HIGH'||c.churn_risk==='CRITICAL'?'#ef4444':'#f5a623', fontFamily:'monospace' }}>{c.churn_risk}</span>
+                    <span style={{ fontSize:11, color:c.churn_risk==='HIGH'||c.churn_risk==='CRITICAL'?'#ef4444':'#f5a623', fontFamily:'monospace' }}>{c.churn_risk}</span>
                   </div>
                 </div>
-                <div style={{ fontSize:10, color:'#4a5260', marginBottom:4 }}>Contract renewal: {c.days_to_contract_renewal} days · Revenue at risk: £{c.revenue_at_risk?.toLocaleString()}/yr</div>
-                {c.risk_signals?.slice(0,2).map((s,si) => <div key={si} style={{ fontSize:10, color:'#f59e0b', marginBottom:1 }}>— {s}</div>)}
+                <div style={{ fontSize:11, color:'#4a5260', marginBottom:4 }}>Contract renewal: {c.days_to_contract_renewal} days · Revenue at risk: £{c.revenue_at_risk?.toLocaleString()}/yr</div>
+                {c.risk_signals?.slice(0,2).map((s,si) => <div key={si} style={{ fontSize:11, color:'#f59e0b', marginBottom:1 }}>— {s}</div>)}
                 <div style={{ fontSize:11, color:'#f5a623', marginTop:5 }}>{c.recommended_action}</div>
               </ItemCard>
             ))}
@@ -962,7 +962,7 @@ function ModuleResult({ result, moduleName }) {
               <ItemCard key={i} bg={u.days_remaining<60?'rgba(239,68,68,0.05)':'rgba(245,158,11,0.04)'} border={u.days_remaining<60?'rgba(239,68,68,0.18)':'rgba(245,158,11,0.15)'}>
                 <div style={{ display:'flex', justifyContent:'space-between', marginBottom:4 }}>
                   <span style={{ fontSize:12, color:'#e8eaed', fontWeight:500 }}>{u.driver}</span>
-                  <span style={{ fontSize:10, color:u.days_remaining<60?'#ef4444':'#f59e0b', fontFamily:'monospace' }}>{u.days_remaining} days · {u.issue_type?.replace(/_/g,' ').toUpperCase()}</span>
+                  <span style={{ fontSize:11, color:u.days_remaining<60?'#ef4444':'#f59e0b', fontFamily:'monospace' }}>{u.days_remaining} days · {u.issue_type?.replace(/_/g,' ').toUpperCase()}</span>
                 </div>
                 <div style={{ fontSize:11, color:'#f5a623' }}>{u.action}</div>
               </ItemCard>
@@ -998,7 +998,7 @@ function ScenarioResult({ result }) {
     <div>
       {entries.map(([k, v]) => (
         <div key={k} style={{ marginBottom: 16 }}>
-          <div style={{ fontFamily:'monospace', fontSize:10, color:'#f5a623', letterSpacing:'0.08em', marginBottom:6, display:'flex', alignItems:'center', gap:8 }}>
+          <div style={{ fontFamily:'monospace', fontSize:11, color:'#f5a623', letterSpacing:'0.08em', marginBottom:6, display:'flex', alignItems:'center', gap:8 }}>
             <div style={{ height:1, width:12, background:'#f5a623' }} />
             {k.replace(/_/g,' ').toUpperCase()}
           </div>
@@ -1034,10 +1034,10 @@ function ScenarioResult({ result }) {
       ))}
       {result.cascade && result.cascade.length > 0 && (
         <div style={{ marginBottom:16 }}>
-          <div style={{ fontFamily:'monospace', fontSize:10, color:'#ef4444', letterSpacing:'0.08em', marginBottom:6 }}>CASCADE CHAIN</div>
+          <div style={{ fontFamily:'monospace', fontSize:11, color:'#ef4444', letterSpacing:'0.08em', marginBottom:6 }}>CASCADE CHAIN</div>
           {result.cascade.map((c,i) => (
             <div key={i} style={{ display:'flex', gap:8, alignItems:'flex-start', marginBottom:4 }}>
-              <div style={{ width:20, height:20, borderRadius:'50%', background: c.sla_breached?'#ef4444':'#f5a623', color:'#fff', display:'flex', alignItems:'center', justifyContent:'center', fontSize:9, fontWeight:700, flexShrink:0 }}>{i}</div>
+              <div style={{ width:20, height:20, borderRadius:'50%', background: c.sla_breached?'#ef4444':'#f5a623', color:'#fff', display:'flex', alignItems:'center', justifyContent:'center', fontSize:11, fontWeight:700, flexShrink:0 }}>{i}</div>
               <div style={{ fontSize:11, color:'#8a9099', flex:1 }}>
                 <span style={{ color:'#e8eaed' }}>{c.ref}</span> — {c.description}
                 {c.penalty > 0 && <span style={{ color:'#f5a623', marginLeft:8 }}>£{c.penalty.toLocaleString()}</span>}
@@ -1912,11 +1912,11 @@ export default function DashboardPage() {
 
           {/* Metrics */}
           <div style={{ padding:'14px', borderBottom:'1px solid rgba(255,255,255,0.06)' }}>
-            <div style={{ fontSize:9, fontFamily:'monospace', color:'#4a5260', letterSpacing:'0.08em', marginBottom:8 }}>TODAY — {new Date().toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'}).toUpperCase()}</div>
+            <div style={{ fontSize:11, fontFamily:'monospace', color:'#4a5260', letterSpacing:'0.08em', marginBottom:8 }}>TODAY — {new Date().toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'}).toUpperCase()}</div>
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:6 }}>
               {[{l:'Active shipments',v:'4'},{l:'Alerts',v:'1',vc:'#ef4444'},{l:'On time',v:'75%'},{l:'Saved today',v:'£7.4K',vc:'#f5a623'}].map(m=>(
                 <div key={m.l} style={{ background:'#0f1826', borderRadius:6, padding:'10px 10px' }}>
-                  <div style={{ fontSize:9, color:'#4a5260', marginBottom:3 }}>{m.l}</div>
+                  <div style={{ fontSize:11, color:'#4a5260', marginBottom:3 }}>{m.l}</div>
                   <div style={{ fontSize:18, fontWeight:500, fontFamily:'monospace', color:m.vc||'#e8eaed' }}>{m.v}</div>
                 </div>
               ))}
@@ -1925,32 +1925,32 @@ export default function DashboardPage() {
 
           {/* Active Shipments */}
           <div style={{ padding:'14px', borderBottom:'1px solid rgba(255,255,255,0.06)' }}>
-            <div style={{ fontSize:9, fontFamily:'monospace', color:'#4a5260', letterSpacing:'0.08em', marginBottom:8 }}>ACTIVE SHIPMENTS</div>
+            <div style={{ fontSize:11, fontFamily:'monospace', color:'#4a5260', letterSpacing:'0.08em', marginBottom:8 }}>ACTIVE SHIPMENTS</div>
             {(liveShipments.length > 0 ? liveShipments : ACTIVE_SHIPMENTS).map(s => (
               <div key={s.ref} onClick={() => analyseShipment(s)} style={{ padding:'9px 10px', borderRadius:6, marginBottom:5, cursor:'pointer', border:activeShipment===s.ref?'1px solid #f5a623':'1px solid rgba(255,255,255,0.05)', background:s.status==='disrupted'?'rgba(239,68,68,0.07)':s.status==='delayed'?'rgba(245,158,11,0.05)':'#0f1826', transition:'all 0.15s' }}>
                 <div style={{ display:'flex', justifyContent:'space-between', marginBottom:2 }}>
                   <span style={{ fontFamily:'monospace', fontSize:11, color:'#e8eaed', fontWeight:500 }}>{s.ref}</span>
-                  <span style={{ fontFamily:'monospace', fontSize:9, color:STATUS_COLORS[s.status], textTransform:'uppercase' }}>{s.status}</span>
+                  <span style={{ fontFamily:'monospace', fontSize:11, color:STATUS_COLORS[s.status], textTransform:'uppercase' }}>{s.status}</span>
                 </div>
-                <div style={{ fontSize:10, color:'#8a9099', marginBottom:2 }}>{s.route}</div>
-                <div style={{ fontSize:9, color:'#4a5260' }}>{s.carrier} · ETA {s.eta}</div>
-                {s.alert && <div style={{ marginTop:5, fontSize:9, color:'#f59e0b', background:'rgba(245,158,11,0.08)', padding:'3px 6px', borderRadius:3 }}>⚠ {s.alert}</div>}
+                <div style={{ fontSize:11, color:'#8a9099', marginBottom:2 }}>{s.route}</div>
+                <div style={{ fontSize:11, color:'#4a5260' }}>{s.carrier} · ETA {s.eta}</div>
+                {s.alert && <div style={{ marginTop:5, fontSize:11, color:'#f59e0b', background:'rgba(245,158,11,0.08)', padding:'3px 6px', borderRadius:3 }}>⚠ {s.alert}</div>}
               </div>
             ))}
           </div>
 
           {/* Recent Incidents */}
           <div style={{ padding:'14px' }}>
-            <div style={{ fontSize:9, fontFamily:'monospace', color:'#4a5260', letterSpacing:'0.08em', marginBottom:8 }}>RECENT INCIDENTS</div>
+            <div style={{ fontSize:11, fontFamily:'monospace', color:'#4a5260', letterSpacing:'0.08em', marginBottom:8 }}>RECENT INCIDENTS</div>
             {[...sessionIncidents, ...INCIDENT_LOG].slice(0,8).map((inc,i) => (
               <div key={i} style={{ padding:'8px 0', borderBottom:'1px solid rgba(255,255,255,0.03)', display:'grid', gridTemplateColumns:'1fr auto' }}>
                 <div>
-                  <div style={{ fontSize:10, color: i===0&&sessionIncidents.length>0?'#f5a623':'#e8eaed', fontFamily:'monospace' }}>{inc.ref} — {inc.type.substring(0,22)}</div>
-                  <div style={{ fontSize:9, color:'#4a5260', marginTop:1 }}>{inc.date}</div>
+                  <div style={{ fontSize:11, color: i===0&&sessionIncidents.length>0?'#f5a623':'#e8eaed', fontFamily:'monospace' }}>{inc.ref} — {inc.type.substring(0,22)}</div>
+                  <div style={{ fontSize:11, color:'#4a5260', marginTop:1 }}>{inc.date}</div>
                 </div>
                 <div style={{ textAlign:'right' }}>
-                  <div style={{ fontSize:9, color:SEV_COLORS[inc.severity], fontFamily:'monospace', padding:'1px 5px', borderRadius:2, background:SEV_BG[inc.severity], display:'inline-block' }}>{inc.severity}</div>
-                  {inc.saved && <div style={{ fontSize:9, color:'#f5a623', marginTop:3 }}>{inc.saved}</div>}
+                  <div style={{ fontSize:11, color:SEV_COLORS[inc.severity], fontFamily:'monospace', padding:'1px 5px', borderRadius:2, background:SEV_BG[inc.severity], display:'inline-block' }}>{inc.severity}</div>
+                  {inc.saved && <div style={{ fontSize:11, color:'#f5a623', marginTop:3 }}>{inc.saved}</div>}
                 </div>
               </div>
             ))}
@@ -1972,9 +1972,9 @@ export default function DashboardPage() {
             <button style={TAB_STYLE(activeTab==='integrations')} onClick={() => { setActiveTab('integrations'); loadWebhookLog(); loadActiveDrivers() }}>SETUP</button>
             <div style={{ marginLeft:'auto', display:'flex', alignItems:'center', gap:8 }}>
               <div style={{ width:7, height:7, borderRadius:'50%', background: loading ? '#f59e0b' : '#f5a623', animation: loading ? 'pulse 1s infinite' : 'none' }} />
-              <span style={{ fontFamily:'monospace', fontSize:10, color:'#4a5260' }}>{loading ? 'ANALYSING...' : 'AGENT READY'}</span>
+              <span style={{ fontFamily:'monospace', fontSize:11, color:'#4a5260' }}>{loading ? 'ANALYSING...' : 'AGENT READY'}</span>
               {messages.length > 0 && (
-                <button onClick={() => { setMessages([]); setResponse(''); setActiveShipment(null); setAgentActions([]); setModuleActions([]); setActionStates({}) }} style={{ fontSize:10, color:'#4a5260', background:'none', border:'1px solid rgba(255,255,255,0.06)', borderRadius:4, padding:'3px 8px', cursor:'pointer', fontFamily:'monospace', marginLeft:4 }}>CLEAR ×</button>
+                <button onClick={() => { setMessages([]); setResponse(''); setActiveShipment(null); setAgentActions([]); setModuleActions([]); setActionStates({}) }} style={{ fontSize:11, color:'#4a5260', background:'none', border:'1px solid rgba(255,255,255,0.06)', borderRadius:4, padding:'3px 8px', cursor:'pointer', fontFamily:'monospace', marginLeft:4 }}>CLEAR ×</button>
               )}
             </div>
           </div>
@@ -1996,7 +1996,7 @@ export default function DashboardPage() {
                 )}
                 {response && <AgentResponse text={response} />}
                 {messages.length >= 2 && (
-                  <div style={{ marginTop:12, fontSize:10, color:'#4a5260', fontFamily:'monospace' }}>
+                  <div style={{ marginTop:12, fontSize:11, color:'#4a5260', fontFamily:'monospace' }}>
                     // Ask a follow-up — "draft the client email", "cheapest option that hits SLA", "what's our liability here"
                   </div>
                 )}
@@ -2004,7 +2004,7 @@ export default function DashboardPage() {
                 {/* ── SUGGESTED ACTIONS ── */}
                 {agentActions.length > 0 && !loading && (
                   <div style={{ marginTop:16, padding:'12px 14px', background:'#0d1420', borderRadius:8, border:'1px solid rgba(245,166,35,0.12)' }}>
-                    <div style={{ fontSize:10, fontFamily:'monospace', color:'#f5a623', letterSpacing:'0.08em', marginBottom:10 }}>SUGGESTED ACTIONS — click to execute</div>
+                    <div style={{ fontSize:11, fontFamily:'monospace', color:'#f5a623', letterSpacing:'0.08em', marginBottom:10 }}>SUGGESTED ACTIONS — click to execute</div>
                     <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
                       {agentActions.map(action => {
                         const state = actionStates[action.id]
@@ -2017,18 +2017,18 @@ export default function DashboardPage() {
                               <div style={{ fontSize:11, color: isDone ? '#f5a623' : '#e8eaed', lineHeight:1.4, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
                                 {action.label}
                               </div>
-                              <div style={{ fontSize:9, color:'#4a5260', fontFamily:'monospace', marginTop:1 }}>{action.type.toUpperCase()}</div>
+                              <div style={{ fontSize:11, color:'#4a5260', fontFamily:'monospace', marginTop:1 }}>{action.type.toUpperCase()}</div>
                             </div>
                             {isDone ? (
                               <div style={{ display:'flex', alignItems:'center', gap:5, flexShrink:0 }}>
                                 <div style={{ width:6, height:6, borderRadius:'50%', background:'#f5a623' }} />
-                                <span style={{ fontSize:10, color:'#f5a623', fontFamily:'monospace' }}>SENT</span>
+                                <span style={{ fontSize:11, color:'#f5a623', fontFamily:'monospace' }}>SENT</span>
                               </div>
                             ) : (
                               <button
                                 onClick={() => fireAction(action.id, action.label, action.type, action.mailto)}
                                 disabled={isFiring}
-                                style={{ padding:'5px 12px', background: isFiring ? 'transparent' : '#f5a623', color: isFiring ? '#f5a623' : '#000', border: isFiring ? '1px solid rgba(245,166,35,0.3)' : 'none', borderRadius:5, fontSize:10, fontWeight:600, cursor: isFiring ? 'default' : 'pointer', fontFamily:'monospace', flexShrink:0, minWidth:60, transition:'all 0.2s' }}>
+                                style={{ padding:'5px 12px', background: isFiring ? 'transparent' : '#f5a623', color: isFiring ? '#f5a623' : '#000', border: isFiring ? '1px solid rgba(245,166,35,0.3)' : 'none', borderRadius:5, fontSize:11, fontWeight:600, cursor: isFiring ? 'default' : 'pointer', fontFamily:'monospace', flexShrink:0, minWidth:60, transition:'all 0.2s' }}>
                                 {isFiring ? '...' : 'FIRE →'}
                               </button>
                             )}
@@ -2037,7 +2037,7 @@ export default function DashboardPage() {
                       })}
                     </div>
                     {Object.values(actionStates).some(s => s === 'done') && (
-                      <div style={{ marginTop:8, fontSize:10, color:'#4a5260', fontFamily:'monospace' }}>
+                      <div style={{ marginTop:8, fontSize:11, color:'#4a5260', fontFamily:'monospace' }}>
                         Executed actions logged · <span style={{ color:'#f5a623', cursor:'pointer' }} onClick={() => setActiveTab('approvals')}>View in approvals →</span>
                       </div>
                     )}
@@ -2056,7 +2056,7 @@ export default function DashboardPage() {
                 <div style={{ marginTop:8, display:'flex', gap:6, flexWrap:'wrap' }}>
                   {['Draft client email','Cheapest reroute','What\'s our liability?','Reorder recommendations'].map(q => (
                     <button key={q} onClick={() => { setInput(q); runAnalysis(q) }}
-                      style={{ fontSize:10, color:'#4a5260', background:'none', border:'1px solid rgba(255,255,255,0.06)', borderRadius:4, padding:'3px 8px', cursor:'pointer', fontFamily:'Barlow' }}>{q}</button>
+                      style={{ fontSize:11, color:'#4a5260', background:'none', border:'1px solid rgba(255,255,255,0.06)', borderRadius:4, padding:'3px 8px', cursor:'pointer', fontFamily:'Barlow' }}>{q}</button>
                   ))}
                 </div>
               </div>
@@ -2070,8 +2070,8 @@ export default function DashboardPage() {
               {/* ── DVSA COMPLIANCE SECTION ─────────────────────────────────── */}
               <div style={{ marginBottom:24, padding:16, background:'#0a0e16', border:'1px solid rgba(255,255,255,0.06)', borderRadius:10 }}>
                 <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:12 }}>
-                  <div style={{ fontSize:10, color:'#f5a623', fontFamily:'monospace', letterSpacing:'0.1em', fontWeight:700 }}>DVSA FLEET COMPLIANCE</div>
-                  <button onClick={loadDvsa} style={{ background:'none', border:'none', color:'#4a5260', fontSize:10, cursor:'pointer' }}>↻ Refresh</button>
+                  <div style={{ fontSize:11, color:'#f5a623', fontFamily:'monospace', letterSpacing:'0.1em', fontWeight:700 }}>DVSA FLEET COMPLIANCE</div>
+                  <button onClick={loadDvsa} style={{ background:'none', border:'none', color:'#4a5260', fontSize:11, cursor:'pointer' }}>↻ Refresh</button>
                 </div>
 
                 {/* Upload CSV */}
@@ -2081,11 +2081,11 @@ export default function DashboardPage() {
                   onDrop={e => { e.preventDefault(); e.stopPropagation(); const f=e.dataTransfer?.files?.[0]; if(f) { const r=new FileReader(); r.onload=ev=>{setDvsaCsvRows(parseDvsaCsv(ev.target.result))}; r.readAsText(f) } }}>
                   <input id="dvsa-csv-upload" type="file" accept=".csv,.txt,text/csv,text/plain" style={{ display:'none' }} onChange={e => { const f=e.target.files?.[0]; if(f) { const r=new FileReader(); r.onload=ev=>{setDvsaCsvRows(parseDvsaCsv(ev.target.result))}; r.readAsText(f) } }} />
                   <div style={{ fontSize:11, color:'#8a9099' }}>Drop DVSA CSV or click to upload</div>
-                  <div style={{ fontSize:9, color:'#4a5260', marginTop:3 }}>Columns: vehicle_reg, mot_expiry, tax_expiry, operator_licence, last_inspection_date, last_inspection_result</div>
+                  <div style={{ fontSize:11, color:'#4a5260', marginTop:3 }}>Columns: vehicle_reg, mot_expiry, tax_expiry, operator_licence, last_inspection_date, last_inspection_result</div>
                 </div>
                 {dvsaCsvRows && dvsaCsvRows.length > 0 && (
                   <div style={{ marginBottom:10 }}>
-                    <div style={{ fontSize:10, color:'#f5a623', marginBottom:4 }}>{dvsaCsvRows.length} vehicles parsed</div>
+                    <div style={{ fontSize:11, color:'#f5a623', marginBottom:4 }}>{dvsaCsvRows.length} vehicles parsed</div>
                     <div style={{ display:'flex', gap:6 }}>
                       <button onClick={async () => {
                         try {
@@ -2094,8 +2094,8 @@ export default function DashboardPage() {
                           if (data.success) { showDashToast(`${data.upserted} vehicles uploaded`); setDvsaCsvRows(null); loadDvsa() }
                           else showDashToast(data.error || 'Upload failed', 'error')
                         } catch { showDashToast('Upload failed', 'error') }
-                      }} style={{ padding:'5px 12px', background:'#f5a623', border:'none', borderRadius:5, color:'#000', fontWeight:600, fontSize:10, cursor:'pointer' }}>Submit</button>
-                      <button onClick={() => setDvsaCsvRows(null)} style={{ padding:'5px 12px', background:'transparent', border:'1px solid rgba(255,255,255,0.1)', borderRadius:5, color:'#4a5260', fontSize:10, cursor:'pointer' }}>Clear</button>
+                      }} style={{ padding:'5px 12px', background:'#f5a623', border:'none', borderRadius:5, color:'#000', fontWeight:600, fontSize:11, cursor:'pointer' }}>Submit</button>
+                      <button onClick={() => setDvsaCsvRows(null)} style={{ padding:'5px 12px', background:'transparent', border:'1px solid rgba(255,255,255,0.1)', borderRadius:5, color:'#4a5260', fontSize:11, cursor:'pointer' }}>Clear</button>
                     </div>
                   </div>
                 )}
@@ -2123,13 +2123,13 @@ export default function DashboardPage() {
                       if (data.success) { showDashToast('Vehicle added'); setDvsaManual({ vehicle_reg:'', mot_expiry:'', tax_expiry:'', operator_licence:'', last_inspection_date:'', last_inspection_result:'' }); loadDvsa() }
                       else showDashToast(data.error || 'Failed', 'error')
                     } catch { showDashToast('Failed', 'error') }
-                  }} style={{ padding:'5px 12px', background:'#f5a623', border:'none', borderRadius:5, color:'#000', fontWeight:600, fontSize:10, cursor:'pointer', whiteSpace:'nowrap' }}>+ Add</button>
+                  }} style={{ padding:'5px 12px', background:'#f5a623', border:'none', borderRadius:5, color:'#000', fontWeight:600, fontSize:11, cursor:'pointer', whiteSpace:'nowrap' }}>+ Add</button>
                 </div>
 
                 {/* Fleet compliance table */}
                 {dvsaRecords.length > 0 ? (
                   <div style={{ overflowX:'auto', border:'1px solid rgba(255,255,255,0.06)', borderRadius:6 }}>
-                    <table style={{ width:'100%', fontSize:10, color:'#8a9099', borderCollapse:'collapse' }}>
+                    <table style={{ width:'100%', fontSize:11, color:'#8a9099', borderCollapse:'collapse' }}>
                       <thead><tr style={{ background:'rgba(245,166,35,0.05)' }}>
                         {['Vehicle','MOT Expiry','Tax Expiry','Last Inspection','Result','Days to MOT'].map(h => <th key={h} style={{ padding:'6px 8px', textAlign:'left', color:'#4a5260', fontWeight:600, whiteSpace:'nowrap' }}>{h}</th>)}
                       </tr></thead>
@@ -2150,24 +2150,24 @@ export default function DashboardPage() {
                     </table>
                   </div>
                 ) : (
-                  <div style={{ padding:12, textAlign:'center', color:'#4a5260', fontSize:10 }}>No DVSA records. Upload a CSV or add vehicles manually.</div>
+                  <div style={{ padding:12, textAlign:'center', color:'#4a5260', fontSize:11 }}>No DVSA records. Upload a CSV or add vehicles manually.</div>
                 )}
               </div>
 
-              <div style={{ fontSize:10, color:'#4a5260', fontFamily:'monospace', marginBottom:6 }}>// INTELLIGENCE MODULES — auto-scan runs at 05:00 daily · click any to run now</div>
+              <div style={{ fontSize:11, color:'#4a5260', fontFamily:'monospace', marginBottom:6 }}>// INTELLIGENCE MODULES — auto-scan runs at 05:00 daily · click any to run now</div>
               <div style={{ display:'flex', gap:12, marginBottom:14, flexWrap:'wrap' }}>
                 {Object.values(latestRuns).some(r=>r.has_issues) && (
-                  <div style={{ display:'flex', alignItems:'center', gap:5, fontSize:10, color:'#ef4444', fontFamily:'monospace' }}>
+                  <div style={{ display:'flex', alignItems:'center', gap:5, fontSize:11, color:'#ef4444', fontFamily:'monospace' }}>
                     <div style={{ width:6, height:6, borderRadius:'50%', background:'#ef4444' }}/> {Object.values(latestRuns).filter(r=>r.has_issues).length} module{Object.values(latestRuns).filter(r=>r.has_issues).length!==1?'s require':' requires'} attention
                   </div>
                 )}
                 {Object.values(latestRuns).length > 0 && (
-                  <div style={{ fontSize:10, color:'#4a5260', fontFamily:'monospace' }}>
+                  <div style={{ fontSize:11, color:'#4a5260', fontFamily:'monospace' }}>
                     Last scan: {(() => { const latest = Object.values(latestRuns).sort((a,b)=>new Date(b.ran_at)-new Date(a.ran_at))[0]; if(!latest?.ran_at) return 'never'; const mins = Math.floor((Date.now()-new Date(latest.ran_at))/60000); return mins<60?`${mins}m ago`:mins<1440?`${Math.floor(mins/60)}h ago`:`${Math.floor(mins/1440)}d ago` })()}
                   </div>
                 )}
                 {Object.values(latestRuns).length === 0 && (
-                  <div style={{ fontSize:10, color:'#4a5260', fontFamily:'monospace' }}>No auto-scans run yet — enable cron or click a module to run manually</div>
+                  <div style={{ fontSize:11, color:'#4a5260', fontFamily:'monospace' }}>No auto-scans run yet — enable cron or click a module to run manually</div>
                 )}
               </div>
               <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(190px,1fr))', gap:8, marginBottom:20 }}>
@@ -2197,11 +2197,11 @@ export default function DashboardPage() {
                         <span style={{ fontSize:15 }}>{m.icon}</span>
                         <span style={{ fontSize:11, fontWeight:500, color:'#e8eaed', lineHeight:1.3 }}>{m.label}</span>
                       </div>
-                      <div style={{ fontSize:9, fontFamily:'monospace', letterSpacing:'0.04em', color: isRunning?'#f5a623':hasIssue?'#ef4444':isClear?'#f5a623':c.text }}>
+                      <div style={{ fontSize:11, fontFamily:'monospace', letterSpacing:'0.04em', color: isRunning?'#f5a623':hasIssue?'#ef4444':isClear?'#f5a623':c.text }}>
                         {isRunning ? '● RUNNING...' : hasIssue ? '● ACTION REQUIRED' : isClear ? `✓ CLEAR · ${ranAgo}` : m.cat.toUpperCase()}
                       </div>
                       {hasIssue && lastRun.financial_impact > 0 && (
-                        <div style={{ fontSize:9, color:'#ef4444', fontFamily:'monospace', marginTop:3 }}>£{Number(lastRun.financial_impact).toLocaleString()}</div>
+                        <div style={{ fontSize:11, color:'#ef4444', fontFamily:'monospace', marginTop:3 }}>£{Number(lastRun.financial_impact).toLocaleString()}</div>
                       )}
                     </button>
                   )
@@ -2218,7 +2218,7 @@ export default function DashboardPage() {
               {/* Module action buttons */}
               {moduleActions.length > 0 && !moduleRunning && (
                 <div style={{ marginTop:16, padding:'12px 14px', background:'#0d1420', borderRadius:8, border:'1px solid rgba(245,166,35,0.12)' }}>
-                  <div style={{ fontSize:10, fontFamily:'monospace', color:'#f5a623', letterSpacing:'0.08em', marginBottom:10 }}>SUGGESTED ACTIONS — click to execute</div>
+                  <div style={{ fontSize:11, fontFamily:'monospace', color:'#f5a623', letterSpacing:'0.08em', marginBottom:10 }}>SUGGESTED ACTIONS — click to execute</div>
                   <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
                     {moduleActions.map(action => {
                       const state = actionStates[action.id]
@@ -2229,16 +2229,16 @@ export default function DashboardPage() {
                           <span style={{ fontSize:14, flexShrink:0 }}>{action.icon}</span>
                           <div style={{ flex:1, minWidth:0 }}>
                             <div style={{ fontSize:11, color: isDone ? '#f5a623' : '#e8eaed', lineHeight:1.4 }}>{action.label}</div>
-                            <div style={{ fontSize:9, color:'#4a5260', fontFamily:'monospace', marginTop:1 }}>{action.type.toUpperCase()}</div>
+                            <div style={{ fontSize:11, color:'#4a5260', fontFamily:'monospace', marginTop:1 }}>{action.type.toUpperCase()}</div>
                           </div>
                           {isDone ? (
                             <div style={{ display:'flex', alignItems:'center', gap:5, flexShrink:0 }}>
                               <div style={{ width:6, height:6, borderRadius:'50%', background:'#f5a623' }} />
-                              <span style={{ fontSize:10, color:'#f5a623', fontFamily:'monospace' }}>SENT</span>
+                              <span style={{ fontSize:11, color:'#f5a623', fontFamily:'monospace' }}>SENT</span>
                             </div>
                           ) : (
                             <button onClick={() => fireAction(action.id, action.label, action.type, action.mailto)} disabled={isFiring}
-                              style={{ padding:'5px 12px', background: isFiring ? 'transparent' : '#f5a623', color: isFiring ? '#f5a623' : '#000', border: isFiring ? '1px solid rgba(245,166,35,0.3)' : 'none', borderRadius:5, fontSize:10, fontWeight:600, cursor: isFiring ? 'default' : 'pointer', fontFamily:'monospace', flexShrink:0, minWidth:60, transition:'all 0.2s' }}>
+                              style={{ padding:'5px 12px', background: isFiring ? 'transparent' : '#f5a623', color: isFiring ? '#f5a623' : '#000', border: isFiring ? '1px solid rgba(245,166,35,0.3)' : 'none', borderRadius:5, fontSize:11, fontWeight:600, cursor: isFiring ? 'default' : 'pointer', fontFamily:'monospace', flexShrink:0, minWidth:60, transition:'all 0.2s' }}>
                               {isFiring ? '...' : 'FIRE →'}
                             </button>
                           )}
@@ -2262,7 +2262,7 @@ export default function DashboardPage() {
             <div style={{ flex:1, overflowY:'auto', padding:'20px' }}>
               {/* Section A — CSV Upload */}
               <div style={{ marginBottom:24 }}>
-                <div style={{ fontSize:10, color:'#4a5260', fontFamily:'monospace', letterSpacing:'0.08em', marginBottom:10 }}>UPLOAD CSV</div>
+                <div style={{ fontSize:11, color:'#4a5260', fontFamily:'monospace', letterSpacing:'0.08em', marginBottom:10 }}>UPLOAD CSV</div>
                 <div style={{ padding:20, border:csvDragActive?'2px solid #f5a623':'2px dashed rgba(245,166,35,0.2)', borderRadius:12, textAlign:'center', cursor:'pointer', background:csvDragActive?'rgba(245,166,35,0.08)':'rgba(245,166,35,0.02)', transition:'all 0.15s' }}
                   onClick={() => document.getElementById('csv-upload')?.click()}
                   onDragOver={e => { e.preventDefault(); e.stopPropagation() }}
@@ -2271,13 +2271,13 @@ export default function DashboardPage() {
                   onDrop={e => { e.preventDefault(); e.stopPropagation(); dragCounter.current=0; setCsvDragActive(false); const f=e.dataTransfer?.files?.[0]; if(f) { const r=new FileReader(); r.onload=ev=>{setCsvRows(parseCsv(ev.target.result))}; r.readAsText(f) } }}>
                   <input id="csv-upload" type="file" accept=".csv,.txt,text/csv,text/plain" style={{ display:'none' }} onChange={e => { const f=e.target.files?.[0]; if(f) { const r=new FileReader(); r.onload=ev=>{setCsvRows(parseCsv(ev.target.result))}; r.readAsText(f) } }} />
                   <div style={{ fontSize:13, color:'#8a9099' }}>Drop a CSV here or click to browse</div>
-                  <div style={{ fontSize:10, color:'#4a5260', marginTop:4 }}>Columns: carrier, invoice_ref, invoice_date, job_ref, description, charged, agreed_rate</div>
+                  <div style={{ fontSize:11, color:'#4a5260', marginTop:4 }}>Columns: carrier, invoice_ref, invoice_date, job_ref, description, charged, agreed_rate</div>
                 </div>
                 {csvRows && csvRows.length > 0 && (
                   <div style={{ marginTop:12 }}>
                     <div style={{ fontSize:11, color:'#f5a623', marginBottom:6 }}>{csvRows.length} rows parsed — {groupCsvToInvoices(csvRows).length} invoices</div>
                     <div style={{ maxHeight:200, overflowY:'auto', border:'1px solid rgba(255,255,255,0.06)', borderRadius:8 }}>
-                      <table style={{ width:'100%', fontSize:10, color:'#8a9099', borderCollapse:'collapse' }}>
+                      <table style={{ width:'100%', fontSize:11, color:'#8a9099', borderCollapse:'collapse' }}>
                         <thead><tr style={{ background:'rgba(245,166,35,0.05)' }}>
                           {['Carrier','Ref','Job','Charged','Agreed','Delta'].map(h => <th key={h} style={{ padding:'6px 8px', textAlign:'left', color:'#4a5260', fontWeight:600 }}>{h}</th>)}
                         </tr></thead>
@@ -2292,7 +2292,7 @@ export default function DashboardPage() {
                           </tr>
                         ))}</tbody>
                       </table>
-                      {csvRows.length > 20 && <div style={{ padding:6, fontSize:10, color:'#4a5260', textAlign:'center' }}>+ {csvRows.length - 20} more rows</div>}
+                      {csvRows.length > 20 && <div style={{ padding:6, fontSize:11, color:'#4a5260', textAlign:'center' }}>+ {csvRows.length - 20} more rows</div>}
                     </div>
                     <div style={{ display:'flex', gap:8, marginTop:10 }}>
                       <button onClick={async () => {
@@ -2312,20 +2312,20 @@ export default function DashboardPage() {
 
               {/* Section B — Manual Entry */}
               <div style={{ marginBottom:24 }}>
-                <div style={{ fontSize:10, color:'#4a5260', fontFamily:'monospace', letterSpacing:'0.08em', marginBottom:10 }}>MANUAL ENTRY</div>
+                <div style={{ fontSize:11, color:'#4a5260', fontFamily:'monospace', letterSpacing:'0.08em', marginBottom:10 }}>MANUAL ENTRY</div>
                 <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:8, marginBottom:10 }}>
                   <input value={manualInv.carrier} onChange={e=>setManualInv(p=>({...p,carrier:e.target.value}))} placeholder="Carrier name" style={{ padding:10, background:'#0f1826', border:'1px solid rgba(255,255,255,0.1)', borderRadius:8, color:'#e8eaed', fontSize:13, outline:'none' }} />
                   <input value={manualInv.invoice_ref} onChange={e=>setManualInv(p=>({...p,invoice_ref:e.target.value}))} placeholder="Invoice ref" style={{ padding:10, background:'#0f1826', border:'1px solid rgba(255,255,255,0.1)', borderRadius:8, color:'#e8eaed', fontSize:13, outline:'none', fontFamily:'monospace' }} />
                   <input type="date" value={manualInv.invoice_date} onChange={e=>setManualInv(p=>({...p,invoice_date:e.target.value}))} style={{ padding:10, background:'#0f1826', border:'1px solid rgba(255,255,255,0.1)', borderRadius:8, color:'#e8eaed', fontSize:13, outline:'none' }} />
                 </div>
-                <div style={{ fontSize:10, color:'#4a5260', marginBottom:6 }}>LINE ITEMS</div>
+                <div style={{ fontSize:11, color:'#4a5260', marginBottom:6 }}>LINE ITEMS</div>
                 {manualInv.line_items.map((li, i) => (
                   <div key={i} style={{ display:'grid', gridTemplateColumns:'1fr 2fr 1fr 1fr auto', gap:6, marginBottom:6 }}>
                     <input value={li.job_ref} onChange={e=>{const u=[...manualInv.line_items];u[i]={...u[i],job_ref:e.target.value};setManualInv(p=>({...p,line_items:u}))}} placeholder="Job ref" style={{ padding:8, background:'#0f1826', border:'1px solid rgba(255,255,255,0.08)', borderRadius:6, color:'#e8eaed', fontSize:11, outline:'none', fontFamily:'monospace' }} />
                     <input value={li.description} onChange={e=>{const u=[...manualInv.line_items];u[i]={...u[i],description:e.target.value};setManualInv(p=>({...p,line_items:u}))}} placeholder="Description" style={{ padding:8, background:'#0f1826', border:'1px solid rgba(255,255,255,0.08)', borderRadius:6, color:'#e8eaed', fontSize:11, outline:'none' }} />
                     <input value={li.charged} onChange={e=>{const u=[...manualInv.line_items];u[i]={...u[i],charged:e.target.value};setManualInv(p=>({...p,line_items:u}))}} placeholder="£ charged" inputMode="decimal" style={{ padding:8, background:'#0f1826', border:'1px solid rgba(255,255,255,0.08)', borderRadius:6, color:'#e8eaed', fontSize:11, outline:'none', fontFamily:'monospace' }} />
                     <input value={li.agreed_rate} onChange={e=>{const u=[...manualInv.line_items];u[i]={...u[i],agreed_rate:e.target.value};setManualInv(p=>({...p,line_items:u}))}} placeholder="£ agreed" inputMode="decimal" style={{ padding:8, background:'#0f1826', border:'1px solid rgba(255,255,255,0.08)', borderRadius:6, color:'#e8eaed', fontSize:11, outline:'none', fontFamily:'monospace' }} />
-                    <button onClick={()=>{const u=manualInv.line_items.filter((_,j)=>j!==i);setManualInv(p=>({...p,line_items:u.length?u:[{job_ref:'',description:'',charged:'',agreed_rate:''}]}))}} style={{ padding:'4px 8px', background:'transparent', border:'1px solid rgba(239,68,68,0.2)', borderRadius:4, color:'#ef4444', fontSize:10, cursor:'pointer' }}>✕</button>
+                    <button onClick={()=>{const u=manualInv.line_items.filter((_,j)=>j!==i);setManualInv(p=>({...p,line_items:u.length?u:[{job_ref:'',description:'',charged:'',agreed_rate:''}]}))}} style={{ padding:'4px 8px', background:'transparent', border:'1px solid rgba(239,68,68,0.2)', borderRadius:4, color:'#ef4444', fontSize:11, cursor:'pointer' }}>✕</button>
                   </div>
                 ))}
                 <div style={{ display:'flex', gap:8, marginTop:8 }}>
@@ -2351,7 +2351,7 @@ export default function DashboardPage() {
               {/* Section C — Invoice List */}
               <div>
                 <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10 }}>
-                  <div style={{ fontSize:10, color:'#4a5260', fontFamily:'monospace', letterSpacing:'0.08em' }}>ALL INVOICES ({invoices.length})</div>
+                  <div style={{ fontSize:11, color:'#4a5260', fontFamily:'monospace', letterSpacing:'0.08em' }}>ALL INVOICES ({invoices.length})</div>
                   <button onClick={loadInvoices} style={{ background:'none', border:'none', color:'#4a5260', fontSize:11, cursor:'pointer' }}>↻ Refresh</button>
                 </div>
                 {invoices.length === 0 ? (
@@ -2363,15 +2363,15 @@ export default function DashboardPage() {
                     <div key={inv.id} style={{ padding:'12px 14px', border:`1px solid ${hasOvercharge ? 'rgba(239,68,68,0.2)' : 'rgba(255,255,255,0.06)'}`, borderLeft:`3px solid ${statusColors[inv.status] || '#4a5260'}`, borderRadius:8, background: hasOvercharge ? 'rgba(239,68,68,0.03)' : '#0f1826', marginBottom:8 }}>
                       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:4 }}>
                         <div>
-                          <span style={{ fontSize:12, color:'#e8eaed', fontWeight:600 }}>{inv.carrier}</span>
-                          <span style={{ fontSize:11, color:'#4a5260', fontFamily:'monospace', marginLeft:8 }}>{inv.invoice_ref}</span>
+                          <span style={{ fontSize:15, color:'#e8eaed', fontWeight:700 }}>{inv.carrier}</span>
+                          <span style={{ fontSize:13, color:'#4a5260', fontFamily:'monospace', marginLeft:8 }}>{inv.invoice_ref}</span>
                         </div>
-                        <span style={{ fontSize:9, padding:'2px 7px', background:`${statusColors[inv.status]}22`, color:statusColors[inv.status], fontFamily:'monospace', fontWeight:700, borderRadius:3 }}>{inv.status?.replace(/_/g,' ').toUpperCase()}</span>
+                        <span style={{ fontSize:11, padding:'2px 7px', background:`${statusColors[inv.status]}22`, color:statusColors[inv.status], fontFamily:'monospace', fontWeight:700, borderRadius:3 }}>{inv.status?.replace(/_/g,' ').toUpperCase()}</span>
                       </div>
-                      <div style={{ display:'flex', gap:14, fontSize:10, color:'#8a9099', marginBottom:6 }}>
+                      <div style={{ display:'flex', gap:14, fontSize:14, color:'#8a9099', marginBottom:6 }}>
                         <span>Charged: £{(inv.total_charged||0).toLocaleString()}</span>
                         <span>Agreed: £{(inv.total_agreed||0).toLocaleString()}</span>
-                        {hasOvercharge && <span style={{ color:'#ef4444', fontWeight:600 }}>Overcharge: £{(inv.total_overcharge||0).toLocaleString()}</span>}
+                        {hasOvercharge && <span style={{ color:'#ef4444', fontWeight:700 }}>Overcharge: £{(inv.total_overcharge||0).toLocaleString()}</span>}
                         <span>{inv.source?.replace(/_/g,' ')}</span>
                         {inv.invoice_date && <span>{inv.invoice_date}</span>}
                       </div>
@@ -2386,15 +2386,15 @@ export default function DashboardPage() {
                             setEmailPickerMailto(`mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`)
                             setEmailPickerInvoiceId(inv.id)
                             setEmailPickerSent(false)
-                          }} style={{ padding:'4px 10px', background:'rgba(239,68,68,0.08)', border:'1px solid rgba(239,68,68,0.25)', borderRadius:5, color:'#ef4444', fontSize:10, fontWeight:600, cursor:'pointer' }}>✉ Dispute</button>
+                          }} style={{ padding:'4px 10px', background:'rgba(239,68,68,0.08)', border:'1px solid rgba(239,68,68,0.25)', borderRadius:5, color:'#ef4444', fontSize:11, fontWeight:600, cursor:'pointer' }}>✉ Dispute</button>
                         )}
                         {inv.status === 'pending_review' && !hasOvercharge && (
                           <button onClick={() => { fetch('/api/invoices', { method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ id:inv.id, status:'approved' }) }).then(()=>{showDashToast('Invoice approved');loadInvoices()}).catch(()=>{}) }}
-                            style={{ padding:'4px 10px', background:'rgba(245,166,35,0.08)', border:'1px solid rgba(245,166,35,0.2)', borderRadius:5, color:'#f5a623', fontSize:10, fontWeight:600, cursor:'pointer' }}>✓ Approve</button>
+                            style={{ padding:'4px 10px', background:'rgba(245,166,35,0.08)', border:'1px solid rgba(245,166,35,0.2)', borderRadius:5, color:'#f5a623', fontSize:11, fontWeight:600, cursor:'pointer' }}>✓ Approve</button>
                         )}
                         {inv.status === 'disputed' && (
                           <button onClick={() => { fetch('/api/invoices', { method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ id:inv.id, status:'resolved' }) }).then(()=>{showDashToast('Marked resolved');loadInvoices()}).catch(()=>{}) }}
-                            style={{ padding:'4px 10px', background:'rgba(34,197,94,0.08)', border:'1px solid rgba(34,197,94,0.2)', borderRadius:5, color:'#22c55e', fontSize:10, fontWeight:600, cursor:'pointer' }}>✓ Resolved</button>
+                            style={{ padding:'4px 10px', background:'rgba(34,197,94,0.08)', border:'1px solid rgba(34,197,94,0.2)', borderRadius:5, color:'#22c55e', fontSize:11, fontWeight:600, cursor:'pointer' }}>✓ Resolved</button>
                         )}
                       </div>
                     </div>
@@ -2407,7 +2407,7 @@ export default function DashboardPage() {
           {/* ── SCENARIOS TAB ─────────────────────────────────────────────── */}
           {activeTab === 'scenarios' && (
             <div style={{ flex:1, overflowY:'auto', padding:'20px' }}>
-              <div style={{ fontSize:10, color:'#4a5260', fontFamily:'monospace', marginBottom:14 }}>// 10 OPERATIONAL SCENARIOS — click any to run with demo data</div>
+              <div style={{ fontSize:11, color:'#4a5260', fontFamily:'monospace', marginBottom:14 }}>// 10 OPERATIONAL SCENARIOS — click any to run with demo data</div>
               <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(220px,1fr))', gap:8, marginBottom:20 }}>
                 {[
                   { id:'driver_silent', label:'Driver Goes Silent', icon:'📵', color:'#ef4444' },
@@ -2427,7 +2427,7 @@ export default function DashboardPage() {
                       <span style={{ fontSize:15 }}>{s.icon}</span>
                       <span style={{ fontSize:11, fontWeight:500, color:'#e8eaed', lineHeight:1.3 }}>{s.label}</span>
                     </div>
-                    <div style={{ fontSize:9, color:s.color, fontFamily:'monospace' }}>
+                    <div style={{ fontSize:11, color:s.color, fontFamily:'monospace' }}>
                       {scenarioRunning===s.id ? '● RUNNING...' : 'CLICK TO RUN DEMO'}
                     </div>
                   </button>
@@ -2463,8 +2463,8 @@ export default function DashboardPage() {
               <div className="dh-cmd-left" style={{ width:280, flexShrink:0, display:'flex', flexDirection:'column', borderRight:'2px solid rgba(255,255,255,0.06)', overflow:'hidden' }}>
                 <div style={{ background:'#0d1420', borderBottom:'1px solid rgba(255,255,255,0.06)', padding:'12px 16px', display:'flex', justifyContent:'space-between', alignItems:'center', flexShrink:0 }}>
                   <div>
-                    <div style={{ fontSize:10, fontWeight:700, letterSpacing:'0.1em', color:'#e8eaed', fontFamily:'monospace' }}>LIVE FLEET</div>
-                    <div style={{ fontSize:9, color:'#4a5260', marginTop:2 }}>{activeDrivers.length} on shift</div>
+                    <div style={{ fontSize:11, fontWeight:700, letterSpacing:'0.1em', color:'#e8eaed', fontFamily:'monospace' }}>LIVE FLEET</div>
+                    <div style={{ fontSize:11, color:'#4a5260', marginTop:2 }}>{activeDrivers.length} on shift</div>
                   </div>
                   <button onClick={() => { loadActiveDrivers(); loadFleet() }} style={{ background:'none', border:'none', color:'#4a5260', fontSize:11, cursor:'pointer' }}>↻</button>
                 </div>
@@ -2473,7 +2473,7 @@ export default function DashboardPage() {
                   {activeDrivers.length === 0 && fleet.length === 0 ? (
                     <div style={{ padding:16, textAlign:'center' }}>
                       <div style={{ fontSize:11, color:'#4a5260', marginBottom:4 }}>No drivers on shift</div>
-                      <div style={{ fontSize:10, color:'#4a5260', fontFamily:'monospace' }}>Start a shift in the driver app</div>
+                      <div style={{ fontSize:11, color:'#4a5260', fontFamily:'monospace' }}>Start a shift in the driver app</div>
                     </div>
                   ) : (
                     (activeDrivers.length > 0 ? activeDrivers : fleet).map((v, i) => {
@@ -2489,17 +2489,17 @@ export default function DashboardPage() {
                       return (
                         <div key={i} style={{ padding:'12px 16px', borderBottom:'1px solid rgba(255,255,255,0.04)', borderLeft:`3px solid ${statusColor}` }}>
                           <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:4 }}>
-                            <span style={{ fontFamily:'monospace', fontSize:12, fontWeight:700, color:'#e8eaed', letterSpacing:1 }}>{reg}</span>
-                            <span style={{ fontSize:8, padding:'2px 6px', background:`${statusColor}18`, color:statusColor, fontFamily:'monospace', fontWeight:700 }}>{status.replace(/_/g,' ').toUpperCase()}</span>
+                            <span style={{ fontFamily:'monospace', fontSize:15, fontWeight:700, color:'#e8eaed', letterSpacing:1 }}>{reg}</span>
+                            <span style={{ fontSize:12, padding:'2px 6px', background:`${statusColor}18`, color:statusColor, fontFamily:'monospace', fontWeight:700 }}>{status.replace(/_/g,' ').toUpperCase()}</span>
                           </div>
-                          <div style={{ fontSize:11, color:'#8a9099', marginBottom:3 }}>{name}</div>
-                          {loc && <div style={{ fontSize:9, color:'#4a5260', marginBottom:2 }}>📍 {loc}</div>}
-                          {cargo && <div style={{ fontSize:9, color:cargoColor }}>{cargo.includes('pharma') ? '💊' : cargo.includes('chilled') ? '❄' : '📦'} {cargo}</div>}
-                          {route && <div style={{ fontSize:9, color:'#374151', marginTop:2 }}>→ {route}</div>}
+                          <div style={{ fontSize:13, color:'#8a9099', marginBottom:3 }}>{name}</div>
+                          {loc && <div style={{ fontSize:11, color:'#4a5260', marginBottom:2 }}>📍 {loc}</div>}
+                          {cargo && <div style={{ fontSize:11, color:cargoColor }}>{cargo.includes('pharma') ? '💊' : cargo.includes('chilled') ? '❄' : '📦'} {cargo}</div>}
+                          {route && <div style={{ fontSize:11, color:'#374151', marginTop:2 }}>→ {route}</div>}
                           {fleetVehicle && fleetVehicle.jobs?.length > 0 && (
                             <div style={{ marginTop:6, display:'flex', gap:6 }}>
                               <button onClick={() => setCancelConfirm({ vehicle_reg: reg, cancel_all: true })}
-                                style={{ padding:'3px 8px', borderRadius:4, border:'1px solid rgba(239,68,68,0.3)', background:'rgba(239,68,68,0.06)', color:'#ef4444', fontSize:9, cursor:'pointer', fontFamily:'monospace' }}>
+                                style={{ padding:'3px 8px', borderRadius:4, border:'1px solid rgba(239,68,68,0.3)', background:'rgba(239,68,68,0.06)', color:'#ef4444', fontSize:11, cursor:'pointer', fontFamily:'monospace' }}>
                                 Cancel all
                               </button>
                             </div>
@@ -2512,30 +2512,30 @@ export default function DashboardPage() {
                   {/* Unassigned queue */}
                   {unassigned.length > 0 && (
                     <div style={{ borderTop:'1px solid rgba(255,255,255,0.06)', padding:'10px 16px' }}>
-                      <div style={{ fontSize:9, color:'#f59e0b', fontFamily:'monospace', fontWeight:700, marginBottom:8 }}>UNASSIGNED — {unassigned.length}</div>
+                      <div style={{ fontSize:11, color:'#f59e0b', fontFamily:'monospace', fontWeight:700, marginBottom:8 }}>UNASSIGNED — {unassigned.length}</div>
                       {unassigned.map(job => (
                         <div key={job.ref} style={{ background:'rgba(245,158,11,0.05)', border:'1px solid rgba(245,158,11,0.15)', borderRadius:6, padding:'8px 10px', marginBottom:6 }}>
                           <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:4 }}>
                             <span style={{ fontFamily:'monospace', fontSize:11, color:'#e8eaed' }}>{job.ref}</span>
                             <button onClick={() => { setReassignJobRef(job.ref); setReassignTo('') }}
-                              style={{ padding:'3px 8px', borderRadius:4, border:'1px solid rgba(245,166,35,0.3)', background:'rgba(245,166,35,0.06)', color:'#f5a623', fontSize:9, cursor:'pointer', fontFamily:'monospace' }}>
+                              style={{ padding:'3px 8px', borderRadius:4, border:'1px solid rgba(245,166,35,0.3)', background:'rgba(245,166,35,0.06)', color:'#f5a623', fontSize:11, cursor:'pointer', fontFamily:'monospace' }}>
                               Assign →
                             </button>
                           </div>
-                          <div style={{ fontSize:9, color:'#4a5260' }}>was {job.original_vehicle}</div>
+                          <div style={{ fontSize:11, color:'#4a5260' }}>was {job.original_vehicle}</div>
                           {reassignJobRef === job.ref && (
                             <div style={{ display:'flex', gap:6, marginTop:6 }}>
                               <select value={reassignTo} onChange={e => setReassignTo(e.target.value)}
-                                style={{ flex:1, padding:'4px 6px', background:'#080c14', border:'1px solid rgba(255,255,255,0.1)', borderRadius:4, color: reassignTo ? '#e8eaed' : '#4a5260', fontSize:10, outline:'none', fontFamily:'Barlow' }}>
+                                style={{ flex:1, padding:'4px 6px', background:'#080c14', border:'1px solid rgba(255,255,255,0.1)', borderRadius:4, color: reassignTo ? '#e8eaed' : '#4a5260', fontSize:11, outline:'none', fontFamily:'Barlow' }}>
                                 <option value=''>Pick driver...</option>
                                 {fleet.map(v => <option key={v.vehicle_reg} value={v.vehicle_reg}>{v.vehicle_reg}{v.driver_name ? ` — ${v.driver_name}` : ''}</option>)}
                               </select>
                               <button onClick={() => reassignTo && reassignUnassigned(job.ref, reassignTo, job.reason)} disabled={!reassignTo}
-                                style={{ padding:'4px 8px', borderRadius:4, border:'none', background: reassignTo ? '#f5a623' : 'rgba(245,166,35,0.2)', color: reassignTo ? '#000' : '#4a5260', fontSize:10, fontWeight:700, cursor: reassignTo ? 'pointer' : 'default', fontFamily:'monospace' }}>
+                                style={{ padding:'4px 8px', borderRadius:4, border:'none', background: reassignTo ? '#f5a623' : 'rgba(245,166,35,0.2)', color: reassignTo ? '#000' : '#4a5260', fontSize:11, fontWeight:700, cursor: reassignTo ? 'pointer' : 'default', fontFamily:'monospace' }}>
                                 ✓
                               </button>
                               <button onClick={() => { setReassignJobRef(null); setReassignTo('') }}
-                                style={{ padding:'4px 7px', borderRadius:4, border:'1px solid rgba(255,255,255,0.08)', background:'transparent', color:'#4a5260', fontSize:10, cursor:'pointer' }}>✕</button>
+                                style={{ padding:'4px 7px', borderRadius:4, border:'1px solid rgba(255,255,255,0.08)', background:'transparent', color:'#4a5260', fontSize:11, cursor:'pointer' }}>✕</button>
                             </div>
                           )}
                         </div>
@@ -2553,7 +2553,7 @@ export default function DashboardPage() {
                   ].map(s => (
                     <div key={s.l} style={{ textAlign:'center' }}>
                       <div style={{ fontSize:16, fontWeight:700, color:s.c, fontFamily:'monospace' }}>{s.n}</div>
-                      <div style={{ fontSize:8, color:'#4a5260', letterSpacing:1 }}>{s.l}</div>
+                      <div style={{ fontSize:11, color:'#4a5260', letterSpacing:1 }}>{s.l}</div>
                     </div>
                   ))}
                 </div>
@@ -2563,8 +2563,8 @@ export default function DashboardPage() {
               <div className="dh-cmd-centre" style={{ flex:1, display:'flex', flexDirection:'column', borderRight:'2px solid rgba(255,255,255,0.06)', overflow:'hidden' }}>
                 <div style={{ background:'#0d1420', borderBottom:'1px solid rgba(255,255,255,0.06)', padding:'12px 20px', display:'flex', justifyContent:'space-between', alignItems:'center', flexShrink:0 }}>
                   <div>
-                    <div style={{ fontSize:10, fontWeight:700, letterSpacing:'0.1em', color:'#e8eaed', fontFamily:'monospace' }}>ACTION QUEUE</div>
-                    <div style={{ fontSize:9, color:'#4a5260', marginTop:2 }}>Decisions waiting · Auto-handled · Resolved</div>
+                    <div style={{ fontSize:11, fontWeight:700, letterSpacing:'0.1em', color:'#e8eaed', fontFamily:'monospace' }}>ACTION QUEUE</div>
+                    <div style={{ fontSize:11, color:'#4a5260', marginTop:2 }}>Decisions waiting · Auto-handled · Resolved</div>
                   </div>
                   <div style={{ display:'flex', gap:6 }}>
                     {[
@@ -2573,7 +2573,7 @@ export default function DashboardPage() {
                     ].map(s => (
                       <div key={s.l} style={{ textAlign:'center', padding:'4px 10px', background:`${s.c}11`, border:`1px solid ${s.c}33` }}>
                         <div style={{ fontSize:15, fontWeight:700, color:s.c, fontFamily:'monospace' }}>{s.n}</div>
-                        <div style={{ fontSize:8, color:`${s.c}88`, letterSpacing:1 }}>{s.l}</div>
+                        <div style={{ fontSize:11, color:`${s.c}88`, letterSpacing:1 }}>{s.l}</div>
                       </div>
                     ))}
                   </div>
@@ -2590,11 +2590,11 @@ export default function DashboardPage() {
                             <span style={{ fontSize:15 }}>{a.ico}</span>
                             <div style={{ flex:1, minWidth:0 }}>
                               <div style={{ fontSize:12, color:'#e8eaed', fontWeight:500 }}>{a.action_label}</div>
-                              <div style={{ fontSize:9, color:'#4a5260', fontFamily:'monospace', marginTop:2 }}>{(a.action_type||'').toUpperCase()} · {a.executed_at}</div>
+                              <div style={{ fontSize:11, color:'#4a5260', fontFamily:'monospace', marginTop:2 }}>{(a.action_type||'').toUpperCase()} · {a.executed_at}</div>
                             </div>
                             <div style={{ display:'flex', alignItems:'center', gap:5 }}>
                               <div style={{ width:6, height:6, borderRadius:'50%', background:'#f5a623' }} />
-                              <span style={{ fontSize:9, color:'#f5a623', fontFamily:'monospace' }}>DONE</span>
+                              <span style={{ fontSize:11, color:'#f5a623', fontFamily:'monospace' }}>DONE</span>
                             </div>
                           </div>
                         </div>
@@ -2620,15 +2620,15 @@ export default function DashboardPage() {
                           <div style={{ padding:'12px 14px' }}>
                             <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:6 }}>
                               <div style={{ display:'flex', gap:8, alignItems:'center' }}>
-                                <span style={{ fontSize:9, padding:'2px 7px', background:`${borderCol}22`, color:borderCol, fontFamily:'monospace', fontWeight:700 }}>
+                                <span style={{ fontSize:11, padding:'2px 7px', background:`${borderCol}22`, color:borderCol, fontFamily:'monospace', fontWeight:700 }}>
                                   {isPending ? '⚠ PENDING' : isExecuted ? '✓ DONE' : isRejected ? '✕ REJECTED' : a.status?.toUpperCase()}
                                 </span>
-                                <span style={{ fontSize:9, color:'#4a5260' }}>{a.action_details?.vehicle_reg || ''}</span>
+                                <span style={{ fontSize:13, color:'#f5a623', fontWeight:700, fontFamily:'monospace' }}>{a.action_details?.vehicle_reg || ''}</span>
                               </div>
-                              <span style={{ fontSize:9, color:'#374151' }}>{timeStr}</span>
+                              <span style={{ fontSize:11, color:'#374151' }}>{timeStr}</span>
                             </div>
-                            <div style={{ fontSize:13, fontWeight:600, color:'#e8eaed', marginBottom:6 }}>{ico} {a.action_label}</div>
-                            {a.financial_value > 0 && <div style={{ fontSize:10, color:borderCol, fontWeight:600, marginBottom:8 }}>£{Number(a.financial_value).toLocaleString()}</div>}
+                            <div style={{ fontSize:14, fontWeight:600, color:'#e8eaed', marginBottom:6, lineHeight:1.5 }}>{ico} {a.action_label}</div>
+                            {a.financial_value > 0 && <div style={{ fontSize:14, color:borderCol, fontWeight:700, marginBottom:8 }}>£{Number(a.financial_value).toLocaleString()}</div>}
                             {isPending && (
                               <div style={{ display:'flex', gap:6 }}>
                                 <button onClick={() => handleApproval(a.id,'approve')} disabled={isProcessing}
@@ -2642,8 +2642,8 @@ export default function DashboardPage() {
 
                               </div>
                             )}
-                            {isExecuted && <div style={{ fontSize:9, color:'#f5a623', fontFamily:'monospace' }}>✓ Actioned {timeStr} — no further action needed</div>}
-                            {isRejected && <div style={{ fontSize:9, color:'#4a5260', fontFamily:'monospace' }}>Dismissed</div>}
+                            {isExecuted && <div style={{ fontSize:11, color:'#f5a623', fontFamily:'monospace' }}>✓ Actioned {timeStr} — no further action needed</div>}
+                            {isRejected && <div style={{ fontSize:11, color:'#4a5260', fontFamily:'monospace' }}>Dismissed</div>}
                           </div>
                         </div>
                       )
@@ -2663,11 +2663,11 @@ export default function DashboardPage() {
                 {/* Toggle header */}
                 <div style={{ background:'#0d1420', borderBottom:'1px solid rgba(255,255,255,0.06)', flexShrink:0, display:'flex' }}>
                   <button onClick={() => setCommandRightTab('incidents')}
-                    style={{ flex:1, padding:'12px 0', background:'transparent', border:'none', borderBottom: commandRightTab==='incidents' ? '2px solid #f5a623' : '2px solid transparent', color: commandRightTab==='incidents' ? '#e8eaed' : '#4a5260', fontSize:10, fontWeight:700, letterSpacing:'0.08em', cursor:'pointer', fontFamily:'monospace' }}>
+                    style={{ flex:1, padding:'12px 0', background:'transparent', border:'none', borderBottom: commandRightTab==='incidents' ? '2px solid #f5a623' : '2px solid transparent', color: commandRightTab==='incidents' ? '#e8eaed' : '#4a5260', fontSize:11, fontWeight:700, letterSpacing:'0.08em', cursor:'pointer', fontFamily:'monospace' }}>
                     INCIDENTS
                   </button>
                   <button onClick={() => setCommandRightTab('value')}
-                    style={{ flex:1, padding:'12px 0', background:'transparent', border:'none', borderBottom: commandRightTab==='value' ? '2px solid #f5a623' : '2px solid transparent', color: commandRightTab==='value' ? '#f5a623' : '#4a5260', fontSize:10, fontWeight:700, letterSpacing:'0.08em', cursor:'pointer', fontFamily:'monospace' }}>
+                    style={{ flex:1, padding:'12px 0', background:'transparent', border:'none', borderBottom: commandRightTab==='value' ? '2px solid #f5a623' : '2px solid transparent', color: commandRightTab==='value' ? '#f5a623' : '#4a5260', fontSize:11, fontWeight:700, letterSpacing:'0.08em', cursor:'pointer', fontFamily:'monospace' }}>
                     VALUE ▲
                   </button>
                 </div>
@@ -2680,11 +2680,11 @@ export default function DashboardPage() {
                   return (
                     <div onClick={() => setCommandRightTab('value')} style={{ background:'rgba(245,166,35,0.04)', borderBottom:'1px solid rgba(245,166,35,0.12)', padding:'10px 16px', cursor:'pointer', flexShrink:0, display:'flex', justifyContent:'space-between', alignItems:'center' }}>
                       <div>
-                        <div style={{ fontSize:8, color:'#4a5260', letterSpacing:2, marginBottom:2 }}>SLA PROTECTED</div>
+                        <div style={{ fontSize:11, color:'#4a5260', letterSpacing:2, marginBottom:2 }}>SLA PROTECTED</div>
                         <div style={{ fontSize:20, fontWeight:700, color:'#f5a623', fontFamily:'monospace', lineHeight:1 }}>£{totalProtected.toLocaleString()}</div>
                       </div>
                       <div style={{ textAlign:'right' }}>
-                        <div style={{ fontSize:8, color:'#4a5260', letterSpacing:2, marginBottom:2 }}>TIME SAVED</div>
+                        <div style={{ fontSize:11, color:'#4a5260', letterSpacing:2, marginBottom:2 }}>TIME SAVED</div>
                         <div style={{ fontSize:20, fontWeight:700, color:'#f5a623', fontFamily:'monospace', lineHeight:1 }}>{timeSavedMins >= 60 ? `${(timeSavedMins/60).toFixed(1)}h` : `${timeSavedMins}m`}</div>
                       </div>
                     </div>
@@ -2704,14 +2704,14 @@ export default function DashboardPage() {
                       return (
                         <div key={i} style={{ padding:'10px 16px', borderBottom:'1px solid rgba(255,255,255,0.04)', borderLeft:`3px solid ${sc}`, background: i===0 ? 'rgba(255,255,255,0.01)' : 'transparent' }}>
                           <div style={{ display:'flex', gap:8, alignItems:'flex-start' }}>
-                            <span style={{ fontSize:8, padding:'2px 5px', background:`${sc}22`, color:sc, fontFamily:'monospace', fontWeight:700, flexShrink:0, marginTop:1 }}>{log.severity}</span>
+                            <span style={{ fontSize:11, padding:'2px 5px', background:`${sc}22`, color:sc, fontFamily:'monospace', fontWeight:700, flexShrink:0, marginTop:1 }}>{log.severity}</span>
                             <div style={{ flex:1, minWidth:0 }}>
                               <div style={{ fontSize:11, fontWeight:600, color: i===0 ? '#e8eaed' : '#8a9099', marginBottom:2, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
                                 {log.event_type?.replace(/_/g,' ')} · {log.payload?.vehicle_reg || ''}
                               </div>
-                              <div style={{ fontSize:9, color:'#4a5260' }}>{log.system_name} · {timeStr}</div>
-                              {log.financial_impact > 0 && <div style={{ fontSize:9, color: i===0 ? '#f59e0b' : '#f5a623', marginTop:2, fontWeight:600 }}>£{Number(log.financial_impact).toLocaleString()}</div>}
-                              {log.sms_fired && <div style={{ fontSize:8, color:'#f5a623', marginTop:1 }}>✓ SMS sent</div>}
+                              <div style={{ fontSize:11, color:'#4a5260' }}>{log.system_name} · {timeStr}</div>
+                              {log.financial_impact > 0 && <div style={{ fontSize:11, color: i===0 ? '#f59e0b' : '#f5a623', marginTop:2, fontWeight:600 }}>£{Number(log.financial_impact).toLocaleString()}</div>}
+                              {log.sms_fired && <div style={{ fontSize:11, color:'#f5a623', marginTop:1 }}>✓ SMS sent</div>}
                             </div>
                           </div>
                         </div>
@@ -2742,12 +2742,12 @@ export default function DashboardPage() {
                     <div style={{ flex:1, overflowY:'auto', padding:'12px 16px' }}>
                       {stats.map((s, i) => (
                         <div key={i} style={{ background:'rgba(255,255,255,0.02)', border:`1px solid ${s.color}22`, borderLeft:`3px solid ${s.color}`, borderRadius:6, padding:'12px', marginBottom:8 }}>
-                          <div style={{ fontSize:8, color:'#4a5260', letterSpacing:'0.1em', marginBottom:6 }}>{s.label}</div>
+                          <div style={{ fontSize:11, color:'#4a5260', letterSpacing:'0.1em', marginBottom:6 }}>{s.label}</div>
                           <div style={{ fontSize:24, fontWeight:700, color:s.color, fontFamily:'monospace', lineHeight:1, marginBottom:4 }}>{s.value}</div>
-                          <div style={{ fontSize:9, color:'#374151', lineHeight:1.5 }}>{s.sub}</div>
+                          <div style={{ fontSize:11, color:'#374151', lineHeight:1.5 }}>{s.sub}</div>
                         </div>
                       ))}
-                      <div style={{ padding:'10px 0', fontSize:9, color:'#374151', lineHeight:1.6, borderTop:'1px solid rgba(255,255,255,0.05)', marginTop:4 }}>
+                      <div style={{ padding:'10px 0', fontSize:11, color:'#374151', lineHeight:1.6, borderTop:'1px solid rgba(255,255,255,0.05)', marginTop:4 }}>
                         {canProject
                           ? `Annual projection: £${Math.round((totalProtected/whLog.length)*365/7*5).toLocaleString()} estimated`
                           : 'Annual projection available after 3 days of data'
@@ -2767,8 +2767,8 @@ export default function DashboardPage() {
                       ['EXECUTED', String(pendingApprovals.filter(a=>a.status==='executed').length)],
                     ].map(([k,v]) => (
                       <div key={k} style={{ display:'flex', justifyContent:'space-between', paddingRight:8 }}>
-                        <span style={{ fontSize:8, color:'#374151' }}>{k}</span>
-                        <span style={{ fontSize:8, color:'#9ca3af', fontWeight:700, fontFamily:'monospace' }}>{v}</span>
+                        <span style={{ fontSize:11, color:'#374151' }}>{k}</span>
+                        <span style={{ fontSize:11, color:'#9ca3af', fontWeight:700, fontFamily:'monospace' }}>{v}</span>
                       </div>
                     ))}
                   </div>
@@ -2837,7 +2837,7 @@ export default function DashboardPage() {
 
                 {/* ── ACTIVE FLEET PANEL — full width above test console ── */}
                 <div style={{ gridColumn:'1 / -1', marginBottom:4 }}>
-                  <div style={{ fontSize:9, color:'#4a5260', fontFamily:'monospace', letterSpacing:'0.08em', marginBottom:10 }}>// ACTIVE FLEET — DRIVERS CURRENTLY ON SHIFT</div>
+                  <div style={{ fontSize:11, color:'#4a5260', fontFamily:'monospace', letterSpacing:'0.08em', marginBottom:10 }}>// ACTIVE FLEET — DRIVERS CURRENTLY ON SHIFT</div>
                   {activeDriversLoading && (
                     <div style={{ fontSize:11, color:'#4a5260', padding:'12px 14px', background:'#0f1826', borderRadius:8 }}>Loading active drivers...</div>
                   )}
@@ -2855,21 +2855,21 @@ export default function DashboardPage() {
                           <div key={i} onClick={() => selectTestVehicle(driver)} style={{ padding:'12px 16px', background: isSelected ? 'rgba(245,166,35,0.06)' : '#0f1826', border: isSelected ? '1px solid rgba(245,166,35,0.35)' : '1px solid rgba(255,255,255,0.08)', borderRadius:9, cursor:'pointer', minWidth:220, flex:'1 1 220px', transition:'all 0.15s' }}>
                             <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:6 }}>
                               <span style={{ fontSize:13, fontWeight:700, color: isSelected ? '#f5a623' : '#e8eaed', fontFamily:'monospace', letterSpacing:1 }}>{driver.vehicle_reg}</span>
-                              {isSelected && <span style={{ fontSize:9, color:'#f5a623', fontFamily:'monospace', letterSpacing:1 }}>✓ SELECTED</span>}
+                              {isSelected && <span style={{ fontSize:11, color:'#f5a623', fontFamily:'monospace', letterSpacing:1 }}>✓ SELECTED</span>}
                             </div>
                             <div style={{ fontSize:11, color:'#8a9099', marginBottom:4 }}>{driver.driver_name}</div>
                             {driver.last_known_location && (
-                              <div style={{ fontSize:10, color:'#4a5260', marginBottom:4 }}>📍 {driver.last_known_location}</div>
+                              <div style={{ fontSize:11, color:'#4a5260', marginBottom:4 }}>📍 {driver.last_known_location}</div>
                             )}
                             {driver.cargo_type && (
-                              <div style={{ fontSize:10, color:cargoColor }}>
+                              <div style={{ fontSize:11, color:cargoColor }}>
                                 {driver.cargo_type.includes('pharma') ? '💊' : driver.cargo_type.includes('chilled') ? '❄' : driver.cargo_type.includes('frozen') ? '🧊' : '📦'} {driver.cargo_type}
                               </div>
                             )}
                             {driver.current_route && (
-                              <div style={{ fontSize:10, color:'#4a5260', marginTop:4 }}>→ {driver.current_route}</div>
+                              <div style={{ fontSize:11, color:'#4a5260', marginTop:4 }}>→ {driver.current_route}</div>
                             )}
-                            <div style={{ fontSize:9, color: isSelected ? '#f5a623' : '#4a5260', marginTop:6, fontFamily:'monospace' }}>
+                            <div style={{ fontSize:11, color: isSelected ? '#f5a623' : '#4a5260', marginTop:6, fontFamily:'monospace' }}>
                               {isSelected ? '✓ Events filtered for this vehicle · payload injected' : 'Select → auto-filters relevant events'}
                             </div>
                           </div>
@@ -2890,11 +2890,11 @@ export default function DashboardPage() {
                       This is a <strong style={{color:'#e8eaed'}}>setup and testing tool</strong> for connecting DisruptionHub to your existing systems — things like your TMS (e.g. Mandata), vehicle tracking (e.g. Webfleet, Samsara), or warehouse systems. When those systems send an alert, DisruptionHub picks it up, analyses it with AI, and notifies ops automatically. Use the console below to test that each connection is working correctly. Your drivers don't see this.
                     </div>
                   </div>
-                  <div style={{ fontSize:10, color:'#4a5260', fontFamily:'monospace', marginBottom:14 }}>// TEST CONSOLE — simulate a system event and trigger the full AI + SMS chain</div>
+                  <div style={{ fontSize:11, color:'#4a5260', fontFamily:'monospace', marginBottom:14 }}>// TEST CONSOLE — simulate a system event and trigger the full AI + SMS chain</div>
 
                   {/* System selector */}
                   <div style={{ marginBottom:14 }}>
-                    <div style={{ fontSize:9, fontFamily:'monospace', color:'#4a5260', letterSpacing:'0.08em', marginBottom:8 }}>SELECT SYSTEM</div>
+                    <div style={{ fontSize:11, fontFamily:'monospace', color:'#4a5260', letterSpacing:'0.08em', marginBottom:8 }}>SELECT SYSTEM</div>
                     <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
                       {Object.entries(WEBHOOK_SYSTEMS).map(([key, s]) => (
                         <button key={key} onClick={() => {
@@ -2913,12 +2913,12 @@ export default function DashboardPage() {
 
                   {/* Event selector — relevance-filtered when vehicle selected */}
                   <div style={{ marginBottom:14 }}>
-                    <div style={{ fontSize:9, fontFamily:'monospace', color:'#4a5260', letterSpacing:'0.08em', marginBottom:8 }}>
+                    <div style={{ fontSize:11, fontFamily:'monospace', color:'#4a5260', letterSpacing:'0.08em', marginBottom:8 }}>
                       SELECT EVENT TYPE
                       {relevantEvents && selectedTestVehicle && (
                         <span style={{ marginLeft:8, color:'#f5a623' }}>· filtered for {selectedTestVehicle.cargo_type || selectedTestVehicle.vehicle_reg}</span>
                       )}
-                      {relevantEvents && <button onClick={() => setRelevantEvents(null)} style={{ marginLeft:8, background:'none', border:'none', color:'#4a5260', fontSize:9, cursor:'pointer', fontFamily:'monospace' }}>show all ×</button>}
+                      {relevantEvents && <button onClick={() => setRelevantEvents(null)} style={{ marginLeft:8, background:'none', border:'none', color:'#4a5260', fontSize:11, cursor:'pointer', fontFamily:'monospace' }}>show all ×</button>}
                     </div>
                     <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
                       {sys && Object.entries(sys.events).map(([key, evt]) => {
@@ -2969,11 +2969,11 @@ export default function DashboardPage() {
                   {/* Payload fields */}
                   {evtConfig && (
                     <div style={{ marginBottom:14 }}>
-                      <div style={{ fontSize:9, fontFamily:'monospace', color:'#4a5260', letterSpacing:'0.08em', marginBottom:8 }}>PAYLOAD — edit fields then fire</div>
+                      <div style={{ fontSize:11, fontFamily:'monospace', color:'#4a5260', letterSpacing:'0.08em', marginBottom:8 }}>PAYLOAD — edit fields then fire</div>
                       <div style={{ background:'#0f1826', border:'1px solid rgba(255,255,255,0.08)', borderRadius:8, overflow:'hidden' }}>
                         {Object.entries(currentPayload).map(([key, val], i, arr) => (
                           <div key={key} style={{ display:'flex', alignItems:'center', padding:'8px 12px', borderBottom: i < arr.length-1 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
-                            <span style={{ fontSize:10, fontFamily:'monospace', color:'#4a5260', width:160, flexShrink:0 }}>{key.replace(/_/g,' ')}</span>
+                            <span style={{ fontSize:11, fontFamily:'monospace', color:'#4a5260', width:160, flexShrink:0 }}>{key.replace(/_/g,' ')}</span>
                             <input
                               defaultValue={String(val)}
                               onChange={e => {
@@ -3016,7 +3016,7 @@ export default function DashboardPage() {
                           <>
                             <span style={{ fontSize:11, fontFamily:'monospace', color: SEV_C[whResult.severity]||'#f5a623', fontWeight:700, padding:'2px 8px', borderRadius:4, background:`${SEV_C[whResult.severity]||'#f5a623'}15`, border:`1px solid ${SEV_C[whResult.severity]||'#f5a623'}30` }}>{whResult.severity}</span>
                             {whResult.financial_impact > 0 && <span style={{ fontSize:11, fontFamily:'monospace', color:'#f5a623' }}>£{whResult.financial_impact.toLocaleString()}</span>}
-                            <span style={{ fontSize:10, fontFamily:'monospace', color: whResult.sms_sent ? '#f5a623' : '#f59e0b' }}>
+                            <span style={{ fontSize:11, fontFamily:'monospace', color: whResult.sms_sent ? '#f5a623' : '#f59e0b' }}>
                               {whResult.sms_sent ? '✓ SMS FIRED TO OPS' : whResult.simulated ? '◎ SIMULATED — no ops phone' : '✗ SMS FAILED'}
                             </span>
                           </>
@@ -3035,9 +3035,9 @@ export default function DashboardPage() {
                 {/* ── RIGHT: WEBHOOK AUDIT LOG ── */}
                 <div>
                   <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:14 }}>
-                    <div style={{ fontSize:10, color:'#4a5260', fontFamily:'monospace' }}>// WEBHOOK AUDIT LOG</div>
+                    <div style={{ fontSize:11, color:'#4a5260', fontFamily:'monospace' }}>// WEBHOOK AUDIT LOG</div>
                     <button onClick={loadWebhookLog} disabled={whLogLoading}
-                      style={{ fontSize:10, color:'#4a5260', background:'none', border:'1px solid rgba(255,255,255,0.06)', borderRadius:4, padding:'3px 8px', cursor:'pointer', fontFamily:'monospace' }}>
+                      style={{ fontSize:11, color:'#4a5260', background:'none', border:'1px solid rgba(255,255,255,0.06)', borderRadius:4, padding:'3px 8px', cursor:'pointer', fontFamily:'monospace' }}>
                       {whLogLoading ? '...' : 'REFRESH ↺'}
                     </button>
                   </div>
@@ -3067,21 +3067,21 @@ export default function DashboardPage() {
                       <div key={entry.id} style={{ padding:'10px 12px', background:'#0f1826', borderRadius:7, border:'1px solid rgba(255,255,255,0.06)', marginBottom:6 }}>
                         <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:5, flexWrap:'wrap' }}>
                           {/* System badge */}
-                          <span style={{ fontSize:10, fontFamily:'monospace', color:sysColor, background:`${sysColor}12`, border:`1px solid ${sysColor}25`, padding:'2px 7px', borderRadius:4 }}>
+                          <span style={{ fontSize:11, fontFamily:'monospace', color:sysColor, background:`${sysColor}12`, border:`1px solid ${sysColor}25`, padding:'2px 7px', borderRadius:4 }}>
                             {sysConfig?.icon || '⚡'} {entry.system_name?.toUpperCase()}
                           </span>
                           {/* Severity badge */}
                           {entry.severity && (
-                            <span style={{ fontSize:10, fontFamily:'monospace', color:sevColor, background:`${sevColor}12`, border:`1px solid ${sevColor}25`, padding:'2px 7px', borderRadius:4 }}>
+                            <span style={{ fontSize:11, fontFamily:'monospace', color:sevColor, background:`${sevColor}12`, border:`1px solid ${sevColor}25`, padding:'2px 7px', borderRadius:4 }}>
                               {entry.severity}
                             </span>
                           )}
                           {/* Financial impact */}
                           {entry.financial_impact > 0 && (
-                            <span style={{ fontSize:10, fontFamily:'monospace', color:'#f5a623' }}>£{Number(entry.financial_impact).toLocaleString()}</span>
+                            <span style={{ fontSize:11, fontFamily:'monospace', color:'#f5a623' }}>£{Number(entry.financial_impact).toLocaleString()}</span>
                           )}
                           {/* SMS status */}
-                          <span style={{ fontSize:9, fontFamily:'monospace', color: entry.sms_fired ? '#f5a623' : entry.simulated ? '#4a5260' : '#f59e0b', marginLeft:'auto' }}>
+                          <span style={{ fontSize:11, fontFamily:'monospace', color: entry.sms_fired ? '#f5a623' : entry.simulated ? '#4a5260' : '#f59e0b', marginLeft:'auto' }}>
                             {entry.sms_fired ? '✓ SMS SENT' : entry.simulated ? '◎ SIM' : '— SMS NOT SENT'}
                           </span>
                         </div>
@@ -3089,13 +3089,13 @@ export default function DashboardPage() {
                           {entry.event_type?.replace(/_/g,' ')}
                         </div>
                         {entry.payload && (
-                          <div style={{ fontSize:10, color:'#4a5260', fontFamily:'monospace', marginBottom:3 }}>
+                          <div style={{ fontSize:11, color:'#4a5260', fontFamily:'monospace', marginBottom:3 }}>
                             {entry.payload.vehicle_reg && `${entry.payload.vehicle_reg} · `}
                             {entry.payload.location && `${entry.payload.location} · `}
                             {entry.payload.consignee && entry.payload.consignee}
                           </div>
                         )}
-                        <div style={{ fontSize:9, color:'#4a5260', fontFamily:'monospace' }}>{dateStr} {timeStr}</div>
+                        <div style={{ fontSize:11, color:'#4a5260', fontFamily:'monospace' }}>{dateStr} {timeStr}</div>
                       </div>
                     )
                   })}
