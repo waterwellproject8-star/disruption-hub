@@ -169,7 +169,6 @@ const extractDelayMinutes = (text) => {
 }
 
 export async function POST(request) {
-  console.log('[ALERT] Handler invoked')
   try {
     const body = await request.json()
     const {
@@ -187,8 +186,6 @@ export async function POST(request) {
       force_financial_zero,
       issue_type,
     } = body
-
-    console.log('[ALERT] Route entered', { client_id, vehicle_reg, issue_description })
 
     if (!issue_description) {
       return Response.json({ error: 'issue_description is required' }, { status: 400 })
@@ -214,7 +211,6 @@ Provide immediate disruption analysis and action plan.`
     let systemPrompt = null
     let contactPhone = null
     const db = getDB()
-    console.log('[ALERT] DB:', db ? 'connected' : 'null')
 
     // Dedup — skip if a pending approval already exists for this vehicle in the last 5 minutes
     if (db && vehicle_reg && client_id) {
@@ -231,7 +227,6 @@ Provide immediate disruption analysis and action plan.`
         return Response.json({ success: true, deduplicated: true, existing_id: recent[0].id })
       }
     }
-    console.log('[ALERT] Dedup passed')
 
     if (db && client_id) {
       const { data } = await db
@@ -244,7 +239,6 @@ Provide immediate disruption analysis and action plan.`
         contactPhone = data.contact_phone
       }
     }
-    console.log('[ALERT] Client:', { contactPhone, systemPrompt: !!systemPrompt })
 
     const finalSystem = systemPrompt
       ? `${DRIVER_ALERT_SYSTEM}\n\nCLIENT CONTEXT:\n${systemPrompt}`
@@ -280,7 +274,6 @@ Provide immediate disruption analysis and action plan.`
 
     if (db) {
       // Log incident
-      console.log('[ALERT] About to insert incident')
       const { error: incidentErr } = await db.from('incidents').insert({
         client_id,
         user_input: analysisPrompt,
@@ -289,7 +282,6 @@ Provide immediate disruption analysis and action plan.`
         financial_impact: financialImpact,
         ref: ref || 'DRIVER-ALERT'
       })
-      console.log('[ALERT] Incident inserted', { incidentErr: incidentErr || null })
       if (incidentErr) console.error('incident insert:', incidentErr.message, incidentErr.code)
 
       // Create approval for HIGH/CRITICAL
