@@ -185,6 +185,7 @@ export async function POST(request) {
       force_alert,
       force_financial_zero,
       issue_type,
+      at_risk_refs,
     } = body
 
     if (!issue_description) {
@@ -358,11 +359,18 @@ Provide immediate disruption analysis and action plan.`
         if ((severity === 'CRITICAL' || severity === 'HIGH') && vehicle_reg) {
           try {
             const delayMins = extractDelayMinutes(fullResponse)
-            const { data: atRiskJobs } = await db.from('driver_progress')
-              .select('ref')
-              .eq('vehicle_reg', vehicle_reg)
-              .eq('status', 'at_risk')
-            const otherRefs = (atRiskJobs || []).map(j => j.ref).filter(r => r && r !== ref && r !== 'SHIFT_START')
+            // Prefer at_risk_refs from request body (avoids race condition where
+            // driver_progress rows haven't been written yet). Fall back to DB query.
+            let otherRefs = (Array.isArray(at_risk_refs) && at_risk_refs.length > 0)
+              ? at_risk_refs.filter(r => r && r !== ref && r !== 'SHIFT_START')
+              : []
+            if (otherRefs.length === 0) {
+              const { data: atRiskJobs } = await db.from('driver_progress')
+                .select('ref')
+                .eq('vehicle_reg', vehicle_reg)
+                .eq('status', 'at_risk')
+              otherRefs = (atRiskJobs || []).map(j => j.ref).filter(r => r && r !== ref && r !== 'SHIFT_START')
+            }
             if (otherRefs.length > 0) {
               const { data: shipments } = await db.from('shipments')
                 .select('ref, consignee, consignee_phone, eta, sla_window, penalty_if_breached')
