@@ -108,6 +108,7 @@ export default function DriverApp() {
   const [view, setView]             = useState('run')
 
   const [toast, setToast]               = useState(null)
+  const [syncStatus, setSyncStatus]     = useState('ok')
   const [pendingUndo, setPendingUndo]   = useState(null)
   const [undoCountdown, setUndoCountdown] = useState(0)
   const undoTimer      = useRef(null)
@@ -357,11 +358,11 @@ export default function DriverApp() {
 
   function pushProgressToSupabase(ref, status, alert, pod=null) {
     if (!driverInfo.clientId || !driverInfo.vehicleReg || !ref) return
+    setSyncStatus('pending')
     fetch('/api/driver/progress', {
       method:'POST', headers:{'Content-Type':'application/json'},
-      // Always include driver_phone so resolveDriverPhone() in ops routes can find this driver
       body: JSON.stringify({ client_id:driverInfo.clientId, vehicle_reg:driverInfo.vehicleReg, driver_name:driverInfo.name, driver_phone:driverInfo.phone||null, ref, status, alert:alert||null, pod: pod||null })
-    }).catch(()=>showToast('⚠ Sync failed','error'))
+    }).then(r => { setSyncStatus(r.ok ? 'ok' : 'error') }).catch(()=>{ setSyncStatus('error'); showToast('⚠ Sync failed','error') })
   }
 
   async function loadJobs(info) {
@@ -1125,6 +1126,12 @@ export default function DriverApp() {
     <div style={{minHeight:'100vh',background:'#080c14',color:'#e8eaed',fontFamily:'Barlow,sans-serif',paddingBottom:90}}>
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}`}</style>
 
+      {/* Sync indicator */}
+      <div style={{position:'fixed',top:8,right:12,zIndex:450,display:'flex',alignItems:'center',gap:4}}>
+        <div style={{width:7,height:7,borderRadius:'50%',background:syncStatus==='ok'?'#22c55e':syncStatus==='pending'?'#f59e0b':'#ef4444',transition:'background 0.3s'}}/>
+        <span style={{fontSize:9,color:'#4a5260',fontFamily:'monospace'}}>{syncStatus==='ok'?'SYNCED':syncStatus==='pending'?'SYNCING':'OFFLINE'}</span>
+      </div>
+
       {/* Toast */}
       {toast&&(
         <div style={{position:'fixed',top:16,left:'50%',transform:'translateX(-50%)',zIndex:500,padding:'10px 18px',borderRadius:10,background:toast.type==='error'?'rgba(239,68,68,0.95)':'rgba(245,166,35,0.95)',color:toast.type==='error'?'#fff':'#000',fontWeight:600,fontSize:13,boxShadow:'0 4px 20px rgba(0,0,0,0.4)',whiteSpace:'nowrap'}}>
@@ -1358,6 +1365,8 @@ export default function DriverApp() {
                         {job.sla_window&&<span style={{color:isAtRisk?'#ef4444':'#f59e0b'}}>Slot {job.sla_window}</span>}
                         {job.cargo_type&&<span>{cargoIcon(job.cargo_type)} {job.cargo_type}</span>}
                         {job.penalty_if_breached>0&&isAtRisk&&<span style={{color:'#ef4444'}}>£{job.penalty_if_breached.toLocaleString()} at risk</span>}
+                        {job.revised_eta&&isAtRisk&&<span style={{color:'#f59e0b',fontWeight:600}}>Revised: {typeof job.revised_eta==='string'&&job.revised_eta.includes('T')?new Date(job.revised_eta).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}):job.revised_eta}</span>}
+                        {job.sla_breach&&<span style={{color:'#ef4444',fontWeight:700}}>⚠ SLA AT RISK</span>}
                       </div>
                     </div>
                     <span style={{fontSize:12,color:'#4a5260',flexShrink:0}}>→</span>
@@ -1442,11 +1451,16 @@ export default function DriverApp() {
         const alertActive = !!lastAlert || panelState === 'sent' || panelState === 'result' || panelState === 'resolving_loading'
         return (
         <div style={{position:'fixed',bottom:0,left:0,right:0,padding:'9px 12px 22px',background:'rgba(10,12,14,0.97)',borderTop:'1px solid rgba(255,255,255,0.06)',backdropFilter:'blur(10px)',zIndex:100,display:'grid',gridTemplateColumns:'5fr 3fr 3fr',gap:8}}>
-          {alertActive ? (
-            <div style={{padding:'13px',background:'rgba(239,68,68,0.08)',border:'1px solid rgba(239,68,68,0.2)',borderRadius:10,color:'#ef4444',fontWeight:600,fontSize:12,display:'flex',alignItems:'center',justifyContent:'center',gridColumn:'1 / -1',gap:6}}>
-              ⚠ Alert already active — resolve current issue first
+          {alertActive ? (<>
+            <div style={{padding:'13px',background:'rgba(239,68,68,0.08)',border:'1px solid rgba(239,68,68,0.2)',borderRadius:10,color:'#ef4444',fontWeight:600,fontSize:12,display:'flex',alignItems:'center',justifyContent:'center',gap:6}}>
+              ⚠ Alert active — resolve first
             </div>
-          ) : (<>
+            <button onClick={()=>openIssue({id:'medical',label:'Medical Emergency',icon:'🚑',needsText:false})}
+              style={{padding:'13px',background:'rgba(239,68,68,0.1)',border:'1px solid rgba(239,68,68,0.3)',borderRadius:10,color:'#ef4444',fontWeight:600,fontSize:11,cursor:'pointer',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:2}}>
+              <span style={{fontSize:18}}>🚑</span><span>Medical</span>
+            </button>
+            <div />
+          </>) : (<>
             <button onClick={()=>openIssue({id:'breakdown',label:'Breakdown',icon:'🚨',needsText:true,placeholder:'What happened?'})}
               style={{padding:'13px',background:'#ef4444',border:'none',borderRadius:10,color:'#fff',fontWeight:700,fontSize:14,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:7}}>
               🚨 BREAKDOWN
