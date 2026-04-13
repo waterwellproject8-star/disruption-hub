@@ -2620,9 +2620,18 @@ export default function DashboardPage() {
                     </div>
                   )}
 
-                  {/* Pending + logged approvals — sorted by priority_score DESC */}
+                  {/* Pending + logged approvals — sorted by status group → severity → newest */}
                   {pendingApprovals.length > 0 ? (
-                    [...pendingApprovals].sort((a,b) => (b.priority_score||0) - (a.priority_score||0)).map(a => {
+                    [...pendingApprovals].sort((a,b) => {
+                      const statusOrder = { pending: 0, executed: 1, resolved: 1, rejected: 2, expired: 2 }
+                      const sevOrder = { CRITICAL: 0, HIGH: 1, MEDIUM: 2, LOW: 3 }
+                      const sa = statusOrder[a.status] ?? 1, sb = statusOrder[b.status] ?? 1
+                      if (sa !== sb) return sa - sb
+                      const sevA = sevOrder[(a.action_details?.severity || '').toUpperCase()] ?? 3
+                      const sevB = sevOrder[(b.action_details?.severity || '').toUpperCase()] ?? 3
+                      if (sevA !== sevB) return sevA - sevB
+                      return new Date(b.created_at || 0) - new Date(a.created_at || 0)
+                    }).map(a => {
                       const isPending = a.status === 'pending'
                       const isExecuted = a.status === 'executed' || a.status === 'resolved'
                       const isRejected = a.status === 'rejected' || a.status === 'expired'
