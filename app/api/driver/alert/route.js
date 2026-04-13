@@ -169,6 +169,7 @@ const extractDelayMinutes = (text) => {
 }
 
 export async function POST(request) {
+  console.log('[ALERT] Handler invoked')
   try {
     const body = await request.json()
     const {
@@ -467,7 +468,7 @@ Provide immediate disruption analysis and action plan.`
     })
 
   } catch (error) {
-    console.error('Driver alert error:', error)
+    console.error('[ALERT] Top-level catch:', error.message, error.stack)
     return Response.json({ error: error.message }, { status: 500 })
   }
 }
