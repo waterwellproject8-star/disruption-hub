@@ -13,18 +13,18 @@
     "@supabase/supabase-js": "^2.39.0",
     "axios": "^1.6.0",
     "leaflet": "^1.9.4",
-    "next": "14.2.5",
-    "node-cron": "^3.0.3",
+    "next": "16.2.3",
+    "node-cron": "^4.2.1",
     "pdf-lib": "^1.17.1",
-    "react": "^18",
-    "react-dom": "^18",
-    "resend": "^3.2.0",
+    "react": "^19",
+    "react-dom": "^19",
+    "resend": "^6.10.0",
     "twilio": "^5.0.0",
     "web-push": "^3.6.7",
-    "zod": "^3.22.4"
+    "zod": "^4.3.6"
   },
   "devDependencies": {
-    "eslint": "^8",
-    "eslint-config-next": "14.2.5"
+    "eslint": "^10",
+    "eslint-config-next": "16.2.3"
   }
 }
