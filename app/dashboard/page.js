@@ -2496,6 +2496,23 @@ export default function DashboardPage() {
                           {loc && <div style={{ fontSize:11, color:'#4a5260', marginBottom:2 }}>📍 {loc}</div>}
                           {cargo && <div style={{ fontSize:11, color:cargoColor }}>{cargo.includes('pharma') ? '💊' : cargo.includes('chilled') ? '❄' : '📦'} {cargo}</div>}
                           {route && <div style={{ fontSize:11, color:'#374151', marginTop:2 }}>→ {route}</div>}
+                          {(() => {
+                            const shipments = liveShipments.length > 0 ? liveShipments : []
+                            const driverJobs = fleetVehicle?.jobs || []
+                            const activeRef = driverJobs.find(j => j.status !== 'completed' && j.status !== 'cancelled')?.ref
+                            const shipment = activeRef ? shipments.find(s => s.ref === activeRef) : null
+                            if (!shipment?.sla_window) return null
+                            const slaParts = shipment.sla_window.split('-')
+                            const slaEnd = slaParts[1]?.trim()
+                            if (!slaEnd) return null
+                            const today = new Date().toLocaleDateString('en-CA')
+                            const slaTime = new Date(`${today}T${slaEnd}:00`)
+                            const now = new Date()
+                            const minsToSla = (slaTime - now) / 60000
+                            if (minsToSla < 0) return <div style={{ marginTop:4, fontSize:12, color:'#ef4444', fontWeight:700, background:'rgba(239,68,68,0.08)', padding:'2px 6px', borderRadius:3, display:'inline-block' }}>BREACH — SLA passed</div>
+                            if (minsToSla < 30) return <div style={{ marginTop:4, fontSize:12, color:'#f59e0b', fontWeight:700, background:'rgba(245,158,11,0.08)', padding:'2px 6px', borderRadius:3, display:'inline-block' }}>⚠ SLA in {Math.round(minsToSla)}min</div>
+                            return null
+                          })()}
                           {fleetVehicle && fleetVehicle.jobs?.length > 0 && (
                             <div style={{ marginTop:6, display:'flex', gap:6 }}>
                               <button onClick={() => setCancelConfirm({ vehicle_reg: reg, cancel_all: true })}
