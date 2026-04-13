@@ -99,7 +99,21 @@ export async function GET(request) {
       .limit(50)
 
     if (error) throw error
-    return Response.json({ approvals: data || [] })
+    const sevScore = { CRITICAL:4, HIGH:3, MEDIUM:2, LOW:1 }
+    const now = Date.now()
+    const enriched = (data || []).map(a => {
+      const sev = a.action_details?.severity || 'MEDIUM'
+      let score = sevScore[sev] || 2
+      if (a.status === 'pending' && a.escalation_at && new Date(a.escalation_at).getTime() - now < 5 * 60 * 1000) score += 2
+      return { ...a, priority_score: score }
+    })
+    enriched.sort((a, b) => {
+      if (a.status === 'pending' && b.status !== 'pending') return -1
+      if (a.status !== 'pending' && b.status === 'pending') return 1
+      if (a.priority_score !== b.priority_score) return b.priority_score - a.priority_score
+      return new Date(b.created_at) - new Date(a.created_at)
+    })
+    return Response.json({ approvals: enriched })
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 })
   }

@@ -2603,9 +2603,9 @@ export default function DashboardPage() {
                     </div>
                   )}
 
-                  {/* Pending + logged approvals */}
+                  {/* Pending + logged approvals — sorted by priority_score DESC */}
                   {pendingApprovals.length > 0 ? (
-                    pendingApprovals.map(a => {
+                    [...pendingApprovals].sort((a,b) => (b.priority_score||0) - (a.priority_score||0)).map(a => {
                       const isPending = a.status === 'pending'
                       const isExecuted = a.status === 'executed' || a.status === 'resolved'
                       const isRejected = a.status === 'rejected' || a.status === 'expired'
