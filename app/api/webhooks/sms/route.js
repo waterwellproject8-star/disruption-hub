@@ -205,8 +205,13 @@ function buildDriverInstruction(details, actionLabel) {
 export async function POST(request) {
   try {
     const formData = await request.formData()
-    const body = formData.get('Body')?.trim().toUpperCase() || ''
+    const rawBody = formData.get('Body')?.trim() || ''
+    const body = rawBody.toUpperCase()
     const from = formData.get('From') || ''
+
+    // Extract approval ref from SMS body (e.g. "YES Ref: d38fe6d6" or quoted original containing "Ref: d38fe6d6")
+    const refMatch = rawBody.match(/Ref:\s*([a-f0-9]{8})/i)
+    const smsRef = refMatch?.[1] || null
 
     const db = getDB()
     if (!db) return twimlReply('DH: System error. Open disruptionhub.ai')
@@ -272,13 +277,31 @@ export async function POST(request) {
 
     // ── NO ─────────────────────────────────────────────────────────────────
     if (body === 'NO' || body === 'N' || body === 'REJECT') {
-      const { data: pending } = await db
-        .from('approvals')
-        .select('id, action_label')
-        .eq('client_id', clientId)
-        .eq('status', 'pending')
-        .order('created_at', { ascending: false })
-        .limit(1)
+      let pending = null
+
+      // If SMS contains a ref, reject that specific approval
+      if (smsRef) {
+        const { data } = await db
+          .from('approvals')
+          .select('id, action_label')
+          .eq('client_id', clientId)
+          .eq('status', 'pending')
+          .ilike('id', `${smsRef}%`)
+          .limit(1)
+        pending = data
+      }
+
+      // Fallback: oldest pending approval (consistent with YES handler)
+      if (!pending?.length) {
+        const { data } = await db
+          .from('approvals')
+          .select('id, action_label')
+          .eq('client_id', clientId)
+          .eq('status', 'pending')
+          .order('created_at', { ascending: true })
+          .limit(1)
+        pending = data
+      }
 
       if (!pending?.length) return twimlReply('DH: No pending actions to reject.')
 
@@ -325,7 +348,7 @@ export async function POST(request) {
           .select('*')
           .eq('client_id', clientId)
           .eq('status', 'pending')
-          .order('created_at', { ascending: 'asc' })
+          .order('created_at', { ascending: true })
           .limit(1)
 
         if (!nextActions?.length) return // nothing queued
@@ -350,7 +373,8 @@ export async function POST(request) {
           actionLine = `YES = execute next action`
         }
 
-        const smsBody = `${sevEmoji} NEXT ACTION${reg ? ` — ${reg}` : ''}${financial}\n${actionLine}\nReply YES · NO`
+        const refTag = next.id ? `\nRef: ${next.id.slice(0, 8)}` : ''
+        const smsBody = `${sevEmoji} NEXT ACTION${reg ? ` — ${reg}` : ''}${financial}\n${actionLine}\nReply YES · NO${refTag}`
 
         await sendSMS(client.contact_phone || from, smsBody)
       } catch (e) {
@@ -360,13 +384,31 @@ export async function POST(request) {
 
     // ── YES ─────────────────────────────────────────────────────────────────
     if (body === 'YES' || body === 'Y' || body === 'APPROVE') {
-      const { data: approvals } = await db
-        .from('approvals')
-        .select('*')
-        .eq('client_id', clientId)
-        .eq('status', 'pending')
-        .order('created_at', { ascending: true })  // oldest first — execute in order they were created
-        .limit(1)
+      let approvals = null
+
+      // If SMS contains a ref, look up that specific approval
+      if (smsRef) {
+        const { data } = await db
+          .from('approvals')
+          .select('*')
+          .eq('client_id', clientId)
+          .eq('status', 'pending')
+          .ilike('id', `${smsRef}%`)
+          .limit(1)
+        approvals = data
+      }
+
+      // Fallback: oldest pending approval for this client
+      if (!approvals?.length) {
+        const { data } = await db
+          .from('approvals')
+          .select('*')
+          .eq('client_id', clientId)
+          .eq('status', 'pending')
+          .order('created_at', { ascending: true })
+          .limit(1)
+        approvals = data
+      }
 
       if (!approvals?.length) return twimlReply('DH: No pending actions. Check disruptionhub.ai')
 
