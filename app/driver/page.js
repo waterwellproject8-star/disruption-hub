@@ -738,7 +738,7 @@ export default function DriverApp() {
       }).catch(() => {})
     }
     ['dh_shift_started','dh_shift_started_at','dh_last_alert','dh_job_progress','dh_ops_messages'].forEach(k=>localStorage.removeItem(k))
-    setShiftStarted(false); setShiftEnded(false); setShiftSummary(null); setJobs([]); setActiveJob(null); setLastAlert(null); setStaleSession(null); setPreShiftChecks({}); setOpsMessages([]); setView('run')
+    setShiftStarted(false); setShiftEnded(false); setShiftSummary(null); setJobs([]); setActiveJob(null); setLastAlert(null); setStaleSession(null); setPreShiftChecks({}); setOpsMessages([]); setSetupDone(false); setView('run')
   }
 
   function resumeSession() {
