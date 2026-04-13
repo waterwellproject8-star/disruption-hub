@@ -272,6 +272,8 @@ Provide immediate disruption analysis and action plan.`
     let detectedType = detectActionType(issueContext, firstAction)
     if (force_alert && force_financial_zero) detectedType = 'preshift'
 
+    let primaryApprovalId = null
+
     if (db) {
       // Log incident
       const { error: incidentErr } = await db.from('incidents').insert({
@@ -287,7 +289,7 @@ Provide immediate disruption analysis and action plan.`
       // Create approval for HIGH/CRITICAL
       // Skip for pre-shift defects — the pre-shift-specific branch below handles those
       if (firstAction && (severity === 'CRITICAL' || severity === 'HIGH' || force_alert) && !(force_alert && force_financial_zero)) {
-        const { error: approvalErr } = await db.from('approvals').insert({
+        const { data: approvalRow, error: approvalErr } = await db.from('approvals').insert({
           client_id,
           action_type: detectedType,
           action_label: firstAction.substring(0, 200),
@@ -306,8 +308,9 @@ Provide immediate disruption analysis and action plan.`
           financial_value: force_financial_zero ? 0 : financialImpact,
           status: 'pending',
           escalation_at: new Date(Date.now() + 15 * 60 * 1000).toISOString()
-        })
+        }).select('id').single()
         if (approvalErr) console.error('approval insert:', approvalErr.message, approvalErr.code)
+        primaryApprovalId = approvalRow?.id || null
 
         // Create second approval for consignee delay notification
         // Sits as a pending card in COMMAND tab — ops fires it after handling recovery
@@ -437,7 +440,7 @@ Provide immediate disruption analysis and action plan.`
     // SMS ops manager
     let smsSent = false
     if ((force_alert || severity === 'CRITICAL' || severity === 'HIGH') && contactPhone) {
-      const smsBody = buildOpsSMS({
+      let smsBody = buildOpsSMS({
         severity,
         vehicle_reg,
         human_description,
@@ -446,6 +449,7 @@ Provide immediate disruption analysis and action plan.`
         force_alert,
         force_financial_zero
       })
+      if (primaryApprovalId) smsBody += `\nRef: ${primaryApprovalId.slice(0, 8)}`
       const result = await sendSMS(contactPhone, smsBody)
       smsSent = result.success || false
     }
