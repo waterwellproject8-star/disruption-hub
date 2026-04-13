@@ -169,13 +169,17 @@ export async function POST(request) {
       return Response.json({ success: false, error: 'Action expired — over 4 hours old. Do not execute stale actions.' }, { status: 409 })
     }
 
-    // Mark executed
-    await db.from('approvals').update({
+    // Mark executed — atomic: only succeeds if status is still 'pending'
+    const { data: updated } = await db.from('approvals').update({
       status: 'executed',
       approved_by,
       approved_at: new Date().toISOString(),
       executed_at: new Date().toISOString()
-    }).eq('id', approval_id)
+    }).eq('id', approval_id).eq('status', 'pending').select('id')
+
+    if (!updated?.length) {
+      return Response.json({ error: 'already_executed' }, { status: 409 })
+    }
 
     const actionType = approval.action_type || ''
     const actionLabel = approval.action_label || ''
