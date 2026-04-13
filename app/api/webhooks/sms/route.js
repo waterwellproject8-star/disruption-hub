@@ -423,12 +423,16 @@ export async function POST(request) {
       const actionLabel = approval.action_label || ''
       const details = approval.action_details || {}
 
-      await db.from('approvals').update({
+      const { data: updated } = await db.from('approvals').update({
         status: 'executed',
         approved_by: contactName,
         approved_at: new Date().toISOString(),
         executed_at: new Date().toISOString()
-      }).eq('id', approval.id)
+      }).eq('id', approval.id).eq('status', 'pending').select('id')
+
+      if (!updated?.length) {
+        return twimlReply('DH: Action already executed or expired. Check dashboard.')
+      }
 
       // RESOLVE DRIVER PHONE
       // 1. driver_phone in action_details (driver app alerts)
