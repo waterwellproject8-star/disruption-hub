@@ -349,6 +349,65 @@ Provide immediate disruption analysis and action plan.`
           })
           if (consigneeErr) console.error('consignee approval insert:', consigneeErr.message, consigneeErr.code)
         }
+
+        // CASCADE — create consignee notifications for all OTHER at_risk jobs
+        if ((severity === 'CRITICAL' || severity === 'HIGH') && vehicle_reg) {
+          try {
+            const delayMins = extractDelayMinutes(fullResponse)
+            const { data: atRiskJobs } = await db.from('driver_progress')
+              .select('ref')
+              .eq('vehicle_reg', vehicle_reg)
+              .eq('status', 'at_risk')
+            const otherRefs = (atRiskJobs || []).map(j => j.ref).filter(r => r && r !== ref && r !== 'SHIFT_START')
+            if (otherRefs.length > 0) {
+              const { data: shipments } = await db.from('shipments')
+                .select('ref, consignee, consignee_phone, eta, sla_window, penalty_if_breached')
+                .eq('client_id', client_id)
+                .in('ref', otherRefs)
+              for (const s of (shipments || [])) {
+                const revisedEta = s.eta ? new Date(new Date().getTime() + delayMins * 60000).toISOString() : null
+                const slaBreach = s.sla_window && revisedEta ? new Date(revisedEta) > new Date(s.sla_window.split('-')[1]?.trim() || s.sla_window) : false
+                const penalty = s.penalty_if_breached || 0
+                const label = slaBreach
+                  ? `⚠ SLA AT RISK — Notify ${s.consignee || 'consignee'} of delay — £${penalty.toLocaleString()} exposure`
+                  : `Notify ${s.consignee || 'consignee'} of delay — automated call`
+                const { error: cascadeErr } = await db.from('approvals').insert({
+                  client_id,
+                  action_type: 'call',
+                  action_label: label,
+                  action_details: {
+                    vehicle_reg,
+                    ref: s.ref,
+                    driver_name: driver_name || null,
+                    driver_phone: driver_phone || null,
+                    call_type: 'consignee_delay_alert',
+                    consignee_name: s.consignee || null,
+                    consignee_phone: s.consignee_phone || null,
+                    delay_reason: human_description || issueContext || null,
+                    delay_minutes: delayMins,
+                    revised_eta: revisedEta,
+                    sla_breach: slaBreach,
+                    penalty_gbp: penalty,
+                    source: 'driver_alert_cascade',
+                    severity
+                  },
+                  financial_value: slaBreach ? penalty : 0,
+                  status: 'pending',
+                  escalation_at: new Date(Date.now() + 20 * 60 * 1000).toISOString()
+                })
+                if (cascadeErr) console.error(`cascade approval [${s.ref}]:`, cascadeErr.message, cascadeErr.code)
+                else console.log(`[cascade] Created consignee notification for ${s.ref} → ${s.consignee || 'unknown'} (SLA breach: ${slaBreach})`)
+              }
+              // Update shipments with revised ETAs
+              for (const s of (shipments || [])) {
+                if (s.eta) {
+                  const revisedEta = new Date(new Date().getTime() + delayMins * 60000).toISOString()
+                  await db.from('shipments').update({ eta: revisedEta }).eq('client_id', client_id).eq('ref', s.ref).catch(() => {})
+                }
+              }
+            }
+          } catch (e) { console.error('[cascade] error:', e.message) }
+        }
       }
 
       // Pre-shift defect — action_type is 'sms' so YES sends instruction to driver

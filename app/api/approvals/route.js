@@ -226,7 +226,20 @@ export async function POST(request) {
     if (actionType === 'dispatch') {
       const driverPhone = await resolveDriverPhone()
       if (driverPhone) {
-        const msg = `DisruptionHub OPS UPDATE${details.ref ? ` — ${details.ref}` : ''}\n\nOps confirmed. Recovery/assistance dispatched.\nStay with vehicle. Help is coming.`
+        // Count pending consignee notifications for this vehicle to inform driver
+        let affectedCount = 0
+        if (details.vehicle_reg) {
+          try {
+            const { data: pending } = await db.from('approvals')
+              .select('id')
+              .eq('client_id', clientId)
+              .eq('status', 'pending')
+              .contains('action_details', { vehicle_reg: details.vehicle_reg, call_type: 'consignee_delay_alert' })
+            affectedCount = pending?.length || 0
+          } catch {}
+        }
+        const affectedNote = affectedCount > 0 ? `\n${affectedCount} delivery${affectedCount > 1 ? 'ies' : 'y'} affected — ops managing consignee notifications.` : ''
+        const msg = `DisruptionHub OPS UPDATE${details.ref ? ` — ${details.ref}` : ''}\n\nOps confirmed. Recovery/assistance dispatched.\nStay with vehicle. Help is coming.${affectedNote}`
         const result = await sendSMS(driverPhone, msg)
 
         if (details.vehicle_reg) {
@@ -234,7 +247,7 @@ export async function POST(request) {
             await db
               .from('driver_progress')
               .update({
-                alert: `OPS_MSG: Recovery dispatched. Stay with vehicle.`,
+                alert: `OPS_MSG: Recovery dispatched. Stay with vehicle.${affectedCount > 0 ? ` ${affectedCount} delivery${affectedCount > 1 ? 'ies' : 'y'} affected — ops managing notifications.` : ''}`,
                 updated_at: new Date().toISOString()
               })
               .eq('vehicle_reg', details.vehicle_reg.trim())
