@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import { formatDelayForSpeech } from '../../../../lib/twilio.js'
 
 async function sendSMS(to, body) {
   const sid   = process.env.TWILIO_ACCOUNT_SID
@@ -566,7 +567,7 @@ export async function POST(request) {
             const parts = [`Hello. This is an automated delivery update from ${contactName || 'your supplier'}.`]
             if (details.consignee_name) parts.push(`This message is for the goods in team at ${details.consignee_name}.`)
             parts.push(spokenReg
-              ? `Vehicle ${spokenReg} is running approximately ${details.delay_minutes || 'some'} minutes late.`
+              ? `Vehicle ${spokenReg} is running approximately ${formatDelayForSpeech(details.delay_minutes)} late.`
               : `Your scheduled delivery is running late.`)
             if (details.revised_eta)  parts.push(`Revised estimated arrival is ${details.revised_eta}.`)
             if (details.delay_reason) parts.push(`Reason: ${String(details.delay_reason).substring(0,120)}.`)
