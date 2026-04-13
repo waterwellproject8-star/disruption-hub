@@ -609,7 +609,7 @@ export default function DriverApp() {
     }
 
     fetch('/api/driver/alert',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({client_id:driverInfo.clientId,driver_name:driverInfo.name,driver_phone:driverInfo.phone||null,vehicle_reg:driverInfo.vehicleReg,ref:job?.ref,issue_type:panelIssue?.id,issue_description:prompt,human_description:inputText||panelIssue?.label,location_description:gpsDescription,latitude:gpsCoords?.latitude,longitude:gpsCoords?.longitude})
+      body:JSON.stringify({client_id:driverInfo.clientId,driver_name:driverInfo.name,driver_phone:driverInfo.phone||null,vehicle_reg:driverInfo.vehicleReg,ref:job?.ref,issue_type:panelIssue?.id,issue_description:prompt,human_description:inputText||panelIssue?.label,location_description:gpsDescription,latitude:gpsCoords?.latitude,longitude:gpsCoords?.longitude,at_risk_refs:jobs.filter(j=>j.status!=='completed').map(j=>j.ref).filter(r=>r&&r!=='SHIFT_START')})
     }).catch(()=>{})
 
     if (emergencyIds.includes(panelIssue?.id)) {
