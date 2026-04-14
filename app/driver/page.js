@@ -194,6 +194,7 @@ export default function DriverApp() {
         }
       }
 
+      if (shiftStartedAt) shiftStartTime.current = new Date(parseInt(shiftStartedAt))
       if (shiftDone) setShiftStarted(true)
       if (savedAlert) { try { setLastAlert(JSON.parse(savedAlert)) } catch {} }
       loadJobs(info).then(loaded => {
