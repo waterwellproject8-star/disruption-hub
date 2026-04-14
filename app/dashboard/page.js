@@ -1799,7 +1799,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div style={{ minHeight:'100vh', display:'flex', flexDirection:'column', fontFamily:'Barlow, sans-serif', background:'#080c14', color:'#e8eaed' }}>
+    <div style={{ height:'100vh', display:'flex', flexDirection:'column', fontFamily:'Barlow, sans-serif', background:'#080c14', color:'#e8eaed', overflow:'hidden' }}>
       {dashToast && <div style={{position:'fixed',top:16,left:'50%',transform:'translateX(-50%)',padding:'10px 20px',borderRadius:8,background:dashToast.type==='error'?'rgba(239,68,68,0.95)':'rgba(245,166,35,0.95)',color:'#fff',fontSize:13,fontWeight:600,zIndex:9999,boxShadow:'0 4px 12px rgba(0,0,0,0.3)'}}>{dashToast.msg}</div>}
       {emailPickerMailto && (() => {
         const subjectMatch = emailPickerMailto.match(/subject=([^&]*)/)
@@ -1857,7 +1857,7 @@ export default function DashboardPage() {
         .dh-main { display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
         .dh-tabs { display: flex; gap: 6px; padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,0.06); background: #080c14; flex-shrink: 0; overflow-x: auto; -webkit-overflow-scrolling: touch; }
         .dh-tabs::-webkit-scrollbar { display: none; }
-        .dh-nav { display: flex; align-items: center; justify-content: space-between; padding: 12px 24px; border-bottom: 1px solid rgba(255,255,255,0.06); background: rgba(10,12,14,0.98); position: sticky; top: 0; z-index: 100; }
+        .dh-nav { display: flex; align-items: center; justify-content: space-between; padding: 12px 24px; border-bottom: 1px solid rgba(255,255,255,0.06); background: rgba(10,12,14,0.98); position: sticky; top: 0; z-index: 100; flex-shrink: 0; }
         .dh-nav-right { display: flex; align-items: center; gap: 16px; }
         .dh-client-name { font-size: 11px; color: #4a5260; }
         @media (max-width: 768px) {
