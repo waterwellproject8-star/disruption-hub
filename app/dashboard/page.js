@@ -3026,7 +3026,7 @@ export default function DashboardPage() {
                 </div>
 
                 {/* ── LEFT: TEST CONSOLE ── */}
-                <div>
+                <div style={{ maxHeight:'calc(100vh - 260px)', overflowY:'auto', paddingRight:4 }}>
                   <div style={{ marginBottom:16, padding:'12px 14px', background:'rgba(59,130,246,0.06)', border:'1px solid rgba(59,130,246,0.18)', borderRadius:9 }}>
                     <div style={{ fontSize:13, color:'#3b82f6', fontWeight:600, marginBottom:4 }}>What is this?</div>
                     <div style={{ fontSize:13, color:'#8a9099', lineHeight:1.6 }}>
