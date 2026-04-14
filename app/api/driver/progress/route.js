@@ -61,6 +61,32 @@ export async function POST(request) {
   }
 }
 
+// PATCH — bulk reset job rows to on-track for a new shift
+export async function PATCH(request) {
+  try {
+    const { client_id, vehicle_reg, refs } = await request.json()
+    if (!client_id || !vehicle_reg || !refs?.length) {
+      return Response.json({ error: 'client_id, vehicle_reg, refs[] required' }, { status: 400 })
+    }
+    const db = getDB()
+    if (!db) return Response.json({ success: true, reset: 0, reason: 'no_db' })
+
+    const { data, error } = await db.from('driver_progress')
+      .update({ status: 'on-track', alert: null, pod: null, updated_at: new Date().toISOString() })
+      .eq('client_id', client_id)
+      .eq('vehicle_reg', vehicle_reg)
+      .in('ref', refs)
+
+    if (error) {
+      console.error('[progress] bulk reset error:', error.message)
+      return Response.json({ success: false, error: error.message })
+    }
+    return Response.json({ success: true })
+  } catch (e) {
+    return Response.json({ error: e.message }, { status: 500 })
+  }
+}
+
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url)
