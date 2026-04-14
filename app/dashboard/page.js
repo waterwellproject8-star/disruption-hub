@@ -1080,6 +1080,7 @@ export default function DashboardPage() {
   const [activeModuleName, setActiveModuleName] = useState(null)
   const [approvingId, setApprovingId] = useState(null)
   const [expandedApprovals, setExpandedApprovals] = useState(new Set())
+  const [doneGroupExpanded, setDoneGroupExpanded] = useState(false)
   const [localApprovals, setLocalApprovals] = useState([])
   const [cancelAssessment, setCancelAssessment] = useState(null)
   const [scenarioResult, setScenarioResult] = useState(null)
@@ -2600,44 +2601,29 @@ export default function DashboardPage() {
                     </div>
                   )}
 
-                  {/* Pending + logged approvals — sorted by status group → severity → newest */}
-                  {pendingApprovals.length > 0 ? (
-                    [...pendingApprovals].sort((a,b) => {
-                      const statusOrder = { pending: 0, executed: 1, resolved: 1, rejected: 2, expired: 2 }
+                  {/* Section 1 — PENDING cards, always full size */}
+                  {(() => {
+                    const sorted = [...pendingApprovals].sort((a,b) => {
                       const sevOrder = { CRITICAL: 0, HIGH: 1, MEDIUM: 2, LOW: 3 }
-                      const sa = statusOrder[a.status] ?? 1, sb = statusOrder[b.status] ?? 1
-                      if (sa !== sb) return sa - sb
                       const sevA = sevOrder[(a.action_details?.severity || '').toUpperCase()] ?? 3
                       const sevB = sevOrder[(b.action_details?.severity || '').toUpperCase()] ?? 3
                       if (sevA !== sevB) return sevA - sevB
                       return new Date(b.created_at || 0) - new Date(a.created_at || 0)
-                    }).map(a => {
+                    })
+                    const pending = sorted.filter(a => a.status === 'pending')
+                    const done = sorted.filter(a => a.status !== 'pending')
+                    const typeMap = { call:'📞', make_call:'📞', send_sms:'💬', sms:'💬', send_email:'✉', email:'✉', dispatch:'🚛', reroute:'🗺', notify:'📣', emergency:'🚨', driver_resolved:'✅' }
+
+                    const renderFullCard = (a) => {
                       const isPending = a.status === 'pending'
                       const isExecuted = a.status === 'executed' || a.status === 'resolved'
                       const isRejected = a.status === 'rejected' || a.status === 'expired'
                       const isProcessing = approvingId === a.id
                       const borderCol = isPending ? '#f59e0b' : isExecuted ? '#f5a623' : '#374151'
                       const bgCol = isPending ? 'rgba(245,158,11,0.04)' : isExecuted ? 'rgba(245,166,35,0.03)' : 'rgba(55,65,81,0.03)'
-                      const typeMap = { call:'📞', make_call:'📞', send_sms:'💬', sms:'💬', send_email:'✉', email:'✉', dispatch:'🚛', reroute:'🗺', notify:'📣', emergency:'🚨', driver_resolved:'✅' }
                       const ico = typeMap[a.action_type] || '⚡'
                       const timeStr = a.executed_at ? new Date(a.executed_at).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}) : a.created_at ? new Date(a.created_at).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}) : ''
-                      const isCollapsible = !isPending
-                      const isExpanded = expandedApprovals.has(a.id)
                       const toggleExpand = () => setExpandedApprovals(prev => { const next = new Set(prev); next.has(a.id) ? next.delete(a.id) : next.add(a.id); return next })
-
-                      if (isCollapsible && !isExpanded) {
-                        return (
-                          <div key={a.id} onClick={toggleExpand} style={{ border:`1px solid ${borderCol}33`, borderLeft:`3px solid ${borderCol}`, borderRadius:6, background:bgCol, marginBottom:4, cursor:'pointer', padding:'8px 12px', display:'flex', alignItems:'center', gap:8, transition:'all 0.15s' }}>
-                            <span style={{ fontSize:11, padding:'2px 7px', background:`${borderCol}22`, color:borderCol, fontFamily:'monospace', fontWeight:700, flexShrink:0 }}>
-                              {isExecuted ? '✓ DONE' : isRejected ? '✕ REJECTED' : a.status?.toUpperCase()}
-                            </span>
-                            <span style={{ fontSize:12, color:'#8a9099', flex:1, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{ico} {a.action_label}</span>
-                            <span style={{ fontSize:11, color:'#374151', flexShrink:0 }}>{timeStr}</span>
-                            <span style={{ fontSize:11, color:'#4a5260', flexShrink:0 }}>▶</span>
-                          </div>
-                        )
-                      }
-
                       return (
                         <div key={a.id} style={{ border:`1px solid ${borderCol}33`, borderLeft:`3px solid ${borderCol}`, borderRadius:8, background:bgCol, marginBottom:8 }}>
                           <div style={{ padding:'12px 14px' }}>
@@ -2650,7 +2636,7 @@ export default function DashboardPage() {
                               </div>
                               <div style={{ display:'flex', alignItems:'center', gap:6 }}>
                                 <span style={{ fontSize:11, color:'#374151' }}>{timeStr}</span>
-                                {isCollapsible && <span onClick={toggleExpand} style={{ fontSize:11, color:'#4a5260', cursor:'pointer' }}>▼</span>}
+                                {!isPending && <span onClick={toggleExpand} style={{ fontSize:11, color:'#4a5260', cursor:'pointer' }}>▼</span>}
                               </div>
                             </div>
                             <div style={{ fontSize:14, fontWeight:600, color:'#e8eaed', marginBottom:6, lineHeight:1.5 }}>{ico} {a.action_label}</div>
@@ -2665,7 +2651,6 @@ export default function DashboardPage() {
                                   style={{ padding:'6px 12px', borderRadius:5, fontSize:11, cursor:'pointer', border:'1px solid rgba(245,158,11,0.4)', background:'rgba(245,158,11,0.06)', color:'#f59e0b', fontFamily:'monospace' }}>
                                   NO
                                 </button>
-
                               </div>
                             )}
                             {isExecuted && <div style={{ fontSize:11, color:'#f5a623', fontFamily:'monospace' }}>✓ Actioned {timeStr} — no further action needed</div>}
@@ -2673,13 +2658,58 @@ export default function DashboardPage() {
                           </div>
                         </div>
                       )
-                    })
-                  ) : localApprovals.length === 0 ? (
-                    <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', height:'50%', opacity:0.3 }}>
-                      <div style={{ fontFamily:'monospace', fontSize:32, color:'#4a5260' }}>✓</div>
-                      <div style={{ fontSize:12, color:'#4a5260', marginTop:8 }}>All clear</div>
-                    </div>
-                  ) : null}
+                    }
+
+                    if (pending.length === 0 && done.length === 0 && localApprovals.length === 0) {
+                      return (
+                        <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', height:'50%', opacity:0.3 }}>
+                          <div style={{ fontFamily:'monospace', fontSize:32, color:'#4a5260' }}>✓</div>
+                          <div style={{ fontSize:12, color:'#4a5260', marginTop:8 }}>All clear</div>
+                        </div>
+                      )
+                    }
+
+                    return (
+                      <>
+                        {pending.map(a => renderFullCard(a))}
+
+                        {/* Section 2 — DONE group, collapsed by default */}
+                        {done.length > 0 && (
+                          <>
+                            <div onClick={() => setDoneGroupExpanded(prev => !prev)}
+                              style={{ display:'flex', alignItems:'center', gap:8, padding:'8px 12px', marginBottom:4, cursor:'pointer', borderRadius:6, border:'1px solid rgba(245,166,35,0.15)', background:'rgba(245,166,35,0.03)', transition:'all 0.15s' }}>
+                              <span style={{ fontSize:11, color:'#4a5260', flexShrink:0 }}>{doneGroupExpanded ? '▼' : '▶'}</span>
+                              <span style={{ fontSize:11, fontFamily:'monospace', fontWeight:700, color:'#f5a623' }}>DONE ({done.length})</span>
+                              <span style={{ fontSize:11, color:'#4a5260', fontFamily:'monospace' }}>· click to {doneGroupExpanded ? 'collapse' : 'expand'}</span>
+                            </div>
+                            {doneGroupExpanded && done.map(a => {
+                              const isExecuted = a.status === 'executed' || a.status === 'resolved'
+                              const isRejected = a.status === 'rejected' || a.status === 'expired'
+                              const borderCol = isExecuted ? '#f5a623' : '#374151'
+                              const bgCol = isExecuted ? 'rgba(245,166,35,0.03)' : 'rgba(55,65,81,0.03)'
+                              const ico = typeMap[a.action_type] || '⚡'
+                              const timeStr = a.executed_at ? new Date(a.executed_at).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}) : a.created_at ? new Date(a.created_at).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}) : ''
+                              const isExpanded = expandedApprovals.has(a.id)
+                              const toggleExpand = () => setExpandedApprovals(prev => { const next = new Set(prev); next.has(a.id) ? next.delete(a.id) : next.add(a.id); return next })
+
+                              if (isExpanded) return renderFullCard(a)
+
+                              return (
+                                <div key={a.id} onClick={toggleExpand} style={{ border:`1px solid ${borderCol}33`, borderLeft:`3px solid ${borderCol}`, borderRadius:6, background:bgCol, marginBottom:4, cursor:'pointer', padding:'8px 12px', display:'flex', alignItems:'center', gap:8, transition:'all 0.15s' }}>
+                                  <span style={{ fontSize:11, padding:'2px 7px', background:`${borderCol}22`, color:borderCol, fontFamily:'monospace', fontWeight:700, flexShrink:0 }}>
+                                    {isExecuted ? '✓ DONE' : isRejected ? '✕ REJECTED' : a.status?.toUpperCase()}
+                                  </span>
+                                  <span style={{ fontSize:12, color:'#8a9099', flex:1, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{ico} {a.action_label}</span>
+                                  <span style={{ fontSize:11, color:'#374151', flexShrink:0 }}>{timeStr}</span>
+                                  <span style={{ fontSize:11, color:'#4a5260', flexShrink:0 }}>▶</span>
+                                </div>
+                              )
+                            })}
+                          </>
+                        )}
+                      </>
+                    )
+                  })()}
                 </div>
               </div>
 
