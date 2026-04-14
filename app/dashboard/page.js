@@ -2028,7 +2028,7 @@ export default function DashboardPage() {
                               <button
                                 onClick={() => fireAction(action.id, action.label, action.type, action.mailto)}
                                 disabled={isFiring}
-                                style={{ padding:'5px 12px', background: isFiring ? 'transparent' : '#f5a623', color: isFiring ? '#f5a623' : '#000', border: isFiring ? '1px solid rgba(245,166,35,0.3)' : 'none', borderRadius:5, fontSize:11, fontWeight:600, cursor: isFiring ? 'default' : 'pointer', fontFamily:'monospace', flexShrink:0, minWidth:60, transition:'all 0.2s' }}>
+                                style={{ padding:'5px 12px', background: isFiring ? 'transparent' : '#f5a623', color: isFiring ? '#f5a623' : '#000', border: isFiring ? '1px solid rgba(245,166,35,0.3)' : 'none', borderRadius:5, fontSize:13, fontWeight:600, cursor: isFiring ? 'default' : 'pointer', fontFamily:'monospace', flexShrink:0, minWidth:60, transition:'all 0.2s' }}>
                                 {isFiring ? '...' : 'FIRE →'}
                               </button>
                             )}
@@ -2070,7 +2070,7 @@ export default function DashboardPage() {
               {/* ── DVSA COMPLIANCE SECTION ─────────────────────────────────── */}
               <div style={{ marginBottom:24, padding:16, background:'#0a0e16', border:'1px solid rgba(255,255,255,0.06)', borderRadius:10 }}>
                 <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:12 }}>
-                  <div style={{ fontSize:11, color:'#f5a623', fontFamily:'monospace', letterSpacing:'0.1em', fontWeight:700 }}>DVSA FLEET COMPLIANCE</div>
+                  <div style={{ fontSize:13, color:'#f5a623', fontFamily:'monospace', letterSpacing:'0.1em', fontWeight:700 }}>DVSA FLEET COMPLIANCE</div>
                   <button onClick={loadDvsa} style={{ background:'none', border:'none', color:'#4a5260', fontSize:11, cursor:'pointer' }}>↻ Refresh</button>
                 </div>
 
@@ -2080,12 +2080,12 @@ export default function DashboardPage() {
                   onDragOver={e => { e.preventDefault(); e.stopPropagation() }}
                   onDrop={e => { e.preventDefault(); e.stopPropagation(); const f=e.dataTransfer?.files?.[0]; if(f) { const r=new FileReader(); r.onload=ev=>{setDvsaCsvRows(parseDvsaCsv(ev.target.result))}; r.readAsText(f) } }}>
                   <input id="dvsa-csv-upload" type="file" accept=".csv,.txt,text/csv,text/plain" style={{ display:'none' }} onChange={e => { const f=e.target.files?.[0]; if(f) { const r=new FileReader(); r.onload=ev=>{setDvsaCsvRows(parseDvsaCsv(ev.target.result))}; r.readAsText(f) } }} />
-                  <div style={{ fontSize:11, color:'#8a9099' }}>Drop DVSA CSV or click to upload</div>
+                  <div style={{ fontSize:13, color:'#8a9099' }}>Drop DVSA CSV or click to upload</div>
                   <div style={{ fontSize:11, color:'#4a5260', marginTop:3 }}>Columns: vehicle_reg, mot_expiry, tax_expiry, operator_licence, last_inspection_date, last_inspection_result</div>
                 </div>
                 {dvsaCsvRows && dvsaCsvRows.length > 0 && (
                   <div style={{ marginBottom:10 }}>
-                    <div style={{ fontSize:11, color:'#f5a623', marginBottom:4 }}>{dvsaCsvRows.length} vehicles parsed</div>
+                    <div style={{ fontSize:13, color:'#f5a623', marginBottom:4 }}>{dvsaCsvRows.length} vehicles parsed</div>
                     <div style={{ display:'flex', gap:6 }}>
                       <button onClick={async () => {
                         try {
@@ -2094,22 +2094,22 @@ export default function DashboardPage() {
                           if (data.success) { showDashToast(`${data.upserted} vehicles uploaded`); setDvsaCsvRows(null); loadDvsa() }
                           else showDashToast(data.error || 'Upload failed', 'error')
                         } catch { showDashToast('Upload failed', 'error') }
-                      }} style={{ padding:'5px 12px', background:'#f5a623', border:'none', borderRadius:5, color:'#000', fontWeight:600, fontSize:11, cursor:'pointer' }}>Submit</button>
-                      <button onClick={() => setDvsaCsvRows(null)} style={{ padding:'5px 12px', background:'transparent', border:'1px solid rgba(255,255,255,0.1)', borderRadius:5, color:'#4a5260', fontSize:11, cursor:'pointer' }}>Clear</button>
+                      }} style={{ padding:'5px 12px', background:'#f5a623', border:'none', borderRadius:5, color:'#000', fontWeight:600, fontSize:13, cursor:'pointer' }}>Submit</button>
+                      <button onClick={() => setDvsaCsvRows(null)} style={{ padding:'5px 12px', background:'transparent', border:'1px solid rgba(255,255,255,0.1)', borderRadius:5, color:'#4a5260', fontSize:13, cursor:'pointer' }}>Clear</button>
                     </div>
                   </div>
                 )}
 
                 {/* Manual entry */}
                 <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:6, marginBottom:8 }}>
-                  <input value={dvsaManual.vehicle_reg} onChange={e=>setDvsaManual(p=>({...p,vehicle_reg:e.target.value.toUpperCase()}))} placeholder="Vehicle reg" style={{ padding:7, background:'#0f1826', border:'1px solid rgba(255,255,255,0.08)', borderRadius:6, color:'#e8eaed', fontSize:11, outline:'none', fontFamily:'monospace' }} />
-                  <input type="date" value={dvsaManual.mot_expiry} onChange={e=>setDvsaManual(p=>({...p,mot_expiry:e.target.value}))} placeholder="MOT expiry" style={{ padding:7, background:'#0f1826', border:'1px solid rgba(255,255,255,0.08)', borderRadius:6, color:'#e8eaed', fontSize:11, outline:'none' }} />
-                  <input type="date" value={dvsaManual.tax_expiry} onChange={e=>setDvsaManual(p=>({...p,tax_expiry:e.target.value}))} placeholder="Tax expiry" style={{ padding:7, background:'#0f1826', border:'1px solid rgba(255,255,255,0.08)', borderRadius:6, color:'#e8eaed', fontSize:11, outline:'none' }} />
+                  <input value={dvsaManual.vehicle_reg} onChange={e=>setDvsaManual(p=>({...p,vehicle_reg:e.target.value.toUpperCase()}))} placeholder="Vehicle reg" style={{ padding:7, background:'#0f1826', border:'1px solid rgba(255,255,255,0.08)', borderRadius:6, color:'#e8eaed', fontSize:13, outline:'none', fontFamily:'monospace' }} />
+                  <input type="date" value={dvsaManual.mot_expiry} onChange={e=>setDvsaManual(p=>({...p,mot_expiry:e.target.value}))} placeholder="MOT expiry" style={{ padding:7, background:'#0f1826', border:'1px solid rgba(255,255,255,0.08)', borderRadius:6, color:'#e8eaed', fontSize:13, outline:'none' }} />
+                  <input type="date" value={dvsaManual.tax_expiry} onChange={e=>setDvsaManual(p=>({...p,tax_expiry:e.target.value}))} placeholder="Tax expiry" style={{ padding:7, background:'#0f1826', border:'1px solid rgba(255,255,255,0.08)', borderRadius:6, color:'#e8eaed', fontSize:13, outline:'none' }} />
                 </div>
                 <div style={{ display:'flex', gap:6, marginBottom:10 }}>
-                  <input value={dvsaManual.operator_licence} onChange={e=>setDvsaManual(p=>({...p,operator_licence:e.target.value}))} placeholder="O-licence" style={{ flex:1, padding:7, background:'#0f1826', border:'1px solid rgba(255,255,255,0.08)', borderRadius:6, color:'#e8eaed', fontSize:11, outline:'none' }} />
-                  <input type="date" value={dvsaManual.last_inspection_date} onChange={e=>setDvsaManual(p=>({...p,last_inspection_date:e.target.value}))} style={{ flex:1, padding:7, background:'#0f1826', border:'1px solid rgba(255,255,255,0.08)', borderRadius:6, color:'#e8eaed', fontSize:11, outline:'none' }} />
-                  <select value={dvsaManual.last_inspection_result} onChange={e=>setDvsaManual(p=>({...p,last_inspection_result:e.target.value}))} style={{ flex:1, padding:7, background:'#0f1826', border:'1px solid rgba(255,255,255,0.08)', borderRadius:6, color:'#e8eaed', fontSize:11, outline:'none' }}>
+                  <input value={dvsaManual.operator_licence} onChange={e=>setDvsaManual(p=>({...p,operator_licence:e.target.value}))} placeholder="O-licence" style={{ flex:1, padding:7, background:'#0f1826', border:'1px solid rgba(255,255,255,0.08)', borderRadius:6, color:'#e8eaed', fontSize:13, outline:'none' }} />
+                  <input type="date" value={dvsaManual.last_inspection_date} onChange={e=>setDvsaManual(p=>({...p,last_inspection_date:e.target.value}))} style={{ flex:1, padding:7, background:'#0f1826', border:'1px solid rgba(255,255,255,0.08)', borderRadius:6, color:'#e8eaed', fontSize:13, outline:'none' }} />
+                  <select value={dvsaManual.last_inspection_result} onChange={e=>setDvsaManual(p=>({...p,last_inspection_result:e.target.value}))} style={{ flex:1, padding:7, background:'#0f1826', border:'1px solid rgba(255,255,255,0.08)', borderRadius:6, color:'#e8eaed', fontSize:13, outline:'none' }}>
                     <option value="">Result...</option>
                     <option value="pass">Pass</option>
                     <option value="fail">Fail</option>
@@ -2123,7 +2123,7 @@ export default function DashboardPage() {
                       if (data.success) { showDashToast('Vehicle added'); setDvsaManual({ vehicle_reg:'', mot_expiry:'', tax_expiry:'', operator_licence:'', last_inspection_date:'', last_inspection_result:'' }); loadDvsa() }
                       else showDashToast(data.error || 'Failed', 'error')
                     } catch { showDashToast('Failed', 'error') }
-                  }} style={{ padding:'5px 12px', background:'#f5a623', border:'none', borderRadius:5, color:'#000', fontWeight:600, fontSize:11, cursor:'pointer', whiteSpace:'nowrap' }}>+ Add</button>
+                  }} style={{ padding:'5px 12px', background:'#f5a623', border:'none', borderRadius:5, color:'#000', fontWeight:600, fontSize:13, cursor:'pointer', whiteSpace:'nowrap' }}>+ Add</button>
                 </div>
 
                 {/* Fleet compliance table */}
@@ -2150,7 +2150,7 @@ export default function DashboardPage() {
                     </table>
                   </div>
                 ) : (
-                  <div style={{ padding:12, textAlign:'center', color:'#4a5260', fontSize:11 }}>No DVSA records. Upload a CSV or add vehicles manually.</div>
+                  <div style={{ padding:12, textAlign:'center', color:'#4a5260', fontSize:13 }}>No DVSA records. Upload a CSV or add vehicles manually.</div>
                 )}
               </div>
 
@@ -2195,7 +2195,7 @@ export default function DashboardPage() {
                       {isClear && <div style={{ position:'absolute', top:7, right:9, width:7, height:7, borderRadius:'50%', background:'#f5a623' }} />}
                       <div style={{ display:'flex', alignItems:'center', gap:7, marginBottom:4 }}>
                         <span style={{ fontSize:15 }}>{m.icon}</span>
-                        <span style={{ fontSize:11, fontWeight:500, color:'#e8eaed', lineHeight:1.3 }}>{m.label}</span>
+                        <span style={{ fontSize:13, fontWeight:500, color:'#e8eaed', lineHeight:1.3 }}>{m.label}</span>
                       </div>
                       <div style={{ fontSize:11, fontFamily:'monospace', letterSpacing:'0.04em', color: isRunning?'#f5a623':hasIssue?'#ef4444':isClear?'#f5a623':c.text }}>
                         {isRunning ? '● RUNNING...' : hasIssue ? '● ACTION REQUIRED' : isClear ? `✓ CLEAR · ${ranAgo}` : m.cat.toUpperCase()}
@@ -2228,7 +2228,7 @@ export default function DashboardPage() {
                         <div key={action.id} style={{ display:'flex', alignItems:'center', gap:10, padding:'9px 12px', background: isDone ? 'rgba(245,166,35,0.06)' : '#0f1826', borderRadius:6, border: isDone ? '1px solid rgba(245,166,35,0.2)' : '1px solid rgba(255,255,255,0.06)', transition:'all 0.3s' }}>
                           <span style={{ fontSize:14, flexShrink:0 }}>{action.icon}</span>
                           <div style={{ flex:1, minWidth:0 }}>
-                            <div style={{ fontSize:11, color: isDone ? '#f5a623' : '#e8eaed', lineHeight:1.4 }}>{action.label}</div>
+                            <div style={{ fontSize:13, color: isDone ? '#f5a623' : '#e8eaed', lineHeight:1.4 }}>{action.label}</div>
                             <div style={{ fontSize:11, color:'#4a5260', fontFamily:'monospace', marginTop:1 }}>{action.type.toUpperCase()}</div>
                           </div>
                           {isDone ? (
@@ -2238,7 +2238,7 @@ export default function DashboardPage() {
                             </div>
                           ) : (
                             <button onClick={() => fireAction(action.id, action.label, action.type, action.mailto)} disabled={isFiring}
-                              style={{ padding:'5px 12px', background: isFiring ? 'transparent' : '#f5a623', color: isFiring ? '#f5a623' : '#000', border: isFiring ? '1px solid rgba(245,166,35,0.3)' : 'none', borderRadius:5, fontSize:11, fontWeight:600, cursor: isFiring ? 'default' : 'pointer', fontFamily:'monospace', flexShrink:0, minWidth:60, transition:'all 0.2s' }}>
+                              style={{ padding:'5px 12px', background: isFiring ? 'transparent' : '#f5a623', color: isFiring ? '#f5a623' : '#000', border: isFiring ? '1px solid rgba(245,166,35,0.3)' : 'none', borderRadius:5, fontSize:13, fontWeight:600, cursor: isFiring ? 'default' : 'pointer', fontFamily:'monospace', flexShrink:0, minWidth:60, transition:'all 0.2s' }}>
                               {isFiring ? '...' : 'FIRE →'}
                             </button>
                           )}
@@ -2251,7 +2251,7 @@ export default function DashboardPage() {
 
               {moduleResult && !moduleRunning && (
                 moduleResult.error
-                  ? <div style={{ padding:'12px 14px', background:'rgba(239,68,68,0.08)', border:'1px solid rgba(239,68,68,0.2)', borderRadius:8, fontFamily:'monospace', fontSize:11, color:'#ef4444' }}>Error: {moduleResult.error}</div>
+                  ? <div style={{ padding:'12px 14px', background:'rgba(239,68,68,0.08)', border:'1px solid rgba(239,68,68,0.2)', borderRadius:8, fontFamily:'monospace', fontSize:13, color:'#ef4444' }}>Error: {moduleResult.error}</div>
                   : <ModuleResult result={moduleResult} moduleName={activeModuleName} />
               )}
             </div>
@@ -2275,7 +2275,7 @@ export default function DashboardPage() {
                 </div>
                 {csvRows && csvRows.length > 0 && (
                   <div style={{ marginTop:12 }}>
-                    <div style={{ fontSize:11, color:'#f5a623', marginBottom:6 }}>{csvRows.length} rows parsed — {groupCsvToInvoices(csvRows).length} invoices</div>
+                    <div style={{ fontSize:13, color:'#f5a623', marginBottom:6 }}>{csvRows.length} rows parsed — {groupCsvToInvoices(csvRows).length} invoices</div>
                     <div style={{ maxHeight:200, overflowY:'auto', border:'1px solid rgba(255,255,255,0.06)', borderRadius:8 }}>
                       <table style={{ width:'100%', fontSize:11, color:'#8a9099', borderCollapse:'collapse' }}>
                         <thead><tr style={{ background:'rgba(245,166,35,0.05)' }}>
@@ -2303,8 +2303,8 @@ export default function DashboardPage() {
                           if (data.success) { showDashToast(`${data.inserted} invoices uploaded`); setCsvRows(null); loadInvoices() }
                           else showDashToast(data.error || 'Upload failed', 'error')
                         } catch { showDashToast('Upload failed', 'error') }
-                      }} style={{ padding:'8px 16px', background:'#f5a623', border:'none', borderRadius:7, color:'#000', fontWeight:600, fontSize:12, cursor:'pointer' }}>Submit {groupCsvToInvoices(csvRows).length} invoices</button>
-                      <button onClick={() => setCsvRows(null)} style={{ padding:'8px 16px', background:'transparent', border:'1px solid rgba(255,255,255,0.1)', borderRadius:7, color:'#4a5260', fontSize:12, cursor:'pointer' }}>Clear</button>
+                      }} style={{ padding:'8px 16px', background:'#f5a623', border:'none', borderRadius:7, color:'#000', fontWeight:600, fontSize:13, cursor:'pointer' }}>Submit {groupCsvToInvoices(csvRows).length} invoices</button>
+                      <button onClick={() => setCsvRows(null)} style={{ padding:'8px 16px', background:'transparent', border:'1px solid rgba(255,255,255,0.1)', borderRadius:7, color:'#4a5260', fontSize:13, cursor:'pointer' }}>Clear</button>
                     </div>
                   </div>
                 )}
@@ -2321,15 +2321,15 @@ export default function DashboardPage() {
                 <div style={{ fontSize:11, color:'#4a5260', marginBottom:6 }}>LINE ITEMS</div>
                 {manualInv.line_items.map((li, i) => (
                   <div key={i} style={{ display:'grid', gridTemplateColumns:'1fr 2fr 1fr 1fr auto', gap:6, marginBottom:6 }}>
-                    <input value={li.job_ref} onChange={e=>{const u=[...manualInv.line_items];u[i]={...u[i],job_ref:e.target.value};setManualInv(p=>({...p,line_items:u}))}} placeholder="Job ref" style={{ padding:8, background:'#0f1826', border:'1px solid rgba(255,255,255,0.08)', borderRadius:6, color:'#e8eaed', fontSize:11, outline:'none', fontFamily:'monospace' }} />
-                    <input value={li.description} onChange={e=>{const u=[...manualInv.line_items];u[i]={...u[i],description:e.target.value};setManualInv(p=>({...p,line_items:u}))}} placeholder="Description" style={{ padding:8, background:'#0f1826', border:'1px solid rgba(255,255,255,0.08)', borderRadius:6, color:'#e8eaed', fontSize:11, outline:'none' }} />
-                    <input value={li.charged} onChange={e=>{const u=[...manualInv.line_items];u[i]={...u[i],charged:e.target.value};setManualInv(p=>({...p,line_items:u}))}} placeholder="£ charged" inputMode="decimal" style={{ padding:8, background:'#0f1826', border:'1px solid rgba(255,255,255,0.08)', borderRadius:6, color:'#e8eaed', fontSize:11, outline:'none', fontFamily:'monospace' }} />
-                    <input value={li.agreed_rate} onChange={e=>{const u=[...manualInv.line_items];u[i]={...u[i],agreed_rate:e.target.value};setManualInv(p=>({...p,line_items:u}))}} placeholder="£ agreed" inputMode="decimal" style={{ padding:8, background:'#0f1826', border:'1px solid rgba(255,255,255,0.08)', borderRadius:6, color:'#e8eaed', fontSize:11, outline:'none', fontFamily:'monospace' }} />
-                    <button onClick={()=>{const u=manualInv.line_items.filter((_,j)=>j!==i);setManualInv(p=>({...p,line_items:u.length?u:[{job_ref:'',description:'',charged:'',agreed_rate:''}]}))}} style={{ padding:'4px 8px', background:'transparent', border:'1px solid rgba(239,68,68,0.2)', borderRadius:4, color:'#ef4444', fontSize:11, cursor:'pointer' }}>✕</button>
+                    <input value={li.job_ref} onChange={e=>{const u=[...manualInv.line_items];u[i]={...u[i],job_ref:e.target.value};setManualInv(p=>({...p,line_items:u}))}} placeholder="Job ref" style={{ padding:8, background:'#0f1826', border:'1px solid rgba(255,255,255,0.08)', borderRadius:6, color:'#e8eaed', fontSize:13, outline:'none', fontFamily:'monospace' }} />
+                    <input value={li.description} onChange={e=>{const u=[...manualInv.line_items];u[i]={...u[i],description:e.target.value};setManualInv(p=>({...p,line_items:u}))}} placeholder="Description" style={{ padding:8, background:'#0f1826', border:'1px solid rgba(255,255,255,0.08)', borderRadius:6, color:'#e8eaed', fontSize:13, outline:'none' }} />
+                    <input value={li.charged} onChange={e=>{const u=[...manualInv.line_items];u[i]={...u[i],charged:e.target.value};setManualInv(p=>({...p,line_items:u}))}} placeholder="£ charged" inputMode="decimal" style={{ padding:8, background:'#0f1826', border:'1px solid rgba(255,255,255,0.08)', borderRadius:6, color:'#e8eaed', fontSize:13, outline:'none', fontFamily:'monospace' }} />
+                    <input value={li.agreed_rate} onChange={e=>{const u=[...manualInv.line_items];u[i]={...u[i],agreed_rate:e.target.value};setManualInv(p=>({...p,line_items:u}))}} placeholder="£ agreed" inputMode="decimal" style={{ padding:8, background:'#0f1826', border:'1px solid rgba(255,255,255,0.08)', borderRadius:6, color:'#e8eaed', fontSize:13, outline:'none', fontFamily:'monospace' }} />
+                    <button onClick={()=>{const u=manualInv.line_items.filter((_,j)=>j!==i);setManualInv(p=>({...p,line_items:u.length?u:[{job_ref:'',description:'',charged:'',agreed_rate:''}]}))}} style={{ padding:'4px 8px', background:'transparent', border:'1px solid rgba(239,68,68,0.2)', borderRadius:4, color:'#ef4444', fontSize:13, cursor:'pointer' }}>✕</button>
                   </div>
                 ))}
                 <div style={{ display:'flex', gap:8, marginTop:8 }}>
-                  <button onClick={()=>setManualInv(p=>({...p,line_items:[...p.line_items,{job_ref:'',description:'',charged:'',agreed_rate:''}]}))} style={{ padding:'6px 12px', background:'transparent', border:'1px solid rgba(245,166,35,0.2)', borderRadius:6, color:'#f5a623', fontSize:11, cursor:'pointer' }}>+ Add line</button>
+                  <button onClick={()=>setManualInv(p=>({...p,line_items:[...p.line_items,{job_ref:'',description:'',charged:'',agreed_rate:''}]}))} style={{ padding:'6px 12px', background:'transparent', border:'1px solid rgba(245,166,35,0.2)', borderRadius:6, color:'#f5a623', fontSize:13, cursor:'pointer' }}>+ Add line</button>
                   <button onClick={async () => {
                     if (!manualInv.carrier || !manualInv.invoice_ref) { showDashToast('Carrier and invoice ref required', 'error'); return }
                     const items = manualInv.line_items.map(li => ({ ...li, charged: Number(li.charged) || 0, agreed_rate: Number(li.agreed_rate) || 0, delta: Math.max(0, (Number(li.charged)||0) - (Number(li.agreed_rate)||0)) }))
@@ -2339,10 +2339,10 @@ export default function DashboardPage() {
                       if (data.success) { showDashToast('Invoice added'); setManualInv({ carrier:'', invoice_ref:'', invoice_date:'', line_items:[{job_ref:'',description:'',charged:'',agreed_rate:''}] }); loadInvoices() }
                       else showDashToast(data.error || 'Failed', 'error')
                     } catch { showDashToast('Failed', 'error') }
-                  }} style={{ padding:'6px 16px', background:'#f5a623', border:'none', borderRadius:6, color:'#000', fontWeight:600, fontSize:11, cursor:'pointer' }}>Submit invoice</button>
+                  }} style={{ padding:'6px 16px', background:'#f5a623', border:'none', borderRadius:6, color:'#000', fontWeight:600, fontSize:13, cursor:'pointer' }}>Submit invoice</button>
                 </div>
                 {manualInv.line_items.some(li => Number(li.charged) > Number(li.agreed_rate)) && (
-                  <div style={{ marginTop:8, fontSize:11, color:'#ef4444' }}>
+                  <div style={{ marginTop:8, fontSize:13, color:'#ef4444' }}>
                     Total overcharge: £{manualInv.line_items.reduce((s,li) => s + Math.max(0, (Number(li.charged)||0) - (Number(li.agreed_rate)||0)), 0).toFixed(2)}
                   </div>
                 )}
@@ -2355,7 +2355,7 @@ export default function DashboardPage() {
                   <button onClick={loadInvoices} style={{ background:'none', border:'none', color:'#4a5260', fontSize:11, cursor:'pointer' }}>↻ Refresh</button>
                 </div>
                 {invoices.length === 0 ? (
-                  <div style={{ padding:20, textAlign:'center', color:'#4a5260', fontSize:12 }}>No invoices yet. Upload a CSV or add one manually.</div>
+                  <div style={{ padding:20, textAlign:'center', color:'#4a5260', fontSize:13 }}>No invoices yet. Upload a CSV or add one manually.</div>
                 ) : invoices.map(inv => {
                   const statusColors = { pending_review:'#f59e0b', disputed:'#ef4444', resolved:'#22c55e', approved:'#f5a623' }
                   const hasOvercharge = (inv.total_overcharge || 0) > 0
@@ -2386,15 +2386,15 @@ export default function DashboardPage() {
                             setEmailPickerMailto(`mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`)
                             setEmailPickerInvoiceId(inv.id)
                             setEmailPickerSent(false)
-                          }} style={{ padding:'4px 10px', background:'rgba(239,68,68,0.08)', border:'1px solid rgba(239,68,68,0.25)', borderRadius:5, color:'#ef4444', fontSize:11, fontWeight:600, cursor:'pointer' }}>✉ Dispute</button>
+                          }} style={{ padding:'4px 10px', background:'rgba(239,68,68,0.08)', border:'1px solid rgba(239,68,68,0.25)', borderRadius:5, color:'#ef4444', fontSize:13, fontWeight:600, cursor:'pointer' }}>✉ Dispute</button>
                         )}
                         {inv.status === 'pending_review' && !hasOvercharge && (
                           <button onClick={() => { fetch('/api/invoices', { method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ id:inv.id, status:'approved' }) }).then(()=>{showDashToast('Invoice approved');loadInvoices()}).catch(()=>{}) }}
-                            style={{ padding:'4px 10px', background:'rgba(245,166,35,0.08)', border:'1px solid rgba(245,166,35,0.2)', borderRadius:5, color:'#f5a623', fontSize:11, fontWeight:600, cursor:'pointer' }}>✓ Approve</button>
+                            style={{ padding:'4px 10px', background:'rgba(245,166,35,0.08)', border:'1px solid rgba(245,166,35,0.2)', borderRadius:5, color:'#f5a623', fontSize:13, fontWeight:600, cursor:'pointer' }}>✓ Approve</button>
                         )}
                         {inv.status === 'disputed' && (
                           <button onClick={() => { fetch('/api/invoices', { method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ id:inv.id, status:'resolved' }) }).then(()=>{showDashToast('Marked resolved');loadInvoices()}).catch(()=>{}) }}
-                            style={{ padding:'4px 10px', background:'rgba(34,197,94,0.08)', border:'1px solid rgba(34,197,94,0.2)', borderRadius:5, color:'#22c55e', fontSize:11, fontWeight:600, cursor:'pointer' }}>✓ Resolved</button>
+                            style={{ padding:'4px 10px', background:'rgba(34,197,94,0.08)', border:'1px solid rgba(34,197,94,0.2)', borderRadius:5, color:'#22c55e', fontSize:13, fontWeight:600, cursor:'pointer' }}>✓ Resolved</button>
                         )}
                       </div>
                     </div>
@@ -2425,7 +2425,7 @@ export default function DashboardPage() {
                     style={{ textAlign:'left', padding:'12px 13px', borderRadius:7, border:`1px solid ${s.color}30`, background:`${s.color}08`, cursor:scenarioRunning?'default':'pointer', opacity:scenarioRunning&&scenarioRunning!==s.id?0.4:1, transition:'all 0.15s' }}>
                     <div style={{ display:'flex', alignItems:'center', gap:7, marginBottom:5 }}>
                       <span style={{ fontSize:15 }}>{s.icon}</span>
-                      <span style={{ fontSize:11, fontWeight:500, color:'#e8eaed', lineHeight:1.3 }}>{s.label}</span>
+                      <span style={{ fontSize:13, fontWeight:500, color:'#e8eaed', lineHeight:1.3 }}>{s.label}</span>
                     </div>
                     <div style={{ fontSize:11, color:s.color, fontFamily:'monospace' }}>
                       {scenarioRunning===s.id ? '● RUNNING...' : 'CLICK TO RUN DEMO'}
@@ -2436,7 +2436,7 @@ export default function DashboardPage() {
               {scenarioRunning && (
                 <div style={{ display:'flex', alignItems:'center', gap:10, padding:'14px', background:'#0f1826', borderRadius:8, border:'1px solid rgba(245,166,35,0.15)' }}>
                   <div style={{ width:16, height:16, border:'2px solid #f5a623', borderTopColor:'transparent', borderRadius:'50%', animation:'spin 0.8s linear infinite', flexShrink:0 }} />
-                  <span style={{ fontFamily:'monospace', fontSize:11, color:'#f5a623' }}>Analysing scenario...</span>
+                  <span style={{ fontFamily:'monospace', fontSize:13, color:'#f5a623' }}>Analysing scenario...</span>
                 </div>
               )}
               {scenarioResult && !scenarioRunning && (
@@ -2445,7 +2445,7 @@ export default function DashboardPage() {
                     SCENARIO RESULT — {scenarioResult.scenario?.toUpperCase().replace(/_/g,' ')}
                   </div>
                   {scenarioResult.error
-                    ? <div style={{ padding:'14px', color:'#ef4444', fontSize:12, fontFamily:'monospace' }}>Error: {scenarioResult.error}</div>
+                    ? <div style={{ padding:'14px', color:'#ef4444', fontSize:13, fontFamily:'monospace' }}>Error: {scenarioResult.error}</div>
                     : <div style={{ padding:'14px', maxHeight:400, overflowY:'auto' }}>
                         <ScenarioResult result={scenarioResult.result} />
                       </div>
@@ -2868,9 +2868,10 @@ export default function DashboardPage() {
                     <div style={{ fontSize:11, color:'#4a5260', padding:'12px 14px', background:'#0f1826', borderRadius:8 }}>Loading active drivers...</div>
                   )}
                   {!activeDriversLoading && activeDrivers.length === 0 && (
-                    <div style={{ fontSize:11, color:'#4a5260', padding:'12px 14px', background:'#0f1826', border:'1px solid rgba(255,255,255,0.06)', borderRadius:8 }}>
+                    <div style={{ fontSize:13, color:'#4a5260', padding:'12px 14px', background:'#0f1826', border:'1px solid rgba(255,255,255,0.06)', borderRadius:8 }}>
                       No drivers currently on shift. Have a driver start their shift in the driver app first.
                     </div>
+
                   )}
                   {!activeDriversLoading && activeDrivers.length > 0 && (
                     <div style={{ display:'flex', flexWrap:'wrap', gap:10 }}>
@@ -2883,7 +2884,7 @@ export default function DashboardPage() {
                               <span style={{ fontSize:13, fontWeight:700, color: isSelected ? '#f5a623' : '#e8eaed', fontFamily:'monospace', letterSpacing:1 }}>{driver.vehicle_reg}</span>
                               {isSelected && <span style={{ fontSize:11, color:'#f5a623', fontFamily:'monospace', letterSpacing:1 }}>✓ SELECTED</span>}
                             </div>
-                            <div style={{ fontSize:11, color:'#8a9099', marginBottom:4 }}>{driver.driver_name}</div>
+                            <div style={{ fontSize:13, color:'#8a9099', marginBottom:4 }}>{driver.driver_name}</div>
                             {driver.last_known_location && (
                               <div style={{ fontSize:11, color:'#4a5260', marginBottom:4 }}>📍 {driver.last_known_location}</div>
                             )}
@@ -2911,8 +2912,8 @@ export default function DashboardPage() {
                 {/* ── LEFT: TEST CONSOLE ── */}
                 <div>
                   <div style={{ marginBottom:16, padding:'12px 14px', background:'rgba(59,130,246,0.06)', border:'1px solid rgba(59,130,246,0.18)', borderRadius:9 }}>
-                    <div style={{ fontSize:12, color:'#3b82f6', fontWeight:600, marginBottom:4 }}>What is this?</div>
-                    <div style={{ fontSize:12, color:'#8a9099', lineHeight:1.6 }}>
+                    <div style={{ fontSize:13, color:'#3b82f6', fontWeight:600, marginBottom:4 }}>What is this?</div>
+                    <div style={{ fontSize:13, color:'#8a9099', lineHeight:1.6 }}>
                       This is a <strong style={{color:'#e8eaed'}}>setup and testing tool</strong> for connecting DisruptionHub to your existing systems — things like your TMS (e.g. Mandata), vehicle tracking (e.g. Webfleet, Samsara), or warehouse systems. When those systems send an alert, DisruptionHub picks it up, analyses it with AI, and notifies ops automatically. Use the console below to test that each connection is working correctly. Your drivers don't see this.
                     </div>
                   </div>
@@ -2930,7 +2931,7 @@ export default function DashboardPage() {
                           setWhPayload(null)
                           setWhResult(null)
                         }}
-                          style={{ padding:'6px 12px', borderRadius:6, border: whSystem===key ? `1px solid ${s.color}` : '1px solid rgba(255,255,255,0.08)', background: whSystem===key ? `${s.color}15` : 'transparent', color: whSystem===key ? s.color : '#4a5260', fontSize:11, cursor:'pointer', fontFamily:'monospace', transition:'all 0.15s' }}>
+                          style={{ padding:'6px 12px', borderRadius:6, border: whSystem===key ? `1px solid ${s.color}` : '1px solid rgba(255,255,255,0.08)', background: whSystem===key ? `${s.color}15` : 'transparent', color: whSystem===key ? s.color : '#4a5260', fontSize:13, cursor:'pointer', fontFamily:'monospace', transition:'all 0.15s' }}>
                           {s.icon} {s.label}
                         </button>
                       ))}
@@ -2977,7 +2978,7 @@ export default function DashboardPage() {
                               setWhResult(null)
                             }}
                             style={{
-                              padding:'5px 11px', borderRadius:5, fontFamily:'monospace', transition:'all 0.15s', fontSize:11, cursor: isRelevant ? 'pointer' : 'not-allowed',
+                              padding:'5px 11px', borderRadius:5, fontFamily:'monospace', transition:'all 0.15s', fontSize:13, cursor: isRelevant ? 'pointer' : 'not-allowed',
                               border: isSelected ? `1px solid ${sys.color}80` : isTopPick ? `1px solid ${sys.color}50` : '1px solid rgba(255,255,255,0.07)',
                               background: isSelected ? `${sys.color}12` : isTopPick ? `${sys.color}08` : '#0f1826',
                               color: isSelected ? sys.color : isRelevant ? '#8a9099' : '#2a3040',
@@ -3006,7 +3007,7 @@ export default function DashboardPage() {
                                 const updated = { ...getWhPayload(), [key]: isNaN(e.target.value) ? e.target.value : (e.target.value === '' ? '' : Number(e.target.value)) }
                                 setWhPayload(updated)
                               }}
-                              style={{ flex:1, background:'transparent', border:'none', outline:'none', color:'#e8eaed', fontSize:11, fontFamily:'IBM Plex Mono, monospace' }}
+                              style={{ flex:1, background:'transparent', border:'none', outline:'none', color:'#e8eaed', fontSize:13, fontFamily:'IBM Plex Mono, monospace' }}
                             />
                           </div>
                         ))}
@@ -3071,7 +3072,7 @@ export default function DashboardPage() {
                   {whLog.length === 0 && !whLogLoading && (
                     <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:'40px 20px', gap:10, opacity:0.3 }}>
                       <div style={{ fontSize:28, color:'#4a5260' }}>⚡</div>
-                      <div style={{ fontSize:12, color:'#4a5260', textAlign:'center' }}>No webhook events yet</div>
+                      <div style={{ fontSize:13, color:'#4a5260', textAlign:'center' }}>No webhook events yet</div>
                       <div style={{ fontSize:11, color:'#4a5260', textAlign:'center', maxWidth:200 }}>Fire a webhook from the console to see the full audit trail here</div>
                     </div>
                   )}
@@ -3111,7 +3112,7 @@ export default function DashboardPage() {
                             {entry.sms_fired ? '✓ SMS SENT' : entry.simulated ? '◎ SIM' : '— SMS NOT SENT'}
                           </span>
                         </div>
-                        <div style={{ fontSize:11, color:'#e8eaed', marginBottom:3 }}>
+                        <div style={{ fontSize:13, color:'#e8eaed', marginBottom:3 }}>
                           {entry.event_type?.replace(/_/g,' ')}
                         </div>
                         {entry.payload && (
