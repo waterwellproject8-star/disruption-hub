@@ -717,6 +717,104 @@ export default function HomePage() {
             </a>
           </div>
 
+          {/* ── FOUNDER ────────────────────────────────────────────────────── */}
+          <div style={{
+            marginTop: 72, marginBottom: 64,
+            padding: '40px 32px',
+            background: T.navyCard,
+            border: `1px solid ${T.border}`,
+            borderRadius: 4,
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: 32,
+            alignItems: 'flex-start',
+          }}>
+            <div style={{ flexShrink: 0 }}>
+              <div style={{
+                width: 120, height: 120, borderRadius: '50%',
+                padding: 3,
+                background: `linear-gradient(135deg, ${T.amber}, rgba(245,166,35,0.25))`,
+                boxShadow: '0 0 24px rgba(245,166,35,0.35), 0 0 48px rgba(245,166,35,0.15)',
+              }}>
+                <img
+                  src="/nomaan.jpg"
+                  alt="Nomaan, Founder of DisruptionHub"
+                  style={{
+                    width: '100%', height: '100%',
+                    borderRadius: '50%', objectFit: 'cover',
+                    display: 'block',
+                    border: `2px solid ${T.navyCard}`,
+                  }}
+                />
+              </div>
+            </div>
+
+            <div style={{ flex: 1, minWidth: 260 }}>
+              <div style={{
+                fontFamily: FF.mono, fontSize: 11, fontWeight: 600,
+                letterSpacing: '0.2em', textTransform: 'uppercase',
+                color: T.amber, marginBottom: 12,
+              }}>
+                Built By
+              </div>
+
+              <h3 style={{
+                fontFamily: FF.condensed, fontSize: 32, fontWeight: 800,
+                textTransform: 'uppercase', color: '#fff',
+                lineHeight: 1, marginBottom: 6, letterSpacing: '0.02em',
+              }}>
+                Nomaan
+              </h3>
+
+              <div style={{
+                fontFamily: FF.body, fontSize: 14, color: T.textDim,
+                marginBottom: 8,
+              }}>
+                Founder, DisruptionHub
+              </div>
+
+              <a
+                href="https://linkedin.com/in/mohammed-nomaan-027382283"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 6,
+                  fontFamily: FF.mono, fontSize: 11,
+                  color: T.amber, textDecoration: 'none',
+                  letterSpacing: '0.04em',
+                  marginBottom: 24,
+                  borderBottom: `1px solid ${T.amberBorder}`,
+                  paddingBottom: 2,
+                }}
+              >
+                linkedin.com/in/mohammed-nomaan-027382283 →
+              </a>
+
+              <p style={{
+                fontFamily: FF.body, fontSize: 15, color: T.text,
+                lineHeight: 1.75, marginBottom: 18,
+              }}>
+                I spent the past year researching the specific pain points hitting UK haulage operators — the data is real, not assumed. In a 2% margin industry, a single Tesco contract lost to repeated SLA penalties isn&apos;t a setback. It&apos;s the end of the business.
+              </p>
+
+              <p style={{
+                fontFamily: FF.body, fontSize: 15, color: T.text,
+                lineHeight: 1.75, marginBottom: 24,
+              }}>
+                I come from a background where protecting the downside wasn&apos;t optional. When AI reached the point where a system like this became buildable, I built it — not as a luxury add-on. So that operators can sleep at night knowing everything is in place to protect what they&apos;ve built.
+              </p>
+
+              <div style={{
+                fontFamily: FF.mono, fontSize: 12,
+                color: T.amber, letterSpacing: '0.06em',
+                paddingTop: 16,
+                borderTop: `1px solid ${T.border}`,
+              }}>
+                &ldquo;Built for operators. By someone who gets it.&rdquo;
+              </div>
+            </div>
+          </div>
+
           {/* Main CTA */}
           <div style={{ textAlign: 'center' }}>
             <a
