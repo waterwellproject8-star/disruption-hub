@@ -21,11 +21,6 @@ function buildDemoShipments() {
 }
 const ACTIVE_SHIPMENTS = buildDemoShipments()
 
-const INCIDENT_LOG = [
-  { date: 'Today 22:03', ref: 'PH-8832', type: 'Breakdown', severity: 'CRITICAL', saved: '£2,400' },
-  { date: 'Yesterday', ref: 'PH-7741', type: 'Invoice Recovery', severity: 'HIGH', saved: '£4,280' },
-  { date: '3 days ago', ref: 'PH-6602', type: 'Driver Hours', severity: 'MEDIUM', saved: '£900' },
-]
 
 const STATUS_COLORS = { 'on-track': '#f5a623', 'disrupted': '#ef4444', 'delayed': '#f59e0b' }
 const SEV_COLORS = { 'CRITICAL': '#ef4444', 'HIGH': '#f59e0b', 'MEDIUM': '#3b82f6', 'LOW': '#8a9099' }
@@ -1927,7 +1922,7 @@ export default function DashboardPage() {
           <div style={{ padding:'14px', borderBottom:'1px solid rgba(255,255,255,0.06)' }}>
             <div style={{ fontSize:11, fontFamily:'monospace', color:'#4a5260', letterSpacing:'0.08em', marginBottom:8 }}>ACTIVE SHIPMENTS</div>
             {(liveShipments.length > 0 ? liveShipments : ACTIVE_SHIPMENTS).map(s => (
-              <div key={s.ref} onClick={() => analyseShipment(s)} style={{ padding:'9px 10px', borderRadius:6, marginBottom:5, cursor:'pointer', border:activeShipment===s.ref?'1px solid #f5a623':'1px solid rgba(255,255,255,0.05)', background:s.status==='disrupted'?'rgba(239,68,68,0.07)':s.status==='delayed'?'rgba(245,158,11,0.05)':'#0f1826', transition:'all 0.15s' }}>
+              <div key={s.ref} onClick={() => analyseShipment(s)} style={{ padding:'11px 12px', borderRadius:6, marginBottom:8, cursor:'pointer', border:activeShipment===s.ref?'1px solid #f5a623':'1px solid rgba(255,255,255,0.05)', background:s.status==='disrupted'?'rgba(239,68,68,0.07)':s.status==='delayed'?'rgba(245,158,11,0.05)':'#0f1826', transition:'all 0.15s' }}>
                 <div style={{ display:'flex', justifyContent:'space-between', marginBottom:2 }}>
                   <span style={{ fontFamily:'monospace', fontSize:13, color:'#e8eaed', fontWeight:500 }}>{s.ref}</span>
                   <span style={{ fontFamily:'monospace', fontSize:11, color:STATUS_COLORS[s.status], textTransform:'uppercase' }}>{s.status}</span>
@@ -1939,22 +1934,6 @@ export default function DashboardPage() {
             ))}
           </div>
 
-          {/* Recent Incidents */}
-          <div style={{ padding:'14px' }}>
-            <div style={{ fontSize:11, fontFamily:'monospace', color:'#4a5260', letterSpacing:'0.08em', marginBottom:8 }}>RECENT INCIDENTS</div>
-            {[...sessionIncidents, ...INCIDENT_LOG].slice(0,8).map((inc,i) => (
-              <div key={i} style={{ padding:'8px 0', borderBottom:'1px solid rgba(255,255,255,0.03)', display:'grid', gridTemplateColumns:'1fr auto' }}>
-                <div>
-                  <div style={{ fontSize:13, color: i===0&&sessionIncidents.length>0?'#f5a623':'#e8eaed', fontFamily:'monospace' }}>{inc.ref} — <span style={{ fontSize:12 }}>{inc.type.substring(0,22)}</span></div>
-                  <div style={{ fontSize:11, color:'#4a5260', marginTop:1 }}>{inc.date}</div>
-                </div>
-                <div style={{ textAlign:'right' }}>
-                  <div style={{ fontSize:11, color:SEV_COLORS[inc.severity], fontFamily:'monospace', padding:'1px 5px', borderRadius:2, background:SEV_BG[inc.severity], display:'inline-block' }}>{inc.severity}</div>
-                  {inc.saved && <div style={{ fontSize:11, color:'#f5a623', marginTop:3 }}>{inc.saved}</div>}
-                </div>
-              </div>
-            ))}
-          </div>
         </div>
 
         {/* ── RIGHT PANEL ───────────────────────────────────────────────────── */}
