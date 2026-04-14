@@ -187,27 +187,31 @@ export default function DriverApp() {
       const savedMessages  = localStorage.getItem('dh_ops_messages')
       if (savedMessages) { try { setOpsMessages(JSON.parse(savedMessages)) } catch {} }
 
-      if (shiftDone && shiftStartedAt) {
-        const hoursAgo = (Date.now() - parseInt(shiftStartedAt)) / 3600000
-        if (hoursAgo > 16) {
-          let lastAlertTime = null
-          if (savedAlert) { try { lastAlertTime = JSON.parse(savedAlert).time } catch {} }
+      // Only an active, non-stale shift may carry alert banners forward.
+      // Any other case — wipe both alert keys so a prior shift's banners
+      // don't leak into a new session.
+      const hoursSinceStart = shiftStartedAt ? (Date.now() - parseInt(shiftStartedAt)) / 3600000 : Infinity
+      const hasActiveShift = !!shiftDone && !!shiftStartedAt && hoursSinceStart <= 16
 
-          setStaleSession({ startedAt: new Date(parseInt(shiftStartedAt)).toLocaleString('en-GB',{weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}), hoursAgo: Math.round(hoursAgo), lastAlertTime })
-          setLoading(false); return
-        }
+      if (shiftDone && shiftStartedAt && hoursSinceStart > 16) {
+        let lastAlertTime = null
+        if (savedAlert) { try { lastAlertTime = JSON.parse(savedAlert).time } catch {} }
+
+        setStaleSession({ startedAt: new Date(parseInt(shiftStartedAt)).toLocaleString('en-GB',{weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}), hoursAgo: Math.round(hoursSinceStart), lastAlertTime })
+        setLoading(false); return
+      }
+
+      if (!hasActiveShift) {
+        localStorage.removeItem('dh_last_alert')
+        localStorage.removeItem('dh_prior_alert')
       }
 
       if (shiftStartedAt) shiftStartTime.current = new Date(parseInt(shiftStartedAt))
       if (shiftDone) setShiftStarted(true)
-      if (savedAlert) { try { setLastAlert(JSON.parse(savedAlert)) } catch {} }
-      // Only restore priorAlert when an active shift is in progress.
-      // Prevents a previous shift's breakdown banner leaking into a fresh shift.
-      if (shiftDone) {
+      if (hasActiveShift && savedAlert) { try { setLastAlert(JSON.parse(savedAlert)) } catch {} }
+      if (hasActiveShift) {
         const savedPrior = localStorage.getItem('dh_prior_alert')
         if (savedPrior) { try { setPriorAlert(JSON.parse(savedPrior)) } catch {} }
-      } else {
-        localStorage.removeItem('dh_prior_alert')
       }
       loadJobs(info).then(loaded => {
         // Auto-clear only if all REAL jobs are completed (not SHIFT_START rows)
