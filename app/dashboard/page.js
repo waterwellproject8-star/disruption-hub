@@ -1079,6 +1079,7 @@ export default function DashboardPage() {
   const [moduleResult, setModuleResult] = useState(null)
   const [activeModuleName, setActiveModuleName] = useState(null)
   const [approvingId, setApprovingId] = useState(null)
+  const [expandedApprovals, setExpandedApprovals] = useState(new Set())
   const [localApprovals, setLocalApprovals] = useState([])
   const [cancelAssessment, setCancelAssessment] = useState(null)
   const [scenarioResult, setScenarioResult] = useState(null)
@@ -2620,6 +2621,23 @@ export default function DashboardPage() {
                       const typeMap = { call:'📞', make_call:'📞', send_sms:'💬', sms:'💬', send_email:'✉', email:'✉', dispatch:'🚛', reroute:'🗺', notify:'📣', emergency:'🚨', driver_resolved:'✅' }
                       const ico = typeMap[a.action_type] || '⚡'
                       const timeStr = a.executed_at ? new Date(a.executed_at).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}) : a.created_at ? new Date(a.created_at).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}) : ''
+                      const isCollapsible = !isPending
+                      const isExpanded = expandedApprovals.has(a.id)
+                      const toggleExpand = () => setExpandedApprovals(prev => { const next = new Set(prev); next.has(a.id) ? next.delete(a.id) : next.add(a.id); return next })
+
+                      if (isCollapsible && !isExpanded) {
+                        return (
+                          <div key={a.id} onClick={toggleExpand} style={{ border:`1px solid ${borderCol}33`, borderLeft:`3px solid ${borderCol}`, borderRadius:6, background:bgCol, marginBottom:4, cursor:'pointer', padding:'8px 12px', display:'flex', alignItems:'center', gap:8, transition:'all 0.15s' }}>
+                            <span style={{ fontSize:11, padding:'2px 7px', background:`${borderCol}22`, color:borderCol, fontFamily:'monospace', fontWeight:700, flexShrink:0 }}>
+                              {isExecuted ? '✓ DONE' : isRejected ? '✕ REJECTED' : a.status?.toUpperCase()}
+                            </span>
+                            <span style={{ fontSize:12, color:'#8a9099', flex:1, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{ico} {a.action_label}</span>
+                            <span style={{ fontSize:11, color:'#374151', flexShrink:0 }}>{timeStr}</span>
+                            <span style={{ fontSize:11, color:'#4a5260', flexShrink:0 }}>▶</span>
+                          </div>
+                        )
+                      }
+
                       return (
                         <div key={a.id} style={{ border:`1px solid ${borderCol}33`, borderLeft:`3px solid ${borderCol}`, borderRadius:8, background:bgCol, marginBottom:8 }}>
                           <div style={{ padding:'12px 14px' }}>
@@ -2630,7 +2648,10 @@ export default function DashboardPage() {
                                 </span>
                                 <span style={{ fontSize:13, color:'#f5a623', fontWeight:700, fontFamily:'monospace' }}>{a.action_details?.vehicle_reg || ''}</span>
                               </div>
-                              <span style={{ fontSize:11, color:'#374151' }}>{timeStr}</span>
+                              <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+                                <span style={{ fontSize:11, color:'#374151' }}>{timeStr}</span>
+                                {isCollapsible && <span onClick={toggleExpand} style={{ fontSize:11, color:'#4a5260', cursor:'pointer' }}>▼</span>}
+                              </div>
                             </div>
                             <div style={{ fontSize:14, fontWeight:600, color:'#e8eaed', marginBottom:6, lineHeight:1.5 }}>{ico} {a.action_label}</div>
                             {a.financial_value > 0 && <div style={{ fontSize:14, color:borderCol, fontWeight:700, marginBottom:8 }}>£{Number(a.financial_value).toLocaleString()}</div>}
