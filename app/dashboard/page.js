@@ -3200,6 +3200,7 @@ export default function DashboardPage() {
                     </div>
                   )}
 
+                  <div style={{ maxHeight:'calc(100vh - 260px)', overflowY:'auto', paddingRight:4 }}>
                   {whLog.map(entry => {
                     const sysConfig = WEBHOOK_SYSTEMS[entry.system_name]
                     const sysColor = sysConfig?.color || '#8a9099'
@@ -3242,6 +3243,7 @@ export default function DashboardPage() {
                       </div>
                     )
                   })}
+                  </div>
                 </div>
 
               </div>
