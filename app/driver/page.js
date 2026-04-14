@@ -719,7 +719,15 @@ export default function DriverApp() {
         })
       }).catch(() => {})
 
-      loadJobs(driverInfo)
+      loadJobs(driverInfo).then(loaded => {
+        // Write fresh on-track rows for every job so Live Fleet SLA badge logic
+        // can find active job refs immediately, not only after first driver interaction
+        if (loaded && loaded.length) {
+          loaded.forEach(job => {
+            pushProgressToSupabase(job.ref, 'on-track', null)
+          })
+        }
+      })
     }
   }
 
