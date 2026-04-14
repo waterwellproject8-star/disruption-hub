@@ -1929,11 +1929,11 @@ export default function DashboardPage() {
             {(liveShipments.length > 0 ? liveShipments : ACTIVE_SHIPMENTS).map(s => (
               <div key={s.ref} onClick={() => analyseShipment(s)} style={{ padding:'9px 10px', borderRadius:6, marginBottom:5, cursor:'pointer', border:activeShipment===s.ref?'1px solid #f5a623':'1px solid rgba(255,255,255,0.05)', background:s.status==='disrupted'?'rgba(239,68,68,0.07)':s.status==='delayed'?'rgba(245,158,11,0.05)':'#0f1826', transition:'all 0.15s' }}>
                 <div style={{ display:'flex', justifyContent:'space-between', marginBottom:2 }}>
-                  <span style={{ fontFamily:'monospace', fontSize:11, color:'#e8eaed', fontWeight:500 }}>{s.ref}</span>
+                  <span style={{ fontFamily:'monospace', fontSize:13, color:'#e8eaed', fontWeight:500 }}>{s.ref}</span>
                   <span style={{ fontFamily:'monospace', fontSize:11, color:STATUS_COLORS[s.status], textTransform:'uppercase' }}>{s.status}</span>
                 </div>
-                <div style={{ fontSize:11, color:'#8a9099', marginBottom:2 }}>{s.route}</div>
-                <div style={{ fontSize:11, color:'#4a5260' }}>{s.carrier} · ETA {s.eta}</div>
+                <div style={{ fontSize:12, color:'#8a9099', marginBottom:2 }}>{s.route}</div>
+                <div style={{ fontSize:12, color:'#4a5260' }}>{s.carrier} · ETA {s.eta}</div>
                 {s.alert && <div style={{ marginTop:5, fontSize:11, color:'#f59e0b', background:'rgba(245,158,11,0.08)', padding:'3px 6px', borderRadius:3 }}>⚠ {s.alert}</div>}
               </div>
             ))}
@@ -1945,7 +1945,7 @@ export default function DashboardPage() {
             {[...sessionIncidents, ...INCIDENT_LOG].slice(0,8).map((inc,i) => (
               <div key={i} style={{ padding:'8px 0', borderBottom:'1px solid rgba(255,255,255,0.03)', display:'grid', gridTemplateColumns:'1fr auto' }}>
                 <div>
-                  <div style={{ fontSize:11, color: i===0&&sessionIncidents.length>0?'#f5a623':'#e8eaed', fontFamily:'monospace' }}>{inc.ref} — {inc.type.substring(0,22)}</div>
+                  <div style={{ fontSize:13, color: i===0&&sessionIncidents.length>0?'#f5a623':'#e8eaed', fontFamily:'monospace' }}>{inc.ref} — <span style={{ fontSize:12 }}>{inc.type.substring(0,22)}</span></div>
                   <div style={{ fontSize:11, color:'#4a5260', marginTop:1 }}>{inc.date}</div>
                 </div>
                 <div style={{ textAlign:'right' }}>
