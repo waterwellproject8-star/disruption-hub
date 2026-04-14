@@ -1931,9 +1931,13 @@ export default function DashboardPage() {
               {(() => {
                 const activeShipments = liveShipments.length
                 const alertsCount = pendingApprovals.filter(a => a.status === 'pending').length
-                const onTimePct = liveShipments.length === 0
+                const otrRelevant = liveShipments.filter(s => s.status !== 'cancelled')
+                const onTimeCount = otrRelevant.filter(s =>
+                  s.status === 'on-track' || s.status === 'completed' || s.status === 'delayed'
+                ).length
+                const onTimePct = otrRelevant.length === 0
                   ? '—'
-                  : Math.round((liveShipments.filter(s => s.status === 'on-track' || s.status === 'completed').length / liveShipments.length) * 100) + '%'
+                  : Math.round((onTimeCount / otrRelevant.length) * 100) + '%'
                 const today = new Date().toDateString()
                 const savedToday = incidents
                   .filter(i => i.created_at && new Date(i.created_at).toDateString() === today)
@@ -1944,7 +1948,7 @@ export default function DashboardPage() {
                 return [
                   { l:'Active shipments', v: String(activeShipments) },
                   { l:'Alerts',           v: String(alertsCount), vc: alertsCount > 0 ? '#ef4444' : undefined },
-                  { l:'On time',          v: onTimePct },
+                  { l:'Under control',    v: onTimePct },
                   { l:'Saved today',      v: savedFmt, vc: '#f5a623' },
                 ]
               })().map(m => (
@@ -2845,14 +2849,15 @@ export default function DashboardPage() {
                     </div>
                     {(() => {
                       const sevRank = { CRITICAL: 0, HIGH: 1, MEDIUM: 2, LOW: 3 }
+                      const normSeverity = (s) => (s || '').toUpperCase()
                       const byNewest = (a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0)
                       let filtered
                       let sorted
                       if (incidentSeverityFilter === 'ALL') {
                         filtered = whLog
                         sorted = [...filtered].sort((a, b) => {
-                          const ra = sevRank[a.severity] ?? 4
-                          const rb = sevRank[b.severity] ?? 4
+                          const ra = sevRank[normSeverity(a.severity)] ?? 4
+                          const rb = sevRank[normSeverity(b.severity)] ?? 4
                           if (ra !== rb) return ra - rb
                           return byNewest(a, b)
                         })
@@ -2860,7 +2865,7 @@ export default function DashboardPage() {
                         sorted = [...whLog].sort(byNewest).slice(0, 10)
                         filtered = sorted
                       } else {
-                        filtered = whLog.filter(l => l.severity === incidentSeverityFilter)
+                        filtered = whLog.filter(l => normSeverity(l.severity) === incidentSeverityFilter)
                         sorted = [...filtered].sort(byNewest)
                       }
                       if (sorted.length === 0) {
