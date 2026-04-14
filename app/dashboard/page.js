@@ -1083,6 +1083,7 @@ export default function DashboardPage() {
   const [doneGroupExpanded, setDoneGroupExpanded] = useState(false)
   const [resolvedInvoicesExpanded, setResolvedInvoicesExpanded] = useState(false)
   const [expandedInvoices, setExpandedInvoices] = useState(new Set())
+  const [incidentSeverityFilter, setIncidentSeverityFilter] = useState('ALL')
   const [localApprovals, setLocalApprovals] = useState([])
   const [cancelAssessment, setCancelAssessment] = useState(null)
   const [scenarioResult, setScenarioResult] = useState(null)
@@ -2796,29 +2797,56 @@ export default function DashboardPage() {
                 {/* INCIDENTS tab */}
                 {commandRightTab === 'incidents' && (
                   <div style={{ flex:1, overflowY:'auto' }}>
-                    {whLog.length === 0 ? (
-                      <div style={{ padding:16, textAlign:'center', opacity:0.4 }}>
-                        <div style={{ fontSize:11, color:'#4a5260' }}>No events logged yet</div>
-                      </div>
-                    ) : whLog.map((log, i) => {
-                      const sc = log.severity==='CRITICAL'?'#ef4444':log.severity==='HIGH'?'#f59e0b':log.severity==='MEDIUM'?'#3b82f6':'#374151'
-                      const timeStr = log.created_at ? new Date(log.created_at).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}) : ''
-                      return (
-                        <div key={i} style={{ padding:'10px 16px', borderBottom:'1px solid rgba(255,255,255,0.04)', borderLeft:`3px solid ${sc}`, background: i===0 ? 'rgba(255,255,255,0.01)' : 'transparent' }}>
-                          <div style={{ display:'flex', gap:8, alignItems:'flex-start' }}>
-                            <span style={{ fontSize:11, padding:'2px 5px', background:`${sc}22`, color:sc, fontFamily:'monospace', fontWeight:700, flexShrink:0, marginTop:1 }}>{log.severity}</span>
-                            <div style={{ flex:1, minWidth:0 }}>
-                              <div style={{ fontSize:11, fontWeight:600, color: i===0 ? '#e8eaed' : '#8a9099', marginBottom:2, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
-                                {log.event_type?.replace(/_/g,' ')} · {log.payload?.vehicle_reg || ''}
+                    {/* Severity filter pills */}
+                    <div style={{ display:'flex', gap:4, padding:'8px 12px', borderBottom:'1px solid rgba(255,255,255,0.04)', flexWrap:'wrap' }}>
+                      {['ALL','CRITICAL','HIGH','MEDIUM','LOW'].map(sev => {
+                        const active = incidentSeverityFilter === sev
+                        return (
+                          <button key={sev} onClick={() => setIncidentSeverityFilter(sev)}
+                            style={{ padding:'3px 9px', fontSize:11, fontFamily:'monospace', fontWeight:700, borderRadius:4, cursor:'pointer', border: active ? '1px solid rgba(245,166,35,0.4)' : '1px solid rgba(255,255,255,0.06)', background: active ? 'rgba(245,166,35,0.12)' : 'transparent', color: active ? '#f5a623' : '#4a5260', letterSpacing:'0.04em', lineHeight:1.4 }}>
+                            {sev}
+                          </button>
+                        )
+                      })}
+                    </div>
+                    {(() => {
+                      const sevRank = { CRITICAL: 0, HIGH: 1, MEDIUM: 2, LOW: 3 }
+                      const filtered = incidentSeverityFilter === 'ALL'
+                        ? whLog
+                        : whLog.filter(l => l.severity === incidentSeverityFilter)
+                      const sorted = [...filtered].sort((a, b) => {
+                        const ra = sevRank[a.severity] ?? 4
+                        const rb = sevRank[b.severity] ?? 4
+                        if (ra !== rb) return ra - rb
+                        return new Date(b.created_at || 0) - new Date(a.created_at || 0)
+                      })
+                      if (sorted.length === 0) {
+                        return (
+                          <div style={{ padding:16, textAlign:'center', opacity:0.4 }}>
+                            <div style={{ fontSize:11, color:'#4a5260' }}>{whLog.length === 0 ? 'No events logged yet' : `No ${incidentSeverityFilter} events`}</div>
+                          </div>
+                        )
+                      }
+                      return sorted.map((log, i) => {
+                        const sc = log.severity==='CRITICAL'?'#ef4444':log.severity==='HIGH'?'#f59e0b':log.severity==='MEDIUM'?'#3b82f6':'#374151'
+                        const timeStr = log.created_at ? new Date(log.created_at).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}) : ''
+                        return (
+                          <div key={log.id || i} style={{ padding:'10px 16px', borderBottom:'1px solid rgba(255,255,255,0.04)', borderLeft:`3px solid ${sc}`, background: i===0 ? 'rgba(255,255,255,0.01)' : 'transparent' }}>
+                            <div style={{ display:'flex', gap:8, alignItems:'flex-start' }}>
+                              <span style={{ fontSize:11, padding:'2px 5px', background:`${sc}22`, color:sc, fontFamily:'monospace', fontWeight:700, flexShrink:0, marginTop:1 }}>{log.severity}</span>
+                              <div style={{ flex:1, minWidth:0 }}>
+                                <div style={{ fontSize:11, fontWeight:600, color: i===0 ? '#e8eaed' : '#8a9099', marginBottom:2, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
+                                  {log.event_type?.replace(/_/g,' ')} · {log.payload?.vehicle_reg || ''}
+                                </div>
+                                <div style={{ fontSize:11, color:'#4a5260' }}>{log.system_name} · {timeStr}</div>
+                                {log.financial_impact > 0 && <div style={{ fontSize:11, color: i===0 ? '#f59e0b' : '#f5a623', marginTop:2, fontWeight:600 }}>£{Number(log.financial_impact).toLocaleString()}</div>}
+                                {log.sms_fired && <div style={{ fontSize:11, color:'#f5a623', marginTop:1 }}>✓ SMS sent</div>}
                               </div>
-                              <div style={{ fontSize:11, color:'#4a5260' }}>{log.system_name} · {timeStr}</div>
-                              {log.financial_impact > 0 && <div style={{ fontSize:11, color: i===0 ? '#f59e0b' : '#f5a623', marginTop:2, fontWeight:600 }}>£{Number(log.financial_impact).toLocaleString()}</div>}
-                              {log.sms_fired && <div style={{ fontSize:11, color:'#f5a623', marginTop:1 }}>✓ SMS sent</div>}
                             </div>
                           </div>
-                        </div>
-                      )
-                    })}
+                        )
+                      })
+                    })()}
                   </div>
                 )}
 
