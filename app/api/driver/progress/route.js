@@ -9,7 +9,7 @@ function getDB() {
 
 export async function POST(request) {
   try {
-    const { client_id, vehicle_reg, driver_name, driver_phone, ref, status, alert, pod } = await request.json()
+    const { client_id, vehicle_reg, driver_name, driver_phone, ref, status, alert, pod, session_id } = await request.json()
 
     if (!client_id || !vehicle_reg || !ref || !status) {
       return Response.json({ error: 'client_id, vehicle_reg, ref, status required' }, { status: 400 })
@@ -17,6 +17,25 @@ export async function POST(request) {
 
     const db = getDB()
     if (!db) return Response.json({ success: true, saved: false, reason: 'no_db' })
+
+    // Session ownership check — the active SHIFT_START row for this vehicle owns the session.
+    // If the incoming session_id does not match the owner, this client has been superseded.
+    if (session_id) {
+      const { data: activeRows } = await db.from('driver_progress')
+        .select('session_id')
+        .eq('client_id', client_id)
+        .eq('vehicle_reg', vehicle_reg)
+        .eq('ref', 'SHIFT_START')
+        .eq('status', 'on_shift')
+        .limit(1)
+      const active = (activeRows || [])[0]
+      if (active && active.session_id && active.session_id !== session_id) {
+        return Response.json({
+          error: 'session_superseded',
+          message: 'Another driver has taken over this vehicle. Your session has ended.'
+        }, { status: 409 })
+      }
+    }
 
     const { error } = await db.from('driver_progress').upsert({
       client_id,
@@ -27,17 +46,27 @@ export async function POST(request) {
       status,
       alert: alert || null,
       pod: pod || null,
+      session_id: session_id || null,
       updated_at: new Date().toISOString(),
     }, {
       onConflict: 'client_id,vehicle_reg,ref,driver_phone'
     })
 
     if (error) {
+      // If session_id column doesn't exist yet (pre-migration), retry without it
+      if (error.message?.includes('session_id')) {
+        const { error: eSess } = await db.from('driver_progress').upsert({
+          client_id, vehicle_reg, driver_name: driver_name || null, driver_phone: driver_phone || null,
+          ref, status, alert: alert || null, pod: pod || null, updated_at: new Date().toISOString(),
+        }, { onConflict: 'client_id,vehicle_reg,ref,driver_phone' })
+        if (eSess) return Response.json({ success: false, error: eSess.message })
+        return Response.json({ success: true, saved: true, note: 'session_id_column_missing' })
+      }
       // If pod column doesn't exist yet, retry without it
       if (error.message?.includes('pod')) {
         const { error: ePod } = await db.from('driver_progress').upsert({
           client_id, vehicle_reg, driver_name: driver_name || null, driver_phone: driver_phone || null,
-          ref, status, alert: alert || null, updated_at: new Date().toISOString(),
+          ref, status, alert: alert || null, session_id: session_id || null, updated_at: new Date().toISOString(),
         }, { onConflict: 'client_id,vehicle_reg,ref' })
         if (ePod) return Response.json({ success: false, error: ePod.message })
         return Response.json({ success: true, saved: true, note: 'pod_column_missing' })
@@ -46,7 +75,7 @@ export async function POST(request) {
       if (error.message?.includes('driver_phone')) {
         const { error: e2 } = await db.from('driver_progress').upsert({
           client_id, vehicle_reg, driver_name: driver_name || null,
-          ref, status, alert: alert || null, pod: pod || null, updated_at: new Date().toISOString(),
+          ref, status, alert: alert || null, pod: pod || null, session_id: session_id || null, updated_at: new Date().toISOString(),
         }, { onConflict: 'client_id,vehicle_reg,ref' })
         if (e2) return Response.json({ success: false, error: e2.message })
         return Response.json({ success: true, saved: true, note: 'phone_column_missing' })
