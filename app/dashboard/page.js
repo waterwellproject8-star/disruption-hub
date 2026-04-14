@@ -1081,6 +1081,8 @@ export default function DashboardPage() {
   const [approvingId, setApprovingId] = useState(null)
   const [expandedApprovals, setExpandedApprovals] = useState(new Set())
   const [doneGroupExpanded, setDoneGroupExpanded] = useState(false)
+  const [resolvedInvoicesExpanded, setResolvedInvoicesExpanded] = useState(false)
+  const [expandedInvoices, setExpandedInvoices] = useState(new Set())
   const [localApprovals, setLocalApprovals] = useState([])
   const [cancelAssessment, setCancelAssessment] = useState(null)
   const [scenarioResult, setScenarioResult] = useState(null)
@@ -2337,50 +2339,94 @@ export default function DashboardPage() {
                 </div>
                 {invoices.length === 0 ? (
                   <div style={{ padding:20, textAlign:'center', color:'#4a5260', fontSize:13 }}>No invoices yet. Upload a CSV or add one manually.</div>
-                ) : invoices.map(inv => {
+                ) : (() => {
                   const statusColors = { pending_review:'#f59e0b', disputed:'#ef4444', resolved:'#22c55e', approved:'#f5a623' }
-                  const hasOvercharge = (inv.total_overcharge || 0) > 0
-                  return (
-                    <div key={inv.id} style={{ padding:'12px 14px', border:`1px solid ${hasOvercharge ? 'rgba(239,68,68,0.2)' : 'rgba(255,255,255,0.06)'}`, borderLeft:`3px solid ${statusColors[inv.status] || '#4a5260'}`, borderRadius:8, background: hasOvercharge ? 'rgba(239,68,68,0.03)' : '#0f1826', marginBottom:8 }}>
-                      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:4 }}>
-                        <div>
-                          <span style={{ fontSize:15, color:'#e8eaed', fontWeight:700 }}>{inv.carrier}</span>
-                          <span style={{ fontSize:13, color:'#4a5260', fontFamily:'monospace', marginLeft:8 }}>{inv.invoice_ref}</span>
+                  const nonResolved = invoices.filter(inv => inv.status !== 'resolved')
+                  const resolved = invoices.filter(inv => inv.status === 'resolved')
+
+                  const renderFullInvoice = (inv) => {
+                    const hasOvercharge = (inv.total_overcharge || 0) > 0
+                    return (
+                      <div key={inv.id} style={{ padding:'12px 14px', border:`1px solid ${hasOvercharge ? 'rgba(239,68,68,0.2)' : 'rgba(255,255,255,0.06)'}`, borderLeft:`3px solid ${statusColors[inv.status] || '#4a5260'}`, borderRadius:8, background: hasOvercharge ? 'rgba(239,68,68,0.03)' : '#0f1826', marginBottom:8 }}>
+                        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:4 }}>
+                          <div>
+                            <span style={{ fontSize:15, color:'#e8eaed', fontWeight:700 }}>{inv.carrier}</span>
+                            <span style={{ fontSize:13, color:'#4a5260', fontFamily:'monospace', marginLeft:8 }}>{inv.invoice_ref}</span>
+                          </div>
+                          <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+                            <span style={{ fontSize:11, padding:'2px 7px', background:`${statusColors[inv.status]}22`, color:statusColors[inv.status], fontFamily:'monospace', fontWeight:700, borderRadius:3 }}>{inv.status?.replace(/_/g,' ').toUpperCase()}</span>
+                            {inv.status === 'resolved' && (
+                              <span onClick={() => setExpandedInvoices(prev => { const next = new Set(prev); next.delete(inv.id); return next })} style={{ fontSize:11, color:'#4a5260', cursor:'pointer' }}>▼</span>
+                            )}
+                          </div>
                         </div>
-                        <span style={{ fontSize:11, padding:'2px 7px', background:`${statusColors[inv.status]}22`, color:statusColors[inv.status], fontFamily:'monospace', fontWeight:700, borderRadius:3 }}>{inv.status?.replace(/_/g,' ').toUpperCase()}</span>
+                        <div style={{ display:'flex', gap:14, fontSize:14, color:'#8a9099', marginBottom:6 }}>
+                          <span>Charged: £{(inv.total_charged||0).toLocaleString()}</span>
+                          <span>Agreed: £{(inv.total_agreed||0).toLocaleString()}</span>
+                          {hasOvercharge && <span style={{ color:'#ef4444', fontWeight:700 }}>Overcharge: £{(inv.total_overcharge||0).toLocaleString()}</span>}
+                          <span>{inv.source?.replace(/_/g,' ')}</span>
+                          {inv.invoice_date && <span>{inv.invoice_date}</span>}
+                        </div>
+                        <div style={{ display:'flex', gap:6 }}>
+                          {inv.status === 'pending_review' && hasOvercharge && (
+                            <button onClick={() => {
+                              const items = inv.line_items || []
+                              const subject = `Invoice Dispute — ${inv.carrier} — £${(inv.total_overcharge||0).toLocaleString()} overcharge identified`
+                              const body = [`Dear ${inv.carrier} Accounts Team,`,'',`We are writing to formally dispute invoice ${inv.invoice_ref}${inv.invoice_date ? ` dated ${inv.invoice_date}` : ''} where charges exceed our contracted rates:`,'',
+                                ...items.filter(li=>(Number(li.charged)||0)>(Number(li.agreed_rate)||0)).flatMap(li=>[`Job: ${li.job_ref||'N/A'}`,`Description: ${li.description||'N/A'}`,`Charged: £${li.charged}`,`Agreed: £${li.agreed_rate}`,`Overcharge: £${li.delta || ((Number(li.charged)||0)-(Number(li.agreed_rate)||0)).toFixed(2)}`,''])
+                                ,`Total disputed: £${(inv.total_overcharge||0).toLocaleString()}`,'','We request a credit note for the full disputed amount within 14 days.','','Kind regards,','Pearson Haulage Operations','via DisruptionHub'].join('\n')
+                              setEmailPickerMailto(`mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`)
+                              setEmailPickerInvoiceId(inv.id)
+                              setEmailPickerSent(false)
+                            }} style={{ padding:'4px 10px', background:'rgba(239,68,68,0.08)', border:'1px solid rgba(239,68,68,0.25)', borderRadius:5, color:'#ef4444', fontSize:13, fontWeight:600, cursor:'pointer' }}>✉ Dispute</button>
+                          )}
+                          {inv.status === 'pending_review' && !hasOvercharge && (
+                            <button onClick={() => { fetch('/api/invoices', { method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ id:inv.id, status:'approved' }) }).then(()=>{showDashToast('Invoice approved');loadInvoices()}).catch(()=>{}) }}
+                              style={{ padding:'4px 10px', background:'rgba(245,166,35,0.08)', border:'1px solid rgba(245,166,35,0.2)', borderRadius:5, color:'#f5a623', fontSize:13, fontWeight:600, cursor:'pointer' }}>✓ Approve</button>
+                          )}
+                          {inv.status === 'disputed' && (
+                            <button onClick={() => { fetch('/api/invoices', { method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ id:inv.id, status:'resolved' }) }).then(()=>{showDashToast('Marked resolved');loadInvoices()}).catch(()=>{}) }}
+                              style={{ padding:'4px 10px', background:'rgba(34,197,94,0.08)', border:'1px solid rgba(34,197,94,0.2)', borderRadius:5, color:'#22c55e', fontSize:13, fontWeight:600, cursor:'pointer' }}>✓ Resolved</button>
+                          )}
+                        </div>
                       </div>
-                      <div style={{ display:'flex', gap:14, fontSize:14, color:'#8a9099', marginBottom:6 }}>
-                        <span>Charged: £{(inv.total_charged||0).toLocaleString()}</span>
-                        <span>Agreed: £{(inv.total_agreed||0).toLocaleString()}</span>
-                        {hasOvercharge && <span style={{ color:'#ef4444', fontWeight:700 }}>Overcharge: £{(inv.total_overcharge||0).toLocaleString()}</span>}
-                        <span>{inv.source?.replace(/_/g,' ')}</span>
-                        {inv.invoice_date && <span>{inv.invoice_date}</span>}
-                      </div>
-                      <div style={{ display:'flex', gap:6 }}>
-                        {inv.status === 'pending_review' && hasOvercharge && (
-                          <button onClick={() => {
-                            const items = inv.line_items || []
-                            const subject = `Invoice Dispute — ${inv.carrier} — £${(inv.total_overcharge||0).toLocaleString()} overcharge identified`
-                            const body = [`Dear ${inv.carrier} Accounts Team,`,'',`We are writing to formally dispute invoice ${inv.invoice_ref}${inv.invoice_date ? ` dated ${inv.invoice_date}` : ''} where charges exceed our contracted rates:`,'',
-                              ...items.filter(li=>(Number(li.charged)||0)>(Number(li.agreed_rate)||0)).flatMap(li=>[`Job: ${li.job_ref||'N/A'}`,`Description: ${li.description||'N/A'}`,`Charged: £${li.charged}`,`Agreed: £${li.agreed_rate}`,`Overcharge: £${li.delta || ((Number(li.charged)||0)-(Number(li.agreed_rate)||0)).toFixed(2)}`,''])
-                              ,`Total disputed: £${(inv.total_overcharge||0).toLocaleString()}`,'','We request a credit note for the full disputed amount within 14 days.','','Kind regards,','Pearson Haulage Operations','via DisruptionHub'].join('\n')
-                            setEmailPickerMailto(`mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`)
-                            setEmailPickerInvoiceId(inv.id)
-                            setEmailPickerSent(false)
-                          }} style={{ padding:'4px 10px', background:'rgba(239,68,68,0.08)', border:'1px solid rgba(239,68,68,0.25)', borderRadius:5, color:'#ef4444', fontSize:13, fontWeight:600, cursor:'pointer' }}>✉ Dispute</button>
-                        )}
-                        {inv.status === 'pending_review' && !hasOvercharge && (
-                          <button onClick={() => { fetch('/api/invoices', { method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ id:inv.id, status:'approved' }) }).then(()=>{showDashToast('Invoice approved');loadInvoices()}).catch(()=>{}) }}
-                            style={{ padding:'4px 10px', background:'rgba(245,166,35,0.08)', border:'1px solid rgba(245,166,35,0.2)', borderRadius:5, color:'#f5a623', fontSize:13, fontWeight:600, cursor:'pointer' }}>✓ Approve</button>
-                        )}
-                        {inv.status === 'disputed' && (
-                          <button onClick={() => { fetch('/api/invoices', { method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ id:inv.id, status:'resolved' }) }).then(()=>{showDashToast('Marked resolved');loadInvoices()}).catch(()=>{}) }}
-                            style={{ padding:'4px 10px', background:'rgba(34,197,94,0.08)', border:'1px solid rgba(34,197,94,0.2)', borderRadius:5, color:'#22c55e', fontSize:13, fontWeight:600, cursor:'pointer' }}>✓ Resolved</button>
-                        )}
-                      </div>
-                    </div>
+                    )
+                  }
+
+                  return (
+                    <>
+                      {/* Section 1 — PENDING REVIEW + DISPUTED, always full size */}
+                      {nonResolved.map(inv => renderFullInvoice(inv))}
+
+                      {/* Section 2 — RESOLVED group, collapsed by default */}
+                      {resolved.length > 0 && (
+                        <>
+                          <div onClick={() => setResolvedInvoicesExpanded(prev => !prev)}
+                            style={{ display:'flex', alignItems:'center', gap:8, padding:'8px 12px', marginBottom:4, cursor:'pointer', borderRadius:6, border:'1px solid rgba(34,197,94,0.15)', background:'rgba(34,197,94,0.03)', transition:'all 0.15s' }}>
+                            <span style={{ fontSize:11, color:'#4a5260', flexShrink:0 }}>{resolvedInvoicesExpanded ? '▼' : '▶'}</span>
+                            <span style={{ fontSize:11, fontFamily:'monospace', fontWeight:700, color:'#22c55e' }}>RESOLVED ({resolved.length})</span>
+                            <span style={{ fontSize:11, color:'#4a5260', fontFamily:'monospace' }}>· click to {resolvedInvoicesExpanded ? 'collapse' : 'expand'}</span>
+                          </div>
+                          {resolvedInvoicesExpanded && resolved.map(inv => {
+                            const isExpanded = expandedInvoices.has(inv.id)
+                            if (isExpanded) return renderFullInvoice(inv)
+                            const overcharge = inv.total_overcharge || 0
+                            const toggleExpand = () => setExpandedInvoices(prev => { const next = new Set(prev); next.add(inv.id); return next })
+                            return (
+                              <div key={inv.id} onClick={toggleExpand} style={{ border:'1px solid rgba(34,197,94,0.2)', borderLeft:'3px solid #22c55e', borderRadius:6, background:'rgba(34,197,94,0.02)', marginBottom:4, cursor:'pointer', padding:'8px 12px', display:'flex', alignItems:'center', gap:8, transition:'all 0.15s' }}>
+                                <span style={{ fontSize:13, color:'#e8eaed', fontWeight:600, flexShrink:0 }}>{inv.carrier}</span>
+                                <span style={{ fontSize:12, color:'#4a5260', fontFamily:'monospace', flexShrink:0 }}>{inv.invoice_ref}</span>
+                                {overcharge > 0 && <span style={{ fontSize:12, color:'#22c55e', fontWeight:700, flexShrink:0 }}>£{overcharge.toLocaleString()}</span>}
+                                <span style={{ fontSize:11, color:'#374151', marginLeft:'auto', flexShrink:0 }}>{inv.invoice_date || ''}</span>
+                                <span style={{ fontSize:11, color:'#4a5260', flexShrink:0 }}>▶</span>
+                              </div>
+                            )
+                          })}
+                        </>
+                      )}
+                    </>
                   )
-                })}
+                })()}
               </div>
             </div>
           )}
