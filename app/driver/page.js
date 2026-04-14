@@ -199,8 +199,14 @@ export default function DriverApp() {
       if (shiftStartedAt) shiftStartTime.current = new Date(parseInt(shiftStartedAt))
       if (shiftDone) setShiftStarted(true)
       if (savedAlert) { try { setLastAlert(JSON.parse(savedAlert)) } catch {} }
-      const savedPrior = localStorage.getItem('dh_prior_alert')
-      if (savedPrior) { try { setPriorAlert(JSON.parse(savedPrior)) } catch {} }
+      // Only restore priorAlert when an active shift is in progress.
+      // Prevents a previous shift's breakdown banner leaking into a fresh shift.
+      if (shiftDone) {
+        const savedPrior = localStorage.getItem('dh_prior_alert')
+        if (savedPrior) { try { setPriorAlert(JSON.parse(savedPrior)) } catch {} }
+      } else {
+        localStorage.removeItem('dh_prior_alert')
+      }
       loadJobs(info).then(loaded => {
         // Auto-clear only if all REAL jobs are completed (not SHIFT_START rows)
         // and there is actually job progress saved locally (not a brand new shift)
@@ -700,6 +706,15 @@ export default function DriverApp() {
 
   function startShift() {
     const now = Date.now()
+    // Clear any residual alert/panel state from a previous shift before starting fresh
+    setLastAlert(null); localStorage.removeItem('dh_last_alert')
+    setPriorAlert(null); localStorage.removeItem('dh_prior_alert')
+    setPriorAlertExpanded(false)
+    setPanelOpen(false)
+    setPanelState('idle')
+    setPanelIssue(null)
+    setParsedResult(null)
+    setOpsAcknowledged(false)
     localStorage.setItem('dh_shift_started','true')
     localStorage.setItem('dh_shift_started_at',String(now))
     shiftStartTime.current = new Date(now)
