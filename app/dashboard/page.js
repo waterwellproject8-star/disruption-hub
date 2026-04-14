@@ -4,6 +4,8 @@ import Link from 'next/link'
 
 const DASHBOARD_PIN = 'DH2026'
 
+const ACTIVE_CLIENT_NAME = process.env.NEXT_PUBLIC_CLIENT_NAME || 'Pearson Haulage'
+
 // Generate demo shipments with ETAs relative to current time
 // Prevents stale times showing (e.g. 08:45 when it's 16:32)
 function buildDemoShipments() {
@@ -13,10 +15,10 @@ function buildDemoShipments() {
     return d.toTimeString().slice(0,5)
   }
   return [
-    { ref: 'PH-4421', route: 'Leeds → Bradford (Tesco DC)', status: 'on-track', eta: fmt(25), carrier: 'Pearson Haulage', alert: null },
-    { ref: 'PH-8832', route: 'Leeds → London (M1)', status: 'disrupted', eta: '???', carrier: 'Pearson Haulage', alert: 'M1 breakdown — recovery dispatched' },
-    { ref: 'PH-5517', route: 'Leeds → Sheffield (NHS Supply Chain)', status: 'delayed', eta: fmt(105), carrier: 'Pearson Haulage', alert: 'Delayed — cascade from London disruption' },
-    { ref: 'PH-9103', route: 'Leeds → Edinburgh (A1)', status: 'delayed', eta: fmt(210), carrier: 'Pearson Haulage', alert: 'Cold chain at risk — slot closing soon' },
+    { ref: 'PH-4421', route: 'Leeds → Bradford (Tesco DC)', status: 'on-track', eta: fmt(25), carrier: ACTIVE_CLIENT_NAME, alert: null },
+    { ref: 'PH-8832', route: 'Leeds → London (M1)', status: 'disrupted', eta: '???', carrier: ACTIVE_CLIENT_NAME, alert: 'M1 breakdown — recovery dispatched' },
+    { ref: 'PH-5517', route: 'Leeds → Sheffield (NHS Supply Chain)', status: 'delayed', eta: fmt(105), carrier: ACTIVE_CLIENT_NAME, alert: 'Delayed — cascade from London disruption' },
+    { ref: 'PH-9103', route: 'Leeds → Edinburgh (A1)', status: 'delayed', eta: fmt(210), carrier: ACTIVE_CLIENT_NAME, alert: 'Cold chain at risk — slot closing soon' },
   ]
 }
 const ACTIVE_SHIPMENTS = buildDemoShipments()
@@ -113,7 +115,7 @@ const WEBHOOK_SYSTEMS = {
       licence_expiry:       { label: 'Driver Licence Expiry Warning', fields: { driver_name:'Dave P', vehicle_reg:'LK72 ABX', licence_expiry:'2026-05-14', days_remaining:38, licence_category:'C+E' } },
       cpc_expiry:           { label: 'CPC / DQC Expiry Warning',     fields: { driver_name:'Dave P', dqc_expiry:'2026-06-01', days_remaining:56, vehicle_reg:'LK72 ABX', action_required:'Book CPC periodic training' } },
       vehicle_service_due:  { label: 'Vehicle Service Overdue',       fields: { vehicle_reg:'LK72 ABX', service_type:'6-week safety inspection', overdue_days:4, mileage:187432, last_service:'2026-02-18', location:'Leeds depot' } },
-      mot_due:              { label: 'MOT / Annual Test Due',         fields: { vehicle_reg:'LK72 ABX', mot_expiry:'2026-04-28', days_remaining:22, vehicle_type:'HGV 44t', test_centre:'Pearson Haulage Leeds' } },
+      mot_due:              { label: 'MOT / Annual Test Due',         fields: { vehicle_reg:'LK72 ABX', mot_expiry:'2026-04-28', days_remaining:22, vehicle_type:'HGV 44t', test_centre:`${ACTIVE_CLIENT_NAME} Leeds` } },
     }
   },
 
@@ -1486,7 +1488,7 @@ export default function DashboardPage() {
           'Please treat this as a formal dispute under our contract terms.',
           '',
           'Kind regards,',
-          'Pearson Haulage Operations',
+          `${ACTIVE_CLIENT_NAME} Operations`,
           'via DisruptionHub'
         ].join('\n')
         const mailto = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
@@ -1913,7 +1915,7 @@ export default function DashboardPage() {
               </button>
             )
           })()}
-          <span className="dh-client-name">Pearson Haulage</span>
+          <span className="dh-client-name">{ACTIVE_CLIENT_NAME}</span>
         </div>
       </nav>
 
@@ -2406,7 +2408,7 @@ export default function DashboardPage() {
                               const subject = `Invoice Dispute — ${inv.carrier} — £${(inv.total_overcharge||0).toLocaleString()} overcharge identified`
                               const body = [`Dear ${inv.carrier} Accounts Team,`,'',`We are writing to formally dispute invoice ${inv.invoice_ref}${inv.invoice_date ? ` dated ${inv.invoice_date}` : ''} where charges exceed our contracted rates:`,'',
                                 ...items.filter(li=>(Number(li.charged)||0)>(Number(li.agreed_rate)||0)).flatMap(li=>[`Job: ${li.job_ref||'N/A'}`,`Description: ${li.description||'N/A'}`,`Charged: £${li.charged}`,`Agreed: £${li.agreed_rate}`,`Overcharge: £${li.delta || ((Number(li.charged)||0)-(Number(li.agreed_rate)||0)).toFixed(2)}`,''])
-                                ,`Total disputed: £${(inv.total_overcharge||0).toLocaleString()}`,'','We request a credit note for the full disputed amount within 14 days.','','Kind regards,','Pearson Haulage Operations','via DisruptionHub'].join('\n')
+                                ,`Total disputed: £${(inv.total_overcharge||0).toLocaleString()}`,'','We request a credit note for the full disputed amount within 14 days.','','Kind regards,',`${ACTIVE_CLIENT_NAME} Operations`,'via DisruptionHub'].join('\n')
                               setEmailPickerMailto(`mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`)
                               setEmailPickerInvoiceId(inv.id)
                               setEmailPickerSent(false)
