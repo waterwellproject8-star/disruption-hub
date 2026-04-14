@@ -223,7 +223,7 @@ export default function HomePage() {
             lineHeight: 1.7, fontWeight: 400,
           }}>
             Triage disruptions in 30 seconds. Protect SLAs.
-            Save £40K+ a year. Zero new software to learn.
+            Save £40K+ a year. Not a luxury add-on — so operators can sleep at night knowing everything is in place to protect what they've built.
           </p>
 
           {/* CTAs */}
@@ -698,6 +698,9 @@ export default function HomePage() {
                 </div>
               ))}
             </div>
+            <p style={{ fontSize: 13, color: T.textDim, lineHeight: 1.6, margin: '12px 0' }}>
+              In a 2% margin industry, one lost Tesco contract ends a business. DisruptionHub exists so that doesn't happen.
+            </p>
             <a
               className="amber-btn-glow enterprise-cta"
               href="mailto:hello@disruptionhub.ai?subject=Enterprise enquiry — DisruptionHub&body=Hi, I'd like to discuss enterprise pricing for my fleet."
@@ -758,7 +761,7 @@ export default function HomePage() {
             </div>
             <div style={{ fontSize: 12, color: T.textDim, maxWidth: 240, lineHeight: 1.7 }}>
               AI operations intelligence for UK haulage.
-              30-second decisions. Zero new software.
+              Not a luxury add-on — one prevented SLA breach pays for a year.
             </div>
             <div style={{ marginTop: 16 }}>
               <a
