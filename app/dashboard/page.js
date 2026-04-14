@@ -1916,8 +1916,8 @@ export default function DashboardPage() {
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:6 }}>
               {[{l:'Active shipments',v:'4'},{l:'Alerts',v:'1',vc:'#ef4444'},{l:'On time',v:'75%'},{l:'Saved today',v:'£7.4K',vc:'#f5a623'}].map(m=>(
                 <div key={m.l} style={{ background:'#0f1826', borderRadius:6, padding:'10px 10px' }}>
-                  <div style={{ fontSize:11, color:'#4a5260', marginBottom:3 }}>{m.l}</div>
-                  <div style={{ fontSize:18, fontWeight:500, fontFamily:'monospace', color:m.vc||'#e8eaed' }}>{m.v}</div>
+                  <div style={{ fontSize:13, color:'#4a5260', marginBottom:3 }}>{m.l}</div>
+                  <div style={{ fontSize:28, fontWeight:700, fontFamily:'monospace', color:m.vc||'#e8eaed' }}>{m.v}</div>
                 </div>
               ))}
             </div>
