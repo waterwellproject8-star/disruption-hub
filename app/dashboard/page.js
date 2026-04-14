@@ -2835,8 +2835,9 @@ export default function DashboardPage() {
                       {['ALL','RECENT','CRITICAL','HIGH','MEDIUM','LOW'].map(f => {
                         const active = incidentSeverityFilter === f
                         return (
-                          <button key={f} onClick={() => setIncidentSeverityFilter(f)}
-                            style={{ padding:'3px 9px', fontSize:11, fontFamily:'monospace', fontWeight:700, borderRadius:4, cursor:'pointer', border: active ? '1px solid rgba(245,166,35,0.4)' : '1px solid rgba(255,255,255,0.06)', background: active ? 'rgba(245,166,35,0.12)' : 'transparent', color: active ? '#f5a623' : '#4a5260', letterSpacing:'0.04em', lineHeight:1.4 }}>
+                          <button key={f} type="button"
+                            onClick={(e) => { e.stopPropagation(); setIncidentSeverityFilter(f) }}
+                            style={{ padding:'3px 9px', fontSize:11, fontFamily:'monospace', fontWeight:700, borderRadius:4, cursor:'pointer', border: active ? '1px solid rgba(245,166,35,0.4)' : '1px solid rgba(255,255,255,0.06)', background: active ? 'rgba(245,166,35,0.12)' : 'transparent', color: active ? '#f5a623' : '#4a5260', letterSpacing:'0.04em', lineHeight:1.4, position:'relative', zIndex:1 }}>
                             {f}
                           </button>
                         )
