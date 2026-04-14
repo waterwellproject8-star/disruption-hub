@@ -2799,31 +2799,46 @@ export default function DashboardPage() {
                   <div style={{ flex:1, overflowY:'auto' }}>
                     {/* Severity filter pills */}
                     <div style={{ display:'flex', gap:4, padding:'8px 12px', borderBottom:'1px solid rgba(255,255,255,0.04)', flexWrap:'wrap' }}>
-                      {['ALL','CRITICAL','HIGH','MEDIUM','LOW'].map(sev => {
-                        const active = incidentSeverityFilter === sev
+                      {['ALL','RECENT','CRITICAL','HIGH','MEDIUM','LOW'].map(f => {
+                        const active = incidentSeverityFilter === f
                         return (
-                          <button key={sev} onClick={() => setIncidentSeverityFilter(sev)}
+                          <button key={f} onClick={() => setIncidentSeverityFilter(f)}
                             style={{ padding:'3px 9px', fontSize:11, fontFamily:'monospace', fontWeight:700, borderRadius:4, cursor:'pointer', border: active ? '1px solid rgba(245,166,35,0.4)' : '1px solid rgba(255,255,255,0.06)', background: active ? 'rgba(245,166,35,0.12)' : 'transparent', color: active ? '#f5a623' : '#4a5260', letterSpacing:'0.04em', lineHeight:1.4 }}>
-                            {sev}
+                            {f}
                           </button>
                         )
                       })}
                     </div>
                     {(() => {
                       const sevRank = { CRITICAL: 0, HIGH: 1, MEDIUM: 2, LOW: 3 }
-                      const filtered = incidentSeverityFilter === 'ALL'
-                        ? whLog
-                        : whLog.filter(l => l.severity === incidentSeverityFilter)
-                      const sorted = [...filtered].sort((a, b) => {
-                        const ra = sevRank[a.severity] ?? 4
-                        const rb = sevRank[b.severity] ?? 4
-                        if (ra !== rb) return ra - rb
-                        return new Date(b.created_at || 0) - new Date(a.created_at || 0)
-                      })
+                      const byNewest = (a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0)
+                      let filtered
+                      let sorted
+                      if (incidentSeverityFilter === 'ALL') {
+                        filtered = whLog
+                        sorted = [...filtered].sort((a, b) => {
+                          const ra = sevRank[a.severity] ?? 4
+                          const rb = sevRank[b.severity] ?? 4
+                          if (ra !== rb) return ra - rb
+                          return byNewest(a, b)
+                        })
+                      } else if (incidentSeverityFilter === 'RECENT') {
+                        const cutoff = Date.now() - 24 * 60 * 60 * 1000
+                        filtered = whLog.filter(l => l.created_at && new Date(l.created_at).getTime() >= cutoff)
+                        sorted = [...filtered].sort(byNewest)
+                      } else {
+                        filtered = whLog.filter(l => l.severity === incidentSeverityFilter)
+                        sorted = [...filtered].sort(byNewest)
+                      }
                       if (sorted.length === 0) {
+                        const emptyMsg = whLog.length === 0
+                          ? 'No events logged yet'
+                          : incidentSeverityFilter === 'RECENT'
+                            ? 'No events in last 24h'
+                            : `No ${incidentSeverityFilter} events`
                         return (
                           <div style={{ padding:16, textAlign:'center', opacity:0.4 }}>
-                            <div style={{ fontSize:11, color:'#4a5260' }}>{whLog.length === 0 ? 'No events logged yet' : `No ${incidentSeverityFilter} events`}</div>
+                            <div style={{ fontSize:11, color:'#4a5260' }}>{emptyMsg}</div>
                           </div>
                         )
                       }
