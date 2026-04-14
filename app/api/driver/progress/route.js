@@ -54,6 +54,18 @@ export async function POST(request) {
       return Response.json({ success: false, error: error.message })
     }
 
+    // When a new shift starts, reset all previous job rows for this vehicle
+    // so Live Fleet SLA badge logic finds active refs immediately
+    if (ref === 'SHIFT_START') {
+      const { error: resetErr } = await db.from('driver_progress')
+        .update({ status: 'on-track', alert: null, pod: null, updated_at: new Date().toISOString() })
+        .eq('client_id', client_id)
+        .eq('vehicle_reg', vehicle_reg)
+        .neq('ref', 'SHIFT_START')
+        .eq('status', 'completed')
+      if (resetErr) console.error('[progress] shift-start reset error:', resetErr.message)
+    }
+
     return Response.json({ success: true, saved: true })
 
   } catch (e) {

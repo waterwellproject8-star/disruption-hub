@@ -719,21 +719,7 @@ export default function DriverApp() {
         })
       }).catch(() => {})
 
-      loadJobs(driverInfo).then(loaded => {
-        if (!loaded || !loaded.length) return
-        // Bulk-reset previous shift's completed rows to on-track so Live Fleet
-        // SLA badge logic finds active job refs immediately on new shift start
-        const refs = loaded.map(j => j.ref).filter(Boolean)
-        fetch('/api/driver/progress', {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            client_id: driverInfo.clientId,
-            vehicle_reg: driverInfo.vehicleReg,
-            refs
-          })
-        }).catch(() => {})
-      })
+      loadJobs(driverInfo)
     }
   }
 
