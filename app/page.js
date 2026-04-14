@@ -128,6 +128,14 @@ export default function HomePage() {
           .hero-ctas { justify-content: center; flex-direction: column; align-items: center; }
           .hero-badge { justify-content: center; }
         }
+        @media (max-width: 640px) {
+          .founder-card { grid-template-columns: 80px 1fr !important; column-gap: 16px !important; padding: 28px 20px !important; }
+          .founder-photo { grid-row: 1 !important; align-self: center; }
+          .founder-photo-ring { width: 80px !important; height: 80px !important; padding: 2px !important; }
+          .founder-meta { grid-column: 2 !important; grid-row: 1 !important; align-self: center; }
+          .founder-meta h3 { font-size: 24px !important; }
+          .founder-body { grid-column: 1 / span 2 !important; grid-row: 2 !important; margin-top: 24px !important; }
+        }
       `}</style>
 
       {/* ── NAV ──────────────────────────────────────────────────────────────── */}
@@ -718,19 +726,21 @@ export default function HomePage() {
           </div>
 
           {/* ── FOUNDER ────────────────────────────────────────────────────── */}
-          <div style={{
+          <div className="founder-card" style={{
             marginTop: 72, marginBottom: 64,
             padding: '40px 32px',
             background: T.navyCard,
             border: `1px solid ${T.border}`,
             borderRadius: 4,
-            display: 'flex',
-            flexWrap: 'wrap',
-            gap: 32,
-            alignItems: 'flex-start',
+            display: 'grid',
+            gridTemplateColumns: '120px 1fr',
+            columnGap: 32,
+            rowGap: 0,
+            alignItems: 'start',
           }}>
-            <div style={{ flexShrink: 0 }}>
-              <div style={{
+            {/* Photo — spans both rows on desktop, row 1 col 1 on mobile */}
+            <div className="founder-photo" style={{ gridColumn: 1, gridRow: '1 / span 2' }}>
+              <div className="founder-photo-ring" style={{
                 width: 120, height: 120, borderRadius: '50%',
                 padding: 3,
                 background: `linear-gradient(135deg, ${T.amber}, rgba(245,166,35,0.25))`,
@@ -749,7 +759,8 @@ export default function HomePage() {
               </div>
             </div>
 
-            <div style={{ flex: 1, minWidth: 260 }}>
+            {/* Meta — name, title, LinkedIn. Sits next to photo on both desktop and mobile */}
+            <div className="founder-meta" style={{ gridColumn: 2, gridRow: 1, minWidth: 0 }}>
               <div style={{
                 fontFamily: FF.mono, fontSize: 11, fontWeight: 600,
                 letterSpacing: '0.2em', textTransform: 'uppercase',
@@ -785,11 +796,15 @@ export default function HomePage() {
                   marginBottom: 24,
                   borderBottom: `1px solid ${T.amberBorder}`,
                   paddingBottom: 2,
+                  wordBreak: 'break-all',
                 }}
               >
                 linkedin.com/in/mohammed-nomaan-027382283 →
               </a>
+            </div>
 
+            {/* Body — paragraphs + pull quote. Sits next to photo on desktop, full width below on mobile */}
+            <div className="founder-body" style={{ gridColumn: 2, gridRow: 2, minWidth: 0 }}>
               <p style={{
                 fontFamily: FF.body, fontSize: 15, color: T.text,
                 lineHeight: 1.75, marginBottom: 18,
