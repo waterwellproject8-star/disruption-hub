@@ -143,6 +143,8 @@ export default function DriverApp() {
   const [parsedResult, setParsedResult] = useState(null)
   const [showDetail, setShowDetail]     = useState(false)
   const [lastAlert, setLastAlert]       = useState(null)
+  const [priorAlert, setPriorAlert]     = useState(null)
+  const [priorAlertExpanded, setPriorAlertExpanded] = useState(false)
   const [resolvedEta, setResolvedEta]   = useState('')
 
   const [gpsCoords, setGpsCoords]           = useState(null)
@@ -197,6 +199,8 @@ export default function DriverApp() {
       if (shiftStartedAt) shiftStartTime.current = new Date(parseInt(shiftStartedAt))
       if (shiftDone) setShiftStarted(true)
       if (savedAlert) { try { setLastAlert(JSON.parse(savedAlert)) } catch {} }
+      const savedPrior = localStorage.getItem('dh_prior_alert')
+      if (savedPrior) { try { setPriorAlert(JSON.parse(savedPrior)) } catch {} }
       loadJobs(info).then(loaded => {
         // Auto-clear only if all REAL jobs are completed (not SHIFT_START rows)
         // and there is actually job progress saved locally (not a brand new shift)
@@ -509,6 +513,29 @@ export default function DriverApp() {
     setPanelIssue(issue); setParsedResult(lastAlert); setPanelState('result'); setPanelOpen(true); setShowDetail(false)
   }
 
+  function resolvePriorAlert() {
+    if (!priorAlert) return
+    const original_issue = priorAlert.issueId
+    fetch('/api/driver/resolve', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        client_id: driverInfo.clientId,
+        driver_name: driverInfo.name,
+        vehicle_reg: driverInfo.vehicleReg,
+        ref: activeJob?.ref,
+        resolution: `${priorAlert.issueLabel || 'Breakdown'} — resolved while medical emergency active`,
+        location_description: gpsDescription,
+        route: activeJob?.route,
+        sla_window: activeJob?.sla_window,
+        original_issue
+      })
+    }).catch(() => {})
+    setPriorAlert(null)
+    setPriorAlertExpanded(false)
+    localStorage.removeItem('dh_prior_alert')
+    showToast('Breakdown marked resolved — ops notified')
+  }
+
   async function resolveIssue(reason) {
     setPanelState('resolving_loading')
     await new Promise(r => setTimeout(r, 3000))
@@ -582,6 +609,11 @@ export default function DriverApp() {
     const job = activeJob
 
     if (emergencyIds.includes(panelIssue?.id)) {
+      // If medical triggers while a non-medical breakdown is active, preserve
+      // the existing alert in priorAlert so the driver can still see and resolve it
+      if (panelIssue?.id === 'medical' && lastAlert && lastAlert.issueId !== 'medical') {
+        setPriorAlert(lastAlert); localStorage.setItem('dh_prior_alert', JSON.stringify(lastAlert))
+      }
       const placeholder = { headline:`${panelIssue.label} — ops alerted`, severity:'HIGH', actions:['Ops manager has been notified — awaiting instructions'], detail:'', issueId:panelIssue.id, issueLabel:panelIssue.label, time:new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}) }
       setLastAlert(placeholder); localStorage.setItem('dh_last_alert',JSON.stringify(placeholder))
     }
@@ -738,8 +770,8 @@ export default function DriverApp() {
         })
       }).catch(() => {})
     }
-    ['dh_shift_started','dh_shift_started_at','dh_last_alert','dh_job_progress','dh_ops_messages'].forEach(k=>localStorage.removeItem(k))
-    setShiftStarted(false); setShiftEnded(false); setShiftSummary(null); setJobs([]); setActiveJob(null); setLastAlert(null); setStaleSession(null); setPreShiftChecks({}); setOpsMessages([]); setSetupDone(false); setView('run')
+    ['dh_shift_started','dh_shift_started_at','dh_last_alert','dh_prior_alert','dh_job_progress','dh_ops_messages'].forEach(k=>localStorage.removeItem(k))
+    setShiftStarted(false); setShiftEnded(false); setShiftSummary(null); setJobs([]); setActiveJob(null); setLastAlert(null); setPriorAlert(null); setStaleSession(null); setPreShiftChecks({}); setOpsMessages([]); setSetupDone(false); setView('run')
   }
 
   function resumeSession() {
@@ -802,10 +834,10 @@ export default function DriverApp() {
           defect_details: null
         })
       }).then(res => {
-        if (res.ok) ['dh_shift_started','dh_shift_started_at','dh_last_alert','dh_job_progress','dh_postshift_draft'].forEach(k=>localStorage.removeItem(k))
+        if (res.ok) ['dh_shift_started','dh_shift_started_at','dh_last_alert','dh_prior_alert','dh_job_progress','dh_postshift_draft'].forEach(k=>localStorage.removeItem(k))
       }).catch(() => {})
     } else {
-      ['dh_shift_started','dh_shift_started_at','dh_last_alert','dh_job_progress'].forEach(k=>localStorage.removeItem(k))
+      ['dh_shift_started','dh_shift_started_at','dh_last_alert','dh_prior_alert','dh_job_progress'].forEach(k=>localStorage.removeItem(k))
     }
   }
 
@@ -1091,7 +1123,7 @@ export default function DriverApp() {
         {shiftSummary.unresolved>0&&<div style={{padding:'10px 14px',background:'rgba(245,158,11,0.06)',border:'1px solid rgba(245,158,11,0.2)',borderRadius:8,marginBottom:8,fontSize:13,color:'#f59e0b'}}>⚠ {shiftSummary.unresolved} unresolved job{shiftSummary.unresolved>1?'s':''} — ops have been notified</div>}
         {shiftSummary.notes&&<div style={{padding:'10px 14px',background:'#0f1826',border:'1px solid rgba(255,255,255,0.06)',borderRadius:8,marginBottom:8,fontSize:13,color:'#8a9099'}}>Notes: <span style={{color:'#e8eaed'}}>{shiftSummary.notes}</span></div>}
         {shiftSummary.completed===shiftSummary.total&&<div style={{padding:'12px',background:'rgba(245,166,35,0.05)',border:'1px solid rgba(245,166,35,0.2)',borderRadius:9,textAlign:'center',marginBottom:12,fontSize:14,color:'#f5a623',fontWeight:500}}>✓ Full shift — all runs delivered</div>}
-        <button onClick={()=>{['dh_driver_info','dh_shift_started','dh_shift_started_at','dh_last_alert','dh_job_progress','dh_ops_messages'].forEach(k=>localStorage.removeItem(k));setSetupDone(false);setShiftStarted(false);setShiftEnded(false);setJobs([]);setActiveJob(null);setShiftSummary(null)}}
+        <button onClick={()=>{['dh_driver_info','dh_shift_started','dh_shift_started_at','dh_last_alert','dh_prior_alert','dh_job_progress','dh_ops_messages'].forEach(k=>localStorage.removeItem(k));setSetupDone(false);setShiftStarted(false);setShiftEnded(false);setJobs([]);setActiveJob(null);setShiftSummary(null)}}
           style={{width:'100%',padding:'14px',background:'#0f1826',border:'1px solid rgba(255,255,255,0.08)',borderRadius:10,color:'#4a5260',fontWeight:500,fontSize:14,cursor:'pointer'}}>
           Sign out
         </button>
@@ -1214,6 +1246,22 @@ export default function DriverApp() {
                   </div>
                 </div>
                 <div style={{fontSize:10,color:'#4a5260',flexShrink:0,marginLeft:8}}>Tap →</div>
+              </div>
+            </div>
+          )}
+
+          {/* ── PRIOR ALERT BANNER (e.g. breakdown preserved during medical) ── */}
+          {priorAlert && (
+            <div style={{margin:'6px 12px 0', padding:'10px 14px', borderRadius:10, border:`1px solid ${SEV[priorAlert.severity]?.border||'rgba(245,158,11,0.35)'}`, background:SEV[priorAlert.severity]?.bg||'rgba(245,158,11,0.05)'}}>
+              <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', gap:10}}>
+                <div onClick={()=>{ setPanelIssue({id:priorAlert.issueId, label:priorAlert.issueLabel}); setParsedResult(priorAlert); setPanelState('result'); setPanelOpen(true); setShowDetail(false) }} style={{flex:1, cursor:'pointer', display:'flex', gap:9, alignItems:'flex-start'}}>
+                  <span style={{fontSize:16, flexShrink:0}}>{SEV[priorAlert.severity]?.icon||'⚠️'}</span>
+                  <div>
+                    <div style={{fontSize:9, color:SEV[priorAlert.severity]?.color, fontFamily:'monospace', fontWeight:700, letterSpacing:'0.06em', marginBottom:2}}>PRIOR · {priorAlert.issueLabel||'BREAKDOWN'} · {priorAlert.time}</div>
+                    <div style={{fontSize:13, color:'#e8eaed', fontWeight:600, lineHeight:1.4}}>{priorAlert.headline}</div>
+                  </div>
+                </div>
+                <button onClick={resolvePriorAlert} style={{padding:'6px 10px', background:'transparent', border:'1px solid rgba(245,166,35,0.28)', borderRadius:6, color:'#f5a623', fontSize:11, fontWeight:600, cursor:'pointer', flexShrink:0}}>✅ Resolved</button>
               </div>
             </div>
           )}
@@ -1436,7 +1484,7 @@ export default function DriverApp() {
                   body: JSON.stringify({ client_id: driverInfo.clientId, vehicle_reg: driverInfo.vehicleReg||null, driver_phone: driverInfo.phone||null, reason:'driver_change' })
                 }).catch(()=>{})
               }
-              ;['dh_driver_info','dh_shift_started','dh_shift_started_at','dh_last_alert','dh_job_progress','dh_ops_messages'].forEach(k=>localStorage.removeItem(k))
+              ;['dh_driver_info','dh_shift_started','dh_shift_started_at','dh_last_alert','dh_prior_alert','dh_job_progress','dh_ops_messages'].forEach(k=>localStorage.removeItem(k))
               setSetupDone(false);setShiftStarted(false);setJobs([]);setActiveJob(null)
             }}
               style={{flex:1,padding:'10px',background:'transparent',border:'1px solid rgba(255,255,255,0.06)',borderRadius:8,color:'#4a5260',fontSize:11,cursor:'pointer'}}>
@@ -1495,6 +1543,34 @@ export default function DriverApp() {
             {gpsStatus==='getting'&&<div style={{fontSize:11,color:'#3b82f6',fontFamily:'monospace',marginBottom:10}}>📍 Getting location...</div>}
             {gpsStatus==='got'&&gpsDescription&&<div style={{fontSize:11,color:'#f5a623',fontFamily:'monospace',marginBottom:10}}>📍 {gpsDescription}</div>}
             {gpsStatus==='failed'&&<div style={{fontSize:11,color:'#f59e0b',fontFamily:'monospace',marginBottom:10}}>📍 Location not available</div>}
+
+            {/* Prior alert (e.g. breakdown) preserved when medical triggers */}
+            {panelIssue?.id==='medical' && priorAlert && (
+              <div style={{marginBottom:13, border:`1px solid ${SEV[priorAlert.severity]?.border||'rgba(245,158,11,0.35)'}`, borderRadius:9, background:SEV[priorAlert.severity]?.bg||'rgba(245,158,11,0.05)', overflow:'hidden'}}>
+                <button onClick={()=>setPriorAlertExpanded(v=>!v)} style={{width:'100%', padding:'11px 13px', background:'transparent', border:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'space-between', textAlign:'left'}}>
+                  <span style={{fontSize:13, color:'#e8eaed', fontWeight:600}}>{priorAlertExpanded?'▼':'▶'} {priorAlert.issueLabel||'Breakdown'} instructions — tap to review</span>
+                  <span style={{fontSize:10, color:SEV[priorAlert.severity]?.color, fontFamily:'monospace', fontWeight:700}}>{priorAlert.time}</span>
+                </button>
+                {priorAlertExpanded && (
+                  <div style={{padding:'0 13px 13px', borderTop:'1px solid rgba(255,255,255,0.05)'}}>
+                    <div style={{fontSize:14, color:'#e8eaed', fontWeight:600, lineHeight:1.4, margin:'10px 0 8px'}}>{priorAlert.headline}</div>
+                    {priorAlert.actions && priorAlert.actions.length>0 && (
+                      <div style={{marginBottom:10}}>
+                        {priorAlert.actions.map((action,i)=>(
+                          <div key={i} style={{display:'flex', gap:9, marginBottom:6, padding:'9px 11px', background:'rgba(0,0,0,0.25)', border:'1px solid rgba(255,255,255,0.06)', borderRadius:8, alignItems:'flex-start'}}>
+                            <div style={{width:20, height:20, borderRadius:'50%', background:'rgba(255,255,255,0.08)', color:'#8a9099', display:'flex', alignItems:'center', justifyContent:'center', fontSize:11, fontWeight:700, flexShrink:0, marginTop:1}}>{i+1}</div>
+                            <div style={{fontSize:13, color:'#e8eaed', lineHeight:1.5}}>{action}</div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    <button onClick={resolvePriorAlert} style={{width:'100%', padding:'11px', background:'transparent', border:'1px solid rgba(245,166,35,0.28)', borderRadius:8, color:'#f5a623', fontWeight:500, fontSize:13, cursor:'pointer'}}>
+                      ✅ Mark {priorAlert.issueLabel||'breakdown'} resolved
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Contextual warnings */}
             {panelIssue?.id==='theft_threat'&&<div style={{padding:'11px 13px',background:'rgba(239,68,68,0.07)',border:'1px solid rgba(239,68,68,0.25)',borderRadius:9,marginBottom:13,fontSize:13,color:'#ef4444'}}>🚨 If in immediate danger — call 999 first. Note any CCTV nearby.</div>}
