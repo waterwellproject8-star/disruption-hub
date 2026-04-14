@@ -26,7 +26,7 @@ function buildPearsonShipments() {
   // PH-5517: SLA now+150 to now+210 — delayed NHS, buffer remaining
   // PH-9103: SLA now+210 to now+270 — at risk cold chain, time in hand
   const r1Eta       = new Date(now.getTime() +  45 * 60000)
-  const r1SlaStart  = new Date(now.getTime() +  45 * 60000)
+  const r1SlaStart  = new Date(now.getTime() + -40 * 60000)
   const r2SlaStart  = new Date(now.getTime() +  90 * 60000)
   const r3Eta       = new Date(now.getTime() + 120 * 60000)
   const r3SlaStart  = new Date(now.getTime() + 150 * 60000)
