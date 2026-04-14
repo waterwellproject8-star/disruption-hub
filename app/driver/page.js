@@ -121,6 +121,8 @@ export default function DriverApp() {
   const [shiftEnded, setShiftEnded]             = useState(false)
   const [shiftSummary, setShiftSummary]         = useState(null)
   const [staleSession, setStaleSession]         = useState(null)
+  const [duplicateSession, setDuplicateSession] = useState(null)
+  const [duplicateChecking, setDuplicateChecking] = useState(false)
   const [opsMessages, setOpsMessages]           = useState([])
   const [shiftNotes, setShiftNotes]             = useState('')
   const [shiftMileage, setShiftMileage]         = useState('')
@@ -694,14 +696,55 @@ export default function DriverApp() {
     return d
   }
 
-  function saveDriverInfo() {
-    if (!driverInfo.name||!driverInfo.clientId||!driverInfo.phone||!driverInfo.vehicleType||!driverInfo.vehicleReg) return
-    const n = {...driverInfo, vehicleReg: driverInfo.vehicleReg.toUpperCase().trim(), phone:normalisePhone(driverInfo.phone)}
+  function proceedWithSetup(n) {
     localStorage.setItem('dh_driver_info',JSON.stringify(n))
     setDriverInfo(n)
     saveDriverHistory(n)
     setSetupDone(true)
     loadJobs(n)
+  }
+
+  async function saveDriverInfo() {
+    if (!driverInfo.name||!driverInfo.clientId||!driverInfo.phone||!driverInfo.vehicleType||!driverInfo.vehicleReg) return
+    const n = {...driverInfo, vehicleReg: driverInfo.vehicleReg.toUpperCase().trim(), phone:normalisePhone(driverInfo.phone)}
+    setDuplicateChecking(true)
+    try {
+      const res = await fetch(`/api/driver/progress?client_id=${encodeURIComponent(n.clientId)}&vehicle_reg=${encodeURIComponent(n.vehicleReg)}`)
+      if (res.ok) {
+        const data = await res.json()
+        const active = (data.progress || []).find(r => r.ref === 'SHIFT_START' && r.status === 'on_shift')
+        if (active) {
+          setDuplicateSession({ info: n, activeSince: active.updated_at })
+          setDuplicateChecking(false)
+          return
+        }
+      }
+    } catch {}
+    setDuplicateChecking(false)
+    proceedWithSetup(n)
+  }
+
+  async function confirmOverwriteSession() {
+    const n = duplicateSession?.info
+    if (!n) return
+    try {
+      await fetch('/api/driver/end-shift', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          client_id: n.clientId,
+          vehicle_reg: n.vehicleReg,
+          reason: 'superseded_by_new_driver'
+        })
+      })
+    } catch {}
+    setDuplicateSession(null)
+    proceedWithSetup(n)
+  }
+
+  function cancelDuplicateSession() {
+    setDuplicateSession(null)
+    // Keep driverInfo state intact so the setup form reappears with their input
   }
 
   function startShift() {
@@ -864,6 +907,34 @@ export default function DriverApp() {
 
   const cargoIcon = t=>!t?'📦':t.includes('pharma')?'💊':t.includes('frozen')?'🧊':t.includes('chilled')?'❄':'📦'
 
+  // ── DUPLICATE SESSION WARNING ─────────────────────────────────────────────
+  if (duplicateSession) {
+    const activeSinceStr = duplicateSession.activeSince
+      ? new Date(duplicateSession.activeSince).toLocaleString('en-GB',{weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})
+      : null
+    return (
+      <div style={{minHeight:'100vh',background:'#080c14',color:'#e8eaed',fontFamily:'Barlow,sans-serif',display:'flex',alignItems:'center',justifyContent:'center',padding:24}}>
+        <div style={{width:'100%',maxWidth:380}}>
+          <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:22}}>
+            <div style={{width:32,height:32,background:'#f5a623',clipPath:'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)'}} />
+            <div>
+              <div style={{fontSize:15,fontWeight:600}}>{duplicateSession.info.name}</div>
+              <div style={{fontSize:11,color:'#4a5260',fontFamily:'monospace'}}>{duplicateSession.info.vehicleReg}</div>
+            </div>
+          </div>
+          <div style={{padding:'18px',background:'rgba(239,68,68,0.06)',border:'1px solid rgba(239,68,68,0.3)',borderRadius:12,marginBottom:20}}>
+            <div style={{fontSize:12,color:'#ef4444',fontFamily:'monospace',fontWeight:700,letterSpacing:'0.06em',marginBottom:6}}>⚠ VEHICLE ALREADY ON SHIFT</div>
+            <div style={{fontSize:15,color:'#e8eaed',fontWeight:500,lineHeight:1.5,marginBottom:activeSinceStr?6:0}}>This vehicle is already on shift. Starting a new session will end the previous one.</div>
+            {activeSinceStr && <div style={{fontSize:12,color:'#8a9099'}}>Previous session active since {activeSinceStr}</div>}
+          </div>
+          <div style={{fontSize:13,color:'#8a9099',marginBottom:20,lineHeight:1.6}}>Tap Continue to proceed — the previous driver's session will be closed out. Tap Cancel to go back and choose a different vehicle.</div>
+          <button onClick={confirmOverwriteSession} style={{width:'100%',padding:'15px',background:'#f5a623',border:'none',borderRadius:10,color:'#000',fontWeight:700,fontSize:16,cursor:'pointer',marginBottom:10}}>Continue — end previous session</button>
+          <button onClick={cancelDuplicateSession} style={{width:'100%',padding:'14px',background:'transparent',border:'1px solid rgba(255,255,255,0.1)',borderRadius:10,color:'#8a9099',fontWeight:500,fontSize:15,cursor:'pointer'}}>Cancel</button>
+        </div>
+      </div>
+    )
+  }
+
   // ── SETUP ─────────────────────────────────────────────────────────────────
   if (!setupDone) {
     const hasHistory = driverHistory.regs && driverHistory.regs.length > 0
@@ -981,9 +1052,9 @@ export default function DriverApp() {
         </div>
 
         {!ready && <div style={{fontSize:12,color:'#4a5260',textAlign:'center',marginBottom:10}}>All fields required to continue</div>}
-        <button onClick={saveDriverInfo} disabled={!ready}
-          style={{width:'100%',padding:15,background:ready?'#f5a623':'rgba(245,166,35,0.3)',border:'none',borderRadius:10,color:'#000',fontWeight:700,fontSize:16,cursor:ready?'pointer':'default'}}>
-          {isReturning ? 'Start shift →' : 'Get started →'}
+        <button onClick={saveDriverInfo} disabled={!ready || duplicateChecking}
+          style={{width:'100%',padding:15,background:(ready&&!duplicateChecking)?'#f5a623':'rgba(245,166,35,0.3)',border:'none',borderRadius:10,color:'#000',fontWeight:700,fontSize:16,cursor:(ready&&!duplicateChecking)?'pointer':'default'}}>
+          {duplicateChecking ? 'Checking...' : isReturning ? 'Start shift →' : 'Get started →'}
         </button>
       </div>
     </div>
