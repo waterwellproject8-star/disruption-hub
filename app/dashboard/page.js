@@ -1095,6 +1095,7 @@ export default function DashboardPage() {
   const [latestRuns, setLatestRuns] = useState({})
   const [sessionIncidents, setSessionIncidents] = useState([])
   const [liveShipments, setLiveShipments] = useState([])
+  const [incidents, setIncidents] = useState([])
   const [whSystem, setWhSystem] = useState('webfleet')
   const [activeDrivers, setActiveDrivers]           = useState([])
   const [activeDriversLoading, setActiveDriversLoading] = useState(false)
@@ -1180,7 +1181,18 @@ export default function DashboardPage() {
     loadWebhookLog()
     loadActiveDrivers()
     loadFleet()
+    loadApprovals()
+    loadIncidents()
   }, [])
+
+  async function loadIncidents() {
+    try {
+      const res = await fetch(`/api/incidents?client_id=${ACTIVE_CLIENT_ID}`)
+      if (!res.ok) return
+      const data = await res.json()
+      setIncidents(data.incidents || [])
+    } catch {}
+  }
 
   if (!unlocked) return <PinGate onUnlock={() => setUnlocked(true)} />
 
@@ -1914,7 +1926,26 @@ export default function DashboardPage() {
           <div style={{ padding:'14px', borderBottom:'1px solid rgba(255,255,255,0.06)' }}>
             <div style={{ fontSize:11, fontFamily:'monospace', color:'#4a5260', letterSpacing:'0.08em', marginBottom:8 }}>TODAY — {new Date().toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'}).toUpperCase()}</div>
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:6 }}>
-              {[{l:'Active shipments',v:'4'},{l:'Alerts',v:'1',vc:'#ef4444'},{l:'On time',v:'75%'},{l:'Saved today',v:'£7.4K',vc:'#f5a623'}].map(m=>(
+              {(() => {
+                const activeShipments = liveShipments.length
+                const alertsCount = pendingApprovals.filter(a => a.status === 'pending').length
+                const onTimePct = liveShipments.length === 0
+                  ? '—'
+                  : Math.round((liveShipments.filter(s => s.status === 'on-track' || s.status === 'completed').length / liveShipments.length) * 100) + '%'
+                const today = new Date().toDateString()
+                const savedToday = incidents
+                  .filter(i => i.created_at && new Date(i.created_at).toDateString() === today)
+                  .reduce((sum, i) => sum + (Number(i.financial_impact) || 0), 0)
+                const savedFmt = savedToday >= 1000
+                  ? `£${(savedToday / 1000).toFixed(1)}K`
+                  : `£${savedToday}`
+                return [
+                  { l:'Active shipments', v: String(activeShipments) },
+                  { l:'Alerts',           v: String(alertsCount), vc: alertsCount > 0 ? '#ef4444' : undefined },
+                  { l:'On time',          v: onTimePct },
+                  { l:'Saved today',      v: savedFmt, vc: '#f5a623' },
+                ]
+              })().map(m => (
                 <div key={m.l} style={{ background:'#0f1826', borderRadius:6, padding:'10px 10px' }}>
                   <div style={{ fontSize:13, color:'#4a5260', marginBottom:3 }}>{m.l}</div>
                   <div style={{ fontSize:28, fontWeight:700, fontFamily:'monospace', color:m.vc||'#e8eaed' }}>{m.v}</div>
