@@ -2823,9 +2823,8 @@ export default function DashboardPage() {
                           return byNewest(a, b)
                         })
                       } else if (incidentSeverityFilter === 'RECENT') {
-                        const cutoff = Date.now() - 24 * 60 * 60 * 1000
-                        filtered = whLog.filter(l => l.created_at && new Date(l.created_at).getTime() >= cutoff)
-                        sorted = [...filtered].sort(byNewest)
+                        sorted = [...whLog].sort(byNewest).slice(0, 10)
+                        filtered = sorted
                       } else {
                         filtered = whLog.filter(l => l.severity === incidentSeverityFilter)
                         sorted = [...filtered].sort(byNewest)
@@ -2833,9 +2832,7 @@ export default function DashboardPage() {
                       if (sorted.length === 0) {
                         const emptyMsg = whLog.length === 0
                           ? 'No events logged yet'
-                          : incidentSeverityFilter === 'RECENT'
-                            ? 'No events in last 24h'
-                            : `No ${incidentSeverityFilter} events`
+                          : `No ${incidentSeverityFilter} events`
                         return (
                           <div style={{ padding:16, textAlign:'center', opacity:0.4 }}>
                             <div style={{ fontSize:11, color:'#4a5260' }}>{emptyMsg}</div>
