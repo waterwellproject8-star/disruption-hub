@@ -123,6 +123,7 @@ export default function DriverApp() {
   const [staleSession, setStaleSession]         = useState(null)
   const [duplicateSession, setDuplicateSession] = useState(null)
   const [duplicateChecking, setDuplicateChecking] = useState(false)
+  const [sessionSuperseded, setSessionSuperseded] = useState(false)
   const [opsMessages, setOpsMessages]           = useState([])
   const [shiftNotes, setShiftNotes]             = useState('')
   const [shiftMileage, setShiftMileage]         = useState('')
@@ -373,13 +374,27 @@ export default function DriverApp() {
     return jobs.map(j => rem[j.ref] ? {...j,...rem[j.ref]} : local[j.ref] ? {...j,...local[j.ref]} : j)
   }
 
+  function handleSessionSuperseded() {
+    setSessionSuperseded(true)
+    ;['dh_driver_info','dh_shift_started','dh_shift_started_at','dh_last_alert','dh_prior_alert','dh_job_progress','dh_ops_messages','dh_session_id','dh_postshift_draft'].forEach(k=>localStorage.removeItem(k))
+  }
+
   function pushProgressToSupabase(ref, status, alert, pod=null) {
     if (!driverInfo.clientId || !driverInfo.vehicleReg || !ref) return
+    const session_id = typeof window !== 'undefined' ? localStorage.getItem('dh_session_id') : null
     setSyncStatus('pending')
     fetch('/api/driver/progress', {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ client_id:driverInfo.clientId, vehicle_reg:driverInfo.vehicleReg, driver_name:driverInfo.name, driver_phone:driverInfo.phone||null, ref, status, alert:alert||null, pod: pod||null })
-    }).then(r => { setSyncStatus(r.ok ? 'ok' : 'error') }).catch(()=>{ setSyncStatus('error'); showToast('⚠ Sync failed','error') })
+      body: JSON.stringify({ client_id:driverInfo.clientId, vehicle_reg:driverInfo.vehicleReg, driver_name:driverInfo.name, driver_phone:driverInfo.phone||null, ref, status, alert:alert||null, pod: pod||null, session_id })
+    }).then(async r => {
+      if (r.status === 409) {
+        try {
+          const body = await r.json()
+          if (body?.error === 'session_superseded') { handleSessionSuperseded(); return }
+        } catch {}
+      }
+      setSyncStatus(r.ok ? 'ok' : 'error')
+    }).catch(()=>{ setSyncStatus('error'); showToast('⚠ Sync failed','error') })
   }
 
   async function loadJobs(info) {
@@ -701,7 +716,11 @@ export default function DriverApp() {
   }
 
   function proceedWithSetup(n) {
+    const sessionId = (typeof crypto !== 'undefined' && crypto.randomUUID)
+      ? crypto.randomUUID()
+      : `sess_${Date.now()}_${Math.random().toString(36).slice(2)}`
     localStorage.setItem('dh_driver_info',JSON.stringify(n))
+    localStorage.setItem('dh_session_id', sessionId)
     setDriverInfo(n)
     saveDriverHistory(n)
     setSetupDone(true)
@@ -714,16 +733,19 @@ export default function DriverApp() {
     setDuplicateChecking(true)
     try {
       const res = await fetch(`/api/driver/progress?client_id=${encodeURIComponent(n.clientId)}&vehicle_reg=${encodeURIComponent(n.vehicleReg)}`)
-      if (res.ok) {
-        const data = await res.json()
-        const active = (data.progress || []).find(r => r.ref === 'SHIFT_START' && r.status === 'on_shift')
-        if (active) {
-          setDuplicateSession({ info: n, activeSince: active.updated_at })
-          setDuplicateChecking(false)
-          return
-        }
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      const data = await res.json()
+      const active = (data.progress || []).find(r => r.ref === 'SHIFT_START' && r.status === 'on_shift')
+      if (active) {
+        setDuplicateSession({ info: n, activeSince: active.updated_at })
+        setDuplicateChecking(false)
+        return
       }
-    } catch {}
+    } catch {
+      setDuplicateChecking(false)
+      showToast('Could not verify active sessions — please try again', 'error')
+      return
+    }
     setDuplicateChecking(false)
     proceedWithSetup(n)
   }
@@ -732,7 +754,7 @@ export default function DriverApp() {
     const n = duplicateSession?.info
     if (!n) return
     try {
-      await fetch('/api/driver/end-shift', {
+      const res = await fetch('/api/driver/end-shift', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -741,7 +763,14 @@ export default function DriverApp() {
           reason: 'superseded_by_new_driver'
         })
       })
-    } catch {}
+      if (!res.ok) {
+        showToast('Could not end previous session — please try again', 'error')
+        return
+      }
+    } catch {
+      showToast('Could not end previous session — please try again', 'error')
+      return
+    }
     setDuplicateSession(null)
     proceedWithSetup(n)
   }
@@ -785,8 +814,13 @@ export default function DriverApp() {
           driver_phone: driverInfo.phone || null,
           ref:    'SHIFT_START',
           status: 'defect_blocked',
-          alert:  null
+          alert:  null,
+          session_id: typeof window !== 'undefined' ? localStorage.getItem('dh_session_id') : null
         })
+      }).then(async r => {
+        if (r.status === 409) {
+          try { const b = await r.json(); if (b?.error === 'session_superseded') handleSessionSuperseded() } catch {}
+        }
       }).catch(() => {})
     } else {
       // Clear old job progress from localStorage BEFORE loading jobs
@@ -809,8 +843,13 @@ export default function DriverApp() {
           driver_phone: driverInfo.phone || null,
           ref:    'SHIFT_START',
           status: 'on_shift',
-          alert:  null
+          alert:  null,
+          session_id: typeof window !== 'undefined' ? localStorage.getItem('dh_session_id') : null
         })
+      }).then(async r => {
+        if (r.status === 409) {
+          try { const b = await r.json(); if (b?.error === 'session_superseded') handleSessionSuperseded() } catch {}
+        }
       }).catch(() => {})
 
       loadJobs(driverInfo)
@@ -832,7 +871,7 @@ export default function DriverApp() {
         })
       }).catch(() => {})
     }
-    ['dh_shift_started','dh_shift_started_at','dh_last_alert','dh_prior_alert','dh_job_progress','dh_ops_messages'].forEach(k=>localStorage.removeItem(k))
+    ['dh_shift_started','dh_shift_started_at','dh_last_alert','dh_prior_alert','dh_job_progress','dh_ops_messages','dh_session_id'].forEach(k=>localStorage.removeItem(k))
     setShiftStarted(false); setShiftEnded(false); setShiftSummary(null); setJobs([]); setActiveJob(null); setLastAlert(null); setPriorAlert(null); setStaleSession(null); setPreShiftChecks({}); setOpsMessages([]); setSetupDone(false); setView('run')
   }
 
@@ -896,10 +935,10 @@ export default function DriverApp() {
           defect_details: null
         })
       }).then(res => {
-        if (res.ok) ['dh_shift_started','dh_shift_started_at','dh_last_alert','dh_prior_alert','dh_job_progress','dh_postshift_draft'].forEach(k=>localStorage.removeItem(k))
+        if (res.ok) ['dh_shift_started','dh_shift_started_at','dh_last_alert','dh_prior_alert','dh_job_progress','dh_postshift_draft','dh_session_id'].forEach(k=>localStorage.removeItem(k))
       }).catch(() => {})
     } else {
-      ['dh_shift_started','dh_shift_started_at','dh_last_alert','dh_prior_alert','dh_job_progress'].forEach(k=>localStorage.removeItem(k))
+      ['dh_shift_started','dh_shift_started_at','dh_last_alert','dh_prior_alert','dh_job_progress','dh_session_id'].forEach(k=>localStorage.removeItem(k))
     }
   }
 
@@ -910,6 +949,20 @@ export default function DriverApp() {
   }
 
   const cargoIcon = t=>!t?'📦':t.includes('pharma')?'💊':t.includes('frozen')?'🧊':t.includes('chilled')?'❄':'📦'
+
+  // ── SESSION SUPERSEDED (hard lockout — takes precedence over everything) ──
+  if (sessionSuperseded) {
+    return (
+      <div style={{minHeight:'100vh',background:'#080c14',color:'#e8eaed',fontFamily:'Barlow,sans-serif',display:'flex',alignItems:'center',justifyContent:'center',padding:24}}>
+        <div style={{width:'100%',maxWidth:380,textAlign:'center'}}>
+          <div style={{width:56,height:56,margin:'0 auto 24px',background:'#ef4444',clipPath:'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)'}} />
+          <div style={{fontSize:12,fontFamily:'monospace',color:'#ef4444',fontWeight:700,letterSpacing:'0.1em',marginBottom:10}}>SESSION ENDED</div>
+          <div style={{fontSize:18,color:'#e8eaed',fontWeight:600,lineHeight:1.5,marginBottom:14}}>Your session has ended — this vehicle has been taken over by another driver.</div>
+          <div style={{fontSize:13,color:'#8a9099',lineHeight:1.6}}>Contact ops if this is unexpected. You can start a fresh session by reloading this page.</div>
+        </div>
+      </div>
+    )
+  }
 
   // ── DUPLICATE SESSION WARNING ─────────────────────────────────────────────
   if (duplicateSession) {
@@ -1213,7 +1266,7 @@ export default function DriverApp() {
         {shiftSummary.unresolved>0&&<div style={{padding:'10px 14px',background:'rgba(245,158,11,0.06)',border:'1px solid rgba(245,158,11,0.2)',borderRadius:8,marginBottom:8,fontSize:13,color:'#f59e0b'}}>⚠ {shiftSummary.unresolved} unresolved job{shiftSummary.unresolved>1?'s':''} — ops have been notified</div>}
         {shiftSummary.notes&&<div style={{padding:'10px 14px',background:'#0f1826',border:'1px solid rgba(255,255,255,0.06)',borderRadius:8,marginBottom:8,fontSize:13,color:'#8a9099'}}>Notes: <span style={{color:'#e8eaed'}}>{shiftSummary.notes}</span></div>}
         {shiftSummary.completed===shiftSummary.total&&<div style={{padding:'12px',background:'rgba(245,166,35,0.05)',border:'1px solid rgba(245,166,35,0.2)',borderRadius:9,textAlign:'center',marginBottom:12,fontSize:14,color:'#f5a623',fontWeight:500}}>✓ Full shift — all runs delivered</div>}
-        <button onClick={()=>{['dh_driver_info','dh_shift_started','dh_shift_started_at','dh_last_alert','dh_prior_alert','dh_job_progress','dh_ops_messages'].forEach(k=>localStorage.removeItem(k));setSetupDone(false);setShiftStarted(false);setShiftEnded(false);setJobs([]);setActiveJob(null);setShiftSummary(null)}}
+        <button onClick={()=>{['dh_driver_info','dh_shift_started','dh_shift_started_at','dh_last_alert','dh_prior_alert','dh_job_progress','dh_ops_messages','dh_session_id'].forEach(k=>localStorage.removeItem(k));setSetupDone(false);setShiftStarted(false);setShiftEnded(false);setJobs([]);setActiveJob(null);setShiftSummary(null)}}
           style={{width:'100%',padding:'14px',background:'#0f1826',border:'1px solid rgba(255,255,255,0.08)',borderRadius:10,color:'#4a5260',fontWeight:500,fontSize:14,cursor:'pointer'}}>
           Sign out
         </button>
@@ -1574,7 +1627,7 @@ export default function DriverApp() {
                   body: JSON.stringify({ client_id: driverInfo.clientId, vehicle_reg: driverInfo.vehicleReg||null, driver_phone: driverInfo.phone||null, reason:'driver_change' })
                 }).catch(()=>{})
               }
-              ;['dh_driver_info','dh_shift_started','dh_shift_started_at','dh_last_alert','dh_prior_alert','dh_job_progress','dh_ops_messages'].forEach(k=>localStorage.removeItem(k))
+              ;['dh_driver_info','dh_shift_started','dh_shift_started_at','dh_last_alert','dh_prior_alert','dh_job_progress','dh_ops_messages','dh_session_id'].forEach(k=>localStorage.removeItem(k))
               setSetupDone(false);setShiftStarted(false);setJobs([]);setActiveJob(null)
             }}
               style={{flex:1,padding:'10px',background:'transparent',border:'1px solid rgba(255,255,255,0.06)',borderRadius:8,color:'#4a5260',fontSize:11,cursor:'pointer'}}>
