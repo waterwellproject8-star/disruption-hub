@@ -287,6 +287,24 @@ Provide immediate disruption analysis and action plan.`
       })
       if (incidentErr) console.error('incident insert:', incidentErr.message, incidentErr.code)
 
+      // Mirror to webhook_log so driver-triggered events appear in the dashboard INCIDENTS panel
+      try {
+        const { error: whErr } = await db.from('webhook_log').insert({
+          client_id,
+          system_name: 'driver_pwa',
+          direction: 'inbound',
+          event_type: issue_type || 'driver_breakdown',
+          severity,
+          financial_impact: Math.round(financialImpact || 0),
+          payload: { vehicle_reg, ref, driver_name, description: human_description },
+          sms_fired: !!contactPhone,
+          created_at: new Date().toISOString()
+        })
+        if (whErr) console.error('webhook_log insert (driver alert):', whErr.message, whErr.code)
+      } catch (e) {
+        console.error('webhook_log insert threw (driver alert):', e?.message)
+      }
+
       // Create approval for HIGH/CRITICAL
       // Skip for pre-shift defects — the pre-shift-specific branch below handles those
       if (firstAction && (severity === 'CRITICAL' || severity === 'HIGH' || force_alert) && !(force_alert && force_financial_zero)) {
