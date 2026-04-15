@@ -68,7 +68,7 @@ export async function GET(request) {
         .from('shipments')
         .select('*')
         .eq('client_id', client_id)
-        .order('sequence', { ascending: true })
+        .order('created_at', { ascending: true })
 
       if (!error && data && data.length > 0) {
         return Response.json({ shipments: data, source: 'live' })
