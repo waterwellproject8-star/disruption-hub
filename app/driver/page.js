@@ -888,13 +888,17 @@ export default function DriverApp() {
       }).catch(err => console.error('clearSession end-shift failed:', err))
     }
 
-    // 2. Wipe every session key (including dh_driver_info and dh_postshift_draft)
-    ;['dh_shift_started','dh_shift_started_at','dh_last_alert','dh_prior_alert','dh_job_progress','dh_ops_messages','dh_session_id','dh_driver_info','dh_postshift_draft'].forEach(k=>localStorage.removeItem(k))
+    // 2. Wipe shift/session keys — keep dh_driver_info so name + phone pre-fill on next login
+    ;['dh_shift_started','dh_shift_started_at','dh_last_alert','dh_prior_alert','dh_job_progress','dh_ops_messages','dh_session_id','dh_postshift_draft'].forEach(k=>localStorage.removeItem(k))
 
-    // 3-5. Reset state so the SHIFT EXPIRED guard (setupDone && staleSession) falsifies and setup screen re-renders
+    // 3-5. Reset state so the SHIFT EXPIRED guard (setupDone && staleSession) falsifies and setup screen re-renders.
+    // Pre-populate name + phone from dh_driver_info (same driver, same phone every shift).
+    // vehicleReg stays blank — dh_driver_history handles the reg dropdown separately.
     setStaleSession(null)
     setSetupDone(false)
-    setDriverInfo({ name:'', clientId:'', vehicleReg:'', phone:'', vehicleType:'' })
+    setDriverInfo(savedInfo
+      ? { name: savedInfo.name || '', phone: savedInfo.phone || '', clientId: savedInfo.clientId || '', vehicleReg: '', vehicleType: '' }
+      : { name:'', clientId:'', vehicleReg:'', phone:'', vehicleType:'' })
     setShiftStarted(false); setShiftEnded(false); setShiftSummary(null); setJobs([]); setActiveJob(null); setLastAlert(null); setPriorAlert(null); setPreShiftChecks({}); setOpsMessages([]); setView('run')
   }
 
