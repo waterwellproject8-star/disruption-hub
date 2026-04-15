@@ -167,9 +167,9 @@ export default function DriverApp() {
           const lastReg = h.regs?.[0]
           setDriverInfo({
             name: h.name || '',
-            phone: h.phone || '',
+            phone: h.phone ? normalisePhone(h.phone) : '',
             clientId: (h.clientId || '').toLowerCase().trim(),
-            vehicleReg: lastReg?.reg || '',
+            vehicleReg: (lastReg?.reg || '').toUpperCase().trim(),
             vehicleType: lastReg?.type || ''
           })
         }
@@ -179,6 +179,12 @@ export default function DriverApp() {
     const saved = localStorage.getItem('dh_driver_info')
     if (saved) {
       const info = JSON.parse(saved)
+      // Normalise legacy-cased values from any pre-fix session so downstream API calls match Supabase rows.
+      info.clientId = (info.clientId || '').toLowerCase().trim()
+      if (info.vehicleReg) info.vehicleReg = info.vehicleReg.toUpperCase().trim()
+      if (info.phone) info.phone = normalisePhone(info.phone)
+      // Overwrite the stale entry so the tainted value never rehydrates again on this device.
+      try { localStorage.setItem('dh_driver_info', JSON.stringify(info)) } catch {}
       setDriverInfo(info)
       setSetupDone(true)
 
