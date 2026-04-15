@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import twilio from 'twilio'
 import { formatDelayForSpeech } from '../../../../lib/twilio.js'
 
 async function sendSMS(to, body) {
@@ -206,6 +207,28 @@ function buildDriverInstruction(details, actionLabel) {
 export async function POST(request) {
   try {
     const formData = await request.formData()
+
+    // Twilio signature validation — reject spoofed webhooks in production.
+    // Skipped in dev so local tests without real Twilio signatures still work.
+    if (process.env.NODE_ENV === 'production') {
+      const authToken = process.env.TWILIO_AUTH_TOKEN
+      const signature = request.headers.get('x-twilio-signature')
+      if (!authToken) {
+        console.error('webhooks/sms: TWILIO_AUTH_TOKEN missing — cannot validate signature')
+        return new Response('Forbidden', { status: 403 })
+      }
+      const proto = request.headers.get('x-forwarded-proto') || 'https'
+      const host = request.headers.get('x-forwarded-host') || request.headers.get('host')
+      const url = host ? `${proto}://${host}/api/webhooks/sms` : request.url
+      const params = {}
+      for (const [k, v] of formData.entries()) params[k] = typeof v === 'string' ? v : ''
+      const valid = twilio.validateRequest(authToken, signature || '', url, params)
+      if (!valid) {
+        console.error('webhooks/sms: invalid Twilio signature', { url, from: params.From })
+        return new Response('Forbidden', { status: 403 })
+      }
+    }
+
     const rawBody = formData.get('Body')?.trim() || ''
     const body = rawBody.toUpperCase()
     const from = formData.get('From') || ''
