@@ -349,7 +349,21 @@ Provide immediate disruption analysis and action plan.`
                 consigneeName = shipment.consignee || null
                 consigneePhone = shipment.consignee_phone || null
               }
-            } catch {}
+            } catch (e) {
+              console.error('shipment lookup for consignee_phone failed:', e?.message)
+            }
+          }
+          // Fallback: no consignee_phone on shipments row → use carrier phone from client system_prompt.
+          // The downstream /api/approvals consignee branch will still prefer consignee_phone first;
+          // this makes sure the approval has SOMETHING to dial rather than silent null.
+          if (!consigneePhone) {
+            const carrierFallback = extractCarrierPhone(systemPrompt)
+            if (carrierFallback) {
+              consigneePhone = carrierFallback
+              console.warn(`[alert] consignee_phone missing for ${ref} — falling back to carrier phone from system_prompt`)
+            } else {
+              console.warn(`[alert] consignee_phone missing for ${ref} and no carrier fallback in system_prompt — approval will be failed at execute time`)
+            }
           }
           const { error: consigneeErr } = await db.from('approvals').insert({
             client_id,
@@ -403,6 +417,16 @@ Provide immediate disruption analysis and action plan.`
                 const label = slaBreach
                   ? `⚠ SLA AT RISK — Notify ${s.consignee || 'consignee'} of delay — £${penalty.toLocaleString()} exposure`
                   : `Notify ${s.consignee || 'consignee'} of delay — automated call`
+                let cascadePhone = s.consignee_phone || null
+                if (!cascadePhone) {
+                  const carrierFallback = extractCarrierPhone(systemPrompt)
+                  if (carrierFallback) {
+                    cascadePhone = carrierFallback
+                    console.warn(`[cascade] consignee_phone missing for ${s.ref} — falling back to carrier phone from system_prompt`)
+                  } else {
+                    console.warn(`[cascade] consignee_phone missing for ${s.ref} and no carrier fallback — approval will be failed at execute time`)
+                  }
+                }
                 const { error: cascadeErr } = await db.from('approvals').insert({
                   client_id,
                   action_type: 'call',
@@ -414,7 +438,7 @@ Provide immediate disruption analysis and action plan.`
                     driver_phone: driver_phone || null,
                     call_type: 'consignee_delay_alert',
                     consignee_name: s.consignee || null,
-                    consignee_phone: s.consignee_phone || null,
+                    consignee_phone: cascadePhone,
                     delay_reason: human_description || issueContext || null,
                     delay_minutes: delayMins,
                     revised_eta: revisedEta,
