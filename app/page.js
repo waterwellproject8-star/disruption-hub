@@ -975,7 +975,7 @@ export default function HomePage() {
               ESC / CLOSE ✕
             </button>
             <video
-              src="/demo.mp4"
+              src="/demo.mp4?v=2026041502"
               controls
               autoPlay
               style={{
