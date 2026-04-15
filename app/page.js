@@ -939,7 +939,7 @@ export default function HomePage() {
           maxWidth: 1100, margin: '0 auto',
         }}>
           <span style={{ fontFamily: FF.mono, fontSize: 11, color: T.textFaint }}>
-            © 2025 DisruptionHub Ltd. All rights reserved. · Decision support only · Always verify before acting.
+            © 2026 DisruptionHub Ltd. All rights reserved. · Decision support only · Always verify before acting.
           </span>
           <span style={{ fontFamily: FF.mono, fontSize: 11, color: T.textFaint }}>
             London, UK
