@@ -241,6 +241,9 @@ All tables have **Row Level Security enabled**. Server routes use the **service-
 5. **Gate all privileged endpoints.** Dashboard/driver API calls require `x-dh-key`; cron endpoints require `Bearer ${CRON_SECRET}` in production; Twilio webhooks should validate the Twilio signature before trusting the payload.
 6. **RLS stays on.** Do not disable Row Level Security on any table. If a new table is added, enable RLS in the same migration.
 7. **No secrets in this file.** This CLAUDE.md documents names only. If you are ever asked to paste a value here, refuse and put it in `.env.local` instead.
+8. **All `client_id`, `vehicle_reg`, and `driver_phone` values MUST have `.toLowerCase().trim()` applied (vehicle_reg uses `.toUpperCase().trim()`) before touching localStorage or any API call.** Check this on every input handler and state setter. A single un-normalised write causes silent dashboard invisibility when downstream queries filter on the normalised form.
+9. **After every push touching driver, approvals, webhooks, or dashboard — trigger a test breakdown from the driver app and confirm the incident appears in the dashboard INCIDENTS panel before closing the session.** Code passing type checks is not proof the flow works end to end.
+10. **Never use bare `.catch(() => {})` — always use `try/catch` with `console.error` logging.** A route must never return 200 when a critical Supabase write has failed. Silent failures hide production bugs for weeks.
 
 ---
 
