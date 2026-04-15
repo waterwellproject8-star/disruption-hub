@@ -55,7 +55,8 @@ function buildArcticFreshShipments() {
 
 export async function GET(request) {
   const { searchParams } = new URL(request.url)
-  const client_id = searchParams.get('client_id')
+  let client_id = searchParams.get('client_id')
+  if (client_id) client_id = client_id.toLowerCase().trim()
 
   if (!client_id) {
     return Response.json({ error: 'client_id required' }, { status: 400 })

@@ -14,7 +14,7 @@ function getDB() {
 
 export async function POST(request) {
   try {
-    const {
+    let {
       client_id,
       vehicle_reg,
       driver_phone,
@@ -34,6 +34,8 @@ export async function POST(request) {
       defects_flagged,
       defect_details
     } = await request.json()
+    if (client_id) client_id = client_id.toLowerCase().trim()
+    if (vehicle_reg) vehicle_reg = vehicle_reg.toUpperCase().trim()
 
     if (!vehicle_reg && !driver_phone) {
       return Response.json({ error: 'vehicle_reg or driver_phone required' }, { status: 400 })

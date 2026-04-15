@@ -171,7 +171,7 @@ const extractDelayMinutes = (text) => {
 export async function POST(request) {
   try {
     const body = await request.json()
-    const {
+    let {
       client_id,
       driver_name,
       driver_phone,
@@ -187,6 +187,8 @@ export async function POST(request) {
       issue_type,
       at_risk_refs,
     } = body
+    if (client_id) client_id = client_id.toLowerCase().trim()
+    if (vehicle_reg) vehicle_reg = vehicle_reg.toUpperCase().trim()
 
     if (!issue_description) {
       return Response.json({ error: 'issue_description is required' }, { status: 400 })

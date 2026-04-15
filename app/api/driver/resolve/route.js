@@ -14,7 +14,7 @@ function getDB() {
 export async function POST(request) {
   try {
     const body = await request.json()
-    const {
+    let {
       client_id,
       driver_name,
       vehicle_reg,
@@ -25,6 +25,8 @@ export async function POST(request) {
       sla_window,
       original_issue,
     } = body
+    if (client_id) client_id = client_id.toLowerCase().trim()
+    if (vehicle_reg) vehicle_reg = vehicle_reg.toUpperCase().trim()
 
     const db = getDB()
     let contactPhone = null

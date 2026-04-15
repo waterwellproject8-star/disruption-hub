@@ -9,7 +9,9 @@ function getDB() {
 
 export async function POST(request) {
   try {
-    const { client_id, vehicle_reg, driver_name, driver_phone, ref, status, alert, pod, session_id } = await request.json()
+    let { client_id, vehicle_reg, driver_name, driver_phone, ref, status, alert, pod, session_id } = await request.json()
+    if (client_id) client_id = client_id.toLowerCase().trim()
+    if (vehicle_reg) vehicle_reg = vehicle_reg.toUpperCase().trim()
 
     if (!client_id || !vehicle_reg || !ref || !status) {
       return Response.json({ error: 'client_id, vehicle_reg, ref, status required' }, { status: 400 })
@@ -105,7 +107,9 @@ export async function POST(request) {
 // PATCH — bulk reset job rows to on-track for a new shift
 export async function PATCH(request) {
   try {
-    const { client_id, vehicle_reg, refs } = await request.json()
+    let { client_id, vehicle_reg, refs } = await request.json()
+    if (client_id) client_id = client_id.toLowerCase().trim()
+    if (vehicle_reg) vehicle_reg = vehicle_reg.toUpperCase().trim()
     if (!client_id || !vehicle_reg || !refs?.length) {
       return Response.json({ error: 'client_id, vehicle_reg, refs[] required' }, { status: 400 })
     }
@@ -131,8 +135,10 @@ export async function PATCH(request) {
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url)
-    const client_id = searchParams.get('client_id')
-    const vehicle_reg = searchParams.get('vehicle_reg')
+    let client_id = searchParams.get('client_id')
+    let vehicle_reg = searchParams.get('vehicle_reg')
+    if (client_id) client_id = client_id.toLowerCase().trim()
+    if (vehicle_reg) vehicle_reg = vehicle_reg.toUpperCase().trim()
 
     if (!client_id || !vehicle_reg) return Response.json({ progress: [] })
 
