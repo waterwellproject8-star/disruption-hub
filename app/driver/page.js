@@ -857,22 +857,45 @@ export default function DriverApp() {
   }
 
   function clearSession(reason = 'session_cleared') {
-    // Mark driver_progress as completed in Supabase before clearing local state
-    // Prevents stale rows from triggering banner notifications on next shift
-    if (driverInfo.vehicleReg || driverInfo.phone) {
+    // Read session data from storage BEFORE wiping so end-shift POST has full context
+    let savedInfo = null
+    let startedAtIso = null
+    try {
+      const raw = localStorage.getItem('dh_driver_info')
+      if (raw) savedInfo = JSON.parse(raw)
+      const sa = localStorage.getItem('dh_shift_started_at')
+      if (sa) startedAtIso = new Date(parseInt(sa)).toISOString()
+    } catch {}
+
+    const clientId    = savedInfo?.clientId    || driverInfo.clientId
+    const vehicleReg  = savedInfo?.vehicleReg  || driverInfo.vehicleReg
+    const driverPhone = savedInfo?.phone       || driverInfo.phone
+    const driverName  = savedInfo?.name        || driverInfo.name
+
+    // 1. Fire-and-forget end-shift POST with full session context
+    if (vehicleReg || driverPhone) {
       fetch('/api/driver/end-shift', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          client_id:    driverInfo.clientId,
-          vehicle_reg:  driverInfo.vehicleReg || null,
-          driver_phone: driverInfo.phone || null,
+          client_id:    clientId,
+          vehicle_reg:  vehicleReg || null,
+          driver_phone: driverPhone || null,
+          driver_name:  driverName || null,
+          started_at:   startedAtIso,
           reason
         })
-      }).catch(() => {})
+      }).catch(err => console.error('clearSession end-shift failed:', err))
     }
-    ['dh_shift_started','dh_shift_started_at','dh_last_alert','dh_prior_alert','dh_job_progress','dh_ops_messages','dh_session_id'].forEach(k=>localStorage.removeItem(k))
-    setShiftStarted(false); setShiftEnded(false); setShiftSummary(null); setJobs([]); setActiveJob(null); setLastAlert(null); setPriorAlert(null); setStaleSession(null); setPreShiftChecks({}); setOpsMessages([]); setSetupDone(false); setView('run')
+
+    // 2. Wipe every session key (including dh_driver_info and dh_postshift_draft)
+    ;['dh_shift_started','dh_shift_started_at','dh_last_alert','dh_prior_alert','dh_job_progress','dh_ops_messages','dh_session_id','dh_driver_info','dh_postshift_draft'].forEach(k=>localStorage.removeItem(k))
+
+    // 3-5. Reset state so the SHIFT EXPIRED guard (setupDone && staleSession) falsifies and setup screen re-renders
+    setStaleSession(null)
+    setSetupDone(false)
+    setDriverInfo({ name:'', clientId:'', vehicleReg:'', phone:'', vehicleType:'' })
+    setShiftStarted(false); setShiftEnded(false); setShiftSummary(null); setJobs([]); setActiveJob(null); setLastAlert(null); setPriorAlert(null); setPreShiftChecks({}); setOpsMessages([]); setView('run')
   }
 
   function resumeSession() {
@@ -1132,7 +1155,7 @@ export default function DriverApp() {
           {staleSession.lastAlertTime&&<div style={{fontSize:12,color:'#f59e0b',marginTop:5}}>⚠ Last alert at {staleSession.lastAlertTime}</div>}
         </div>
         <div style={{fontSize:13,color:'#8a9099',marginBottom:20,lineHeight:1.6}}>Your previous shift has expired. Tap below to start fresh, or continue if you're on a trunking or overnight run.</div>
-        <button onClick={clearSession} style={{width:'100%',padding:'15px',background:'#f5a623',border:'none',borderRadius:10,color:'#000',fontWeight:700,fontSize:16,cursor:'pointer',marginBottom:10}}>Start new shift</button>
+        <button onClick={() => clearSession('expired_new_shift')} style={{width:'100%',padding:'15px',background:'#f5a623',border:'none',borderRadius:10,color:'#000',fontWeight:700,fontSize:16,cursor:'pointer',marginBottom:10}}>Start new shift</button>
         <button onClick={resumeSession} style={{width:'100%',padding:'14px',background:'transparent',border:'1px solid rgba(255,255,255,0.1)',borderRadius:10,color:'#8a9099',fontWeight:500,fontSize:15,cursor:'pointer'}}>Continue previous session</button>
         <div style={{marginTop:14,fontSize:11,color:'#4a5260',textAlign:'center'}}>Overnight or trunking drivers — tap Continue.</div>
       </div>
