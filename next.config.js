@@ -2,6 +2,15 @@
 const nextConfig = {
   experimental: {
     serverComponentsExternalPackages: ['twilio', 'resend']
+  },
+  async redirects() {
+    return [
+      {
+        source: '/demo',
+        destination: '/demo.mp4',
+        permanent: false,
+      },
+    ]
   }
 }
 module.exports = nextConfig
