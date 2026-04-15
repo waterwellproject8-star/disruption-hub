@@ -168,7 +168,7 @@ export default function DriverApp() {
           setDriverInfo({
             name: h.name || '',
             phone: h.phone || '',
-            clientId: h.clientId || '',
+            clientId: (h.clientId || '').toLowerCase().trim(),
             vehicleReg: lastReg?.reg || '',
             vehicleType: lastReg?.type || ''
           })
@@ -729,7 +729,7 @@ export default function DriverApp() {
 
   async function saveDriverInfo() {
     if (!driverInfo.name||!driverInfo.clientId||!driverInfo.phone||!driverInfo.vehicleType||!driverInfo.vehicleReg) return
-    const n = {...driverInfo, vehicleReg: driverInfo.vehicleReg.toUpperCase().trim(), phone:normalisePhone(driverInfo.phone)}
+    const n = {...driverInfo, clientId: driverInfo.clientId.toLowerCase().trim(), vehicleReg: driverInfo.vehicleReg.toUpperCase().trim(), phone:normalisePhone(driverInfo.phone)}
     setDuplicateChecking(true)
     try {
       const res = await fetch(`/api/driver/progress?client_id=${encodeURIComponent(n.clientId)}&vehicle_reg=${encodeURIComponent(n.vehicleReg)}`)
@@ -1130,7 +1130,7 @@ export default function DriverApp() {
           <div style={{fontSize:13,color:'#8a9099',marginBottom:5}}>Company access code</div>
           <input
             value={driverInfo.clientId}
-            onChange={e=>setDriverInfo(p=>({...p,clientId:e.target.value}))}
+            onChange={e=>setDriverInfo(p=>({...p,clientId:e.target.value.toLowerCase().trim()}))}
             placeholder='Given by your manager'
             style={{width:'100%',padding:'13px',background:'#0f1826',border:'1px solid rgba(255,255,255,0.1)',borderRadius:8,color:'#e8eaed',fontSize:16,outline:'none',boxSizing:'border-box'}}/>
         </div>
