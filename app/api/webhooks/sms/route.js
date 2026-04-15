@@ -447,15 +447,33 @@ export async function POST(request) {
       const actionLabel = approval.action_label || ''
       const details = approval.action_details || {}
 
+      // Claim the approval without marking executed — finaliseApproval() below
+      // writes the real status once we know whether Twilio actually delivered.
       const { data: updated } = await db.from('approvals').update({
-        status: 'executed',
         approved_by: contactName,
-        approved_at: new Date().toISOString(),
-        executed_at: new Date().toISOString()
-      }).eq('id', approval.id).eq('status', 'pending').select('id')
+        approved_at: new Date().toISOString()
+      }).eq('id', approval.id).eq('status', 'pending').is('approved_at', null).select('id')
 
       if (!updated?.length) {
         return twimlReply('DH: Action already executed or expired. Check dashboard.')
+      }
+
+      // Final status writer. SMS success = sendSMS().success; call success =
+      // callResult.success && !callResult.simulated. Anything else is 'failed'
+      // with a structured reason in execution_result.
+      async function finaliseApproval(outcome) {
+        const nowIso = new Date().toISOString()
+        const patch = { status: outcome.success ? 'executed' : 'failed', executed_at: nowIso }
+        if (outcome.success) {
+          if (outcome.twilio_sid) patch.execution_result = { twilio_sid: outcome.twilio_sid, twilio_status: outcome.twilio_status }
+          else if (outcome.sms_sent) patch.execution_result = { sms_sent: true }
+        } else if (outcome.simulated) {
+          patch.execution_result = { simulated: true, reason: outcome.reason || 'twilio_not_configured' }
+        } else {
+          patch.execution_result = { failure_reason: outcome.failure_reason || 'unknown' }
+        }
+        const { error: finErr } = await db.from('approvals').update(patch).eq('id', approval.id)
+        if (finErr) console.error('sms YES finalise failed:', finErr.message)
       }
 
       // RESOLVE DRIVER PHONE
@@ -522,9 +540,13 @@ export async function POST(request) {
         await writeInstructionToApp(msg)
         if (driverPhone) {
           const result = await sendSMS(driverPhone, msg)
+          await finaliseApproval(result.success
+            ? { success: true, sms_sent: true }
+            : { success: false, failure_reason: result.error || 'driver_sms_failed' })
           await sendNextPendingActionSMS()
           return twimlReply(result.success ? 'DH: Driver notified. Recovery confirmed.' : 'DH: Approved. Call driver directly — SMS failed.')
         }
+        await finaliseApproval({ success: false, failure_reason: 'no_driver_phone_on_file' })
         await sendNextPendingActionSMS()
         return twimlReply('DH: Approved. No driver phone — call them directly.')
       }
@@ -545,9 +567,13 @@ export async function POST(request) {
 
         if (driverPhone) {
           const result = await sendSMS(driverPhone, instruction)
+          await finaliseApproval(result.success
+            ? { success: true, sms_sent: true }
+            : { success: false, failure_reason: result.error || 'driver_sms_failed' })
           await sendNextPendingActionSMS()
           return twimlReply(result.success ? 'DH: Driver notified. Check dashboard.' : 'DH: Approved. Send instruction to driver manually.')
         }
+        await finaliseApproval({ success: false, failure_reason: 'no_driver_phone_on_file' })
         await sendNextPendingActionSMS()
         return twimlReply('DH: Approved. No driver phone — send instruction manually.')
       }
@@ -606,6 +632,13 @@ export async function POST(request) {
             if (driverPhone) await sendSMS(driverPhone, driverMsg).catch(() => {})
 
             await sendNextPendingActionSMS()
+            if (callResult.success) {
+              await finaliseApproval({ success: true, twilio_sid: callResult.sid, twilio_status: callResult.status })
+            } else if (callResult.simulated) {
+              await finaliseApproval({ success: false, simulated: true, reason: callResult.reason || 'twilio_not_configured' })
+            } else {
+              await finaliseApproval({ success: false, failure_reason: callResult.error || 'call_error' })
+            }
             if (callResult.success) return twimlReply(`DH: Calling ${details.consignee_name || consigneePhone}. Driver notified.`)
             if (callResult.simulated) return twimlReply(`DH: Call ${details.consignee_name || 'consignee'} manually: ${rawConsigneePhone}`)
             return twimlReply(`DH: Call failed (${callResult.error || 'unknown'}) — dial ${rawConsigneePhone} manually.`)
@@ -616,6 +649,7 @@ export async function POST(request) {
           const driverMsg = `DisruptionHub OPS${details.ref ? ` — ${details.ref}` : ''}\n\nOps approved delay. No consignee contact on file — ops will call directly.\nContinue to destination. Reply DONE.`
           await writeInstructionToApp(driverMsg)
           if (driverPhone) await sendSMS(driverPhone, driverMsg).catch(() => {})
+          await finaliseApproval({ success: false, failure_reason: 'no_consignee_phone' })
           return twimlReply(`DH: Approved. No consignee phone for ${details.consignee_name || 'this delivery'} — call them manually.`)
         }
 
@@ -653,6 +687,14 @@ export async function POST(request) {
           await writeInstructionToApp(driverMsg)
           if (driverPhone) await sendSMS(driverPhone, driverMsg).catch(() => {})
 
+          if (callResult.success) {
+            await finaliseApproval({ success: true, twilio_sid: callResult.sid, twilio_status: callResult.status })
+          } else if (callResult.simulated) {
+            await finaliseApproval({ success: false, simulated: true, reason: callResult.reason || 'twilio_not_configured' })
+          } else {
+            await finaliseApproval({ success: false, failure_reason: callResult.error || 'call_error' })
+          }
+
           if (callResult.success) return twimlReply(`DH: Calling ${details.carrier_name || rawCarrierPhone}. Driver notified.`)
           if (callResult.simulated) return twimlReply(`DH: Call ${details.carrier_name || 'carrier'} manually: ${rawCarrierPhone}`)
           return twimlReply(`DH: Call failed (${callResult.error || 'unknown'}) — dial ${rawCarrierPhone} manually.`)
@@ -663,13 +705,20 @@ export async function POST(request) {
         const helpMsg = `DisruptionHub OPS${details.ref ? ` — ${details.ref}` : ''}\n\nOps approved. Help being arranged. Stay safe.`
         await writeInstructionToApp(helpMsg)
         if (driverPhone) await sendSMS(driverPhone, helpMsg).catch(() => {})
+        await finaliseApproval({ success: false, failure_reason: 'no_carrier_or_consignee_phone' })
         return twimlReply('DH: Approved. No contact phone on file — action manually.')
       }
 
       // Unknown action type
       const driverPhone = await resolveDriverPhone()
       if (driverPhone) {
-        await sendSMS(driverPhone, `DisruptionHub OPS${details.ref ? ` — ${details.ref}` : ''}\n\nOps approved your report. Action being taken.`).catch(() => {})
+        const result = await sendSMS(driverPhone, `DisruptionHub OPS${details.ref ? ` — ${details.ref}` : ''}\n\nOps approved your report. Action being taken.`)
+          .catch(err => ({ success: false, error: err?.message }))
+        await finaliseApproval(result?.success
+          ? { success: true, sms_sent: true }
+          : { success: false, failure_reason: `unknown_action_type:${actionType || 'none'}` })
+      } else {
+        await finaliseApproval({ success: false, failure_reason: `unknown_action_type_no_driver_phone:${actionType || 'none'}` })
       }
       return twimlReply('DH: Action approved and logged.')
     }
