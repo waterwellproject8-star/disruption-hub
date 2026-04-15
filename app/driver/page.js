@@ -685,7 +685,7 @@ export default function DriverApp() {
     }
 
     try {
-      const res = await fetch('/api/agent',{method:'POST',headers:{'Content-Type':'application/json','x-dh-key':process.env.NEXT_PUBLIC_DH_KEY},body:JSON.stringify({messages:[{role:'user',content:prompt}],driver_mode:true})})
+      const res = await fetch('/api/driver/agent',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:[{role:'user',content:prompt}],driver_mode:true})})
       const reader=res.body.getReader(); const decoder=new TextDecoder(); let full=''
       while(true){const{done,value}=await reader.read();if(done)break;for(const line of decoder.decode(value).split('\n')){if(line.startsWith('data: ')&&line!=='data: [DONE]'){try{const p=JSON.parse(line.slice(6));if(p.text)full+=p.text}catch{}}}}
       if(full){setParsedResult(parseResponse(full));setPanelState('result')}else setPanelState('sent')
