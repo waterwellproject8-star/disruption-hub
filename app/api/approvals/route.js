@@ -34,7 +34,7 @@ async function makeCall(to, twimlMessage, rawTwiml) {
   const token = process.env.TWILIO_AUTH_TOKEN
   const from  = process.env.TWILIO_PHONE_NUMBER
   if (!sid || !token || !from || sid.includes('placeholder') || sid.startsWith('AC_')) {
-    console.log('[Twilio Voice - not configured] To:', to)
+    console.error('[Twilio Voice - NOT CONFIGURED — call simulated only] To:', to)
     return { success: false, reason: 'not_configured', simulated: true }
   }
   const twiml = rawTwiml || `<?xml version="1.0" encoding="UTF-8"?><Response><Pause length="1"/><Say voice="Polly.Amy" language="en-GB">${twimlMessage}</Say><Pause length="1"/><Say voice="Polly.Amy" language="en-GB">I will repeat that.</Say><Pause length="1"/><Say voice="Polly.Amy" language="en-GB">${twimlMessage}</Say></Response>`
@@ -170,13 +170,14 @@ export async function POST(request) {
       return Response.json({ success: false, error: 'Action expired — over 4 hours old. Do not execute stale actions.' }, { status: 409 })
     }
 
-    // Mark executed — atomic: only succeeds if status is still 'pending'
+    // Atomic reserve — claim the approval by setting approved_at. Status stays
+    // 'pending' until the action result is known; finalise() writes 'executed'
+    // or 'failed'. Race protection: .is('approved_at', null) ensures exactly
+    // one claimant even under concurrent clicks / SMS YES.
     const { data: updated } = await db.from('approvals').update({
-      status: 'executed',
       approved_by,
-      approved_at: new Date().toISOString(),
-      executed_at: new Date().toISOString()
-    }).eq('id', approval_id).eq('status', 'pending').select('id')
+      approved_at: new Date().toISOString()
+    }).eq('id', approval_id).eq('status', 'pending').is('approved_at', null).select('id')
 
     if (!updated?.length) {
       return Response.json({ error: 'already_executed' }, { status: 409 })
@@ -186,6 +187,23 @@ export async function POST(request) {
     const actionLabel = approval.action_label || ''
     const details = approval.action_details || {}
     const clientId = approval.client_id
+
+    // Write final status once we know whether the action actually went out.
+    // SMS: result.success === true → executed.
+    // Call: callResult.success && !callResult.simulated → executed.
+    // Any other outcome (Twilio not configured, API failure, no phone) → failed,
+    // with the reason recorded inside action_details.failure_reason.
+    async function finalise(success, failureReason = null, extra = null) {
+      const nowIso = new Date().toISOString()
+      const patch = { status: success ? 'executed' : 'failed', executed_at: nowIso }
+      if (!success) {
+        patch.action_details = { ...(approval.action_details || {}), failure_reason: failureReason || 'unknown', failed_at: nowIso }
+      } else if (extra) {
+        patch.execution_result = extra
+      }
+      const { error: finErr } = await db.from('approvals').update(patch).eq('id', approval_id)
+      if (finErr) console.error('approvals finalise failed:', finErr.message)
+    }
 
     const { data: client } = await db
       .from('clients')
@@ -276,9 +294,11 @@ export async function POST(request) {
           } catch {}
         }
 
-        return Response.json({ success: true, action: 'executed', driver_notified: result.success, phase: 2 })
+        await finalise(result.success, result.success ? null : (result.error || 'driver_sms_failed'), result.success ? { twilio_sid: result.sid } : null)
+        return Response.json({ success: true, action: result.success ? 'executed' : 'failed', driver_notified: result.success, phase: 2 })
       }
-      return Response.json({ success: true, action: 'executed', driver_notified: false, note: 'No driver phone — call directly' })
+      await finalise(false, 'no_driver_phone_on_file')
+      return Response.json({ success: true, action: 'failed', driver_notified: false, note: 'No driver phone — call directly' })
     }
 
     // ── SMS / REROUTE / NOTIFY — instruction to driver ───────────────────
@@ -308,25 +328,18 @@ export async function POST(request) {
           } catch {}
         }
 
-        return Response.json({ success: true, action: 'executed', driver_notified: result.success, phase: 2 })
+        await finalise(result.success, result.success ? null : (result.error || 'driver_sms_failed'), result.success ? { twilio_sid: result.sid } : null)
+        return Response.json({ success: true, action: result.success ? 'executed' : 'failed', driver_notified: result.success, phase: 2 })
       }
-      return Response.json({ success: true, action: 'executed', driver_notified: false, note: 'No driver phone on file' })
+      await finalise(false, 'no_driver_phone_on_file')
+      return Response.json({ success: true, action: 'failed', driver_notified: false, note: 'No driver phone on file' })
     }
 
     // ── CONSIGNEE DELAY ALERT — one-way notification call ──────────────
     if (['call', 'emergency', 'make_call'].includes(actionType) && details.call_type === 'consignee_delay_alert') {
-      let rawConsigneePhone = details.consignee_phone || null
-      if (!rawConsigneePhone && details.consignee_name && client?.system_prompt) {
-        for (const line of client.system_prompt.split('\n')) {
-          if (line.toLowerCase().includes(details.consignee_name.toLowerCase())) {
-            rawConsigneePhone = extractPhoneNumber(line)
-            if (rawConsigneePhone) break
-          }
-        }
-      }
-      if (!rawConsigneePhone && client?.system_prompt) {
-        rawConsigneePhone = extractPhoneNumber(client.system_prompt)
-      }
+      // FIX 1: consignee calls prefer details.consignee_phone, then fall back to
+      // a phone extracted from client.system_prompt. Keeps the chain predictable.
+      const rawConsigneePhone = details.consignee_phone || extractPhoneNumber(client?.system_prompt)
       if (rawConsigneePhone) {
         const spokenReg = details.vehicle_reg ? details.vehicle_reg.replace(/\s/g, '').split('').join(', ') : null
         const spellOut = s => s ? s.replace(/[^a-zA-Z0-9]/g, '').split('').join(', ') : ''
@@ -359,8 +372,14 @@ export async function POST(request) {
           await sendSMS(driverPhone, `DisruptionHub OPS${details.ref ? ` — ${details.ref}` : ''}\n\nOps approved. ${details.consignee_name || 'Consignee'} being called automatically.\nContinue to destination.`).catch(() => {})
         }
 
+        const callSuccess = callResult.success && !callResult.simulated
+        await finalise(
+          callSuccess,
+          !callResult.success ? (callResult.error || 'twilio_call_failed') : callResult.simulated ? 'twilio_not_configured' : null,
+          callSuccess ? { twilio_sid: callResult.sid, twilio_status: callResult.status, consignee_phone: rawConsigneePhone } : null
+        )
         return Response.json({
-          success: true, action: 'executed',
+          success: true, action: callSuccess ? 'executed' : 'failed',
           call_result: callResult.success ? 'placed' : callResult.simulated ? 'simulated' : 'failed',
           consignee: details.consignee_name || rawConsigneePhone,
           driver_notified: !!driverPhone,
@@ -370,9 +389,10 @@ export async function POST(request) {
       // No consignee phone — notify driver, ops calls manually
       const driverPhone = await resolveDriverPhone()
       if (driverPhone) {
-        await sendSMS(driverPhone, `DisruptionHub OPS${details.ref ? ` — ${details.ref}` : ''}\n\nOps approved delay notification. No consignee phone on file — ops will call directly.\nContinue to destination.`).catch(() => {})
+        await sendSMS(driverPhone, `DisruptionHub OPS${details.ref ? ` — ${details.ref}` : ''}\n\nOps approved delay notification. No consignee phone on file — ops will call directly.\nContinue to destination.`).catch(err => console.error('driver fallback SMS failed:', err?.message))
       }
-      return Response.json({ success: true, action: 'executed', driver_notified: !!driverPhone, note: `No consignee phone for ${details.consignee_name || 'this delivery'} — call manually` })
+      await finalise(false, 'no_consignee_phone')
+      return Response.json({ success: true, action: 'failed', driver_notified: !!driverPhone, note: `No consignee phone for ${details.consignee_name || 'this delivery'} — call manually` })
     }
 
     // ── CALL / EMERGENCY / MAKE_CALL — Phase 3 voice call to carrier ────
@@ -406,9 +426,15 @@ export async function POST(request) {
           await sendSMS(resolvedDriverPhone, driverMsg).catch(() => {})
         }
 
+        const callSuccess = callResult.success && !callResult.simulated
+        await finalise(
+          callSuccess,
+          !callResult.success ? (callResult.error || 'twilio_call_failed') : callResult.simulated ? 'twilio_not_configured' : null,
+          callSuccess ? { twilio_sid: callResult.sid, twilio_status: callResult.status, carrier_phone: carrierPhone } : null
+        )
         return Response.json({
           success: true,
-          action: 'executed',
+          action: callSuccess ? 'executed' : 'failed',
           call_result: callResult.success ? 'placed' : callResult.simulated ? 'simulated' : 'failed',
           driver_notified: !!resolvedDriverPhone,
           phase: 3
@@ -420,12 +446,15 @@ export async function POST(request) {
       if (resolvedDriverPhone2) {
         const driverMsg = `DisruptionHub OPS${details.ref ? ` — ${details.ref}` : ''}\n\nOps has reviewed your situation. Action approved.\nHelp is being arranged.`
         const result = await sendSMS(resolvedDriverPhone2, driverMsg)
-        return Response.json({ success: true, action: 'executed', driver_notified: result.success, note: 'No carrier phone — driver notified directly' })
+        await finalise(false, 'no_carrier_phone_driver_notified_only')
+        return Response.json({ success: true, action: 'failed', driver_notified: result.success, note: 'No carrier phone — driver notified directly' })
       }
 
-      return Response.json({ success: true, action: 'executed', driver_notified: false, note: 'No carrier or driver phone — action manually' })
+      await finalise(false, 'no_carrier_or_driver_phone')
+      return Response.json({ success: true, action: 'failed', driver_notified: false, note: 'No carrier or driver phone — action manually' })
     }
 
+    await finalise(true)
     return Response.json({ success: true, action: 'executed' })
 
   } catch (error) {
