@@ -79,7 +79,7 @@ export async function POST(request) {
             severity: 'LOW',
             financial_impact: 0,
             ref: `ESCALATION-FAIL-${approval.id.substring(0,8)}`
-          }).catch(() => {})
+          }).catch(err => console.error('[escalate] incidents insert failed:', err?.message))
         }
       } catch (e) {
         summary.errors.push({ id: approval.id, error: e.message })

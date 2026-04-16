@@ -143,7 +143,7 @@ export async function POST(request) {
         const { data: approval } = await db.from('approvals').select('*').eq('id', approval_id).single()
         const driverPhone = approval?.action_details?.driver_phone
         if (driverPhone) {
-          await sendSMS(driverPhone, `DisruptionHub OPS${approval.action_details?.ref ? ` — ${approval.action_details.ref}` : ''}\n\nDISREGARD previous instruction. Continue on original planned route.`).catch(() => {})
+          await sendSMS(driverPhone, `DisruptionHub OPS${approval.action_details?.ref ? ` — ${approval.action_details.ref}` : ''}\n\nDISREGARD previous instruction. Continue on original planned route.`).catch(err => console.error('[approvals] sendSMS to driver failed:', err?.message))
         }
       }
 
@@ -369,7 +369,7 @@ export async function POST(request) {
 
         const driverPhone = await resolveDriverPhone()
         if (driverPhone) {
-          await sendSMS(driverPhone, `DisruptionHub OPS${details.ref ? ` — ${details.ref}` : ''}\n\nOps approved. ${details.consignee_name || 'Consignee'} being called automatically.\nContinue to destination.`).catch(() => {})
+          await sendSMS(driverPhone, `DisruptionHub OPS${details.ref ? ` — ${details.ref}` : ''}\n\nOps approved. ${details.consignee_name || 'Consignee'} being called automatically.\nContinue to destination.`).catch(err => console.error('[approvals] sendSMS to driver failed:', err?.message))
         }
 
         const callSuccess = callResult.success && !callResult.simulated
@@ -423,7 +423,7 @@ export async function POST(request) {
         const resolvedDriverPhone = await resolveDriverPhone()
         if (resolvedDriverPhone) {
           const driverMsg = `DisruptionHub OPS${details.ref ? ` — ${details.ref}` : ''}\n\nOps approved. Carrier being contacted.\nStay safe.`
-          await sendSMS(resolvedDriverPhone, driverMsg).catch(() => {})
+          await sendSMS(resolvedDriverPhone, driverMsg).catch(err => console.error('[approvals] sendSMS to driver failed:', err?.message))
         }
 
         const callSuccess = callResult.success && !callResult.simulated

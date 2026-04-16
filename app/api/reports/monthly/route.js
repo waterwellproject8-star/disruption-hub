@@ -124,7 +124,7 @@ export async function POST(request) {
     }
 
     // Save report
-    await db.from('monthly_reports').insert({ client_id, period:periodLabel, report_data:report, generated_at:now.toISOString() }).catch(()=>{})
+    await db.from('monthly_reports').insert({ client_id, period:periodLabel, report_data:report, generated_at:now.toISOString() }).catch(err => console.error('[monthly-report] insert failed:', err?.message))
 
     // SMS notification to ops manager
     if (client.contact_phone) {

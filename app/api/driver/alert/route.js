@@ -443,7 +443,7 @@ Provide immediate disruption analysis and action plan.`
               for (const s of (shipments || [])) {
                 if (s.eta) {
                   const revisedEta = new Date(new Date().getTime() + delayMins * 60000).toISOString()
-                  await db.from('shipments').update({ eta: revisedEta }).eq('client_id', client_id).eq('ref', s.ref).catch(() => {})
+                  await db.from('shipments').update({ eta: revisedEta }).eq('client_id', client_id).eq('ref', s.ref).catch(err => console.error('[alert] shipments ETA update failed:', err?.message))
                 }
               }
             }
