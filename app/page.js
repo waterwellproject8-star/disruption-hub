@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import DashboardPreview from '../components/DashboardPreview'
 import { motion } from 'framer-motion'
@@ -45,6 +45,27 @@ function HexMark({ size = 28 }) {
 export default function HomePage() {
 
   const [videoOpen, setVideoOpen] = useState(false)
+  const timelineRef = useRef(null)
+  const [tlStep, setTlStep] = useState(-1)
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          const delays = [0, 900, 700, 800, 700]
+          let cumulative = 300
+          delays.forEach((d, i) => {
+            cumulative += d
+            setTimeout(() => setTlStep(i), cumulative)
+          })
+          observer.disconnect()
+        }
+      },
+      { threshold: 0.3 }
+    )
+    if (timelineRef.current) observer.observe(timelineRef.current)
+    return () => observer.disconnect()
+  }, [])
 
   const handleMailto = (e) => {
     const href = e.currentTarget.getAttribute('href')
@@ -72,6 +93,10 @@ export default function HomePage() {
         @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
         @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
         @keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes tl-pulse { 0%{box-shadow:0 0 0 0 rgba(245,166,35,0.6)} 70%{box-shadow:0 0 0 10px rgba(245,166,35,0)} 100%{box-shadow:0 0 0 0 rgba(245,166,35,0)} }
+        @keyframes tl-pulse-red { 0%{box-shadow:0 0 0 0 rgba(239,68,68,0.6)} 70%{box-shadow:0 0 0 10px rgba(239,68,68,0)} 100%{box-shadow:0 0 0 0 rgba(239,68,68,0)} }
+        @keyframes tl-fill { from{width:0%} to{width:100%} }
+        @keyframes tl-fill-v { from{height:0%} to{height:100%} }
         @keyframes dot-travel { 0%{left:0} 100%{left:calc(100% - 6px)} }
         @keyframes marquee { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
         .ticker-track { animation: marquee 30s linear infinite; display:inline-flex; gap:48px; white-space:nowrap; }
@@ -119,6 +144,8 @@ export default function HomePage() {
           .how-grid { grid-template-columns: 1fr !important; }
           .how-connector { display: none !important; }
           .how-timeline-grid { grid-template-columns: 1fr !important; gap: 12px !important; }
+          .tl-desktop { display: none !important; }
+          .tl-mobile { display: flex !important; }
           .pricing-grid { grid-template-columns: 1fr !important; }
           .enterprise-card { flex-direction: column !important; align-items: stretch !important; }
           .enterprise-card .enterprise-divider { display: none !important; }
@@ -136,6 +163,11 @@ export default function HomePage() {
           .hero-badge { justify-content: center; }
           .dh-preview-section { padding: 48px 0px !important; }
           .dash-desktop-section { display: none !important; }
+        }
+        @media (min-width: 769px) {
+          .tl-desktop { display: block !important; }
+          .tl-mobile { display: none !important; }
+        }
         @media (max-width: 640px) {
           .founder-card { grid-template-columns: 80px 1fr !important; column-gap: 16px !important; padding: 28px 20px !important; }
           .founder-photo { grid-row: 1 !important; align-self: center; }
@@ -353,9 +385,9 @@ export default function HomePage() {
           }}>
             {/* ── Card 1: CONNECT ── */}
             <motion.div initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '-60px' }} transition={{ duration: 0.5, delay: 0 }}>
-            <div style={{ background: '#0a0c0e', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, padding: '32px 24px', position: 'relative' }}>
-              <div style={{ fontFamily: FF.mono, fontSize: 10, color: '#4a5260', letterSpacing: '0.15em', marginBottom: 12 }}>01</div>
-              <div style={{ marginBottom: 16 }}>
+            <div style={{ background: '#0a0c0e', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, padding: '32px 24px', position: 'relative', overflow: 'hidden' }}>
+              <div style={{ position: 'absolute', top: 12, right: 16, fontFamily: 'monospace', fontSize: 64, fontWeight: 900, color: 'rgba(245,166,35,0.08)', lineHeight: 1, zIndex: 0 }}>01</div>
+              <div style={{ marginBottom: 16, position: 'relative', zIndex: 1 }}>
                 <svg width="28" height="28" viewBox="0 0 18 18"><polygon points="9,1 17,5 17,13 9,17 1,13 1,5" fill="#f5a623"/></svg>
               </div>
               <h3 style={{ fontFamily: FF.condensed, fontSize: 22, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#fff', marginBottom: 12 }}>Connect</h3>
@@ -384,9 +416,9 @@ export default function HomePage() {
 
             {/* ── Card 2: ANALYSE ── */}
             <motion.div initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '-60px' }} transition={{ duration: 0.5, delay: 0.15 }}>
-            <div style={{ background: '#0a0c0e', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, padding: '32px 24px', position: 'relative' }}>
-              <div style={{ fontFamily: FF.mono, fontSize: 10, color: '#4a5260', letterSpacing: '0.15em', marginBottom: 12 }}>02</div>
-              <div style={{ marginBottom: 16 }}>
+            <div style={{ background: '#0a0c0e', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, padding: '32px 24px', position: 'relative', overflow: 'hidden' }}>
+              <div style={{ position: 'absolute', top: 12, right: 16, fontFamily: 'monospace', fontSize: 64, fontWeight: 900, color: 'rgba(245,166,35,0.08)', lineHeight: 1, zIndex: 0 }}>02</div>
+              <div style={{ marginBottom: 16, position: 'relative', zIndex: 1 }}>
                 <svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="#f5a623" strokeWidth="1.5" strokeLinecap="round">
                   <rect x="3" y="5" width="22" height="16" rx="2"/>
                   <circle cx="22" cy="8" r="3" fill="#ef4444" stroke="none"/>
@@ -419,9 +451,9 @@ export default function HomePage() {
 
             {/* ── Card 3: DECIDE ── */}
             <motion.div initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '-60px' }} transition={{ duration: 0.5, delay: 0.3 }}>
-            <div style={{ background: '#0a0c0e', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, padding: '32px 24px', position: 'relative' }}>
-              <div style={{ fontFamily: FF.mono, fontSize: 10, color: '#4a5260', letterSpacing: '0.15em', marginBottom: 12 }}>03</div>
-              <div style={{ marginBottom: 16 }}>
+            <div style={{ background: '#0a0c0e', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, padding: '32px 24px', position: 'relative', overflow: 'hidden' }}>
+              <div style={{ position: 'absolute', top: 12, right: 16, fontFamily: 'monospace', fontSize: 64, fontWeight: 900, color: 'rgba(245,166,35,0.08)', lineHeight: 1, zIndex: 0 }}>03</div>
+              <div style={{ marginBottom: 16, position: 'relative', zIndex: 1 }}>
                 <svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="#f5a623" strokeWidth="1.5" strokeLinecap="round">
                   <rect x="8" y="2" width="12" height="24" rx="2"/>
                   <line x1="11" y1="22" x2="17" y2="22"/>
@@ -442,28 +474,72 @@ export default function HomePage() {
             </motion.div>
           </div>
 
-          {/* ── TIMELINE STRIP ── */}
-          <div style={{ marginTop: 56, padding: '32px 24px', background: '#0a0c0e', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8 }}>
-            <div style={{ fontFamily: FF.mono, fontSize: 10, color: '#4a5260', letterSpacing: '0.1em', marginBottom: 20, textAlign: 'center' }}>REAL SCENARIO — 2:30AM REEFER FAULT ON M62</div>
-            <div className="how-timeline-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 0, position: 'relative' }}>
-              {/* Connector line behind nodes */}
-              <div style={{ position: 'absolute', top: 15, left: '10%', right: '10%', height: 1, background: 'rgba(255,255,255,0.07)', zIndex: 0 }} />
-              {[
-                { icon: '!', bg: '#ef4444', time: '02:31', label: 'Fault detected — Webfleet webhook' },
-                { icon: 'AI', bg: '#f5a623', time: '+3s', label: 'AI analyses — action plan built' },
-                { icon: 'SMS', bg: '#f5a623', time: '+8s', label: 'Ops notified — full brief sent' },
-                { icon: 'YES', bg: '#f5a623', time: '+28s', label: 'Approved — one reply from bed' },
-                { icon: '✓', bg: '#00e5b0', time: '+30s', label: 'Resolved — SLA protected' },
-              ].map((n, i) => (
-                <motion.div key={i} initial={{ opacity: 0, scale: 0.8 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ duration: 0.35, delay: i * 0.12 }}
-                  style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, position: 'relative', zIndex: 1 }}>
-                  <div style={{ width: 30, height: 30, borderRadius: '50%', background: n.bg, color: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: FF.mono, fontSize: 9, fontWeight: 700 }}>{n.icon}</div>
-                  <div style={{ fontFamily: FF.mono, fontSize: 11, color: '#e8eaed', fontWeight: 600 }}>{n.time}</div>
-                  <div style={{ fontFamily: FF.mono, fontSize: 10, color: '#8a9099', textAlign: 'center', lineHeight: 1.5, maxWidth: 140 }}>{n.label}</div>
-                </motion.div>
-              ))}
-            </div>
-          </div>
+          {/* ── ANIMATED TIMELINE ── */}
+          {(() => {
+            const steps = [
+              { dot: '!', pulse: 'tl-pulse-red', activeColor: '#ef4444', activeBg: 'rgba(239,68,68,0.15)', time: '02:31', label: 'Fault detected', sub: 'Webfleet webhook' },
+              { dot: 'AI', pulse: 'tl-pulse', activeColor: '#f5a623', activeBg: 'rgba(245,166,35,0.15)', time: '+3s', label: 'AI analyses', sub: 'Action plan built' },
+              { dot: 'SMS', pulse: 'tl-pulse', activeColor: '#f5a623', activeBg: 'rgba(245,166,35,0.15)', time: '+8s', label: 'Ops notified', sub: 'Full brief sent' },
+              { dot: 'YES', pulse: 'tl-pulse', activeColor: '#f5a623', activeBg: 'rgba(245,166,35,0.15)', time: '+28s', label: 'Approved', sub: 'One reply from bed' },
+              { dot: '✓', pulse: 'tl-pulse', activeColor: '#00e5b0', activeBg: 'rgba(0,229,176,0.12)', time: '+30s', label: 'Resolved', sub: 'SLA protected' },
+            ]
+            const nodeStyle = (i) => {
+              if (tlStep > i) return { background: 'rgba(0,229,176,0.12)', border: '2px solid #00e5b0', color: '#00e5b0' }
+              if (tlStep === i) return { background: steps[i].activeBg, border: `2px solid ${steps[i].activeColor}`, color: steps[i].activeColor, animation: `${steps[i].pulse} 1.5s infinite` }
+              return { background: '#111418', border: '2px solid rgba(255,255,255,0.08)', color: '#4a5260' }
+            }
+            return (
+              <div ref={timelineRef} style={{ marginTop: 56, padding: '32px 24px', background: '#0a0c0e', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8 }}>
+                <div style={{ fontFamily: FF.mono, fontSize: 10, color: '#4a5260', letterSpacing: '0.1em', marginBottom: 20, textAlign: 'center' }}>REAL SCENARIO — 2:30AM REEFER FAULT ON M62</div>
+
+                {/* DESKTOP */}
+                <div className="tl-desktop">
+                  <div style={{ display: 'flex', alignItems: 'center' }}>
+                    {steps.map((s, i) => (
+                      <div key={i} style={{ display: 'contents' }}>
+                        <div style={{ width: 44, height: 44, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: FF.mono, fontSize: 10, fontWeight: 700, flexShrink: 0, transition: 'all 0.4s', ...nodeStyle(i) }}>{s.dot}</div>
+                        {i < steps.length - 1 && (
+                          <div style={{ flex: 1, height: 2, background: 'rgba(255,255,255,0.07)', position: 'relative', overflow: 'hidden' }}>
+                            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to right, #00e5b0, #f5a623)', width: tlStep > i ? '100%' : '0%', transition: 'width 0.6s ease-out' }} />
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{ display: 'flex', marginTop: 12 }}>
+                    {steps.map((s, i) => (
+                      <div key={i} style={{ flex: 1, textAlign: 'center' }}>
+                        <div style={{ fontFamily: FF.mono, fontSize: 12, color: tlStep >= i ? '#e8eaed' : '#4a5260', fontWeight: 600, transition: 'color 0.3s' }}>{s.time}</div>
+                        <div style={{ fontFamily: FF.mono, fontSize: 10, color: tlStep >= i ? '#8a9099' : '#4a5260', marginTop: 2, transition: 'color 0.3s' }}>{s.label}</div>
+                        <div style={{ fontFamily: FF.mono, fontSize: 9, color: '#4a5260', marginTop: 1 }}>{s.sub}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* MOBILE */}
+                <div className="tl-mobile" style={{ display: 'none', flexDirection: 'column', gap: 0 }}>
+                  {steps.map((s, i) => (
+                    <div key={i} style={{ display: 'flex', gap: 14, alignItems: 'flex-start' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                        <div style={{ width: 36, height: 36, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: FF.mono, fontSize: 9, fontWeight: 700, flexShrink: 0, transition: 'all 0.4s', ...nodeStyle(i) }}>{s.dot}</div>
+                        {i < steps.length - 1 && (
+                          <div style={{ width: 2, flex: 1, minHeight: 24, margin: '4px auto', background: 'rgba(255,255,255,0.07)', position: 'relative', overflow: 'hidden' }}>
+                            <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', background: 'linear-gradient(to bottom, #00e5b0, #f5a623)', height: tlStep > i ? '100%' : '0%', transition: 'height 0.6s ease-out' }} />
+                          </div>
+                        )}
+                      </div>
+                      <div style={{ paddingTop: 6 }}>
+                        <div style={{ fontFamily: FF.mono, fontSize: 12, color: tlStep >= i ? '#e8eaed' : '#4a5260', fontWeight: 600, transition: 'color 0.3s' }}>{s.time}</div>
+                        <div style={{ fontFamily: FF.mono, fontSize: 11, color: tlStep >= i ? '#8a9099' : '#4a5260', transition: 'color 0.3s' }}>{s.label}</div>
+                        <div style={{ fontFamily: FF.mono, fontSize: 9, color: '#4a5260', marginTop: 1, marginBottom: 8 }}>{s.sub}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )
+          })()}
         </div>
       </section>
 
