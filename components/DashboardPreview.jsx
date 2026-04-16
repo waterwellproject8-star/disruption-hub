@@ -192,7 +192,6 @@ export default function DashboardPreview() {
             }}>
               <ActionBtn label="APPROVE" color={C.teal} />
               <ActionBtn label="REJECT" color={C.red} />
-              <ActionBtn label="ESCALATE" color={C.amber} />
             </div>
           </div>
         </div>
