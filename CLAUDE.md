@@ -295,7 +295,18 @@ Environment: copy needed variables from Section 5 into `.env.local` at the proje
 
 ---
 
-## 11. When In Doubt
+## 11. UI/UX Standards
+
+1. **Outcome-driven components.** Every section, card, or panel must answer: *what changes for the user?* If a component doesn't drive a decision, surface a metric, or trigger an action, it doesn't belong on the page.
+2. **8px base grid.** All spacing (padding, margin, gap) must be a multiple of 8px. Permitted values: 4 (half-unit for tight inner padding only), 8, 16, 24, 32, 40, 48, 56, 64. No arbitrary pixel values.
+3. **Typography hierarchy.** Headlines: `Barlow Condensed` weight 900, uppercase, letter-spacing `0.04em`. Body text: `Barlow` weight 400–500. Monospace labels: `IBM Plex Mono`. Never mix additional font families.
+4. **Amber accent — CTAs and key highlights only.** Primary accent `#f5a623` is reserved for: call-to-action buttons, active tab indicators, severity/financial figures, and the HexMark logo glow. Do not use amber for body text, borders, or decorative elements. Secondary text uses `#8a9099` (dim) or `#4a5260` (faint).
+5. **Dark backgrounds — two values only.** Page background: `#0a0c0e`. Card/panel background: `#111418`. No other background colours except `transparent` and the amber accent on buttons. No generic gradients — the only permitted gradient is the hero overlay defined in `app/page.js`.
+6. **Product UI above the fold.** The live product interface (dashboard screenshot, interactive demo, or real feed) must be visible within the first scroll on desktop (≤ 900px from top). Never lead with a wall of text or stock imagery before showing the product.
+
+---
+
+## 12. When In Doubt
 
 - Read the file before changing it. Do not refactor code you have not read.
 - Do not add speculative features, logging, or abstractions beyond what the task asks.
