@@ -672,8 +672,8 @@ export default function HomePage() {
               ))}
             </div>
 
-          </div>
           </motion.div>
+          </div>
 
           {/* ENTERPRISE — full width below the 4-column grid */}
           <div className="pricing-card enterprise-card" style={{
