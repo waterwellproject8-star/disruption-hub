@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import TypewriterText from '../components/TypewriterText'
 import AnimatedStat from '../components/AnimatedStat'
 import ScrambleText from '../components/ScrambleText'
+import GlitchText from '../components/GlitchText'
 
 // ── DESIGN TOKENS ─────────────────────────────────────────────────────────────
 const T = {
@@ -111,6 +112,7 @@ export default function HomePage() {
         html { scroll-behavior: smooth; }
         @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
         @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+        @keyframes dh-glitch { 0%{transform:translate(0);opacity:1;color:#fff} 10%{transform:translate(-3px,1px);opacity:0.8;color:#f5a623} 20%{transform:translate(3px,-1px);opacity:1;color:#fff} 30%{transform:translate(-2px,2px);opacity:0.9;color:#f5a623} 40%{transform:translate(2px,-2px);opacity:1;color:#fff} 50%{transform:translate(-1px,1px);clip-path:inset(30% 0 20% 0);color:#f5a623} 60%{transform:translate(1px,-1px);clip-path:inset(0);opacity:0.95;color:#fff} 70%{transform:translate(-2px,0);opacity:1;color:#fff} 85%{transform:translate(1px,0);color:#f5a623} 100%{transform:translate(0);opacity:1;color:#fff} }
         @keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
         @keyframes tl-pulse { 0%{box-shadow:0 0 0 0 rgba(245,166,35,0.6)} 70%{box-shadow:0 0 0 10px rgba(245,166,35,0)} 100%{box-shadow:0 0 0 0 rgba(245,166,35,0)} }
         @keyframes tl-pulse-red { 0%{box-shadow:0 0 0 0 rgba(239,68,68,0.6)} 70%{box-shadow:0 0 0 10px rgba(239,68,68,0)} 100%{box-shadow:0 0 0 0 rgba(239,68,68,0)} }
@@ -281,12 +283,12 @@ export default function HomePage() {
             letterSpacing: '-0.01em', textTransform: 'uppercase',
             color: '#fff', marginBottom: 28,
           }}>
-            <ScrambleText text="Your Ops Never Sleep." delay={300} speed={35} />
+            <GlitchText text="Your Ops Never Sleep." delay={400} />
             <span style={{
               color: T.amber, display: 'block',
               textShadow: '0 0 30px rgba(245,166,35,0.65), 0 0 60px rgba(245,166,35,0.3), 0 0 100px rgba(245,166,35,0.15)',
             }}>
-              <ScrambleText text="Neither Does Ours." delay={800} speed={35} />
+              <GlitchText text="Neither Does Ours." delay={900} />
             </span>
           </h1>
 
