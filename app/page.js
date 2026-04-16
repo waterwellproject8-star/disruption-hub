@@ -9,7 +9,7 @@ import TypewriterText from '../components/TypewriterText'
 const T = {
   navy:       '#080c14',
   navyMid:    '#0d1420',
-  navyCard:   '#0f1826',
+  navyCard:   '#111418',
   navyRow:    '#111927',
   amber:      '#f5a623',
   amberBright:'#ffb733',
