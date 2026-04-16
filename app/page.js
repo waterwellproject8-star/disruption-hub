@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import DashboardPreview from '../components/DashboardPreview'
+import { motion } from 'framer-motion'
 
 // ── DESIGN TOKENS ─────────────────────────────────────────────────────────────
 const T = {
@@ -326,27 +327,30 @@ export default function HomePage() {
       {/* ── HOW IT WORKS ─────────────────────────────────────────────────────── */}
       <section id="how" style={{ background: '#0a0c0e', padding: '100px 40px' }}>
         <div style={{ maxWidth: 1100, margin: '0 auto' }}>
-          <div style={{
-            fontFamily: FF.mono, fontSize: 11, fontWeight: 600,
-            letterSpacing: '0.2em', textTransform: 'uppercase',
-            color: T.amber, textAlign: 'center', marginBottom: 16,
-          }}>
-            How It Works
-          </div>
-          <h2 style={{
-            fontFamily: FF.condensed, fontSize: 'clamp(32px, 4vw, 48px)',
-            fontWeight: 800, textTransform: 'uppercase',
-            letterSpacing: '0.02em', color: '#fff',
-            textAlign: 'center', marginBottom: 64,
-          }}>
-            Three Steps. Thirty Seconds.
-          </h2>
+          <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.4 }}>
+            <div style={{
+              fontFamily: FF.mono, fontSize: 11, fontWeight: 600,
+              letterSpacing: '0.2em', textTransform: 'uppercase',
+              color: T.amber, textAlign: 'center', marginBottom: 16,
+            }}>
+              How It Works
+            </div>
+            <h2 style={{
+              fontFamily: FF.condensed, fontSize: 'clamp(32px, 4vw, 48px)',
+              fontWeight: 800, textTransform: 'uppercase',
+              letterSpacing: '0.02em', color: '#fff',
+              textAlign: 'center', marginBottom: 64,
+            }}>
+              Three Steps. Thirty Seconds.
+            </h2>
+          </motion.div>
 
           <div className="how-grid" style={{
             display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)',
             gap: 24, position: 'relative', alignItems: 'start',
           }}>
             {/* ── Card 1: CONNECT ── */}
+            <motion.div initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '-60px' }} transition={{ duration: 0.5, delay: 0 }}>
             <div style={{ background: '#0a0c0e', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, padding: '32px 24px', position: 'relative' }}>
               <div style={{ fontFamily: FF.mono, fontSize: 10, color: '#4a5260', letterSpacing: '0.15em', marginBottom: 12 }}>01</div>
               <div style={{ marginBottom: 16 }}>
@@ -369,6 +373,7 @@ export default function HomePage() {
                 ))}
               </div>
             </div>
+            </motion.div>
 
             {/* ── Connector 1 ── */}
             <div className="how-connector" style={{ position: 'absolute', left: 'calc(33.33% - 12px)', top: 80, width: 24, height: 2, background: 'rgba(255,255,255,0.07)', zIndex: 2 }}>
@@ -376,6 +381,7 @@ export default function HomePage() {
             </div>
 
             {/* ── Card 2: ANALYSE ── */}
+            <motion.div initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '-60px' }} transition={{ duration: 0.5, delay: 0.15 }}>
             <div style={{ background: '#0a0c0e', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, padding: '32px 24px', position: 'relative' }}>
               <div style={{ fontFamily: FF.mono, fontSize: 10, color: '#4a5260', letterSpacing: '0.15em', marginBottom: 12 }}>02</div>
               <div style={{ marginBottom: 16 }}>
@@ -402,6 +408,7 @@ export default function HomePage() {
                 ))}
               </div>
             </div>
+            </motion.div>
 
             {/* ── Connector 2 ── */}
             <div className="how-connector" style={{ position: 'absolute', left: 'calc(66.66% - 12px)', top: 80, width: 24, height: 2, background: 'rgba(255,255,255,0.07)', zIndex: 2 }}>
@@ -409,6 +416,7 @@ export default function HomePage() {
             </div>
 
             {/* ── Card 3: DECIDE ── */}
+            <motion.div initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '-60px' }} transition={{ duration: 0.5, delay: 0.3 }}>
             <div style={{ background: '#0a0c0e', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, padding: '32px 24px', position: 'relative' }}>
               <div style={{ fontFamily: FF.mono, fontSize: 10, color: '#4a5260', letterSpacing: '0.15em', marginBottom: 12 }}>03</div>
               <div style={{ marginBottom: 16 }}>
@@ -429,6 +437,7 @@ export default function HomePage() {
                 </div>
               </div>
             </div>
+            </motion.div>
           </div>
 
           {/* ── TIMELINE STRIP ── */}
@@ -444,11 +453,12 @@ export default function HomePage() {
                 { icon: 'YES', bg: '#f5a623', time: '+28s', label: 'Approved — one reply from bed' },
                 { icon: '✓', bg: '#00e5b0', time: '+30s', label: 'Resolved — SLA protected' },
               ].map((n, i) => (
-                <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, position: 'relative', zIndex: 1 }}>
+                <motion.div key={i} initial={{ opacity: 0, scale: 0.8 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ duration: 0.35, delay: i * 0.12 }}
+                  style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, position: 'relative', zIndex: 1 }}>
                   <div style={{ width: 30, height: 30, borderRadius: '50%', background: n.bg, color: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: FF.mono, fontSize: 9, fontWeight: 700 }}>{n.icon}</div>
                   <div style={{ fontFamily: FF.mono, fontSize: 11, color: '#e8eaed', fontWeight: 600 }}>{n.time}</div>
                   <div style={{ fontFamily: FF.mono, fontSize: 10, color: '#8a9099', textAlign: 'center', lineHeight: 1.5, maxWidth: 140 }}>{n.label}</div>
-                </div>
+                </motion.div>
               ))}
             </div>
           </div>
@@ -463,20 +473,22 @@ export default function HomePage() {
         background: '#0a0c0e',
       }}>
         <div style={{ maxWidth: 1000, margin: '0 auto' }}>
-          <div style={{
-            fontFamily: FF.mono, fontSize: 11, fontWeight: 600,
-            letterSpacing: '0.2em', textTransform: 'uppercase',
-            color: T.amber, textAlign: 'center', marginBottom: 16,
-          }}>
-            Simple Pricing
-          </div>
-          <h2 style={{
-            fontFamily: FF.condensed, fontSize: 'clamp(32px, 4vw, 48px)',
-            fontWeight: 800, textTransform: 'uppercase',
-            color: '#fff', textAlign: 'center', marginBottom: 56,
-          }}>
-            Start Small. Scale Fast.
-          </h2>
+          <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.4 }}>
+            <div style={{
+              fontFamily: FF.mono, fontSize: 11, fontWeight: 600,
+              letterSpacing: '0.2em', textTransform: 'uppercase',
+              color: T.amber, textAlign: 'center', marginBottom: 16,
+            }}>
+              Simple Pricing
+            </div>
+            <h2 style={{
+              fontFamily: FF.condensed, fontSize: 'clamp(32px, 4vw, 48px)',
+              fontWeight: 800, textTransform: 'uppercase',
+              color: '#fff', textAlign: 'center', marginBottom: 56,
+            }}>
+              Start Small. Scale Fast.
+            </h2>
+          </motion.div>
 
           <div className="pricing-grid" style={{
             display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)',
@@ -484,6 +496,7 @@ export default function HomePage() {
           }}>
 
             {/* PILOT */}
+            <motion.div initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '-60px' }} transition={{ duration: 0.5, delay: 0 }}>
             <div className="pricing-card" style={{
               background: T.navyCard,
               border: `1px solid ${T.border}`,
@@ -525,8 +538,10 @@ export default function HomePage() {
                 </div>
               ))}
             </div>
+            </motion.div>
 
             {/* FOUNDING COHORT — highlighted */}
+            <motion.div initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '-60px' }} transition={{ duration: 0.5, delay: 0.1 }}>
             <div className="pricing-card" style={{
               background: `linear-gradient(135deg, ${T.navyCard}, rgba(245,166,35,0.04))`,
               border: `1px solid ${T.amberBorder}`,
@@ -573,8 +588,10 @@ export default function HomePage() {
                 5 founding spots — once filled, this rate closes permanently. No exceptions.
               </div>
             </div>
+            </motion.div>
 
             {/* STANDARD */}
+            <motion.div initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '-60px' }} transition={{ duration: 0.5, delay: 0.2 }}>
             <div className="pricing-card" style={{
               background: T.navyCard,
               border: `1px solid ${T.border}`,
@@ -609,8 +626,10 @@ export default function HomePage() {
                 </div>
               ))}
             </div>
+            </motion.div>
 
             {/* GROWTH */}
+            <motion.div initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '-60px' }} transition={{ duration: 0.5, delay: 0.3 }}>
             <div className="pricing-card" style={{
               background: T.navyCard,
               border: `1px solid ${T.border}`,
@@ -654,6 +673,7 @@ export default function HomePage() {
             </div>
 
           </div>
+          </motion.div>
 
           {/* ENTERPRISE — full width below the 4-column grid */}
           <div className="pricing-card enterprise-card" style={{
@@ -708,7 +728,10 @@ export default function HomePage() {
             </a>
           </div>
 
+          <div style={{ height: '2px', marginTop: 64, background: 'linear-gradient(to right, rgba(245,166,35,0.03), rgba(245,166,35,0.4), rgba(245,166,35,0.03))' }} />
+
           {/* ── FOUNDER ────────────────────────────────────────────────────── */}
+          <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.4 }}>
           <div className="founder-card founder-grid" style={{
             marginTop: 72, marginBottom: 64,
             padding: '40px 32px',
@@ -812,6 +835,7 @@ export default function HomePage() {
               </div>
             </div>
           </div>
+          </motion.div>
 
           {/* Main CTA */}
           <div style={{ textAlign: 'center' }}>
