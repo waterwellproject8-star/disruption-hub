@@ -49,22 +49,40 @@ export default function HomePage() {
   const [tlStep, setTlStep] = useState(-1)
 
   useEffect(() => {
+    const delays = [0, 900, 700, 800, 700]
+    let timeouts = []
+
+    function runSequence() {
+      setTlStep(-1)
+      let cumulative = 400
+      delays.forEach((d, i) => {
+        cumulative += d
+        const t = setTimeout(() => {
+          setTlStep(i)
+          if (i === delays.length - 1) {
+            const reset = setTimeout(runSequence, 2000)
+            timeouts.push(reset)
+          }
+        }, cumulative)
+        timeouts.push(t)
+      })
+    }
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          const delays = [0, 900, 700, 800, 700]
-          let cumulative = 300
-          delays.forEach((d, i) => {
-            cumulative += d
-            setTimeout(() => setTlStep(i), cumulative)
-          })
+          runSequence()
           observer.disconnect()
         }
       },
       { threshold: 0.3 }
     )
     if (timelineRef.current) observer.observe(timelineRef.current)
-    return () => observer.disconnect()
+
+    return () => {
+      timeouts.forEach(t => clearTimeout(t))
+      observer.disconnect()
+    }
   }, [])
 
   const handleMailto = (e) => {
@@ -386,7 +404,7 @@ export default function HomePage() {
             {/* ── Card 1: CONNECT ── */}
             <motion.div initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '-60px' }} transition={{ duration: 0.5, delay: 0 }}>
             <div style={{ background: '#0a0c0e', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, padding: '32px 24px', position: 'relative', overflow: 'hidden' }}>
-              <div style={{ position: 'absolute', top: 12, right: 16, fontFamily: 'monospace', fontSize: 64, fontWeight: 900, color: 'rgba(245,166,35,0.18)', lineHeight: 1, zIndex: 0 }}>01</div>
+              <div style={{ position: 'absolute', top: 12, right: 16, fontFamily: 'monospace', fontSize: 64, fontWeight: 900, color: 'rgba(245,166,35,0.35)', lineHeight: 1, zIndex: 0 }}>01</div>
               <div style={{ marginBottom: 16, position: 'relative', zIndex: 1 }}>
                 <svg width="28" height="28" viewBox="0 0 18 18"><polygon points="9,1 17,5 17,13 9,17 1,13 1,5" fill="#f5a623"/></svg>
               </div>
@@ -417,7 +435,7 @@ export default function HomePage() {
             {/* ── Card 2: ANALYSE ── */}
             <motion.div initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '-60px' }} transition={{ duration: 0.5, delay: 0.15 }}>
             <div style={{ background: '#0a0c0e', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, padding: '32px 24px', position: 'relative', overflow: 'hidden' }}>
-              <div style={{ position: 'absolute', top: 12, right: 16, fontFamily: 'monospace', fontSize: 64, fontWeight: 900, color: 'rgba(245,166,35,0.18)', lineHeight: 1, zIndex: 0 }}>02</div>
+              <div style={{ position: 'absolute', top: 12, right: 16, fontFamily: 'monospace', fontSize: 64, fontWeight: 900, color: 'rgba(245,166,35,0.35)', lineHeight: 1, zIndex: 0 }}>02</div>
               <div style={{ marginBottom: 16, position: 'relative', zIndex: 1 }}>
                 <svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="#f5a623" strokeWidth="1.5" strokeLinecap="round">
                   <rect x="3" y="5" width="22" height="16" rx="2"/>
@@ -452,7 +470,7 @@ export default function HomePage() {
             {/* ── Card 3: DECIDE ── */}
             <motion.div initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '-60px' }} transition={{ duration: 0.5, delay: 0.3 }}>
             <div style={{ background: '#0a0c0e', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, padding: '32px 24px', position: 'relative', overflow: 'hidden' }}>
-              <div style={{ position: 'absolute', top: 12, right: 16, fontFamily: 'monospace', fontSize: 64, fontWeight: 900, color: 'rgba(245,166,35,0.18)', lineHeight: 1, zIndex: 0 }}>03</div>
+              <div style={{ position: 'absolute', top: 12, right: 16, fontFamily: 'monospace', fontSize: 64, fontWeight: 900, color: 'rgba(245,166,35,0.35)', lineHeight: 1, zIndex: 0 }}>03</div>
               <div style={{ marginBottom: 16, position: 'relative', zIndex: 1 }}>
                 <svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="#f5a623" strokeWidth="1.5" strokeLinecap="round">
                   <rect x="8" y="2" width="12" height="24" rx="2"/>
