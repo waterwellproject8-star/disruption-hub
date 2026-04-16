@@ -811,26 +811,6 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div style={{ textAlign: 'center', marginTop: 40 }}>
-            <p style={{ fontSize: 14, color: '#8a9099', marginBottom: 16, fontStyle: 'italic' }}>
-              &ldquo;In a 1–2% margin industry, one lost Tesco contract ends a business. DisruptionHub exists so that doesn&rsquo;t happen.&rdquo;
-            </p>
-            <a
-              href="mailto:hello@disruptionhub.ai?subject=Book a call"
-              onClick={handleMailto}
-              style={{
-                display: 'inline-block',
-                background: '#f5a623', color: '#000',
-                fontFamily: 'monospace', fontWeight: 700,
-                fontSize: 13, padding: '14px 40px',
-                borderRadius: 6, textDecoration: 'none',
-                letterSpacing: '0.05em'
-              }}
-            >
-              BOOK A CALL →
-            </a>
-          </div>
-
           <div style={{ height: '2px', marginTop: 64, background: 'linear-gradient(to right, rgba(245,166,35,0.03), rgba(245,166,35,0.4), rgba(245,166,35,0.03))' }} />
 
           {/* ── FOUNDER ────────────────────────────────────────────────────── */}
@@ -943,11 +923,18 @@ export default function HomePage() {
           {/* Main CTA */}
           <div style={{ textAlign: 'center' }}>
             <a
-              className="btn-cta-large amber-btn-glow"
-              href="mailto:hello@disruptionhub.ai?subject=Onboarding call request — DisruptionHub pilot&body=Hi, I'd like to book my onboarding call to start the £149 pilot."
+              href="mailto:hello@disruptionhub.ai?subject=Onboarding call — DisruptionHub&body=Hi, I'd like to book my onboarding call to start the £149 pilot."
               onClick={handleMailto}
+              style={{
+                display: 'inline-block',
+                background: '#f5a623', color: '#000',
+                fontFamily: 'monospace', fontWeight: 700,
+                fontSize: 13, padding: '14px 40px',
+                borderRadius: 6, textDecoration: 'none',
+                letterSpacing: '0.05em',
+              }}
             >
-              Book Your Onboarding Call
+              BOOK YOUR ONBOARDING CALL →
             </a>
             <div style={{
               marginTop: 14, fontFamily: FF.mono, fontSize: 11,
