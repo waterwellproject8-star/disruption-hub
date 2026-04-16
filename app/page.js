@@ -3,6 +3,8 @@ import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import TypewriterText from '../components/TypewriterText'
+import AnimatedStat from '../components/AnimatedStat'
+import ScrambleText from '../components/ScrambleText'
 
 // ── DESIGN TOKENS ─────────────────────────────────────────────────────────────
 const T = {
@@ -279,12 +281,12 @@ export default function HomePage() {
             letterSpacing: '-0.01em', textTransform: 'uppercase',
             color: '#fff', marginBottom: 28,
           }}>
-            Your Ops Never Sleep.
+            <ScrambleText text="Your Ops Never Sleep." delay={300} speed={35} />
             <span style={{
               color: T.amber, display: 'block',
               textShadow: '0 0 30px rgba(245,166,35,0.65), 0 0 60px rgba(245,166,35,0.3), 0 0 100px rgba(245,166,35,0.15)',
             }}>
-              Neither Does Ours.
+              <ScrambleText text="Neither Does Ours." delay={800} speed={35} />
             </span>
           </h1>
 
