@@ -339,7 +339,7 @@ export async function POST(request) {
     }
 
     // ── OPEN ────────────────────────────────────────────────────────────────
-    if (body === 'OPEN') return twimlReply(`DH: Dashboard -> ${appUrl}/unlock`)
+    if (body === 'OPEN') return twimlReply(`DH: Dashboard -> ${appUrl}/ops-9x7k`)
 
     // ── STATUS ──────────────────────────────────────────────────────────────
     if (body === 'STATUS') {
