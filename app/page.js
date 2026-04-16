@@ -1,7 +1,7 @@
 'use client'
 import { useState } from 'react'
 import Link from 'next/link'
-import DashboardPreview from '@/components/DashboardPreview'
+import DashboardPreview from '../components/DashboardPreview'
 
 // ── DESIGN TOKENS ─────────────────────────────────────────────────────────────
 const T = {
