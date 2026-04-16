@@ -3,6 +3,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import DashboardPreview from '../components/DashboardPreview'
 import { motion } from 'framer-motion'
+import TypewriterText from '../components/TypewriterText'
 
 // ── DESIGN TOKENS ─────────────────────────────────────────────────────────────
 const T = {
@@ -69,6 +70,7 @@ export default function HomePage() {
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html { scroll-behavior: smooth; }
         @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
         @keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
         @keyframes dot-travel { 0%{left:0} 100%{left:calc(100% - 6px)} }
         @keyframes marquee { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
@@ -240,7 +242,7 @@ export default function HomePage() {
             maxWidth: 520, margin: '0 0 44px',
             lineHeight: 1.7, fontWeight: 400,
           }}>
-            It's 2:30am. A reefer fault hits on the M62. Your ops manager gets one SMS — approve or reject in 30 seconds — and goes back to sleep. Driver instructed. Recovery dispatched. SLA protected.
+            <TypewriterText text="It's 2:30am. A reefer fault hits on the M62. One SMS. One tap. Back to sleep." speed={28} delay={600} />
           </p>
 
           {/* CTAs */}
