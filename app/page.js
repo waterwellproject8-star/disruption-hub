@@ -133,10 +133,6 @@ export default function HomePage() {
           .hero-badge { justify-content: center; }
           .dh-preview-section { padding: 48px 0px !important; }
           .dash-desktop-section { display: none !important; }
-          .dash-mobile-note { display: flex !important; }
-        }
-        @media (min-width: 769px) {
-          .dash-mobile-note { display: none !important; }
         @media (max-width: 640px) {
           .founder-card { grid-template-columns: 80px 1fr !important; column-gap: 16px !important; padding: 28px 20px !important; }
           .founder-photo { grid-row: 1 !important; align-self: center; }
@@ -145,6 +141,9 @@ export default function HomePage() {
           .founder-meta h3 { font-size: 24px !important; }
           .founder-body { grid-column: 1 / span 2 !important; grid-row: 2 !important; margin-top: 24px !important; }
           .founder-body p { font-size: 14px !important; }
+          .founder-grid { display: flex !important; flex-direction: column !important; align-items: flex-start !important; gap: 24px !important; width: 100% !important; }
+          .founder-grid > * { width: 100% !important; max-width: 100% !important; }
+          .founder-bio { font-size: 15px !important; line-height: 1.8 !important; padding: 0 !important; }
         }
       `}</style>
 
@@ -301,63 +300,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      <div className="dash-mobile-note" style={{
-        justifyContent: 'center',
-        padding: '24px',
-        borderTop: '1px solid rgba(255,255,255,0.04)'
-      }}>
-        <span style={{
-          fontFamily: 'monospace',
-          fontSize: 11,
-          color: '#4a5260',
-          letterSpacing: '0.08em'
-        }}>
-          ◈ OPERATIONS DASHBOARD — BEST EXPERIENCED ON DESKTOP
-        </span>
-      </div>
-
-      {/* ── STATS STRIP ──────────────────────────────────────────────────────── */}
-      <div style={{
-        background: T.navyMid,
-        borderTop: `1px solid ${T.amberBorder}`,
-        borderBottom: `1px solid ${T.amberBorder}`,
-        padding: '0 40px',
-      }}>
-        <div className="stats-grid" style={{
-          maxWidth: 1100, margin: '0 auto',
-          display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)',
-        }}>
-          {[
-            { value: '30 SEC', label: 'Avg. Triage Time' },
-            { value: '£40K+', label: 'Disruption Cost Avoided / Year' },
-            { value: '85%', label: 'Decisions Before Escalation' },
-            { value: 'ZERO', label: 'New Software to Learn' },
-          ].map((s, i) => (
-            <div key={i} className="stat-card stat-card-hover" style={{
-              padding: '44px 32px', textAlign: 'center',
-              borderRight: i < 3 ? `1px solid ${T.border}` : 'none',
-              transition: 'all 0.2s', cursor: 'default',
-            }}>
-              <div className="stat-val" style={{
-                fontFamily: FF.condensed, fontSize: 54, fontWeight: 900,
-                color: T.amber, lineHeight: 1, letterSpacing: '-0.02em',
-                marginBottom: 10,
-                textShadow: '0 0 30px rgba(245,166,35,0.5), 0 0 60px rgba(245,166,35,0.25)',
-                transition: 'text-shadow 0.2s',
-              }}>
-                {s.value}
-              </div>
-              <div style={{
-                fontSize: 12, color: T.textDim,
-                textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 600,
-              }}>
-                {s.label}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
       {/* ── LIVE INCIDENT TICKER ─────────────────────────────────────────────── */}
       <div style={{ background: '#0d1420', borderBottom: '1px solid rgba(255,255,255,0.05)', padding: '14px 0', overflow: 'hidden' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 0 }}>
@@ -399,14 +341,14 @@ export default function HomePage() {
             gap: 24, position: 'relative', alignItems: 'start',
           }}>
             {/* ── Card 1: CONNECT ── */}
-            <div style={{ background: '#0d1014', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, padding: '32px 24px', position: 'relative' }}>
+            <div style={{ background: '#0a0c0e', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, padding: '32px 24px', position: 'relative' }}>
               <div style={{ fontFamily: FF.mono, fontSize: 10, color: '#4a5260', letterSpacing: '0.15em', marginBottom: 12 }}>01</div>
               <div style={{ marginBottom: 16 }}>
                 <svg width="28" height="28" viewBox="0 0 18 18"><polygon points="9,1 17,5 17,13 9,17 1,13 1,5" fill="#f5a623"/></svg>
               </div>
               <h3 style={{ fontFamily: FF.condensed, fontSize: 22, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#fff', marginBottom: 12 }}>Connect</h3>
               <p style={{ fontSize: 13, color: '#8a9099', lineHeight: 1.7, marginBottom: 20 }}>Your existing systems — Mandata, Webfleet, Microlise, Samsara — connect via webhook. No new software. No driver training.</p>
-              <div style={{ background: '#080c14', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 6, padding: '12px 14px' }}>
+              <div style={{ background: '#0a0c0e', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 6, padding: '12px 14px' }}>
                 {[
                   { src: 'Webfleet', evt: 'reefer_fault', hot: true },
                   { src: 'Mandata', evt: 'job_delayed', hot: false },
@@ -428,7 +370,7 @@ export default function HomePage() {
             </div>
 
             {/* ── Card 2: ANALYSE ── */}
-            <div style={{ background: '#0d1014', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, padding: '32px 24px', position: 'relative' }}>
+            <div style={{ background: '#0a0c0e', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, padding: '32px 24px', position: 'relative' }}>
               <div style={{ fontFamily: FF.mono, fontSize: 10, color: '#4a5260', letterSpacing: '0.15em', marginBottom: 12 }}>02</div>
               <div style={{ marginBottom: 16 }}>
                 <svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="#f5a623" strokeWidth="1.5" strokeLinecap="round">
@@ -439,7 +381,7 @@ export default function HomePage() {
               </div>
               <h3 style={{ fontFamily: FF.condensed, fontSize: 22, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#fff', marginBottom: 12 }}>Analyse</h3>
               <p style={{ fontSize: 13, color: '#8a9099', lineHeight: 1.7, marginBottom: 20 }}>AI analyses the incident in real time — severity, financial exposure, cascade risk, regulatory impact — and builds an action plan.</p>
-              <div style={{ background: '#080c14', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 6, padding: '12px 14px' }}>
+              <div style={{ background: '#0a0c0e', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 6, padding: '12px 14px' }}>
                 <div style={{ fontFamily: FF.mono, fontSize: 9, color: '#4a5260', letterSpacing: '0.1em', marginBottom: 8 }}>ASSESSMENT OUTPUT</div>
                 {[
                   { k: 'Severity', v: 'CRITICAL', c: '#ef4444' },
@@ -461,7 +403,7 @@ export default function HomePage() {
             </div>
 
             {/* ── Card 3: DECIDE ── */}
-            <div style={{ background: '#0d1014', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, padding: '32px 24px', position: 'relative' }}>
+            <div style={{ background: '#0a0c0e', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, padding: '32px 24px', position: 'relative' }}>
               <div style={{ fontFamily: FF.mono, fontSize: 10, color: '#4a5260', letterSpacing: '0.15em', marginBottom: 12 }}>03</div>
               <div style={{ marginBottom: 16 }}>
                 <svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="#f5a623" strokeWidth="1.5" strokeLinecap="round">
@@ -471,7 +413,7 @@ export default function HomePage() {
               </div>
               <h3 style={{ fontFamily: FF.condensed, fontSize: 22, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#fff', marginBottom: 12 }}>Decide</h3>
               <p style={{ fontSize: 13, color: '#8a9099', lineHeight: 1.7, marginBottom: 20 }}>Ops manager gets one SMS with the full picture. Reply YES — driver instructed, consignee called, SLA protected. Under 30 seconds.</p>
-              <div style={{ background: '#080c14', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 6, padding: '14px 14px 12px' }}>
+              <div style={{ background: '#0a0c0e', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 6, padding: '14px 14px 12px' }}>
                 <div style={{ fontFamily: FF.mono, fontSize: 10, color: '#e8eaed', lineHeight: 1.6, marginBottom: 12 }}>
                   CRITICAL — LK72 ABX reefer fault M62 J27. £14,000 cargo at risk. Reply YES to dispatch recovery, instruct driver, and notify Tesco DC Bradford.
                 </div>
@@ -484,7 +426,7 @@ export default function HomePage() {
           </div>
 
           {/* ── TIMELINE STRIP ── */}
-          <div style={{ marginTop: 56, padding: '32px 24px', background: '#0d1014', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8 }}>
+          <div style={{ marginTop: 56, padding: '32px 24px', background: '#0a0c0e', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8 }}>
             <div style={{ fontFamily: FF.mono, fontSize: 10, color: '#4a5260', letterSpacing: '0.1em', marginBottom: 20, textAlign: 'center' }}>REAL SCENARIO — 2:30AM REEFER FAULT ON M62</div>
             <div className="how-timeline-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 0, position: 'relative' }}>
               {/* Connector line behind nodes */}
@@ -761,7 +703,7 @@ export default function HomePage() {
           </div>
 
           {/* ── FOUNDER ────────────────────────────────────────────────────── */}
-          <div className="founder-card" style={{
+          <div className="founder-card founder-grid" style={{
             marginTop: 72, marginBottom: 64,
             padding: '40px 32px',
             background: T.navyCard,
@@ -839,7 +781,7 @@ export default function HomePage() {
             </div>
 
             {/* Body — paragraphs + pull quote. Sits next to photo on desktop, full width below on mobile */}
-            <div className="founder-body" style={{ gridColumn: 2, gridRow: 2, minWidth: 0 }}>
+            <div className="founder-body founder-bio" style={{ gridColumn: 2, gridRow: 2, minWidth: 0 }}>
               <p style={{
                 fontFamily: FF.body, fontSize: 'clamp(14px, 4vw, 16px)', color: T.text,
                 lineHeight: 1.8, marginBottom: 18, maxWidth: '100%', wordBreak: 'break-word',
