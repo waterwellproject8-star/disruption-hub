@@ -478,7 +478,7 @@ export default function HomePage() {
             }
             return (
               <div ref={timelineRef} style={{ marginTop: 56, padding: '32px 24px', background: T.navyCard, border: '1px solid rgba(255,255,255,0.12)', borderRadius: 8, boxShadow: '0 0 0 1px rgba(255,255,255,0.06), 0 4px 24px rgba(0,0,0,0.4)' }}>
-                <div style={{ fontFamily: FF.mono, fontSize: 10, color: '#4a5260', letterSpacing: '0.1em', marginBottom: 20, textAlign: 'center' }}>REAL SCENARIO — 2:30AM REEFER FAULT ON M62</div>
+                <div style={{ fontFamily: FF.mono, fontSize: 10, color: '#8a9099', letterSpacing: '0.1em', marginBottom: 20, textAlign: 'center' }}>REAL SCENARIO — 2:30AM REEFER FAULT ON M62</div>
 
                 {/* DESKTOP */}
                 <div className="tl-desktop">
@@ -498,8 +498,8 @@ export default function HomePage() {
                     {steps.map((s, i) => (
                       <div key={i} style={{ flex: 1, textAlign: 'center' }}>
                         <div style={{ fontFamily: FF.mono, fontSize: 12, color: tlStep >= i ? '#e8eaed' : '#4a5260', fontWeight: 600, transition: 'color 0.3s' }}>{s.time}</div>
-                        <div style={{ fontFamily: FF.mono, fontSize: 10, color: tlStep >= i ? '#8a9099' : '#4a5260', marginTop: 2, transition: 'color 0.3s' }}>{s.label}</div>
-                        <div style={{ fontFamily: FF.mono, fontSize: 9, color: '#4a5260', marginTop: 1 }}>{s.sub}</div>
+                        <div style={{ fontFamily: FF.mono, fontSize: 10, color: tlStep >= i ? '#ffffff' : '#4a5260', fontWeight: 500, marginTop: 2, transition: 'color 0.3s' }}>{s.label}</div>
+                        <div style={{ fontFamily: FF.mono, fontSize: 9, color: '#8a9099', marginTop: 1 }}>{s.sub}</div>
                       </div>
                     ))}
                   </div>
@@ -519,8 +519,8 @@ export default function HomePage() {
                       </div>
                       <div style={{ paddingTop: 6 }}>
                         <div style={{ fontFamily: FF.mono, fontSize: 12, color: tlStep >= i ? '#e8eaed' : '#4a5260', fontWeight: 600, transition: 'color 0.3s' }}>{s.time}</div>
-                        <div style={{ fontFamily: FF.mono, fontSize: 11, color: tlStep >= i ? '#8a9099' : '#4a5260', transition: 'color 0.3s' }}>{s.label}</div>
-                        <div style={{ fontFamily: FF.mono, fontSize: 9, color: '#4a5260', marginTop: 1, marginBottom: 8 }}>{s.sub}</div>
+                        <div style={{ fontFamily: FF.mono, fontSize: 11, color: tlStep >= i ? '#ffffff' : '#4a5260', fontWeight: 500, transition: 'color 0.3s' }}>{s.label}</div>
+                        <div style={{ fontFamily: FF.mono, fontSize: 9, color: '#8a9099', marginTop: 1, marginBottom: 8 }}>{s.sub}</div>
                       </div>
                     </div>
                   ))}
