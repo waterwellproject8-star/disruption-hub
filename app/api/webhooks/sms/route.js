@@ -629,7 +629,7 @@ export async function POST(request) {
             const driverPhone = await resolveDriverPhone()
             const driverMsg = `DisruptionHub OPS${details.ref ? ` — ${details.ref}` : ''}\n\nOps approved. ${details.consignee_name || 'Consignee'} being called automatically.\nContinue to destination. Reply DONE when acknowledged.`
             await writeInstructionToApp(driverMsg)
-            if (driverPhone) await sendSMS(driverPhone, driverMsg).catch(() => {})
+            if (driverPhone) await sendSMS(driverPhone, driverMsg).catch(err => console.error('[sms-yes] sendSMS to driver failed:', err?.message))
 
             await sendNextPendingActionSMS()
             if (callResult.success) {
@@ -648,7 +648,7 @@ export async function POST(request) {
           const driverPhone = await resolveDriverPhone()
           const driverMsg = `DisruptionHub OPS${details.ref ? ` — ${details.ref}` : ''}\n\nOps approved delay. No consignee contact on file — ops will call directly.\nContinue to destination. Reply DONE.`
           await writeInstructionToApp(driverMsg)
-          if (driverPhone) await sendSMS(driverPhone, driverMsg).catch(() => {})
+          if (driverPhone) await sendSMS(driverPhone, driverMsg).catch(err => console.error('[sms-yes] sendSMS to driver failed:', err?.message))
           await finaliseApproval({ success: false, failure_reason: 'no_consignee_phone' })
           return twimlReply(`DH: Approved. No consignee phone for ${details.consignee_name || 'this delivery'} — call them manually.`)
         }
@@ -685,7 +685,7 @@ export async function POST(request) {
           const driverPhone = await resolveDriverPhone()
           const driverMsg = `DisruptionHub OPS${details.ref ? ` — ${details.ref}` : ''}\n\nOps approved. Carrier being contacted now.\nStay safe. Help is coming.`
           await writeInstructionToApp(driverMsg)
-          if (driverPhone) await sendSMS(driverPhone, driverMsg).catch(() => {})
+          if (driverPhone) await sendSMS(driverPhone, driverMsg).catch(err => console.error('[sms-yes] sendSMS to driver failed:', err?.message))
 
           if (callResult.success) {
             await finaliseApproval({ success: true, twilio_sid: callResult.sid, twilio_status: callResult.status })
@@ -704,7 +704,7 @@ export async function POST(request) {
         const driverPhone = await resolveDriverPhone()
         const helpMsg = `DisruptionHub OPS${details.ref ? ` — ${details.ref}` : ''}\n\nOps approved. Help being arranged. Stay safe.`
         await writeInstructionToApp(helpMsg)
-        if (driverPhone) await sendSMS(driverPhone, helpMsg).catch(() => {})
+        if (driverPhone) await sendSMS(driverPhone, helpMsg).catch(err => console.error('[sms-yes] sendSMS to driver failed:', err?.message))
         await finaliseApproval({ success: false, failure_reason: 'no_carrier_or_consignee_phone' })
         return twimlReply('DH: Approved. No contact phone on file — action manually.')
       }
