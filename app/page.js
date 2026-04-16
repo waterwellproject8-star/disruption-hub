@@ -232,8 +232,7 @@ export default function HomePage() {
             maxWidth: 520, margin: '0 0 44px',
             lineHeight: 1.7, fontWeight: 400,
           }}>
-            Triage disruptions in 30 seconds. Protect SLAs.
-            Save £40K+ a year. Not a luxury add-on — so operators can sleep at night knowing everything is in place to protect what they've built.
+            It's 2:30am. A reefer fault hits on the M62. Your ops manager gets one SMS — approve or reject in 30 seconds — and goes back to sleep. Driver instructed. Recovery dispatched. SLA protected.
           </p>
 
           {/* CTAs */}
@@ -278,7 +277,7 @@ export default function HomePage() {
                   marginLeft: 3,
                 }} />
               </div>
-              Watch 29-second demo
+              See What Happens At 2:30AM
             </button>
           </div>
 
