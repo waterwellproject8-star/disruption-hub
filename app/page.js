@@ -17,7 +17,7 @@ const T = {
   text:       '#e8eaed',
   textDim:    '#8a9099',
   textFaint:  '#4a5260',
-  green:      '#22c55e',
+  green:      '#00e5b0',
   red:        '#ef4444',
 }
 
@@ -144,6 +144,7 @@ export default function HomePage() {
           .founder-meta { grid-column: 2 !important; grid-row: 1 !important; align-self: center; }
           .founder-meta h3 { font-size: 24px !important; }
           .founder-body { grid-column: 1 / span 2 !important; grid-row: 2 !important; margin-top: 24px !important; }
+          .founder-body p { font-size: 14px !important; }
         }
       `}</style>
 
@@ -361,7 +362,7 @@ export default function HomePage() {
       <div style={{ background: '#0d1420', borderBottom: '1px solid rgba(255,255,255,0.05)', padding: '14px 0', overflow: 'hidden' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 0 }}>
           <div style={{ paddingLeft: 32, flexShrink: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
-            <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#22c55e', animation: 'pulse 2s infinite' }} />
+            <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#00e5b0', animation: 'pulse 2s infinite' }} />
             <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 9, color: '#4a5260', letterSpacing: '0.15em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>LIVE FEED</span>
           </div>
           <div style={{ flex: 1, overflow: 'hidden' }}>
@@ -472,7 +473,7 @@ export default function HomePage() {
               <p style={{ fontSize: 13, color: '#8a9099', lineHeight: 1.7, marginBottom: 20 }}>Ops manager gets one SMS with the full picture. Reply YES — driver instructed, consignee called, SLA protected. Under 30 seconds.</p>
               <div style={{ background: '#080c14', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 6, padding: '14px 14px 12px' }}>
                 <div style={{ fontFamily: FF.mono, fontSize: 10, color: '#e8eaed', lineHeight: 1.6, marginBottom: 12 }}>
-                  CRITICAL — LK72 ABX reefer fault M62 J27. £14,000 at risk. Reply YES to execute.
+                  CRITICAL — LK72 ABX reefer fault M62 J27. £14,000 cargo at risk. Reply YES to dispatch recovery, instruct driver, and notify Tesco DC Bradford.
                 </div>
                 <div style={{ display: 'flex', gap: 8 }}>
                   <div style={{ fontFamily: FF.mono, fontSize: 10, fontWeight: 700, padding: '6px 16px', borderRadius: 4, background: 'rgba(0,229,176,0.12)', border: '1px solid rgba(0,229,176,0.3)', color: '#00e5b0' }}>YES</div>
@@ -840,15 +841,15 @@ export default function HomePage() {
             {/* Body — paragraphs + pull quote. Sits next to photo on desktop, full width below on mobile */}
             <div className="founder-body" style={{ gridColumn: 2, gridRow: 2, minWidth: 0 }}>
               <p style={{
-                fontFamily: FF.body, fontSize: 15, color: T.text,
-                lineHeight: 1.75, marginBottom: 18,
+                fontFamily: FF.body, fontSize: 'clamp(14px, 4vw, 16px)', color: T.text,
+                lineHeight: 1.8, marginBottom: 18, maxWidth: '100%', wordBreak: 'break-word',
               }}>
                 I spent the past year researching the specific pain points hitting UK haulage operators — the data is real, not assumed. In a 2% margin industry, a single Tesco contract lost to repeated SLA penalties isn&apos;t a setback. It&apos;s the end of the business.
               </p>
 
               <p style={{
-                fontFamily: FF.body, fontSize: 15, color: T.text,
-                lineHeight: 1.75, marginBottom: 24,
+                fontFamily: FF.body, fontSize: 'clamp(14px, 4vw, 16px)', color: T.text,
+                lineHeight: 1.8, marginBottom: 24, maxWidth: '100%', wordBreak: 'break-word',
               }}>
                 I come from a background where protecting the downside wasn&apos;t optional. When AI reached the point where a system like this became buildable, I built it — not as a luxury add-on. So that operators can sleep at night knowing everything is in place to protect what they&apos;ve built.
               </p>
