@@ -165,6 +165,7 @@ export default function HomePage() {
           .tl-desktop { display: none !important; }
           .tl-mobile { display: flex !important; }
           .pricing-grid { grid-template-columns: 1fr !important; }
+          .pricing-card { padding: 24px 20px !important; }
           .enterprise-card { flex-direction: column !important; align-items: stretch !important; gap: 16px !important; padding: 24px 20px !important; }
           .enterprise-card .enterprise-divider { display: none !important; }
           .enterprise-card .enterprise-features { grid-template-columns: 1fr !important; gap: 6px 0 !important; margin-top: 0 !important; }
@@ -666,7 +667,7 @@ export default function HomePage() {
               }}>
                 £349
               </div>
-              <div style={{ fontSize: 13, color: T.textDim, marginBottom: 24 }}>/month · locked for life</div>
+              <div style={{ fontSize: 13, color: T.textDim, marginBottom: 16 }}>/month · locked for life</div>
               <div style={{
                 fontFamily: FF.condensed, fontSize: 18, fontWeight: 700,
                 color: '#fff', marginBottom: 20,
