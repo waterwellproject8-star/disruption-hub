@@ -310,7 +310,7 @@ export default function HomePage() {
                 borderRadius: 6,
               }}
             >
-              See What Happens At 2:30AM
+              See What Happens At 2:30AM →
             </button>
           </div>
 
