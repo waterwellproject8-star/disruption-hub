@@ -9,7 +9,7 @@ import TypewriterText from '../components/TypewriterText'
 const T = {
   navy:       '#080c14',
   navyMid:    '#0d1420',
-  navyCard:   '#111418',
+  navyCard:   '#0f1826',
   navyRow:    '#111927',
   amber:      '#f5a623',
   amberBright:'#ffb733',
@@ -598,7 +598,7 @@ export default function HomePage() {
             {/* PILOT */}
             <motion.div initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '-60px' }} transition={{ duration: 0.5, delay: 0 }}>
             <div className="pricing-card" style={{
-              background: '#111418',
+              background: T.navyCard,
               border: `1px solid ${T.border}`,
               borderRadius: 4, padding: '32px 28px',
               transition: 'transform 0.2s',
@@ -643,7 +643,7 @@ export default function HomePage() {
             {/* FOUNDING COHORT — highlighted */}
             <motion.div initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '-60px' }} transition={{ duration: 0.5, delay: 0.1 }}>
             <div className="pricing-card" style={{
-              background: `linear-gradient(135deg, #111418, rgba(245,166,35,0.04))`,
+              background: `linear-gradient(135deg, ${T.navyCard}, rgba(245,166,35,0.04))`,
               border: `1px solid ${T.amberBorder}`,
               borderRadius: 4, padding: '32px 28px',
               position: 'relative',
@@ -693,7 +693,7 @@ export default function HomePage() {
             {/* STANDARD */}
             <motion.div initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '-60px' }} transition={{ duration: 0.5, delay: 0.2 }}>
             <div className="pricing-card" style={{
-              background: '#111418',
+              background: T.navyCard,
               border: `1px solid ${T.border}`,
               borderRadius: 4, padding: '32px 28px',
               transition: 'transform 0.2s',
@@ -731,7 +731,7 @@ export default function HomePage() {
             {/* GROWTH */}
             <motion.div initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '-60px' }} transition={{ duration: 0.5, delay: 0.3 }}>
             <div className="pricing-card" style={{
-              background: '#111418',
+              background: T.navyCard,
               border: `1px solid ${T.border}`,
               borderRadius: 4, padding: '32px 28px',
               transition: 'transform 0.2s',
@@ -777,7 +777,7 @@ export default function HomePage() {
 
           {/* ENTERPRISE — full width below the 4-column grid */}
           <div className="pricing-card enterprise-card" style={{
-            background: '#111418',
+            background: T.navyCard,
             border: `1px solid ${T.border}`,
             borderRadius: 4, padding: '32px 36px',
             marginBottom: 48,
