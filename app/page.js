@@ -69,6 +69,7 @@ export default function HomePage() {
         html { scroll-behavior: smooth; }
         @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
         @keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes dot-travel { 0%{left:0} 100%{left:calc(100% - 6px)} }
         @keyframes marquee { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
         .ticker-track { animation: marquee 30s linear infinite; display:inline-flex; gap:48px; white-space:nowrap; }
         .ticker-track:hover { animation-play-state: paused; }
@@ -113,6 +114,8 @@ export default function HomePage() {
           .nav-links-desktop { display: none !important; }
           .stats-grid { grid-template-columns: 1fr 1fr !important; }
           .how-grid { grid-template-columns: 1fr !important; }
+          .how-connector { display: none !important; }
+          .how-timeline-grid { grid-template-columns: 1fr !important; gap: 12px !important; }
           .pricing-grid { grid-template-columns: 1fr !important; }
           .enterprise-card { flex-direction: column !important; align-items: stretch !important; }
           .enterprise-card .enterprise-divider { display: none !important; }
@@ -129,7 +132,11 @@ export default function HomePage() {
           .hero-ctas { justify-content: center; flex-direction: column; align-items: center; }
           .hero-badge { justify-content: center; }
           .dh-preview-section { padding: 48px 0px !important; }
+          .dash-desktop-section { display: none !important; }
+          .dash-mobile-note { display: flex !important; }
         }
+        @media (min-width: 769px) {
+          .dash-mobile-note { display: none !important; }
         @media (max-width: 640px) {
           .founder-card { grid-template-columns: 80px 1fr !important; column-gap: 16px !important; padding: 28px 20px !important; }
           .founder-photo { grid-row: 1 !important; align-self: center; }
@@ -280,7 +287,7 @@ export default function HomePage() {
       </section>
 
       {/* ── DASHBOARD PREVIEW ────────────────────────────────────────────────── */}
-      <section className="dh-preview-section" style={{ background: '#080c14', borderTop: '1px solid rgba(255,255,255,0.06)', padding: '48px 24px', overflowX: 'hidden', width: '100%' }}>
+      <section className="dh-preview-section dash-desktop-section" style={{ background: '#080c14', borderTop: '1px solid rgba(255,255,255,0.06)', padding: '48px 24px', overflowX: 'hidden', width: '100%' }}>
         <div style={{ maxWidth: 1100, margin: '0 auto' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
             <div style={{ height: 1, width: 32, background: 'rgba(255,255,255,0.15)' }} />
@@ -292,6 +299,21 @@ export default function HomePage() {
           <DashboardPreview />
         </div>
       </section>
+
+      <div className="dash-mobile-note" style={{
+        justifyContent: 'center',
+        padding: '24px',
+        borderTop: '1px solid rgba(255,255,255,0.04)'
+      }}>
+        <span style={{
+          fontFamily: 'monospace',
+          fontSize: 11,
+          color: '#4a5260',
+          letterSpacing: '0.08em'
+        }}>
+          ◈ OPERATIONS DASHBOARD — BEST EXPERIENCED ON DESKTOP
+        </span>
+      </div>
 
       {/* ── STATS STRIP ──────────────────────────────────────────────────────── */}
       <div style={{
@@ -353,122 +375,134 @@ export default function HomePage() {
       </div>
 
       {/* ── HOW IT WORKS ─────────────────────────────────────────────────────── */}
-      <section id="how" style={{ padding: '100px 40px', maxWidth: 1100, margin: '0 auto' }}>
-        <div style={{
-          fontFamily: FF.mono, fontSize: 11, fontWeight: 600,
-          letterSpacing: '0.2em', textTransform: 'uppercase',
-          color: T.amber, textAlign: 'center', marginBottom: 16,
-        }}>
-          How It Works
-        </div>
-        <h2 style={{
-          fontFamily: FF.condensed, fontSize: 'clamp(32px, 4vw, 48px)',
-          fontWeight: 800, textTransform: 'uppercase',
-          letterSpacing: '0.02em', color: '#fff',
-          textAlign: 'center', marginBottom: 64,
-        }}>
-          Three Steps. Thirty Seconds.
-        </h2>
-
-        <div className="how-grid" style={{
-          display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)',
-          gap: 0, position: 'relative',
-        }}>
-          {/* Connector line */}
+      <section id="how" style={{ background: '#0a0c0e', padding: '100px 40px' }}>
+        <div style={{ maxWidth: 1100, margin: '0 auto' }}>
           <div style={{
-            position: 'absolute', top: 52, left: '25%', right: '25%',
-            height: 1,
-            background: `linear-gradient(90deg, transparent, ${T.amberBorder}, transparent)`,
-            pointerEvents: 'none',
-          }} />
+            fontFamily: FF.mono, fontSize: 11, fontWeight: 600,
+            letterSpacing: '0.2em', textTransform: 'uppercase',
+            color: T.amber, textAlign: 'center', marginBottom: 16,
+          }}>
+            How It Works
+          </div>
+          <h2 style={{
+            fontFamily: FF.condensed, fontSize: 'clamp(32px, 4vw, 48px)',
+            fontWeight: 800, textTransform: 'uppercase',
+            letterSpacing: '0.02em', color: '#fff',
+            textAlign: 'center', marginBottom: 64,
+          }}>
+            Three Steps. Thirty Seconds.
+          </h2>
 
-          {[
-            {
-              num: '01', title: 'Connect',
-              desc: 'Webhook connects to Mandata, Webfleet, Microlise, Samsara — your existing systems, no new software.',
-              icon: (
-                <svg width="36" height="36" viewBox="0 0 36 36" fill="none" stroke={T.amber} strokeWidth="1.5" strokeLinecap="round">
-                  <circle cx="18" cy="18" r="3"/>
-                  <path d="M18 7v4M18 25v4M7 18h4M25 18h4"/>
-                  <circle cx="18" cy="18" r="10" strokeDasharray="3 3"/>
-                </svg>
-              ),
-            },
-            {
-              num: '02', title: 'Analyse',
-              desc: 'AI analyses disruptions in real time — severity, financial exposure, cascade risk, recommended action.',
-              icon: (
-                <svg width="36" height="36" viewBox="0 0 36 36" fill="none" stroke={T.amber} strokeWidth="1.5" strokeLinecap="round">
-                  <polyline points="6,26 13,16 19,20 26,10 30,14"/>
-                  <circle cx="30" cy="10" r="2" fill={T.amber}/>
-                </svg>
-              ),
-            },
-            {
-              num: '03', title: 'Decide',
-              desc: 'Ops gets SMS with YES/NO decision ready to execute. Reply YES — driver notified, consignee called, SLA protected.',
-              icon: (
-                <svg width="36" height="36" viewBox="0 0 36 36" fill="none" stroke={T.amber} strokeWidth="1.5" strokeLinecap="round">
-                  <rect x="8" y="8" width="20" height="14" rx="2"/>
-                  <path d="M8 22l4 5h12l4-5"/>
-                  <path d="M13 14l3 3 7-7"/>
-                </svg>
-              ),
-            },
-          ].map((step, i) => (
-            <div key={i} className="how-card how-card-hover" style={{
-              textAlign: 'center', padding: '40px 32px', position: 'relative', zIndex: 1,
-              background: T.navyCard,
-              border: `1px solid ${T.border}`,
-              borderRadius: 4,
-              margin: '0 8px',
-              transition: 'all 0.2s',
-            }}>
-              {/* Step number */}
-              <div style={{
-                fontFamily: FF.mono, fontSize: 10, color: T.amberBorder,
-                letterSpacing: '0.15em', marginBottom: 16,
-              }}>
-                {step.num}
+          <div className="how-grid" style={{
+            display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)',
+            gap: 24, position: 'relative', alignItems: 'start',
+          }}>
+            {/* ── Card 1: CONNECT ── */}
+            <div style={{ background: '#0d1014', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, padding: '32px 24px', position: 'relative' }}>
+              <div style={{ fontFamily: FF.mono, fontSize: 10, color: '#4a5260', letterSpacing: '0.15em', marginBottom: 12 }}>01</div>
+              <div style={{ marginBottom: 16 }}>
+                <svg width="28" height="28" viewBox="0 0 18 18"><polygon points="9,1 17,5 17,13 9,17 1,13 1,5" fill="#f5a623"/></svg>
               </div>
-
-              {/* Icon box */}
-              <div style={{
-                width: 80, height: 80,
-                border: `1px solid ${T.amberBorder}`,
-                borderRadius: 4,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                margin: '0 auto 24px',
-                background: `linear-gradient(135deg, ${T.navyMid}, ${T.navyCard})`,
-                boxShadow: '0 0 20px rgba(245,166,35,0.15), inset 0 0 10px rgba(245,166,35,0.05)',
-              }}>
-                {step.icon}
+              <h3 style={{ fontFamily: FF.condensed, fontSize: 22, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#fff', marginBottom: 12 }}>Connect</h3>
+              <p style={{ fontSize: 13, color: '#8a9099', lineHeight: 1.7, marginBottom: 20 }}>Your existing systems — Mandata, Webfleet, Microlise, Samsara — connect via webhook. No new software. No driver training.</p>
+              <div style={{ background: '#080c14', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 6, padding: '12px 14px' }}>
+                {[
+                  { src: 'Webfleet', evt: 'reefer_fault', hot: true },
+                  { src: 'Mandata', evt: 'job_delayed', hot: false },
+                  { src: 'Microlise', evt: 'driver_hours', hot: false },
+                ].map((w, i) => (
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '5px 0', borderBottom: i < 2 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
+                    <div style={{ width: 5, height: 5, borderRadius: '50%', background: w.hot ? '#f5a623' : '#4a5260' }} />
+                    <span style={{ fontFamily: FF.mono, fontSize: 10, color: '#8a9099' }}>{w.src}</span>
+                    <span style={{ fontFamily: FF.mono, fontSize: 10, color: '#4a5260' }}>→</span>
+                    <span style={{ fontFamily: FF.mono, fontSize: 10, color: w.hot ? '#f5a623' : '#4a5260' }}>{w.evt}</span>
+                  </div>
+                ))}
               </div>
-
-              {/* Arrow between cards */}
-              {i < 2 && (
-                <div style={{
-                  position: 'absolute', right: -20, top: '50%',
-                  transform: 'translateY(-50%)',
-                  color: T.amber, fontSize: 18, fontWeight: 700, zIndex: 3,
-                  letterSpacing: '-2px',
-                }}>
-                  --›
-                </div>
-              )}
-
-              <h3 style={{
-                fontFamily: FF.condensed, fontSize: 22, fontWeight: 800,
-                textTransform: 'uppercase', letterSpacing: '0.06em',
-                color: '#fff', marginBottom: 12,
-              }}>
-                {step.title}
-              </h3>
-              <p style={{ fontSize: 14, color: T.textDim, lineHeight: 1.7 }}>
-                {step.desc}
-              </p>
             </div>
-          ))}
+
+            {/* ── Connector 1 ── */}
+            <div className="how-connector" style={{ position: 'absolute', left: 'calc(33.33% - 12px)', top: 80, width: 24, height: 2, background: 'rgba(255,255,255,0.07)', zIndex: 2 }}>
+              <div style={{ position: 'absolute', width: 6, height: 6, borderRadius: '50%', background: '#f5a623', top: -2, animation: 'dot-travel 2s ease-in-out infinite' }} />
+            </div>
+
+            {/* ── Card 2: ANALYSE ── */}
+            <div style={{ background: '#0d1014', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, padding: '32px 24px', position: 'relative' }}>
+              <div style={{ fontFamily: FF.mono, fontSize: 10, color: '#4a5260', letterSpacing: '0.15em', marginBottom: 12 }}>02</div>
+              <div style={{ marginBottom: 16 }}>
+                <svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="#f5a623" strokeWidth="1.5" strokeLinecap="round">
+                  <rect x="3" y="5" width="22" height="16" rx="2"/>
+                  <circle cx="22" cy="8" r="3" fill="#ef4444" stroke="none"/>
+                  <polyline points="7,17 11,12 15,14 20,9"/>
+                </svg>
+              </div>
+              <h3 style={{ fontFamily: FF.condensed, fontSize: 22, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#fff', marginBottom: 12 }}>Analyse</h3>
+              <p style={{ fontSize: 13, color: '#8a9099', lineHeight: 1.7, marginBottom: 20 }}>AI analyses the incident in real time — severity, financial exposure, cascade risk, regulatory impact — and builds an action plan.</p>
+              <div style={{ background: '#080c14', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 6, padding: '12px 14px' }}>
+                <div style={{ fontFamily: FF.mono, fontSize: 9, color: '#4a5260', letterSpacing: '0.1em', marginBottom: 8 }}>ASSESSMENT OUTPUT</div>
+                {[
+                  { k: 'Severity', v: 'CRITICAL', c: '#ef4444' },
+                  { k: 'Exposure', v: '£14,000', c: '#f5a623' },
+                  { k: 'Cascade risk', v: '3 shipments', c: '#f5a623' },
+                  { k: 'Action', v: 'dispatch recovery', c: '#00e5b0' },
+                ].map((r, i) => (
+                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', borderBottom: i < 3 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
+                    <span style={{ fontFamily: FF.mono, fontSize: 10, color: '#8a9099' }}>— {r.k}</span>
+                    <span style={{ fontFamily: FF.mono, fontSize: 10, color: r.c, fontWeight: 600 }}>{r.v}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* ── Connector 2 ── */}
+            <div className="how-connector" style={{ position: 'absolute', left: 'calc(66.66% - 12px)', top: 80, width: 24, height: 2, background: 'rgba(255,255,255,0.07)', zIndex: 2 }}>
+              <div style={{ position: 'absolute', width: 6, height: 6, borderRadius: '50%', background: '#f5a623', top: -2, animation: 'dot-travel 2s ease-in-out infinite', animationDelay: '1s' }} />
+            </div>
+
+            {/* ── Card 3: DECIDE ── */}
+            <div style={{ background: '#0d1014', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, padding: '32px 24px', position: 'relative' }}>
+              <div style={{ fontFamily: FF.mono, fontSize: 10, color: '#4a5260', letterSpacing: '0.15em', marginBottom: 12 }}>03</div>
+              <div style={{ marginBottom: 16 }}>
+                <svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="#f5a623" strokeWidth="1.5" strokeLinecap="round">
+                  <rect x="8" y="2" width="12" height="24" rx="2"/>
+                  <line x1="11" y1="22" x2="17" y2="22"/>
+                </svg>
+              </div>
+              <h3 style={{ fontFamily: FF.condensed, fontSize: 22, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#fff', marginBottom: 12 }}>Decide</h3>
+              <p style={{ fontSize: 13, color: '#8a9099', lineHeight: 1.7, marginBottom: 20 }}>Ops manager gets one SMS with the full picture. Reply YES — driver instructed, consignee called, SLA protected. Under 30 seconds.</p>
+              <div style={{ background: '#080c14', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 6, padding: '14px 14px 12px' }}>
+                <div style={{ fontFamily: FF.mono, fontSize: 10, color: '#e8eaed', lineHeight: 1.6, marginBottom: 12 }}>
+                  CRITICAL — LK72 ABX reefer fault M62 J27. £14,000 at risk. Reply YES to execute.
+                </div>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <div style={{ fontFamily: FF.mono, fontSize: 10, fontWeight: 700, padding: '6px 16px', borderRadius: 4, background: 'rgba(0,229,176,0.12)', border: '1px solid rgba(0,229,176,0.3)', color: '#00e5b0' }}>YES</div>
+                  <div style={{ fontFamily: FF.mono, fontSize: 10, fontWeight: 700, padding: '6px 16px', borderRadius: 4, background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.3)', color: '#ef4444' }}>NO</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* ── TIMELINE STRIP ── */}
+          <div style={{ marginTop: 56, padding: '32px 24px', background: '#0d1014', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8 }}>
+            <div style={{ fontFamily: FF.mono, fontSize: 10, color: '#4a5260', letterSpacing: '0.1em', marginBottom: 20, textAlign: 'center' }}>REAL SCENARIO — 2:30AM REEFER FAULT ON M62</div>
+            <div className="how-timeline-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 0, position: 'relative' }}>
+              {/* Connector line behind nodes */}
+              <div style={{ position: 'absolute', top: 15, left: '10%', right: '10%', height: 1, background: 'rgba(255,255,255,0.07)', zIndex: 0 }} />
+              {[
+                { icon: '!', bg: '#ef4444', time: '02:31', label: 'Fault detected — Webfleet webhook' },
+                { icon: 'AI', bg: '#f5a623', time: '+3s', label: 'AI analyses — action plan built' },
+                { icon: 'SMS', bg: '#f5a623', time: '+8s', label: 'Ops notified — full brief sent' },
+                { icon: 'YES', bg: '#f5a623', time: '+28s', label: 'Approved — one reply from bed' },
+                { icon: '✓', bg: '#00e5b0', time: '+30s', label: 'Resolved — SLA protected' },
+              ].map((n, i) => (
+                <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, position: 'relative', zIndex: 1 }}>
+                  <div style={{ width: 30, height: 30, borderRadius: '50%', background: n.bg, color: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: FF.mono, fontSize: 9, fontWeight: 700 }}>{n.icon}</div>
+                  <div style={{ fontFamily: FF.mono, fontSize: 11, color: '#e8eaed', fontWeight: 600 }}>{n.time}</div>
+                  <div style={{ fontFamily: FF.mono, fontSize: 10, color: '#8a9099', textAlign: 'center', lineHeight: 1.5, maxWidth: 140 }}>{n.label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
 
