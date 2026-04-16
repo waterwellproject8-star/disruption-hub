@@ -1,5 +1,32 @@
 import { createClient } from '@supabase/supabase-js'
 
+async function sendSMS(to, body) {
+  const sid   = process.env.TWILIO_ACCOUNT_SID
+  const token = process.env.TWILIO_AUTH_TOKEN
+  const from  = process.env.TWILIO_PHONE_NUMBER
+  if (!sid || !token || !from || sid.includes('placeholder') || sid.startsWith('AC_')) {
+    console.log('[end-shift SMS - not configured] To:', to)
+    return { success: false, simulated: true }
+  }
+  try {
+    const res = await fetch(
+      `https://api.twilio.com/2010-04-01/Accounts/${sid}/Messages.json`,
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Basic ' + Buffer.from(`${sid}:${token}`).toString('base64'),
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: new URLSearchParams({ To: to, From: from, Body: body })
+      }
+    )
+    const data = await res.json()
+    return { success: res.ok, sid: data.sid, error: data.message }
+  } catch (e) {
+    return { success: false, error: e.message }
+  }
+}
+
 function getDB() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -123,6 +150,10 @@ export async function POST(request) {
       }
     }
 
+    // Timestamp before any notification inserts — used to scope the expire query
+    // so freshly created SHIFT ENDED notifications are not immediately expired.
+    const shiftEndTime = new Date().toISOString()
+
     // Expire any pending approvals for this vehicle so they don't sit in the ops queue
     // overnight and don't trigger spurious escalation SMSs for resolved incidents
     if (client_id && vehicle_reg) {
@@ -131,6 +162,7 @@ export async function POST(request) {
         .eq('client_id', client_id)
         .eq('status', 'pending')
         .contains('action_details', { vehicle_reg: vehicle_reg })
+        .lt('created_at', shiftEndTime)
 
       for (const a of (staleApprovals || [])) {
         const { error: expireErr } = await db.from('approvals')
@@ -172,6 +204,21 @@ export async function POST(request) {
         executed_at: now
       })
       if (notifyErr) console.error('[end-shift] unresolved notify error:', notifyErr.message, notifyErr.code)
+
+      // SMS ops manager about unresolved jobs so they don't go unnoticed
+      try {
+        const { data: clientRow } = await db.from('clients')
+          .select('contact_phone, contact_name')
+          .eq('id', client_id)
+          .single()
+        if (clientRow?.contact_phone) {
+          const smsBody = `DH SHIFT ENDED — ${vehicle_reg || 'unknown'}\n${driver_name || 'Driver'} ended shift with ${unresolvedJobs.length} unresolved job${unresolvedJobs.length > 1 ? 's' : ''}: ${refs}\nCheck dashboard for details.`
+          const smsResult = await sendSMS(clientRow.contact_phone, smsBody)
+          if (!smsResult.success) console.error('[end-shift] ops SMS failed:', smsResult.error)
+        }
+      } catch (e) {
+        console.error('[end-shift] ops SMS lookup failed:', e?.message)
+      }
     }
 
     return Response.json({
