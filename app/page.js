@@ -147,9 +147,9 @@ export default function HomePage() {
           .tl-desktop { display: none !important; }
           .tl-mobile { display: flex !important; }
           .pricing-grid { grid-template-columns: 1fr !important; }
-          .enterprise-card { flex-direction: column !important; align-items: stretch !important; }
+          .enterprise-card { flex-direction: column !important; align-items: stretch !important; gap: 16px !important; padding: 24px 20px !important; }
           .enterprise-card .enterprise-divider { display: none !important; }
-          .enterprise-card .enterprise-features { grid-template-columns: 1fr !important; }
+          .enterprise-card .enterprise-features { grid-template-columns: 1fr !important; gap: 6px 0 !important; margin-top: 0 !important; }
           .enterprise-card .enterprise-cta { width: 100% !important; text-align: center !important; }
           .footer-cols { flex-direction: column !important; gap: 32px !important; }
           /* Hero — center on mobile */
