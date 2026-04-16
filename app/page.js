@@ -280,7 +280,7 @@ export default function HomePage() {
       </section>
 
       {/* ── DASHBOARD PREVIEW ────────────────────────────────────────────────── */}
-      <section className="dh-preview-section" style={{ background: '#0a0c0e', borderTop: '1px solid rgba(255,255,255,0.06)', padding: '48px 24px', overflowX: 'hidden', width: '100%' }}>
+      <section className="dh-preview-section" style={{ background: '#080c14', borderTop: '1px solid rgba(255,255,255,0.06)', padding: '48px 24px', overflowX: 'hidden', width: '100%' }}>
         <div style={{ maxWidth: 1100, margin: '0 auto' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
             <div style={{ height: 1, width: 32, background: 'rgba(255,255,255,0.15)' }} />
@@ -295,7 +295,7 @@ export default function HomePage() {
 
       {/* ── STATS STRIP ──────────────────────────────────────────────────────── */}
       <div style={{
-        background: '#0a0c0e',
+        background: T.navyMid,
         borderTop: `1px solid ${T.amberBorder}`,
         borderBottom: `1px solid ${T.amberBorder}`,
         padding: '0 40px',
