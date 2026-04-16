@@ -166,6 +166,9 @@ export default function HomePage() {
           .tl-mobile { display: flex !important; }
           .pricing-grid { grid-template-columns: 1fr !important; }
           .pricing-card { padding: 24px 20px !important; }
+          .pricing-card .pc-spacer { height: 8px !important; }
+          .pricing-card .pc-divider { margin-bottom: 12px !important; }
+          .pricing-card .pc-subtitle { margin-bottom: 12px !important; }
           .enterprise-card { flex-direction: column !important; align-items: stretch !important; gap: 16px !important; padding: 24px 20px !important; }
           .enterprise-card .enterprise-divider { display: none !important; }
           .enterprise-card .enterprise-features { grid-template-columns: 1fr !important; gap: 6px 0 !important; margin-top: 0 !important; }
@@ -620,14 +623,14 @@ export default function HomePage() {
                   / 30 days
                 </div>
               </div>
-              <div style={{ height: 16 }} />
-              <div style={{
+              <div className="pc-spacer" style={{ height: 16 }} />
+              <div className="pc-subtitle" style={{
                 fontFamily: FF.condensed, fontSize: 18, fontWeight: 700,
                 color: '#fff', marginBottom: 20,
               }}>
                 Prove the Value
               </div>
-              <div style={{ height: 1, background: T.border, marginBottom: 20 }} />
+              <div className="pc-divider" style={{ height: 1, background: T.border, marginBottom: 20 }} />
               {['Non-refundable after onboarding call', '30 Days Full Access', 'Proof of Value Report', 'Dedicated Success Manager'].map(f => (
                 <div key={f} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 10 }}>
                   <span style={{ color: T.green, fontSize: 13, flexShrink: 0, marginTop: 1 }}>✓</span>
@@ -667,14 +670,14 @@ export default function HomePage() {
               }}>
                 £349
               </div>
-              <div style={{ fontSize: 13, color: T.textDim, marginBottom: 16 }}>/month · locked for life</div>
-              <div style={{
+              <div className="pc-spacer" style={{ fontSize: 13, color: T.textDim, marginBottom: 16 }}>/month · locked for life</div>
+              <div className="pc-subtitle" style={{
                 fontFamily: FF.condensed, fontSize: 18, fontWeight: 700,
                 color: '#fff', marginBottom: 20,
               }}>
                 Locked for Life
               </div>
-              <div style={{ height: 1, background: T.amberBorder, marginBottom: 20 }} />
+              <div className="pc-divider" style={{ height: 1, background: T.amberBorder, marginBottom: 20 }} />
               {['All Full Platform Features', 'Priority Onboarding', "Founder's Circle Access", 'Lifetime Price Lock'].map(f => (
                 <div key={f} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
                   <span style={{ color: T.amber, fontSize: 13, flexShrink: 0 }}>✓</span>
@@ -708,14 +711,14 @@ export default function HomePage() {
               }}>
                 £499
               </div>
-              <div style={{ fontSize: 13, color: T.textDim, marginBottom: 24 }}>/month · up to 30 vehicles</div>
-              <div style={{
+              <div className="pc-spacer" style={{ fontSize: 13, color: T.textDim, marginBottom: 24 }}>/month · up to 30 vehicles</div>
+              <div className="pc-subtitle" style={{
                 fontFamily: FF.condensed, fontSize: 18, fontWeight: 700,
                 color: '#fff', marginBottom: 20,
               }}>
                 Full Platform Access
               </div>
-              <div style={{ height: 1, background: T.border, marginBottom: 20 }} />
+              <div className="pc-divider" style={{ height: 1, background: T.border, marginBottom: 20 }} />
               {['Unlimited AI Triage', 'Real-time Alerts', 'SLA Protection', '24/7 Support', 'API Access'].map(f => (
                 <div key={f} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
                   <span style={{ color: T.green, fontSize: 13, flexShrink: 0 }}>✓</span>
@@ -753,14 +756,14 @@ export default function HomePage() {
                   + £8/vehicle
                 </div>
               </div>
-              <div style={{ fontSize: 13, color: T.textDim, marginBottom: 24 }}>above 30 vehicles · e.g. 40 vehicles = £579/mo</div>
-              <div style={{
+              <div className="pc-spacer" style={{ fontSize: 13, color: T.textDim, marginBottom: 24 }}>above 30 vehicles · e.g. 40 vehicles = £579/mo</div>
+              <div className="pc-subtitle" style={{
                 fontFamily: FF.condensed, fontSize: 18, fontWeight: 700,
                 color: '#fff', marginBottom: 20,
               }}>
                 Scale Without Limits
               </div>
-              <div style={{ height: 1, background: T.border, marginBottom: 20 }} />
+              <div className="pc-divider" style={{ height: 1, background: T.border, marginBottom: 20 }} />
               {['Everything in Standard', 'Unlimited Vehicles', 'Volume Pricing', 'Dedicated Account Manager'].map(f => (
                 <div key={f} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
                   <span style={{ color: T.green, fontSize: 13, flexShrink: 0 }}>✓</span>
@@ -789,8 +792,8 @@ export default function HomePage() {
                 Enterprise
               </div>
               <div style={{
-                fontFamily: FF.condensed, fontSize: 48, fontWeight: 900,
-                color: T.amber, lineHeight: 1, marginBottom: 6,
+                fontFamily: "'Barlow Condensed', sans-serif", fontSize: 48, fontWeight: 900,
+                color: '#f5a623', lineHeight: 1, marginBottom: 6,
                 textShadow: '0 0 20px rgba(245,166,35,0.2)',
               }}>
                 Custom
