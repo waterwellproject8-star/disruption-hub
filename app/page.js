@@ -1,7 +1,6 @@
 'use client'
 import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
-import DashboardPreview from '../components/DashboardPreview'
 import { motion } from 'framer-motion'
 import TypewriterText from '../components/TypewriterText'
 
@@ -183,8 +182,7 @@ export default function HomePage() {
           .hero-sub { margin: 0 auto 32px !important; font-size: 16px !important; }
           .hero-ctas { justify-content: center; flex-direction: column; align-items: center; }
           .hero-badge { justify-content: center; }
-          .dh-preview-section { padding: 48px 0px !important; }
-          .dash-desktop-section { display: none !important; }
+
         }
         @media (min-width: 769px) {
           .tl-desktop { display: block !important; }
@@ -328,24 +326,6 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-
-      <div style={{ height: '2px', background: 'linear-gradient(to right, rgba(245,166,35,0.03), rgba(245,166,35,0.4), rgba(245,166,35,0.03))' }} />
-
-      {/* ── DASHBOARD PREVIEW ────────────────────────────────────────────────── */}
-      <section className="dh-preview-section dash-desktop-section" style={{ background: T.navyCard, padding: '48px 24px', overflowX: 'hidden', width: '100%' }}>
-        <div style={{ maxWidth: 1100, margin: '0 auto' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
-            <div style={{ height: 1, width: 32, background: 'rgba(255,255,255,0.15)' }} />
-            <span style={{ fontFamily: 'monospace', fontSize: 11, color: '#4a5260', letterSpacing: '0.1em' }}>
-              WHAT YOUR OPS MANAGER SEES
-            </span>
-            <div style={{ height: 1, flex: 1, background: 'rgba(255,255,255,0.06)' }} />
-          </div>
-          <DashboardPreview />
-        </div>
-      </section>
-
-      <div style={{ height: '2px', background: 'linear-gradient(to right, rgba(245,166,35,0.03), rgba(245,166,35,0.4), rgba(245,166,35,0.03))' }} />
 
       {/* ── LIVE INCIDENT TICKER ─────────────────────────────────────────────── */}
       <div style={{ background: '#0a0c0e', padding: '14px 0', marginBottom: 0, overflow: 'hidden' }}>
