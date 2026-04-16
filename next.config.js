@@ -10,11 +10,6 @@ const nextConfig = {
         destination: '/demo.mp4',
         permanent: false,
       },
-      {
-        source: '/dashboard',
-        destination: '/404',
-        permanent: false,
-      },
     ]
   }
 }

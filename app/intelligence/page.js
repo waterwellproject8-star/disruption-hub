@@ -147,7 +147,7 @@ export default function IntelligencePage() {
       {/* Nav */}
       <nav style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'12px 24px', borderBottom:'1px solid rgba(255,255,255,0.06)', background:'rgba(10,12,14,.98)', position:'sticky', top:0, zIndex:100 }}>
         <div style={{ display:'flex', alignItems:'center', gap:16 }}>
-          <Link href="/unlock" style={{ display:'flex', alignItems:'center', gap:8, textDecoration:'none' }}>
+          <Link href="/ops-9x7k" style={{ display:'flex', alignItems:'center', gap:8, textDecoration:'none' }}>
             <div style={{ width:24, height:24, background:'#00e5b0', borderRadius:4, display:'flex', alignItems:'center', justifyContent:'center', fontSize:10, fontWeight:700, color:'#000', fontFamily:'monospace' }}>DH</div>
             <span style={{ fontFamily:'monospace', fontSize:12, color:'#8a9099' }}>DisruptionHub</span>
           </Link>
@@ -155,7 +155,7 @@ export default function IntelligencePage() {
           <span style={{ fontSize:13, fontWeight:500 }}>Intelligence Platform</span>
           <span style={{ fontFamily:'monospace', fontSize:9, padding:'2px 7px', background:'rgba(168,85,247,.12)', border:'1px solid rgba(168,85,247,.25)', borderRadius:3, color:'#a855f7', letterSpacing:'.06em' }}>5 REVOLUTIONARY MODULES</span>
         </div>
-        <Link href="/unlock" style={{ fontSize:11, color:'#4a5260', fontFamily:'monospace', textDecoration:'none' }}>← Dashboard</Link>
+        <Link href="/ops-9x7k" style={{ fontSize:11, color:'#4a5260', fontFamily:'monospace', textDecoration:'none' }}>← Dashboard</Link>
       </nav>
 
       <div style={{ display:'grid', gridTemplateColumns:'320px 1fr', minHeight:'calc(100vh - 52px)' }}>
