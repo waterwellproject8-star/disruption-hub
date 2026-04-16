@@ -163,6 +163,8 @@ export default function HomePage() {
           .enterprise-card .enterprise-cta { width: 100% !important; text-align: center !important; }
         }
         @media (max-width: 768px) {
+          .ticker-content { font-size: 11px !important; line-height: 1 !important; }
+          .ticker-content * { font-size: 11px !important; }
           .nav-links-desktop { display: none !important; }
           .stats-grid { grid-template-columns: 1fr 1fr !important; }
           .how-grid { grid-template-columns: 1fr !important; }
@@ -343,8 +345,8 @@ export default function HomePage() {
             <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 9, color: '#4a5260', letterSpacing: '0.15em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>LIVE FEED</span>
           </div>
           <div style={{ flex: 1, overflow: 'hidden' }}>
-            <div className="ticker-track" style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: '#f5a623', letterSpacing: '0.1em', textTransform: 'uppercase', textShadow: '0 0 15px rgba(245,166,35,0.5)' }}>
-              {['REEFER FAULT · M62 J27 · RESOLVED IN 28s','TEMP ALARM · NHS LOAD · SLA PROTECTED £2,400','DRIVER HOURS · CASCADE PREVENTED · £900 SAVED','PANIC BUTTON · DRIVER SAFE · OPS NOTIFIED IN 12s','JOB DELAYED · TESCO DC · AUTO-REROUTED · £1,200 PROTECTED','REEFER FAULT · M62 J27 · RESOLVED IN 28s','TEMP ALARM · NHS LOAD · SLA PROTECTED £2,400','DRIVER HOURS · CASCADE PREVENTED · £900 SAVED','PANIC BUTTON · DRIVER SAFE · OPS NOTIFIED IN 12s','JOB DELAYED · TESCO DC · AUTO-REROUTED · £1,200 PROTECTED'].map((item, i) => (
+            <div className="ticker-track ticker-content" style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: '#f5a623', letterSpacing: '0.1em', textTransform: 'uppercase', textShadow: '0 0 15px rgba(245,166,35,0.5)' }}>
+              {['REEFER FAULT · M62 J27 · RESOLVED IN 28s','INVOICE RECOVERY · £4,280 OVERCHARGE DISPUTED · RECOVERED IN 24HRS','TEMP ALARM · NHS LOAD · SLA PROTECTED £2,400','LICENCE CHECK · EXPIRED CPC DETECTED · DRIVER STOOD DOWN','DRIVER HOURS · CASCADE PREVENTED · £900 SAVED','FAILED DELIVERY · NHS SUPPLY CHAIN · CONSIGNEE REBOOKED · SLA SAVED','PANIC BUTTON · DRIVER SAFE · OPS NOTIFIED IN 12s','ROUTE DEVIATION · A1(M) NORTHBOUND · OPS MANAGER ALERTED · JOB PROTECTED','JOB DELAYED · TESCO DC · AUTO-REROUTED · £1,200 PROTECTED','REEFER FAULT · M62 J27 · RESOLVED IN 28s','INVOICE RECOVERY · £4,280 OVERCHARGE DISPUTED · RECOVERED IN 24HRS','TEMP ALARM · NHS LOAD · SLA PROTECTED £2,400','LICENCE CHECK · EXPIRED CPC DETECTED · DRIVER STOOD DOWN','DRIVER HOURS · CASCADE PREVENTED · £900 SAVED','FAILED DELIVERY · NHS SUPPLY CHAIN · CONSIGNEE REBOOKED · SLA SAVED','PANIC BUTTON · DRIVER SAFE · OPS NOTIFIED IN 12s','ROUTE DEVIATION · A1(M) NORTHBOUND · OPS MANAGER ALERTED · JOB PROTECTED','JOB DELAYED · TESCO DC · AUTO-REROUTED · £1,200 PROTECTED'].map((item, i) => (
                 <span key={i} style={{ flexShrink: 0 }}>⬥ {item}</span>
               ))}
             </div>
