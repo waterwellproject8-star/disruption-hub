@@ -54,17 +54,11 @@ export async function POST(request) {
         }
 
         const severity = approval.action_details?.severity || 'HIGH'
-        const vehicleReg = approval.action_details?.vehicle_reg
-        const eventType = approval.action_details?.event_type
-        const line2 = vehicleReg && eventType
-          ? `${vehicleReg} — ${eventType.replace(/_/g, ' ').toUpperCase()}`
-          : (approval.action_label || '').substring(0, 60)
-        const smsBody = [
-          `DH ESCALATION — ${severity}`,
-          line2,
-          'Primary ops not responded >15min',
-          'YES to action / NO to dismiss'
-        ].join('\n')
+        const vehicleReg = approval.action_details?.vehicle_reg || ''
+        const driverName = approval.action_details?.driver_name || ''
+        const alertType = (approval.action_details?.issue_context || approval.action_type || 'alert').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+        const who = [driverName, vehicleReg].filter(Boolean).join(', ')
+        const smsBody = `DH ESCALATION — ${severity}\n${who}${who ? ' — ' : ''}${alertType}\nPrimary ops has not responded.\nYES to execute / NO to dismiss`.substring(0, 160)
 
         const result = await sendSMS(secondaryPhone, smsBody)
         await db.from('approvals').update({ escalated_at: nowIso }).eq('id', approval.id)
