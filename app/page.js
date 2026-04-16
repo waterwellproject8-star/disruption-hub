@@ -469,11 +469,11 @@ export default function HomePage() {
           {/* ── ANIMATED TIMELINE ── */}
           {(() => {
             const steps = [
-              { dot: '!', pulse: 'tl-pulse-red', activeColor: '#ef4444', activeBg: 'rgba(239,68,68,0.15)', time: '02:31', label: 'Fault detected', sub: 'Webfleet webhook' },
+              { dot: '!', pulse: 'tl-pulse-red', activeColor: '#ef4444', activeBg: 'rgba(239,68,68,0.15)', time: '02:31', label: 'Fault detected', sub: 'Webfleet webhook', big: true },
               { dot: 'AI', pulse: 'tl-pulse', activeColor: '#f5a623', activeBg: 'rgba(245,166,35,0.15)', time: '+3s', label: 'AI analyses', sub: 'Action plan built' },
               { dot: 'SMS', pulse: 'tl-pulse', activeColor: '#f5a623', activeBg: 'rgba(245,166,35,0.15)', time: '+8s', label: 'Ops notified', sub: 'Full brief sent' },
               { dot: 'YES', pulse: 'tl-pulse', activeColor: '#f5a623', activeBg: 'rgba(245,166,35,0.15)', time: '+28s', label: 'Approved', sub: 'One reply from bed' },
-              { dot: '✓', pulse: 'tl-pulse', activeColor: '#00e5b0', activeBg: 'rgba(0,229,176,0.12)', time: '+30s', label: 'Resolved', sub: 'SLA protected' },
+              { dot: 'tick', pulse: 'tl-pulse', activeColor: '#00e5b0', activeBg: 'rgba(0,229,176,0.12)', time: '+30s', label: 'Resolved', sub: 'SLA protected', big: true },
             ]
             const nodeStyle = (i) => {
               if (tlStep > i) return { background: 'rgba(0,229,176,0.12)', border: '2px solid #00e5b0', color: '#00e5b0' }
@@ -489,7 +489,7 @@ export default function HomePage() {
                   <div style={{ display: 'flex', alignItems: 'center' }}>
                     {steps.map((s, i) => (
                       <div key={i} style={{ display: 'contents' }}>
-                        <div style={{ width: 44, height: 44, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: FF.mono, fontSize: 10, fontWeight: 700, flexShrink: 0, transition: 'all 0.4s', ...nodeStyle(i) }}>{s.dot}</div>
+                        <div style={{ width: s.big ? 48 : 44, height: s.big ? 48 : 44, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: FF.mono, fontSize: s.dot === '!' ? 16 : 10, fontWeight: s.dot === '!' ? 900 : 700, flexShrink: 0, transition: 'all 0.4s', ...nodeStyle(i) }}>{s.dot === 'tick' ? <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2.5 7L5.5 10L11.5 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg> : s.dot}</div>
                         {i < steps.length - 1 && (
                           <div style={{ flex: 1, height: 2, background: 'rgba(255,255,255,0.07)', position: 'relative', overflow: 'hidden' }}>
                             <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to right, #00e5b0, #f5a623)', width: tlStep > i ? '100%' : '0%', transition: 'width 0.6s ease-out' }} />
@@ -514,7 +514,7 @@ export default function HomePage() {
                   {steps.map((s, i) => (
                     <div key={i} style={{ display: 'flex', gap: 14, alignItems: 'flex-start' }}>
                       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                        <div style={{ width: 36, height: 36, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: FF.mono, fontSize: 9, fontWeight: 700, flexShrink: 0, transition: 'all 0.4s', ...nodeStyle(i) }}>{s.dot}</div>
+                        <div style={{ width: s.big ? 48 : 36, height: s.big ? 48 : 36, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: FF.mono, fontSize: s.dot === '!' ? 16 : 9, fontWeight: s.dot === '!' ? 900 : 700, flexShrink: 0, transition: 'all 0.4s', ...nodeStyle(i) }}>{s.dot === 'tick' ? <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2.5 7L5.5 10L11.5 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg> : s.dot}</div>
                         {i < steps.length - 1 && (
                           <div style={{ width: 2, flex: 1, minHeight: 24, margin: '4px auto', background: 'rgba(255,255,255,0.07)', position: 'relative', overflow: 'hidden' }}>
                             <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', background: 'linear-gradient(to bottom, #00e5b0, #f5a623)', height: tlStep > i ? '100%' : '0%', transition: 'height 0.6s ease-out' }} />
