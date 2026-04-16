@@ -124,12 +124,10 @@ export default function HomePage() {
           .hero-truck-bg { display: none !important; }
           .hero-overlay { display: none !important; }
           .hero-glow { display: none !important; }
-          .hero-columns { flex-direction: column !important; gap: 32px !important; }
           .hero-content { text-align: center; max-width: 100% !important; }
           .hero-sub { margin: 0 auto 32px !important; font-size: 16px !important; }
           .hero-ctas { justify-content: center; flex-direction: column; align-items: center; }
           .hero-badge { justify-content: center; }
-          .hero-dashboard { max-width: 100% !important; transform: none !important; }
         }
         @media (max-width: 640px) {
           .founder-card { grid-template-columns: 80px 1fr !important; column-gap: 16px !important; padding: 28px 20px !important; }
@@ -196,8 +194,7 @@ export default function HomePage() {
           background: 'radial-gradient(ellipse 50% 60% at 20% 55%, rgba(245,166,35,0.07) 0%, transparent 70%)',
         }} />
 
-        <div className="hero-columns" style={{ position: 'relative', zIndex: 2, display: 'flex', alignItems: 'center', gap: 48, width: '100%' }}>
-        <div className="hero-content" style={{ maxWidth: 720, flexShrink: 0 }}>
+        <div className="hero-content" style={{ position: 'relative', zIndex: 2, maxWidth: 720 }}>
           {/* Label */}
           <div style={{
             fontFamily: FF.mono, fontSize: 11, fontWeight: 500,
@@ -295,15 +292,19 @@ export default function HomePage() {
             </span>
           </div>
         </div>
-        <div className="hero-dashboard" style={{
-          maxWidth: 580, flexShrink: 1, minWidth: 0,
-          transform: 'perspective(1000px) rotateY(-4deg) rotateX(2deg)',
-          boxShadow: '0 40px 80px rgba(245,166,35,0.12)',
-          borderRadius: 12,
-          overflow: 'hidden',
-        }}>
+      </section>
+
+      {/* ── DASHBOARD PREVIEW ────────────────────────────────────────────────── */}
+      <section style={{ background: '#0d1014', borderTop: '1px solid rgba(255,255,255,0.06)', padding: '48px 24px' }}>
+        <div style={{ maxWidth: 1100, margin: '0 auto' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
+            <div style={{ height: 1, width: 32, background: 'rgba(255,255,255,0.15)' }} />
+            <span style={{ fontFamily: 'monospace', fontSize: 11, color: '#4a5260', letterSpacing: '0.1em' }}>
+              WHAT YOUR OPS MANAGER SEES
+            </span>
+            <div style={{ height: 1, flex: 1, background: 'rgba(255,255,255,0.06)' }} />
+          </div>
           <DashboardPreview />
-        </div>
         </div>
       </section>
 

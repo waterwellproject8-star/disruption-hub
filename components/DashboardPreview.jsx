@@ -63,11 +63,9 @@ export default function DashboardPreview() {
         borderBottom: '1px solid rgba(255,255,255,0.06)',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{
-            width: 22, height: 22, borderRadius: 4, background: C.teal,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 9, fontWeight: 700, color: '#000', fontFamily: MONO,
-          }}>DH</div>
+          <svg width="18" height="18" viewBox="0 0 18 18" style={{ flexShrink: 0 }}>
+            <polygon points="9,1 17,5 17,13 9,17 1,13 1,5" fill="#f5a623"/>
+          </svg>
           <span style={{ fontFamily: MONO, fontSize: 11, color: C.muted }}>Operations Dashboard</span>
         </div>
         <div style={{
