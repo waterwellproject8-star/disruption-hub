@@ -164,8 +164,8 @@ export default function HomePage() {
           .how-timeline-grid { grid-template-columns: 1fr !important; gap: 12px !important; }
           .tl-desktop { display: none !important; }
           .tl-mobile { display: flex !important; }
-          .pricing-grid { grid-template-columns: 1fr !important; }
-          .pricing-card { padding: 24px 20px !important; }
+          .pricing-grid { grid-template-columns: 1fr !important; gap: 20px !important; }
+          .pricing-card { padding: 24px 20px 32px !important; }
           .pricing-card .pc-spacer { height: 8px !important; }
           .pricing-card .pc-divider { margin-bottom: 12px !important; }
           .pricing-card .pc-subtitle { margin-bottom: 12px !important; }
@@ -809,22 +809,25 @@ export default function HomePage() {
                 </div>
               ))}
             </div>
-            <p style={{ fontSize: 13, color: T.textDim, lineHeight: 1.6, margin: '12px 0' }}>
-              In a 2% margin industry, one lost Tesco contract ends a business. DisruptionHub exists so that doesn't happen.
+          </div>
+
+          <div style={{ textAlign: 'center', marginTop: 40 }}>
+            <p style={{ fontSize: 14, color: '#8a9099', marginBottom: 16, fontStyle: 'italic' }}>
+              &ldquo;In a 1–2% margin industry, one lost Tesco contract ends a business. DisruptionHub exists so that doesn&rsquo;t happen.&rdquo;
             </p>
             <a
-              className="amber-btn-glow enterprise-cta"
-              href="mailto:hello@disruptionhub.ai?subject=Enterprise enquiry — DisruptionHub&body=Hi, I'd like to discuss enterprise pricing for my fleet."
+              href="mailto:hello@disruptionhub.ai?subject=Book a call"
               onClick={handleMailto}
               style={{
-                display: 'inline-block', padding: '14px 28px',
-                background: T.amber, color: '#000', borderRadius: 4,
-                fontFamily: FF.condensed, fontSize: 16, fontWeight: 700,
-                textTransform: 'uppercase', letterSpacing: '0.06em',
-                textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0,
+                display: 'inline-block',
+                background: '#f5a623', color: '#000',
+                fontFamily: 'monospace', fontWeight: 700,
+                fontSize: 13, padding: '14px 40px',
+                borderRadius: 6, textDecoration: 'none',
+                letterSpacing: '0.05em'
               }}
             >
-              Book a Call →
+              BOOK A CALL →
             </a>
           </div>
 
