@@ -381,7 +381,7 @@ export default function HomePage() {
       <div style={{ height: '2px', background: 'linear-gradient(to right, rgba(245,166,35,0.03), rgba(245,166,35,0.4), rgba(245,166,35,0.03))' }} />
 
       {/* ── HOW IT WORKS ─────────────────────────────────────────────────────── */}
-      <section id="how" style={{ background: '#0a0c0e', padding: '80px 40px 100px' }}>
+      <section id="how" style={{ background: '#0a0c0e', padding: '80px 40px 60px' }}>
         <div style={{ maxWidth: 1100, margin: '0 auto' }}>
           <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.4 }}>
             <div style={{
@@ -569,7 +569,7 @@ export default function HomePage() {
 
       {/* ── PRICING ──────────────────────────────────────────────────────────── */}
       <section id="pricing" style={{
-        padding: '80px 40px 100px',
+        padding: '60px 40px 100px',
         background: '#0a0c0e',
       }}>
         <div style={{ maxWidth: 1000, margin: '0 auto' }}>
