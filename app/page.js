@@ -818,7 +818,7 @@ export default function HomePage() {
           <div className="founder-card founder-grid" style={{
             marginTop: 72, marginBottom: 64,
             padding: '40px 32px',
-            background: T.navyCard,
+            background: '#111418',
             border: `1px solid ${T.border}`,
             borderRadius: 4,
             display: 'grid',
