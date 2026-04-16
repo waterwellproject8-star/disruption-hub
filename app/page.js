@@ -346,7 +346,7 @@ export default function HomePage() {
       <div style={{ height: '2px', background: 'linear-gradient(to right, rgba(245,166,35,0.03), rgba(245,166,35,0.4), rgba(245,166,35,0.03))' }} />
 
       {/* ── DASHBOARD PREVIEW ────────────────────────────────────────────────── */}
-      <section className="dh-preview-section dash-desktop-section" style={{ background: '#0a0c0e', padding: '48px 24px', overflowX: 'hidden', width: '100%' }}>
+      <section className="dh-preview-section dash-desktop-section" style={{ background: T.navyCard, padding: '48px 24px', overflowX: 'hidden', width: '100%' }}>
         <div style={{ maxWidth: 1100, margin: '0 auto' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
             <div style={{ height: 1, width: 32, background: 'rgba(255,255,255,0.15)' }} />
@@ -407,14 +407,14 @@ export default function HomePage() {
           }}>
             {/* ── Card 1: CONNECT ── */}
             <motion.div initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '-60px' }} transition={{ duration: 0.5, delay: 0 }}>
-            <div style={{ background: '#0a0c0e', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, padding: '32px 24px', position: 'relative', overflow: 'hidden' }}>
+            <div style={{ background: T.navyCard, border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, padding: '32px 24px', position: 'relative', overflow: 'hidden' }}>
               <div style={{ position: 'absolute', top: 12, right: 16, fontFamily: 'monospace', fontSize: 64, fontWeight: 900, color: 'rgba(245,166,35,0.10)', lineHeight: 1, zIndex: 0 }}>01</div>
               <div style={{ marginBottom: 16, position: 'relative', zIndex: 1 }}>
                 <svg width="28" height="28" viewBox="0 0 18 18"><polygon points="9,1 17,5 17,13 9,17 1,13 1,5" fill="#f5a623"/></svg>
               </div>
               <h3 style={{ fontFamily: FF.condensed, fontSize: 22, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#fff', marginBottom: 12 }}>Connect</h3>
               <p style={{ fontSize: 13, color: '#8a9099', lineHeight: 1.7, marginBottom: 20 }}>Your existing systems — Mandata, Webfleet, Microlise, Samsara — connect via webhook. No new software. No driver training.</p>
-              <div style={{ background: '#0a0c0e', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 6, padding: '12px 14px' }}>
+              <div style={{ background: T.navyCard, border: '1px solid rgba(255,255,255,0.07)', borderRadius: 6, padding: '12px 14px' }}>
                 {[
                   { src: 'Webfleet', evt: 'reefer_fault', hot: true },
                   { src: 'Mandata', evt: 'job_delayed', hot: false },
@@ -438,7 +438,7 @@ export default function HomePage() {
 
             {/* ── Card 2: ANALYSE ── */}
             <motion.div initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '-60px' }} transition={{ duration: 0.5, delay: 0.15 }}>
-            <div style={{ background: '#0a0c0e', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, padding: '32px 24px', position: 'relative', overflow: 'hidden' }}>
+            <div style={{ background: T.navyCard, border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, padding: '32px 24px', position: 'relative', overflow: 'hidden' }}>
               <div style={{ position: 'absolute', top: 12, right: 16, fontFamily: 'monospace', fontSize: 64, fontWeight: 900, color: 'rgba(245,166,35,0.10)', lineHeight: 1, zIndex: 0 }}>02</div>
               <div style={{ marginBottom: 16, position: 'relative', zIndex: 1 }}>
                 <svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="#f5a623" strokeWidth="1.5" strokeLinecap="round">
@@ -449,7 +449,7 @@ export default function HomePage() {
               </div>
               <h3 style={{ fontFamily: FF.condensed, fontSize: 22, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#fff', marginBottom: 12 }}>Analyse</h3>
               <p style={{ fontSize: 13, color: '#8a9099', lineHeight: 1.7, marginBottom: 20 }}>AI analyses the incident in real time — severity, financial exposure, cascade risk, regulatory impact — and builds an action plan.</p>
-              <div style={{ background: '#0a0c0e', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 6, padding: '12px 14px' }}>
+              <div style={{ background: T.navyCard, border: '1px solid rgba(255,255,255,0.07)', borderRadius: 6, padding: '12px 14px' }}>
                 <div style={{ fontFamily: FF.mono, fontSize: 9, color: '#4a5260', letterSpacing: '0.1em', marginBottom: 8 }}>ASSESSMENT OUTPUT</div>
                 {[
                   { k: 'Severity', v: 'CRITICAL', c: '#ef4444' },
@@ -473,7 +473,7 @@ export default function HomePage() {
 
             {/* ── Card 3: DECIDE ── */}
             <motion.div initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '-60px' }} transition={{ duration: 0.5, delay: 0.3 }}>
-            <div style={{ background: '#0a0c0e', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, padding: '32px 24px', position: 'relative', overflow: 'hidden' }}>
+            <div style={{ background: T.navyCard, border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, padding: '32px 24px', position: 'relative', overflow: 'hidden' }}>
               <div style={{ position: 'absolute', top: 12, right: 16, fontFamily: 'monospace', fontSize: 64, fontWeight: 900, color: 'rgba(245,166,35,0.10)', lineHeight: 1, zIndex: 0 }}>03</div>
               <div style={{ marginBottom: 16, position: 'relative', zIndex: 1 }}>
                 <svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="#f5a623" strokeWidth="1.5" strokeLinecap="round">
@@ -483,7 +483,7 @@ export default function HomePage() {
               </div>
               <h3 style={{ fontFamily: FF.condensed, fontSize: 22, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#fff', marginBottom: 12 }}>Decide</h3>
               <p style={{ fontSize: 13, color: '#8a9099', lineHeight: 1.7, marginBottom: 20 }}>Ops manager gets one SMS with the full picture. Reply YES — driver instructed, consignee called, SLA protected. Under 30 seconds.</p>
-              <div style={{ background: '#0a0c0e', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 6, padding: '14px 14px 12px' }}>
+              <div style={{ background: T.navyCard, border: '1px solid rgba(255,255,255,0.07)', borderRadius: 6, padding: '14px 14px 12px' }}>
                 <div style={{ fontFamily: FF.mono, fontSize: 10, color: '#e8eaed', lineHeight: 1.6, marginBottom: 12 }}>
                   CRITICAL — LK72 ABX reefer fault M62 J27. £14,000 cargo at risk. Reply YES to dispatch recovery, instruct driver, and notify Tesco DC Bradford.
                 </div>
@@ -511,7 +511,7 @@ export default function HomePage() {
               return { background: '#111418', border: '2px solid rgba(255,255,255,0.08)', color: '#4a5260' }
             }
             return (
-              <div ref={timelineRef} style={{ marginTop: 56, padding: '32px 24px', background: '#0a0c0e', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8 }}>
+              <div ref={timelineRef} style={{ marginTop: 56, padding: '32px 24px', background: T.navyCard, border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8 }}>
                 <div style={{ fontFamily: FF.mono, fontSize: 10, color: '#4a5260', letterSpacing: '0.1em', marginBottom: 20, textAlign: 'center' }}>REAL SCENARIO — 2:30AM REEFER FAULT ON M62</div>
 
                 {/* DESKTOP */}
