@@ -362,7 +362,7 @@ export default function HomePage() {
       <div style={{ height: '2px', background: 'linear-gradient(to right, rgba(245,166,35,0.03), rgba(245,166,35,0.4), rgba(245,166,35,0.03))' }} />
 
       {/* ── LIVE INCIDENT TICKER ─────────────────────────────────────────────── */}
-      <div style={{ background: '#0a0c0e', padding: '14px 0', overflow: 'hidden' }}>
+      <div style={{ background: '#0a0c0e', padding: '14px 0', marginBottom: 0, overflow: 'hidden' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 0 }}>
           <div style={{ paddingLeft: 32, flexShrink: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
             <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#00e5b0', animation: 'pulse 2s infinite' }} />
@@ -381,7 +381,7 @@ export default function HomePage() {
       <div style={{ height: '2px', background: 'linear-gradient(to right, rgba(245,166,35,0.03), rgba(245,166,35,0.4), rgba(245,166,35,0.03))' }} />
 
       {/* ── HOW IT WORKS ─────────────────────────────────────────────────────── */}
-      <section id="how" style={{ background: '#0a0c0e', padding: '100px 40px' }}>
+      <section id="how" style={{ background: '#0a0c0e', padding: '80px 40px 100px' }}>
         <div style={{ maxWidth: 1100, margin: '0 auto' }}>
           <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.4 }}>
             <div style={{
@@ -408,7 +408,7 @@ export default function HomePage() {
             {/* ── Card 1: CONNECT ── */}
             <motion.div initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '-60px' }} transition={{ duration: 0.5, delay: 0 }}>
             <div style={{ background: '#0a0c0e', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, padding: '32px 24px', position: 'relative', overflow: 'hidden' }}>
-              <div style={{ position: 'absolute', top: 12, right: 16, fontFamily: 'monospace', fontSize: 64, fontWeight: 900, color: 'rgba(245,166,35,0.35)', lineHeight: 1, zIndex: 0 }}>01</div>
+              <div style={{ position: 'absolute', top: 12, right: 16, fontFamily: 'monospace', fontSize: 64, fontWeight: 900, color: 'rgba(245,166,35,0.10)', lineHeight: 1, zIndex: 0 }}>01</div>
               <div style={{ marginBottom: 16, position: 'relative', zIndex: 1 }}>
                 <svg width="28" height="28" viewBox="0 0 18 18"><polygon points="9,1 17,5 17,13 9,17 1,13 1,5" fill="#f5a623"/></svg>
               </div>
@@ -439,7 +439,7 @@ export default function HomePage() {
             {/* ── Card 2: ANALYSE ── */}
             <motion.div initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '-60px' }} transition={{ duration: 0.5, delay: 0.15 }}>
             <div style={{ background: '#0a0c0e', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, padding: '32px 24px', position: 'relative', overflow: 'hidden' }}>
-              <div style={{ position: 'absolute', top: 12, right: 16, fontFamily: 'monospace', fontSize: 64, fontWeight: 900, color: 'rgba(245,166,35,0.35)', lineHeight: 1, zIndex: 0 }}>02</div>
+              <div style={{ position: 'absolute', top: 12, right: 16, fontFamily: 'monospace', fontSize: 64, fontWeight: 900, color: 'rgba(245,166,35,0.10)', lineHeight: 1, zIndex: 0 }}>02</div>
               <div style={{ marginBottom: 16, position: 'relative', zIndex: 1 }}>
                 <svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="#f5a623" strokeWidth="1.5" strokeLinecap="round">
                   <rect x="3" y="5" width="22" height="16" rx="2"/>
@@ -474,7 +474,7 @@ export default function HomePage() {
             {/* ── Card 3: DECIDE ── */}
             <motion.div initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '-60px' }} transition={{ duration: 0.5, delay: 0.3 }}>
             <div style={{ background: '#0a0c0e', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, padding: '32px 24px', position: 'relative', overflow: 'hidden' }}>
-              <div style={{ position: 'absolute', top: 12, right: 16, fontFamily: 'monospace', fontSize: 64, fontWeight: 900, color: 'rgba(245,166,35,0.35)', lineHeight: 1, zIndex: 0 }}>03</div>
+              <div style={{ position: 'absolute', top: 12, right: 16, fontFamily: 'monospace', fontSize: 64, fontWeight: 900, color: 'rgba(245,166,35,0.10)', lineHeight: 1, zIndex: 0 }}>03</div>
               <div style={{ marginBottom: 16, position: 'relative', zIndex: 1 }}>
                 <svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="#f5a623" strokeWidth="1.5" strokeLinecap="round">
                   <rect x="8" y="2" width="12" height="24" rx="2"/>
