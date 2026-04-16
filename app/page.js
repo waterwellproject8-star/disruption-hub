@@ -399,17 +399,17 @@ export default function HomePage() {
                 <svg width="28" height="28" viewBox="0 0 18 18"><polygon points="9,1 17,5 17,13 9,17 1,13 1,5" fill="#f5a623"/></svg>
               </div>
               <h3 style={{ fontFamily: FF.condensed, fontSize: 22, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#fff', marginBottom: 12 }}>Connect</h3>
-              <p style={{ fontSize: 13, color: '#8a9099', lineHeight: 1.7, marginBottom: 20 }}>Your existing systems — Mandata, Webfleet, Microlise, Samsara — connect via webhook. No new software. No driver training.</p>
+              <p style={{ fontSize: 13, color: '#8a9099', lineHeight: 1.7, marginBottom: 20 }}>Plugs directly into your existing systems — Mandata, Webfleet, Microlise, Samsara. No new software. No driver training.</p>
               <div style={{ background: T.navyCard, border: '1px solid rgba(255,255,255,0.12)', borderRadius: 6, padding: '12px 14px' }}>
                 {[
-                  { src: 'Webfleet', evt: 'reefer_fault', hot: true },
-                  { src: 'Mandata', evt: 'job_delayed', hot: false },
-                  { src: 'Microlise', evt: 'driver_hours', hot: false },
+                  { src: 'Webfleet', evt: 'reefer unit fault detected', hot: true },
+                  { src: 'Mandata', evt: 'job running late', hot: false },
+                  { src: 'Microlise', evt: 'driver hours at limit', hot: false },
                 ].map((w, i) => (
                   <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '5px 0', borderBottom: i < 2 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
                     <div style={{ width: 5, height: 5, borderRadius: '50%', background: w.hot ? '#f5a623' : '#4a5260' }} />
                     <span style={{ fontFamily: FF.mono, fontSize: 10, color: '#8a9099' }}>{w.src}</span>
-                    <span style={{ fontFamily: FF.mono, fontSize: 10, color: '#4a5260' }}>→</span>
+                    <span style={{ fontFamily: FF.mono, fontSize: 10, color: '#4a5260' }}>—</span>
                     <span style={{ fontFamily: FF.mono, fontSize: 10, color: w.hot ? '#f5a623' : '#4a5260' }}>{w.evt}</span>
                   </div>
                 ))}
@@ -434,7 +434,7 @@ export default function HomePage() {
                 </svg>
               </div>
               <h3 style={{ fontFamily: FF.condensed, fontSize: 22, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#fff', marginBottom: 12 }}>Analyse</h3>
-              <p style={{ fontSize: 13, color: '#8a9099', lineHeight: 1.7, marginBottom: 20 }}>AI analyses the incident in real time — severity, financial exposure, cascade risk, regulatory impact — and builds an action plan.</p>
+              <p style={{ fontSize: 13, color: '#8a9099', lineHeight: 1.7, marginBottom: 20 }}>AI reads the incident instantly — how serious, what it costs, what breaks next if you do nothing.</p>
               <div style={{ background: T.navyCard, border: '1px solid rgba(255,255,255,0.12)', borderRadius: 6, padding: '12px 14px' }}>
                 <div style={{ fontFamily: FF.mono, fontSize: 9, color: '#4a5260', letterSpacing: '0.1em', marginBottom: 8 }}>ASSESSMENT OUTPUT</div>
                 {[
@@ -468,7 +468,7 @@ export default function HomePage() {
                 </svg>
               </div>
               <h3 style={{ fontFamily: FF.condensed, fontSize: 22, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#fff', marginBottom: 12 }}>Decide</h3>
-              <p style={{ fontSize: 13, color: '#8a9099', lineHeight: 1.7, marginBottom: 20 }}>Ops manager gets one SMS with the full picture. Reply YES — driver instructed, consignee called, SLA protected. Under 30 seconds.</p>
+              <p style={{ fontSize: 13, color: '#8a9099', lineHeight: 1.7, marginBottom: 20 }}>One text to ops. Reply YES — driver instructed, consignee called, SLA protected.</p>
               <div style={{ background: T.navyCard, border: '1px solid rgba(255,255,255,0.12)', borderRadius: 6, padding: '14px 14px 12px' }}>
                 <div style={{ fontFamily: FF.mono, fontSize: 10, color: '#e8eaed', lineHeight: 1.6, marginBottom: 12 }}>
                   CRITICAL — LK72 ABX reefer fault M62 J27. £14,000 cargo at risk. Reply YES to dispatch recovery, instruct driver, and notify Tesco DC Bradford.
