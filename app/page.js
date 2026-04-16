@@ -314,20 +314,6 @@ export default function HomePage() {
             >
               See What Happens At 2:30AM
             </button>
-            <a
-              href="mailto:hello@disruptionhub.ai?subject=Pilot request — DisruptionHub&body=Hi, I'd like to start the £149 pilot for my haulage operation."
-              onClick={handleMailto}
-              style={{
-                background: 'transparent', border: '1px solid #f5a623', cursor: 'pointer',
-                display: 'inline-flex', alignItems: 'center',
-                color: '#f5a623', fontFamily: "'Barlow Condensed', sans-serif",
-                fontSize: 16, fontWeight: 700, letterSpacing: '0.06em',
-                textTransform: 'uppercase', padding: '15px 32px',
-                borderRadius: 6, textDecoration: 'none',
-              }}
-            >
-              Start Your Pilot
-            </a>
           </div>
 
           {/* Social proof */}
