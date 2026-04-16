@@ -128,6 +128,7 @@ export default function HomePage() {
           .hero-sub { margin: 0 auto 32px !important; font-size: 16px !important; }
           .hero-ctas { justify-content: center; flex-direction: column; align-items: center; }
           .hero-badge { justify-content: center; }
+          .dh-preview-section { padding: 48px 0px !important; }
         }
         @media (max-width: 640px) {
           .founder-card { grid-template-columns: 80px 1fr !important; column-gap: 16px !important; padding: 28px 20px !important; }
@@ -295,7 +296,7 @@ export default function HomePage() {
       </section>
 
       {/* ── DASHBOARD PREVIEW ────────────────────────────────────────────────── */}
-      <section style={{ background: '#0d1014', borderTop: '1px solid rgba(255,255,255,0.06)', padding: '48px 24px' }}>
+      <section className="dh-preview-section" style={{ background: '#0d1014', borderTop: '1px solid rgba(255,255,255,0.06)', padding: '48px 24px', overflowX: 'hidden', width: '100%' }}>
         <div style={{ maxWidth: 1100, margin: '0 auto' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
             <div style={{ height: 1, width: 32, background: 'rgba(255,255,255,0.15)' }} />

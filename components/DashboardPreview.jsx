@@ -44,6 +44,7 @@ export default function DashboardPreview() {
       borderRadius: 12,
       border: '1px solid rgba(255,255,255,0.08)',
       overflow: 'hidden',
+      overflowX: 'hidden',
       fontFamily: BODY,
       fontSize: 12,
       color: C.text,
@@ -54,6 +55,11 @@ export default function DashboardPreview() {
       <style>{`
         @keyframes dh-pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
         @keyframes dh-glow { 0%,100%{box-shadow:0 0 6px rgba(245,158,11,.4)} 50%{box-shadow:0 0 14px rgba(245,158,11,.7)} }
+        @media (max-width: 768px) {
+          .dh-preview-layout { flex-direction: column !important; }
+          .dh-preview-sidebar { width: 100% !important; border-right: none !important; border-bottom: 1px solid rgba(255,255,255,0.06) !important; overflow: visible !important; max-height: none !important; }
+          .dh-preview-main { min-height: 300px !important; }
+        }
       `}</style>
 
       {/* ── NAV ───────────────────────────────────────────────────── */}
@@ -86,10 +92,10 @@ export default function DashboardPreview() {
       </div>
 
       {/* ── BODY ──────────────────────────────────────────────────── */}
-      <div style={{ display: 'flex', minHeight: 420 }}>
+      <div className="dh-preview-layout" style={{ display: 'flex', minHeight: 420 }}>
 
         {/* ── LEFT SIDEBAR ────────────────────────────────────────── */}
-        <div style={{
+        <div className="dh-preview-sidebar" style={{
           width: 290, flexShrink: 0,
           borderRight: '1px solid rgba(255,255,255,0.06)',
           background: C.bg, padding: '14px 14px 16px',
@@ -128,7 +134,7 @@ export default function DashboardPreview() {
         </div>
 
         {/* ── RIGHT PANEL ─────────────────────────────────────────── */}
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: C.bg }}>
+        <div className="dh-preview-main" style={{ flex: 1, display: 'flex', flexDirection: 'column', background: C.bg }}>
           {/* Tabs */}
           <div style={{
             display: 'flex', gap: 0,
