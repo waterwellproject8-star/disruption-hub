@@ -295,7 +295,7 @@ export default function HomePage() {
 
       {/* ── STATS STRIP ──────────────────────────────────────────────────────── */}
       <div style={{
-        background: T.navyMid,
+        background: '#0a0c0e',
         borderTop: `1px solid ${T.amberBorder}`,
         borderBottom: `1px solid ${T.amberBorder}`,
         padding: '0 40px',
