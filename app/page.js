@@ -159,7 +159,7 @@ export default function HomePage() {
         <ul className="nav-links-desktop" style={{ display: 'flex', alignItems: 'center', gap: 32, listStyle: 'none' }}>
           <li><a href="#how" className="nav-link">Platform</a></li>
           <li><a href="#pricing" className="nav-link">Pricing</a></li>
-          <li><Link href="/dashboard" className="nav-link">Dashboard</Link></li>
+          <li><Link href="/unlock" className="nav-link">Dashboard</Link></li>
         </ul>
 
         <a
@@ -243,7 +243,7 @@ export default function HomePage() {
             >
               Start Your Pilot
             </a>
-            <Link href="/dashboard" className="btn-outline">
+            <Link href="/unlock" className="btn-outline">
               View Dashboard →
             </Link>
           </div>
@@ -899,7 +899,7 @@ export default function HomePage() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 <a href="#how" style={{ fontSize: 13, color: T.textDim, textDecoration: 'none' }}>Platform</a>
                 <a href="#pricing" style={{ fontSize: 13, color: T.textDim, textDecoration: 'none' }}>Pricing</a>
-                <Link href="/dashboard" style={{ fontSize: 13, color: T.textDim, textDecoration: 'none' }}>Dashboard</Link>
+                <Link href="/unlock" style={{ fontSize: 13, color: T.textDim, textDecoration: 'none' }}>Dashboard</Link>
               </div>
             </div>
             <div>

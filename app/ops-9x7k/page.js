@@ -236,7 +236,10 @@ function PinGate({ onUnlock }) {
   const [error, setError] = useState(false)
   const handleSubmit = () => {
     if (pin.toUpperCase() === DASHBOARD_PIN) {
-      if (typeof window !== 'undefined') localStorage.setItem('dh_unlocked','true')
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('dh_unlocked','true')
+        document.cookie = 'dh_ops_auth=true; path=/; max-age=31536000; SameSite=Strict'
+      }
       onUnlock()
     }
     else { setError(true); setPin(''); setTimeout(() => setError(false), 2000) }
