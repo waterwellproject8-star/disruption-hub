@@ -62,7 +62,7 @@ export default function HomePage() {
   }
 
   return (
-    <div style={{ background: T.navy, color: T.text, fontFamily: FF.body, overflowX: 'hidden' }}>
+    <div style={{ background: '#0a0c0e', color: T.text, fontFamily: FF.body, overflowX: 'hidden' }}>
 
       <style>{`
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -286,8 +286,10 @@ export default function HomePage() {
         </div>
       </section>
 
+      <div style={{ height: '2px', background: 'linear-gradient(to right, rgba(245,166,35,0.03), rgba(245,166,35,0.4), rgba(245,166,35,0.03))' }} />
+
       {/* ── DASHBOARD PREVIEW ────────────────────────────────────────────────── */}
-      <section className="dh-preview-section dash-desktop-section" style={{ background: '#080c14', borderTop: '1px solid rgba(255,255,255,0.06)', padding: '48px 24px', overflowX: 'hidden', width: '100%' }}>
+      <section className="dh-preview-section dash-desktop-section" style={{ background: '#0a0c0e', padding: '48px 24px', overflowX: 'hidden', width: '100%' }}>
         <div style={{ maxWidth: 1100, margin: '0 auto' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
             <div style={{ height: 1, width: 32, background: 'rgba(255,255,255,0.15)' }} />
@@ -300,8 +302,10 @@ export default function HomePage() {
         </div>
       </section>
 
+      <div style={{ height: '2px', background: 'linear-gradient(to right, rgba(245,166,35,0.03), rgba(245,166,35,0.4), rgba(245,166,35,0.03))' }} />
+
       {/* ── LIVE INCIDENT TICKER ─────────────────────────────────────────────── */}
-      <div style={{ background: '#0d1420', borderBottom: '1px solid rgba(255,255,255,0.05)', padding: '14px 0', overflow: 'hidden' }}>
+      <div style={{ background: '#0a0c0e', padding: '14px 0', overflow: 'hidden' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 0 }}>
           <div style={{ paddingLeft: 32, flexShrink: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
             <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#00e5b0', animation: 'pulse 2s infinite' }} />
@@ -316,6 +320,8 @@ export default function HomePage() {
           </div>
         </div>
       </div>
+
+      <div style={{ height: '2px', background: 'linear-gradient(to right, rgba(245,166,35,0.03), rgba(245,166,35,0.4), rgba(245,166,35,0.03))' }} />
 
       {/* ── HOW IT WORKS ─────────────────────────────────────────────────────── */}
       <section id="how" style={{ background: '#0a0c0e', padding: '100px 40px' }}>
@@ -449,12 +455,12 @@ export default function HomePage() {
         </div>
       </section>
 
+      <div style={{ height: '2px', background: 'linear-gradient(to right, rgba(245,166,35,0.03), rgba(245,166,35,0.4), rgba(245,166,35,0.03))' }} />
+
       {/* ── PRICING ──────────────────────────────────────────────────────────── */}
       <section id="pricing" style={{
         padding: '80px 40px 100px',
-        background: T.navyMid,
-        borderTop: `1px solid ${T.border}`,
-        borderBottom: `1px solid ${T.border}`,
+        background: '#0a0c0e',
       }}>
         <div style={{ maxWidth: 1000, margin: '0 auto' }}>
           <div style={{
@@ -826,10 +832,11 @@ export default function HomePage() {
         </div>
       </section>
 
+      <div style={{ height: '2px', background: 'linear-gradient(to right, rgba(245,166,35,0.03), rgba(245,166,35,0.4), rgba(245,166,35,0.03))' }} />
+
       {/* ── FOOTER ───────────────────────────────────────────────────────────── */}
       <footer style={{
-        background: T.navyMid,
-        borderTop: `1px solid ${T.border}`,
+        background: '#0a0c0e',
         padding: '48px 40px 32px',
       }}>
         <div className="footer-cols" style={{
