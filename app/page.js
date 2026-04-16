@@ -379,7 +379,7 @@ export default function HomePage() {
                 <svg width="28" height="28" viewBox="0 0 18 18"><polygon points="9,1 17,5 17,13 9,17 1,13 1,5" fill="#f5a623"/></svg>
               </div>
               <h3 style={{ fontFamily: FF.condensed, fontSize: 22, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#fff', marginBottom: 12 }}>Connect</h3>
-              <p style={{ fontSize: 13, color: '#8a9099', lineHeight: 1.7, marginBottom: 20 }}>Plugs directly into your existing systems — Mandata, Webfleet, Microlise, Samsara. No new software. No driver training.</p>
+              <p style={{ fontSize: 13, color: '#c8cdd4', lineHeight: 1.7, marginBottom: 20, fontWeight: 400 }}>Plugs directly into your existing systems — Mandata, Webfleet, Microlise, Samsara. No new software. No driver training.</p>
               <div style={{ background: T.navyCard, border: '1px solid rgba(255,255,255,0.12)', borderRadius: 6, padding: '12px 14px' }}>
                 {[
                   { src: 'Webfleet', evt: 'reefer unit fault detected', hot: true },
@@ -388,9 +388,9 @@ export default function HomePage() {
                 ].map((w, i) => (
                   <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '5px 0', borderBottom: i < 2 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
                     <div style={{ width: 5, height: 5, borderRadius: '50%', background: w.hot ? '#f5a623' : '#4a5260' }} />
-                    <span style={{ fontFamily: FF.mono, fontSize: 10, color: '#8a9099' }}>{w.src}</span>
+                    <span style={{ fontFamily: FF.mono, fontSize: 10, color: '#e8eaed', fontWeight: 600 }}>{w.src}</span>
                     <span style={{ fontFamily: FF.mono, fontSize: 10, color: '#4a5260' }}>—</span>
-                    <span style={{ fontFamily: FF.mono, fontSize: 10, color: w.hot ? '#f5a623' : '#4a5260' }}>{w.evt}</span>
+                    <span style={{ fontFamily: FF.mono, fontSize: 10, color: '#f5a623' }}>{w.evt}</span>
                   </div>
                 ))}
               </div>
@@ -414,9 +414,9 @@ export default function HomePage() {
                 </svg>
               </div>
               <h3 style={{ fontFamily: FF.condensed, fontSize: 22, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#fff', marginBottom: 12 }}>Analyse</h3>
-              <p style={{ fontSize: 13, color: '#8a9099', lineHeight: 1.7, marginBottom: 20 }}>AI reads the incident instantly — how serious, what it costs, what breaks next if you do nothing.</p>
+              <p style={{ fontSize: 13, color: '#c8cdd4', lineHeight: 1.7, marginBottom: 20, fontWeight: 400 }}>AI reads the incident instantly — how serious, what it costs, what breaks next if you do nothing.</p>
               <div style={{ background: T.navyCard, border: '1px solid rgba(255,255,255,0.12)', borderRadius: 6, padding: '12px 14px' }}>
-                <div style={{ fontFamily: FF.mono, fontSize: 9, color: '#4a5260', letterSpacing: '0.1em', marginBottom: 8 }}>ASSESSMENT OUTPUT</div>
+                <div style={{ fontFamily: FF.mono, fontSize: 9, color: '#8a9099', letterSpacing: '0.1em', marginBottom: 8 }}>ASSESSMENT OUTPUT</div>
                 {[
                   { k: 'Severity', v: 'CRITICAL', c: '#ef4444' },
                   { k: 'Exposure', v: '£14,000', c: '#f5a623' },
@@ -424,7 +424,7 @@ export default function HomePage() {
                   { k: 'Action', v: 'dispatch recovery', c: '#00e5b0' },
                 ].map((r, i) => (
                   <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', borderBottom: i < 3 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
-                    <span style={{ fontFamily: FF.mono, fontSize: 10, color: '#8a9099' }}>— {r.k}</span>
+                    <span style={{ fontFamily: FF.mono, fontSize: 10, color: '#c8cdd4' }}>— {r.k}</span>
                     <span style={{ fontFamily: FF.mono, fontSize: 10, color: r.c, fontWeight: 600 }}>{r.v}</span>
                   </div>
                 ))}
@@ -448,7 +448,7 @@ export default function HomePage() {
                 </svg>
               </div>
               <h3 style={{ fontFamily: FF.condensed, fontSize: 22, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#fff', marginBottom: 12 }}>Decide</h3>
-              <p style={{ fontSize: 13, color: '#8a9099', lineHeight: 1.7, marginBottom: 20 }}>One text to ops. Reply YES — driver instructed, consignee called, SLA protected.</p>
+              <p style={{ fontSize: 13, color: '#c8cdd4', lineHeight: 1.7, marginBottom: 20, fontWeight: 400 }}>One text to ops. Reply YES — driver instructed, consignee called, SLA protected.</p>
               <div style={{ background: T.navyCard, border: '1px solid rgba(255,255,255,0.12)', borderRadius: 6, padding: '14px 14px 12px' }}>
                 <div style={{ fontFamily: FF.mono, fontSize: 10, color: '#e8eaed', lineHeight: 1.6, marginBottom: 12 }}>
                   CRITICAL — LK72 ABX reefer fault M62 J27. £14,000 cargo at risk. Reply YES to dispatch recovery, instruct driver, and notify Tesco DC Bradford.
