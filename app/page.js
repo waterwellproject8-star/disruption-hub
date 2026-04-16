@@ -236,49 +236,34 @@ export default function HomePage() {
           </p>
 
           {/* CTAs */}
-          <div className="hero-ctas" style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-            <a
-              className="btn-hero"
-              href="mailto:hello@disruptionhub.ai?subject=Pilot request — DisruptionHub&body=Hi, I'd like to start the £149 pilot for my haulage operation."
-              onClick={handleMailto}
-            >
-              Start Your Pilot
-            </a>
-            <Link href="/dashboard" className="btn-outline">
-              View Dashboard →
-            </Link>
-          </div>
-
-          {/* Watch Demo button */}
-          <div className="hero-ctas" style={{ marginTop: 20 }}>
+          <div className="hero-ctas" style={{ display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'center' }}>
             <button
               onClick={() => setVideoOpen(true)}
               style={{
-                background: 'transparent', border: 'none', cursor: 'pointer',
+                background: '#f5a623', border: 'none', cursor: 'pointer',
                 display: 'inline-flex', alignItems: 'center', gap: 10,
-                color: '#8a9099', fontFamily: "'Barlow Condensed', sans-serif",
-                fontSize: 15, fontWeight: 600, letterSpacing: '0.06em',
-                textTransform: 'uppercase', padding: '8px 0',
+                color: '#000', fontFamily: "'Barlow Condensed', sans-serif",
+                fontSize: 16, fontWeight: 700, letterSpacing: '0.06em',
+                textTransform: 'uppercase', padding: '16px 32px',
+                borderRadius: 6,
               }}
-              onMouseEnter={e => e.currentTarget.style.color = '#f5a623'}
-              onMouseLeave={e => e.currentTarget.style.color = '#8a9099'}
             >
-              <div style={{
-                width: 36, height: 36, borderRadius: '50%',
-                border: '1px solid rgba(245,166,35,0.3)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                flexShrink: 0,
-              }}>
-                <div style={{
-                  width: 0, height: 0,
-                  borderTop: '7px solid transparent',
-                  borderBottom: '7px solid transparent',
-                  borderLeft: '12px solid #f5a623',
-                  marginLeft: 3,
-                }} />
-              </div>
               See What Happens At 2:30AM
             </button>
+            <a
+              href="mailto:hello@disruptionhub.ai?subject=Pilot request — DisruptionHub&body=Hi, I'd like to start the £149 pilot for my haulage operation."
+              onClick={handleMailto}
+              style={{
+                background: 'transparent', border: '1px solid #f5a623', cursor: 'pointer',
+                display: 'inline-flex', alignItems: 'center',
+                color: '#f5a623', fontFamily: "'Barlow Condensed', sans-serif",
+                fontSize: 16, fontWeight: 700, letterSpacing: '0.06em',
+                textTransform: 'uppercase', padding: '15px 32px',
+                borderRadius: 6, textDecoration: 'none',
+              }}
+            >
+              Start Your Pilot
+            </a>
           </div>
 
           {/* Social proof */}
