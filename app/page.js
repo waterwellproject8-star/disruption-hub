@@ -7,10 +7,10 @@ import TypewriterText from '../components/TypewriterText'
 
 // ── DESIGN TOKENS ─────────────────────────────────────────────────────────────
 const T = {
-  navy:       '#080c14',
-  navyMid:    '#0d1420',
-  navyCard:   '#0f1826',
-  navyRow:    '#111927',
+  navy:       '#0a0c0e',
+  navyMid:    '#0a0c0e',
+  navyCard:   '#0a0c0e',
+  navyRow:    '#0a0c0e',
   amber:      '#f5a623',
   amberBright:'#ffb733',
   amberDim:   'rgba(245,166,35,0.15)',
@@ -508,7 +508,7 @@ export default function HomePage() {
             const nodeStyle = (i) => {
               if (tlStep > i) return { background: 'rgba(0,229,176,0.12)', border: '2px solid #00e5b0', color: '#00e5b0' }
               if (tlStep === i) return { background: steps[i].activeBg, border: `2px solid ${steps[i].activeColor}`, color: steps[i].activeColor, animation: `${steps[i].pulse} 1.5s infinite` }
-              return { background: '#111418', border: '2px solid rgba(255,255,255,0.08)', color: '#4a5260' }
+              return { background: '#0a0c0e', border: '2px solid rgba(255,255,255,0.08)', color: '#4a5260' }
             }
             return (
               <div ref={timelineRef} style={{ marginTop: 56, padding: '32px 24px', background: T.navyCard, border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8 }}>
@@ -818,7 +818,7 @@ export default function HomePage() {
           <div className="founder-card founder-grid" style={{
             marginTop: 72, marginBottom: 64,
             padding: '40px 32px',
-            background: '#111418',
+            background: '#0a0c0e',
             border: `1px solid ${T.border}`,
             borderRadius: 4,
             display: 'grid',
