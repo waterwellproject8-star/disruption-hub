@@ -621,12 +621,12 @@ export async function POST(request) {
 
           if (consigneePhone) {
             const spokenVehicle = speakReg(details.vehicle_reg)
+            const delayNum = parseInt(details.delay_minutes, 10) || 0
+            const delaySpoken = delayNum > 0 ? formatDelayForSpeech(delayNum) : '30 minutes'
             const parts = [
-              `This is an automated message from DisruptionHub on behalf of ${contactName || 'your supplier'}.`,
-              `Your delivery from vehicle ${spokenVehicle} is running approximately ${formatDelayForSpeech(details.delay_minutes)} late.`,
+              `${contactName || 'your supplier'} is calling to advise that your delivery from vehicle ${spokenVehicle} is running approximately ${delaySpoken} late.`,
               details.revised_eta ? `Expected arrival is now ${details.revised_eta}.` : '',
-              `Please contact the operations team if you need to discuss.`,
-              `Thank you.`
+              `No action is required from you at this time. If you need to discuss, please contact our operations team. Thank you.`
             ].filter(Boolean)
 
             const voiceMessage = parts.join(' ')

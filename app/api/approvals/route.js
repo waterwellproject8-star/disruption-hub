@@ -358,14 +358,13 @@ export async function POST(request) {
       const rawConsigneePhone = details.consignee_phone || extractPhoneNumber(client?.system_prompt)
       if (rawConsigneePhone) {
         const contactName = client?.contact_name || 'your supplier'
-        const consigneeSafe = twimlSafe(details.consignee_name)
         const spokenVehicle = speakReg(details.vehicle_reg)
+        const delayNum = parseInt(details.delay_minutes, 10) || 0
+        const delaySpoken = delayNum > 0 ? formatDelayForSpeech(delayNum) : '30 minutes'
         const parts = [
-          `This is an automated message from DisruptionHub on behalf of ${contactName}.`,
-          `Your delivery from vehicle ${spokenVehicle} is running approximately ${formatDelayForSpeech(details.delay_minutes)} late.`,
+          `${contactName} is calling to advise that your delivery from vehicle ${spokenVehicle} is running approximately ${delaySpoken} late.`,
           details.revised_eta ? `Expected arrival is now ${details.revised_eta}.` : '',
-          `Please contact the operations team if you need to discuss.`,
-          `Thank you.`
+          `No action is required from you at this time. If you need to discuss, please contact our operations team. Thank you.`
         ].filter(Boolean)
 
         const safe = parts.join(' ').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
