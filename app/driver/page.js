@@ -153,6 +153,10 @@ export default function DriverApp() {
   const [gpsCoords, setGpsCoords]           = useState(null)
   const [gpsDescription, setGpsDescription] = useState('')
   const [gpsStatus, setGpsStatus]           = useState(null)
+  const [failedDeliveryHold, setFailedDeliveryHold] = useState(null)
+  const [runningLateModal, setRunningLateModal] = useState(false)
+  const [lateMinutes, setLateMinutes]     = useState('')
+  const [lateReason, setLateReason]       = useState('Traffic')
 
   useEffect(() => {
     // Load driver history for pre-filling setup screen
@@ -704,6 +708,12 @@ export default function DriverApp() {
       while(true){const{done,value}=await reader.read();if(done)break;for(const line of decoder.decode(value).split('\n')){if(line.startsWith('data: ')&&line!=='data: [DONE]'){try{const p=JSON.parse(line.slice(6));if(p.text)full+=p.text}catch{}}}}
       if(full){setParsedResult(parseResponse(full));setPanelState('result')}else setPanelState('sent')
     } catch {setPanelState('sent')}
+
+    // Show holding panel for failed/refused deliveries
+    if (['goods_refused','short_load','damage_found'].includes(panelIssue?.id)) {
+      setFailedDeliveryHold(panelIssue.id)
+      setTimeout(() => setFailedDeliveryHold(null), 10 * 60 * 1000)
+    }
   }
 
   // Save driver history for pre-filling future setup screens
@@ -1419,8 +1429,8 @@ export default function DriverApp() {
 
           {/* ── LAST ALERT BANNER ── */}
           {lastAlert&&(
-            <div onClick={reopenLastAlert} style={{margin:'8px 12px 0',padding:'12px 14px',borderRadius:10,cursor:'pointer',border:`1px solid ${SEV[lastAlert.severity]?.border||'rgba(245,158,11,0.35)'}`,background:SEV[lastAlert.severity]?.bg}}>
-              <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start'}}>
+            <div style={{margin:'8px 12px 0',padding:'12px 14px',borderRadius:10,border:`1px solid ${SEV[lastAlert.severity]?.border||'rgba(245,158,11,0.35)'}`,background:SEV[lastAlert.severity]?.bg}}>
+              <div onClick={reopenLastAlert} style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',cursor:'pointer'}}>
                 <div style={{display:'flex',gap:9,flex:1}}>
                   <span style={{fontSize:18,flexShrink:0}}>{SEV[lastAlert.severity]?.icon||'⚠️'}</span>
                   <div>
@@ -1431,6 +1441,11 @@ export default function DriverApp() {
                 </div>
                 <div style={{fontSize:10,color:'#4a5260',flexShrink:0,marginLeft:8}}>Tap →</div>
               </div>
+              {(lastAlert.issueId==='medical'||lastAlert.issueId==='driver_unwell')&&(
+                <button onClick={async(e)=>{e.stopPropagation();try{await fetch('/api/driver/resolve',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({client_id:driverInfo.clientId,vehicle_reg:driverInfo.vehicleReg,driver_name:driverInfo.name,ref:activeJob?.ref||'MEDICAL',resolution:'Driver confirmed OK — resuming shift',original_issue:lastAlert.issueId})})}catch{}setLastAlert(null);localStorage.removeItem('dh_last_alert');showToast('Medical cleared — ops notified','ok')}} style={{marginTop:10,width:'100%',padding:'11px',background:'rgba(0,229,176,0.1)',border:'1px solid rgba(0,229,176,0.3)',borderRadius:8,color:'#00e5b0',fontWeight:600,fontSize:13,cursor:'pointer'}}>
+                  ✅ I'm OK — Continue shift
+                </button>
+              )}
             </div>
           )}
 
@@ -1679,6 +1694,53 @@ export default function DriverApp() {
         </div>
       )}
 
+      {/* FAILED DELIVERY HOLDING PANEL */}
+      {failedDeliveryHold && (
+        <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.85)',zIndex:200,display:'flex',alignItems:'center',justifyContent:'center',padding:24}}>
+          <div style={{maxWidth:380,width:'100%',background:'#0a0c0e',border:'1px solid rgba(239,68,68,0.25)',borderRadius:12,padding:'32px 24px',textAlign:'center'}}>
+            <div style={{fontSize:32,marginBottom:12}}>📋</div>
+            <div style={{fontSize:16,fontWeight:600,color:'#e8eaed',marginBottom:16}}>Delivery could not be completed</div>
+            <div style={{textAlign:'left',fontSize:13,color:'#8a9099',lineHeight:1.8,marginBottom:20}}>
+              <div style={{marginBottom:8}}>What to do now:</div>
+              <div>1. Retain all paperwork and note the reason</div>
+              <div>2. Ops have been notified — await instructions before leaving the site</div>
+              <div>3. Do not reattempt without ops confirmation</div>
+            </div>
+            <div style={{fontFamily:'monospace',fontSize:10,color:'#f59e0b',letterSpacing:'0.08em',marginBottom:16}}>WAITING FOR OPS INSTRUCTIONS...</div>
+            <button onClick={()=>setFailedDeliveryHold(null)} style={{padding:'10px 24px',background:'transparent',border:'1px solid rgba(255,255,255,0.12)',borderRadius:6,color:'#8a9099',fontSize:12,cursor:'pointer'}}>Dismiss (after 10 min)</button>
+          </div>
+        </div>
+      )}
+
+      {/* RUNNING LATE MODAL */}
+      {runningLateModal && (
+        <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.85)',zIndex:200,display:'flex',alignItems:'center',justifyContent:'center',padding:24}}>
+          <div style={{maxWidth:360,width:'100%',background:'#0a0c0e',border:'1px solid rgba(245,166,35,0.25)',borderRadius:12,padding:'28px 24px'}}>
+            <div style={{fontFamily:'monospace',fontSize:10,color:'#f5a623',letterSpacing:'0.08em',marginBottom:16}}>REPORT DELAY</div>
+            <div style={{marginBottom:14}}>
+              <label style={{fontSize:12,color:'#8a9099',display:'block',marginBottom:6}}>How many minutes late?</label>
+              <input type="number" value={lateMinutes} onChange={e=>setLateMinutes(e.target.value)} placeholder="e.g. 25" style={{width:'100%',padding:'10px 12px',background:'#111418',border:'1px solid rgba(255,255,255,0.12)',borderRadius:6,color:'#e8eaed',fontSize:14,outline:'none',boxSizing:'border-box'}} />
+            </div>
+            <div style={{marginBottom:18}}>
+              <label style={{fontSize:12,color:'#8a9099',display:'block',marginBottom:6}}>Reason</label>
+              <select value={lateReason} onChange={e=>setLateReason(e.target.value)} style={{width:'100%',padding:'10px 12px',background:'#111418',border:'1px solid rgba(255,255,255,0.12)',borderRadius:6,color:'#e8eaed',fontSize:14,outline:'none',boxSizing:'border-box'}}>
+                {['Traffic','Roadworks','Customer delay','Loading delay','Other'].map(r=><option key={r} value={r}>{r}</option>)}
+              </select>
+            </div>
+            <div style={{display:'flex',gap:8}}>
+              <button onClick={()=>setRunningLateModal(false)} style={{flex:1,padding:'11px',background:'transparent',border:'1px solid rgba(255,255,255,0.12)',borderRadius:6,color:'#8a9099',fontSize:13,cursor:'pointer'}}>Cancel</button>
+              <button onClick={async()=>{
+                const mins = parseInt(lateMinutes,10)||0
+                if(!mins){showToast('Enter minutes','error');return}
+                try{await fetch('/api/driver/alert',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({client_id:driverInfo.clientId,driver_name:driverInfo.name,driver_phone:driverInfo.phone||null,vehicle_reg:driverInfo.vehicleReg,ref:activeJob?.ref,issue_type:'delayed',issue_description:`DRIVER RUNNING LATE. ${driverInfo.name} (${driverInfo.vehicleReg}). ${mins} minutes. Reason: ${lateReason}. Job: ${activeJob?.route||'?'}.`,human_description:`Running ${mins}min late — ${lateReason}`,location_description:gpsDescription||null,latitude:gpsCoords?.latitude,longitude:gpsCoords?.longitude})})}catch{}
+                setRunningLateModal(false);setLateMinutes('');setLateReason('Traffic')
+                showToast(mins>15?'Delay reported — ops notified':'Delay logged','ok')
+              }} style={{flex:1,padding:'11px',background:'#f5a623',border:'none',borderRadius:6,color:'#000',fontWeight:700,fontSize:13,cursor:'pointer'}}>Report Delay</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* STICKY BAR */}
       {(() => {
         const alertActive = !!lastAlert || panelState === 'sent' || panelState === 'result' || panelState === 'resolving_loading'
@@ -1702,9 +1764,9 @@ export default function DriverApp() {
               style={{padding:'13px',background:'rgba(239,68,68,0.1)',border:'1px solid rgba(239,68,68,0.3)',borderRadius:10,color:'#ef4444',fontWeight:600,fontSize:11,cursor:'pointer',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:2}}>
               <span style={{fontSize:18}}>🚑</span><span>Medical</span>
             </button>
-            <button onClick={()=>openIssue({id:'cant_complete',label:"Can't Complete",icon:'⛔',needsText:true,placeholder:"Reason — e.g. hours up"})}
-              style={{padding:'13px',background:'rgba(239,68,68,0.06)',border:'1px solid rgba(239,68,68,0.2)',borderRadius:10,color:'#ef4444',fontWeight:600,fontSize:11,cursor:'pointer',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:2}}>
-              <span style={{fontSize:18}}>⛔</span><span>Can't Complete</span>
+            <button onClick={()=>setRunningLateModal(true)}
+              style={{padding:'13px',background:'rgba(245,166,35,0.08)',border:'1px solid rgba(245,166,35,0.25)',borderRadius:10,color:'#f5a623',fontWeight:600,fontSize:11,cursor:'pointer',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:2}}>
+              <span style={{fontSize:18}}>⏱</span><span>Running Late</span>
             </button>
           </>)}
         </div>
