@@ -406,7 +406,7 @@ export default function HomePage() {
             maxWidth: 520, margin: '0 0 44px',
             lineHeight: 1.7, fontWeight: 400,
           }}>
-            Stops SLA breaches before they become penalty clauses.
+            It's 2:30am. A reefer fault hits on the M62. One SMS. One tap. Back to sleep.
           </p>
 
           {/* CTAs */}
@@ -444,7 +444,7 @@ export default function HomePage() {
 
       <div className="statement-divider">
         <p className="statement-divider-text" data-reveal>
-          Industry response time: <em>20–40 minutes.</em>{' '}Ours: <em>30 seconds.</em>
+          Stops SLA breaches <em>before they become penalty clauses.</em>
         </p>
       </div>
 
@@ -455,19 +455,10 @@ export default function HomePage() {
             <div style={{
               fontFamily: FF.mono, fontSize: 11, fontWeight: 600,
               letterSpacing: '0.2em', textTransform: 'uppercase',
-              color: T.amber, textAlign: 'center', marginBottom: 16,
+              color: T.amber, textAlign: 'center', marginBottom: 48,
             }}>
               How It Works
             </div>
-            <h2 style={{
-              fontFamily: FF.condensed, fontSize: 'clamp(32px, 8vw, 48px)',
-              fontWeight: 800, textTransform: 'uppercase',
-              letterSpacing: '0.02em', color: '#fff',
-              textAlign: 'center', marginBottom: 64, lineHeight: 1.15,
-            }}>
-              <span style={{ display: 'block' }}>THREE STEPS.</span>
-              <span style={{ display: 'block' }}>THIRTY SECONDS.</span>
-            </h2>
           </motion.div>
 
           <div className="how-grid" style={{
@@ -673,17 +664,10 @@ export default function HomePage() {
             <div style={{
               fontFamily: FF.mono, fontSize: 11, fontWeight: 600,
               letterSpacing: '0.2em', textTransform: 'uppercase',
-              color: T.amber, textAlign: 'center', marginBottom: 16,
+              color: T.amber, textAlign: 'center', marginBottom: 48,
             }}>
               Simple Pricing
             </div>
-            <h2 style={{
-              fontFamily: FF.condensed, fontSize: 'clamp(32px, 4vw, 48px)',
-              fontWeight: 800, textTransform: 'uppercase',
-              color: '#fff', textAlign: 'center', marginBottom: 56,
-            }}>
-              Start Small. Scale Fast.
-            </h2>
           </motion.div>
 
           <div className="pricing-grid" style={{
