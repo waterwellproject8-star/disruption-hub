@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 
 const PROGRESS_STEPS = [
   { id:'arrived_collection', label:'Arrived at Collection', icon:'📍', color:'#3b82f6', status:'at_collection' },
@@ -155,6 +155,10 @@ export default function DriverApp() {
   const [gpsStatus, setGpsStatus]           = useState(null)
   const [failedDeliveryHold, setFailedDeliveryHold] = useState(null)
   const [runningLateModal, setRunningLateModal] = useState(false)
+  const [secUpNext, setSecUpNext] = useState(false)
+  const [secReport, setSecReport] = useState(false)
+  const [secCompleted, setSecCompleted] = useState(false)
+  const [showMoreMenu, setShowMoreMenu] = useState(false)
   const [lateMinutes, setLateMinutes]     = useState('')
   const [lateReason, setLateReason]       = useState('Traffic')
 
@@ -1351,7 +1355,101 @@ export default function DriverApp() {
   // ── MAIN RUN VIEW ─────────────────────────────────────────────────────────
   return (
     <div style={{minHeight:'100vh',background:'#090b0d',color:'#e8eaed',fontFamily:'Barlow,sans-serif',paddingBottom:90,paddingTop:'env(safe-area-inset-top, 0px)'}}>
-      <style>{`@keyframes spin{to{transform:rotate(360deg)}}@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}`}</style>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+        @keyframes spin{to{transform:rotate(360deg)}}
+        @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+        @keyframes dh-expand{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+        .dh-sb-wrap{padding:13px 24px 0;height:56px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;position:relative;z-index:10}
+        .dh-time{font-size:17px;font-weight:600;color:rgba(255,255,255,0.92);letter-spacing:-0.3px;font-family:'DM Sans',-apple-system,sans-serif}
+        .dh-synced{display:flex;align-items:center;gap:5px;font-family:'DM Mono',monospace;font-size:9px;color:#30d158;letter-spacing:0.1em}
+        .dh-synced::before{content:'';width:5px;height:5px;border-radius:50%;background:#30d158;box-shadow:0 0 6px #30d158}
+        .dh-more-btn{width:32px;height:32px;border-radius:10px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;color:rgba(255,255,255,0.4);font-size:16px;letter-spacing:2px;user-select:none;flex-shrink:0;-webkit-tap-highlight-color:transparent;font-family:monospace;padding-bottom:4px}
+        .dh-more-pop{position:absolute;top:54px;right:0;background:#18181f;border:1px solid rgba(255,255,255,0.1);border-radius:14px;overflow:hidden;z-index:500;box-shadow:0 12px 40px rgba(0,0,0,0.7);min-width:190px}
+        .dh-pop-item{display:flex;align-items:center;gap:12px;padding:13px 16px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.07);-webkit-tap-highlight-color:transparent;transition:background 0.1s}
+        .dh-pop-item:last-child{border-bottom:none}
+        .dh-pop-item:active{background:rgba(255,255,255,0.05)}
+        .dh-greeting{font-family:'DM Sans',-apple-system,sans-serif;font-size:13px;color:rgba(255,255,255,0.48);margin-bottom:3px;padding:14px 24px 0;flex-shrink:0}
+        .dh-driver-name{font-family:'DM Sans',-apple-system,sans-serif;font-size:26px;font-weight:700;color:rgba(255,255,255,0.92);letter-spacing:-0.7px;line-height:1;padding:0 24px;flex-shrink:0}
+        .dh-pips-row{display:flex;align-items:center;gap:6px;padding:10px 24px 14px;flex-shrink:0}
+        .dh-pip{width:26px;height:4px;border-radius:2px;background:rgba(255,255,255,0.08);flex-shrink:0}
+        .dh-pip.done{background:#f5a623}
+        .dh-pip.active{background:rgba(245,166,35,0.45)}
+        .dh-pip-txt{font-family:'DM Mono',monospace;font-size:11px;color:rgba(255,255,255,0.24);letter-spacing:0.08em;margin-left:4px}
+        .dh-job-card{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.07);border-radius:22px;margin-bottom:10px;overflow:hidden;position:relative}
+        .dh-job-card::before{content:'';position:absolute;top:0;left:24px;right:24px;height:1px;background:linear-gradient(to right,transparent,rgba(245,166,35,0.5),transparent)}
+        .dh-job-top{padding:16px 18px 13px}
+        .dh-job-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px}
+        .dh-job-ref{font-family:'DM Mono',monospace;font-size:12px;color:#f5a623;letter-spacing:0.05em;font-weight:500}
+        .dh-status-pill{display:flex;align-items:center;gap:5px;font-family:'DM Mono',monospace;font-size:10px;font-weight:500;padding:4px 10px;border-radius:20px;letter-spacing:0.06em}
+        .dh-pill-dot{width:5px;height:5px;border-radius:50%;background:currentColor;animation:pulse 2s infinite}
+        .dh-job-from{font-family:'DM Sans',-apple-system,sans-serif;font-size:13px;color:rgba(255,255,255,0.48);margin-bottom:2px}
+        .dh-job-dest{font-family:'DM Sans',-apple-system,sans-serif;font-size:21px;font-weight:700;color:rgba(255,255,255,0.92);letter-spacing:-0.5px;line-height:1.15;margin-bottom:9px}
+        .dh-chips{display:flex;gap:6px;flex-wrap:wrap}
+        .dh-chip{font-family:'DM Sans',-apple-system,sans-serif;font-size:11px;color:rgba(255,255,255,0.48);background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.07);padding:2px 8px;border-radius:7px}
+        .dh-chip-warn{color:#ff453a;background:rgba(255,69,58,0.1);border-color:transparent}
+        .dh-prog-row{display:flex;align-items:center;gap:6px;padding:10px 18px 12px;border-top:1px solid rgba(255,255,255,0.07)}
+        .dh-pd{display:flex;align-items:center;gap:3px;font-family:'DM Mono',monospace;font-size:9px;color:rgba(255,255,255,0.24);letter-spacing:0.06em}
+        .dh-pd.done{color:#f5a623}
+        .dh-pd.active{color:rgba(255,255,255,0.9);font-weight:500}
+        .dh-pd-dot{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,0.1);flex-shrink:0}
+        .dh-pd-dot.done{background:#f5a623}
+        .dh-pd-dot.active{background:rgba(255,255,255,0.9)}
+        .dh-pd-line{flex:1;height:1px;background:rgba(255,255,255,0.07)}
+        .dh-pd-line.done{background:rgba(245,166,35,0.3)}
+        .dh-cta{padding:18px 20px;background:#f5a623;border-radius:20px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;box-shadow:0 6px 28px rgba(245,166,35,0.3);border:none;width:100%;text-align:left;margin-bottom:12px;transition:transform 0.12s cubic-bezier(0.34,1.56,0.64,1);font-family:'DM Sans',-apple-system,sans-serif;-webkit-tap-highlight-color:transparent}
+        .dh-cta:active{transform:scale(0.98)}
+        .dh-cta-hint{font-size:10px;font-weight:600;color:rgba(0,0,0,0.4);letter-spacing:0.05em;text-transform:uppercase;margin-bottom:3px}
+        .dh-cta-label{font-size:20px;font-weight:700;color:#000;letter-spacing:-0.4px;line-height:1.1}
+        .dh-cta-arrow{width:40px;height:40px;background:rgba(0,0,0,0.1);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+        .dh-section{margin-bottom:7px;border-radius:14px;overflow:hidden;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.07)}
+        .dh-sec-toggle{display:flex;align-items:center;gap:12px;padding:13px 16px;cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent;transition:background 0.15s}
+        .dh-sec-toggle:active{background:rgba(255,255,255,0.07)}
+        .dh-sec-icon{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+        .dh-sec-title{font-family:'DM Sans',-apple-system,sans-serif;font-size:14px;font-weight:600;letter-spacing:-0.2px;flex:1}
+        .dh-sec-count{font-family:'DM Mono',monospace;font-size:10px;color:rgba(255,255,255,0.24);letter-spacing:0.05em}
+        .dh-sec-chev{font-size:11px;color:rgba(255,255,255,0.24);transition:transform 0.22s cubic-bezier(0.34,1.56,0.64,1);margin-left:4px}
+        .dh-section.dh-open .dh-sec-chev{transform:rotate(180deg)}
+        .dh-sec-body{display:none;border-top:1px solid rgba(255,255,255,0.07)}
+        .dh-section.dh-open .dh-sec-body{display:block;animation:dh-expand 0.18s ease}
+        .dh-up-item{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.07);cursor:pointer;-webkit-tap-highlight-color:transparent}
+        .dh-up-item:last-child{border-bottom:none}
+        .dh-up-item:active{background:rgba(255,255,255,0.04)}
+        .dh-up-bar{width:3px;border-radius:2px;align-self:stretch;min-height:28px;flex-shrink:0}
+        .dh-up-ref{font-family:'DM Mono',monospace;font-size:10px;color:rgba(255,255,255,0.24);margin-bottom:2px}
+        .dh-up-route{font-family:'DM Sans',-apple-system,sans-serif;font-size:14px;font-weight:600;color:rgba(255,255,255,0.92);letter-spacing:-0.2px}
+        .dh-up-sub{font-family:'DM Sans',-apple-system,sans-serif;font-size:12px;color:rgba(255,255,255,0.45);margin-top:1px}
+        .dh-up-sp{font-family:'DM Mono',monospace;font-size:9px;font-weight:600;letter-spacing:0.08em;padding:2px 7px;border-radius:7px}
+        .dh-rpt-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;padding:10px}
+        .dh-rpt-btn{padding:12px 11px;border-radius:11px;display:flex;flex-direction:column;align-items:flex-start;gap:3px;cursor:pointer;border:1px solid rgba(255,255,255,0.07);background:rgba(255,255,255,0.03);-webkit-tap-highlight-color:transparent;transition:background 0.15s}
+        .dh-rpt-btn:active{background:rgba(255,255,255,0.07)}
+        .dh-rpt-btn.dh-hl{background:rgba(245,166,35,0.1);border-color:rgba(245,166,35,0.22)}
+        .dh-rpt-ico{font-size:18px;margin-bottom:1px}
+        .dh-rpt-lbl{font-family:'DM Sans',-apple-system,sans-serif;font-size:12px;font-weight:600;color:rgba(255,255,255,0.9);letter-spacing:-0.1px;line-height:1.2}
+        .dh-rpt-lbl.hl{color:#f5a623}
+        .dh-rpt-sub{font-family:'DM Sans',-apple-system,sans-serif;font-size:10px;color:rgba(255,255,255,0.28);line-height:1.3}
+        .dh-comp-item{display:flex;align-items:center;gap:12px;padding:11px 16px;opacity:0.5;border-bottom:1px solid rgba(255,255,255,0.07)}
+        .dh-comp-item:last-child{border-bottom:none}
+        .dh-comp-chk{width:20px;height:20px;border-radius:6px;background:rgba(245,166,35,0.1);display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;color:#f5a623}
+        .dh-comp-ref{font-family:'DM Mono',monospace;font-size:10px;color:#f5a623;margin-bottom:1px}
+        .dh-comp-route{font-family:'DM Sans',-apple-system,sans-serif;font-size:12px;font-weight:500;color:rgba(255,255,255,0.9);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .dh-comp-time{font-family:'DM Mono',monospace;font-size:10px;color:rgba(255,255,255,0.24);margin-left:auto}
+        .dh-bottom-bar{position:fixed;bottom:0;left:0;right:0;padding:10px 16px;padding-bottom:calc(env(safe-area-inset-bottom,0px) + 10px);background:linear-gradient(to bottom,transparent,rgba(10,10,15,0.99) 24%);display:grid;grid-template-columns:1fr 1fr;gap:8px;z-index:100}
+        .dh-bar-btn{border-radius:18px;display:flex;align-items:center;cursor:pointer;overflow:hidden;position:relative;border:1px solid transparent;-webkit-tap-highlight-color:transparent;transition:transform 0.12s cubic-bezier(0.34,1.56,0.64,1)}
+        .dh-bar-btn:active{transform:scale(0.96)}
+        .dh-bar-btn.bd{background:linear-gradient(135deg,#ff3b30,#ff453a);box-shadow:0 5px 20px rgba(255,59,48,0.4);border-color:rgba(255,100,90,0.25)}
+        .dh-bar-btn.bd::before{content:'';position:absolute;inset:0;background:linear-gradient(to bottom,rgba(255,255,255,0.1),transparent);pointer-events:none}
+        .dh-bar-btn.md{background:linear-gradient(135deg,rgba(10,132,255,0.16),rgba(10,132,255,0.09));border-color:rgba(10,132,255,0.25);box-shadow:0 3px 14px rgba(10,132,255,0.12)}
+        .dh-bar-btn.md::before{content:'';position:absolute;inset:0;background:linear-gradient(to bottom,rgba(255,255,255,0.05),transparent);pointer-events:none}
+        .dh-bar-inner{display:flex;align-items:center;gap:9px;padding:14px 18px;width:100%;position:relative;z-index:1}
+        .dh-bar-lbl{font-family:'DM Sans',-apple-system,sans-serif;font-size:14px;font-weight:700;letter-spacing:-0.2px;display:block}
+        .dh-bar-sub{font-family:'DM Sans',-apple-system,sans-serif;font-size:10px;display:block;margin-top:1px;opacity:0.65}
+        .dh-bar-btn.bd .dh-bar-lbl{color:#fff}
+        .dh-bar-btn.bd .dh-bar-sub{color:rgba(255,255,255,0.7)}
+        .dh-bar-btn.md .dh-bar-lbl{color:#0a84ff}
+        .dh-bar-btn.md .dh-bar-sub{color:rgba(10,132,255,0.7)}
+        .dh-end-btn{width:100%;padding:12px;margin-top:6px;border-radius:12px;border:1px solid rgba(245,166,35,0.18);background:rgba(245,166,35,0.06);color:#f5a623;font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',-apple-system,sans-serif;letter-spacing:-0.1px;-webkit-tap-highlight-color:transparent}
+      `}</style>
 
       {/* Sync indicator */}
       <div style={{position:'fixed',top:'calc(env(safe-area-inset-top, 0px) + 8px)',right:12,zIndex:450,display:'flex',alignItems:'center',gap:4}}>
