@@ -1451,12 +1451,6 @@ export default function DriverApp() {
         .dh-end-btn{width:100%;padding:12px;margin-top:6px;border-radius:12px;border:1px solid rgba(245,166,35,0.18);background:rgba(245,166,35,0.06);color:#f5a623;font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',-apple-system,sans-serif;letter-spacing:-0.1px;-webkit-tap-highlight-color:transparent}
       `}</style>
 
-      {/* Sync indicator */}
-      <div style={{position:'fixed',top:'calc(env(safe-area-inset-top, 0px) + 8px)',right:12,zIndex:450,display:'flex',alignItems:'center',gap:4}}>
-        <div style={{width:7,height:7,borderRadius:'50%',background:syncStatus==='ok'?'#22c55e':syncStatus==='pending'?'#f59e0b':'#ef4444',transition:'background 0.3s'}}/>
-        <span style={{fontSize:9,color:'#4a5260',fontFamily:'monospace'}}>{syncStatus==='ok'?'SYNCED':syncStatus==='pending'?'SYNCING':'OFFLINE'}</span>
-      </div>
-
       {/* Toast */}
       {toast&&(
         <div style={{position:'fixed',top:'calc(env(safe-area-inset-top, 0px) + 12px)',left:'50%',transform:'translateX(-50%)',zIndex:500,padding:'10px 18px',borderRadius:10,background:toast.type==='error'?'rgba(239,68,68,0.95)':'rgba(245,166,35,0.95)',color:toast.type==='error'?'#fff':'#000',fontWeight:600,fontSize:13,boxShadow:'0 4px 20px rgba(0,0,0,0.4)',whiteSpace:'nowrap'}}>
@@ -1500,7 +1494,6 @@ export default function DriverApp() {
 
           {/* ── STATUS BAR ── */}
           <div className="dh-sb-wrap">
-            <span className="dh-time">{new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})}</span>
             <div style={{display:'flex',alignItems:'center',gap:10,position:'relative'}}>
               <div className="dh-synced">SYNCED</div>
               <div className="dh-more-btn" onClick={()=>setShowMoreMenu(v=>!v)}>···</div>
