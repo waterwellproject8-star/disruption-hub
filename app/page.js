@@ -374,8 +374,8 @@ export default function HomePage() {
               letterSpacing: '0.02em', color: '#fff',
               textAlign: 'center', marginBottom: 64, lineHeight: 1.15,
             }}>
-              <span style={{ display: 'block' }}>3 STEPS.</span>
-              <span style={{ display: 'block' }}>30 SECONDS.</span>
+              <span style={{ display: 'block' }}>THREE STEPS.</span>
+              <span style={{ display: 'block' }}>THIRTY SECONDS.</span>
             </h2>
           </motion.div>
 
