@@ -192,7 +192,13 @@ export default function DriverApp() {
       const shiftDone      = localStorage.getItem('dh_shift_started')
       const savedAlert     = localStorage.getItem('dh_last_alert')
       const savedMessages  = localStorage.getItem('dh_ops_messages')
-      if (savedMessages) { try { setOpsMessages(JSON.parse(savedMessages)) } catch {} }
+      if (savedMessages) {
+        try {
+          const all = JSON.parse(savedMessages)
+          const readList = JSON.parse(localStorage.getItem('dh_ops_messages_read') || '[]')
+          setOpsMessages(all.filter(m => !readList.includes(m)))
+        } catch {}
+      }
 
       // Only an active, non-stale shift may carry alert banners forward.
       // Any other case — wipe both alert keys so a prior shift's banners
@@ -382,7 +388,7 @@ export default function DriverApp() {
 
   function handleSessionSuperseded() {
     setSessionSuperseded(true)
-    ;['dh_driver_info','dh_shift_started','dh_shift_started_at','dh_last_alert','dh_prior_alert','dh_job_progress','dh_ops_messages','dh_session_id','dh_postshift_draft'].forEach(k=>localStorage.removeItem(k))
+    ;['dh_driver_info','dh_shift_started','dh_shift_started_at','dh_last_alert','dh_prior_alert','dh_job_progress','dh_ops_messages','dh_ops_messages_read','dh_session_id','dh_postshift_draft'].forEach(k=>localStorage.removeItem(k))
   }
 
   function pushProgressToSupabase(ref, status, alert, pod=null) {
@@ -897,7 +903,7 @@ export default function DriverApp() {
     }
 
     // 2. Wipe shift/session keys — keep dh_driver_info so name + phone pre-fill on next login
-    ;['dh_shift_started','dh_shift_started_at','dh_last_alert','dh_prior_alert','dh_job_progress','dh_ops_messages','dh_session_id','dh_postshift_draft'].forEach(k=>localStorage.removeItem(k))
+    ;['dh_shift_started','dh_shift_started_at','dh_last_alert','dh_prior_alert','dh_job_progress','dh_ops_messages','dh_ops_messages_read','dh_session_id','dh_postshift_draft'].forEach(k=>localStorage.removeItem(k))
 
     // 3-5. Reset state so the SHIFT EXPIRED guard (setupDone && staleSession) falsifies and setup screen re-renders.
     // Pre-populate name + phone from dh_driver_info (same driver, same phone every shift).
@@ -1301,7 +1307,7 @@ export default function DriverApp() {
         {shiftSummary.unresolved>0&&<div style={{padding:'10px 14px',background:'rgba(245,158,11,0.06)',border:'1px solid rgba(245,158,11,0.2)',borderRadius:8,marginBottom:8,fontSize:13,color:'#f59e0b'}}>⚠ {shiftSummary.unresolved} unresolved job{shiftSummary.unresolved>1?'s':''} — ops have been notified</div>}
         {shiftSummary.notes&&<div style={{padding:'10px 14px',background:'#0f1826',border:'1px solid rgba(255,255,255,0.06)',borderRadius:8,marginBottom:8,fontSize:13,color:'#8a9099'}}>Notes: <span style={{color:'#e8eaed'}}>{shiftSummary.notes}</span></div>}
         {shiftSummary.completed===shiftSummary.total&&<div style={{padding:'12px',background:'rgba(245,166,35,0.05)',border:'1px solid rgba(245,166,35,0.2)',borderRadius:9,textAlign:'center',marginBottom:12,fontSize:14,color:'#f5a623',fontWeight:500}}>✓ Full shift — all runs delivered</div>}
-        <button onClick={()=>{['dh_driver_info','dh_shift_started','dh_shift_started_at','dh_last_alert','dh_prior_alert','dh_job_progress','dh_ops_messages','dh_session_id'].forEach(k=>localStorage.removeItem(k));setSetupDone(false);setShiftStarted(false);setShiftEnded(false);setJobs([]);setActiveJob(null);setShiftSummary(null)}}
+        <button onClick={()=>{['dh_driver_info','dh_shift_started','dh_shift_started_at','dh_last_alert','dh_prior_alert','dh_job_progress','dh_ops_messages','dh_ops_messages_read','dh_session_id'].forEach(k=>localStorage.removeItem(k));setSetupDone(false);setShiftStarted(false);setShiftEnded(false);setJobs([]);setActiveJob(null);setShiftSummary(null)}}
           style={{width:'100%',padding:'14px',background:'#0f1826',border:'1px solid rgba(255,255,255,0.08)',borderRadius:10,color:'#4a5260',fontWeight:500,fontSize:14,cursor:'pointer'}}>
           Sign out
         </button>
@@ -1374,7 +1380,7 @@ export default function DriverApp() {
         <div style={{margin:'8px 12px 0',padding:'10px 13px',background:'rgba(59,130,246,0.08)',border:'1px solid rgba(59,130,246,0.25)',borderRadius:9}}>
           <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:4}}>
             <div style={{fontSize:9,color:'#3b82f6',fontFamily:'monospace',fontWeight:700,letterSpacing:'0.08em'}}>OPS MESSAGE</div>
-            <button onClick={()=>{setOpsMessages([]);try{localStorage.removeItem('dh_ops_messages')}catch{}}} style={{background:'none',border:'none',color:'#4a5260',fontSize:16,cursor:'pointer',padding:'0 2px',lineHeight:1}}>✕</button>
+            <button onClick={()=>{const msg=opsMessages[opsMessages.length-1];if(msg){try{const read=JSON.parse(localStorage.getItem('dh_ops_messages_read')||'[]');read.push(msg);localStorage.setItem('dh_ops_messages_read',JSON.stringify(read))}catch{}}setOpsMessages(prev=>prev.filter(m=>m!==msg))}} style={{background:'none',border:'none',color:'#4a5260',fontSize:16,cursor:'pointer',padding:'0 2px',lineHeight:1}}>✕</button>
           </div>
           <div style={{fontSize:13,color:'#e8eaed'}}>{opsMessages[opsMessages.length-1]}</div>
         </div>
@@ -1662,7 +1668,7 @@ export default function DriverApp() {
                   body: JSON.stringify({ client_id: driverInfo.clientId, vehicle_reg: driverInfo.vehicleReg||null, driver_phone: driverInfo.phone||null, reason:'driver_change' })
                 }).catch(()=>{})
               }
-              ;['dh_driver_info','dh_shift_started','dh_shift_started_at','dh_last_alert','dh_prior_alert','dh_job_progress','dh_ops_messages','dh_session_id'].forEach(k=>localStorage.removeItem(k))
+              ;['dh_driver_info','dh_shift_started','dh_shift_started_at','dh_last_alert','dh_prior_alert','dh_job_progress','dh_ops_messages','dh_ops_messages_read','dh_session_id'].forEach(k=>localStorage.removeItem(k))
               setSetupDone(false);setShiftStarted(false);setJobs([]);setActiveJob(null)
             }}
               style={{flex:1,padding:'10px',background:'transparent',border:'1px solid rgba(255,255,255,0.06)',borderRadius:8,color:'#4a5260',fontSize:11,cursor:'pointer'}}>
