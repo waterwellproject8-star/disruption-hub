@@ -163,8 +163,7 @@ export default function HomePage() {
           .enterprise-card .enterprise-cta { width: 100% !important; text-align: center !important; }
         }
         @media (max-width: 768px) {
-          .ticker-content { font-size: 11px !important; line-height: 1 !important; }
-          .ticker-content * { font-size: 11px !important; }
+          .ticker-track span { font-size: 9px !important; letter-spacing: 0.06em !important; padding-left: 24px !important; padding-right: 24px !important; }
           .nav-links-desktop { display: none !important; }
           .stats-grid { grid-template-columns: 1fr 1fr !important; }
           .how-grid { grid-template-columns: 1fr !important; }
