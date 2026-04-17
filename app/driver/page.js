@@ -1350,7 +1350,7 @@ export default function DriverApp() {
 
   // ── MAIN RUN VIEW ─────────────────────────────────────────────────────────
   return (
-    <div style={{minHeight:'100vh',background:'#090b0d',color:'#e8eaed',fontFamily:'Barlow,sans-serif',paddingBottom:90}}>
+    <div style={{minHeight:'100vh',background:'#090b0d',color:'#e8eaed',fontFamily:'Barlow,sans-serif',paddingBottom:90,paddingTop:'env(safe-area-inset-top, 0px)'}}>
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}`}</style>
 
       {/* Sync indicator */}
@@ -1361,7 +1361,7 @@ export default function DriverApp() {
 
       {/* Toast */}
       {toast&&(
-        <div style={{position:'fixed',top:16,left:'50%',transform:'translateX(-50%)',zIndex:500,padding:'10px 18px',borderRadius:10,background:toast.type==='error'?'rgba(239,68,68,0.95)':'rgba(245,166,35,0.95)',color:toast.type==='error'?'#fff':'#000',fontWeight:600,fontSize:13,boxShadow:'0 4px 20px rgba(0,0,0,0.4)',whiteSpace:'nowrap'}}>
+        <div style={{position:'fixed',top:'calc(env(safe-area-inset-top, 0px) + 12px)',left:'50%',transform:'translateX(-50%)',zIndex:500,padding:'10px 18px',borderRadius:10,background:toast.type==='error'?'rgba(239,68,68,0.95)':'rgba(245,166,35,0.95)',color:toast.type==='error'?'#fff':'#000',fontWeight:600,fontSize:13,boxShadow:'0 4px 20px rgba(0,0,0,0.4)',whiteSpace:'nowrap'}}>
           {toast.msg}
         </div>
       )}
@@ -1743,7 +1743,7 @@ export default function DriverApp() {
       {(() => {
         const alertActive = !!lastAlert || panelState === 'sent' || panelState === 'result' || panelState === 'resolving_loading'
         return (
-        <div style={{position:'fixed',bottom:0,left:0,right:0,padding:'9px 14px 24px',background:'rgba(9,11,13,0.97)',borderTop:'1px solid rgba(255,255,255,0.06)',backdropFilter:'blur(10px)',zIndex:100,display:'grid',gridTemplateColumns:'5fr 3fr 3fr',gap:8}}>
+        <div style={{position:'fixed',bottom:0,left:0,right:0,padding:'9px 14px',paddingBottom:'calc(env(safe-area-inset-bottom, 0px) + 10px)',background:'rgba(9,11,13,0.97)',borderTop:'1px solid rgba(255,255,255,0.06)',backdropFilter:'blur(10px)',zIndex:100,display:'grid',gridTemplateColumns:'5fr 3fr 3fr',gap:8}}>
           {alertActive ? (<>
             <div style={{padding:'13px',background:'rgba(239,68,68,0.08)',border:'1px solid rgba(239,68,68,0.2)',borderRadius:10,color:'#ef4444',fontWeight:600,fontSize:12,display:'flex',alignItems:'center',justifyContent:'center',gap:6}}>
               ⚠ Alert active — resolve first
