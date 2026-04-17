@@ -1358,7 +1358,7 @@ export default function DriverApp() {
         @keyframes spin{to{transform:rotate(360deg)}}
         @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
         @keyframes dh-expand{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
-        .dh-sb-wrap{padding:13px 24px 0;height:56px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;position:relative;z-index:10}
+        .dh-sb-wrap{padding:13px 24px 0;height:56px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;z-index:10}
         .dh-time{font-size:17px;font-weight:600;color:rgba(255,255,255,0.92);letter-spacing:-0.3px;font-family:'DM Sans',-apple-system,sans-serif}
         .dh-synced{display:flex;align-items:center;gap:5px;font-family:'DM Mono',monospace;font-size:9px;color:#30d158;letter-spacing:0.1em}
         .dh-synced::before{content:'';width:5px;height:5px;border-radius:50%;background:#30d158;box-shadow:0 0 6px #30d158}
@@ -1496,7 +1496,7 @@ export default function DriverApp() {
               <div className="dh-synced">SYNCED</div>
               <div className="dh-more-btn" onClick={()=>setShowMoreMenu(v=>!v)}>···</div>
               {showMoreMenu&&(
-                <div className="dh-more-pop" style={{position:'absolute',top:48,right:0,left:'auto',minWidth:200,zIndex:500}}>
+                <div className="dh-more-pop" style={{position:'absolute',top:42,right:0,left:'auto',minWidth:200,zIndex:500}}>
                   <div className="dh-pop-item" onClick={()=>{setShowMoreMenu(false);setView('preshift')}}>
                     <span style={{fontSize:17}}>🔍</span>
                     <div><div style={{fontSize:14,fontWeight:600,color:'rgba(255,255,255,0.9)'}}>Vehicle Check</div><div style={{fontSize:11,color:'rgba(255,255,255,0.3)',marginTop:1}}>Pre/post shift defects</div></div>
