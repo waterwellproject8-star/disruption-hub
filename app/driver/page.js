@@ -1054,28 +1054,26 @@ export default function DriverApp() {
     const ready = driverInfo.name && driverInfo.phone && driverInfo.vehicleType && driverInfo.clientId && driverInfo.vehicleReg
 
     return (
-    <div style={{minHeight:'100vh',background:'#090b0d',color:'#e8eaed',fontFamily:'Barlow,sans-serif',display:'flex',alignItems:'center',justifyContent:'center',padding:24}}>
-      <div style={{width:'100%',maxWidth:380}}>
-        <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:24}}>
-          <div style={{width:36,height:36,background:'#f5a623',clipPath:'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)'}} />
-          <div>
-            <div style={{fontSize:17,fontWeight:600}}>DisruptionHub</div>
-            <div style={{fontSize:12,color:'#4a5260'}}>Driver App</div>
-          </div>
+    <div style={{minHeight:'100vh',background:'#0a0a0f',color:'rgba(255,255,255,0.92)',fontFamily:"'DM Sans',-apple-system,sans-serif",display:'flex',flexDirection:'column',justifyContent:'center',padding:'32px 24px'}}>
+      <div style={{width:'100%',maxWidth:380,margin:'0 auto'}}>
+        <div style={{textAlign:'center',marginBottom:28}}>
+          <div style={{width:44,height:44,background:'#f5a623',clipPath:'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',margin:'0 auto 16px'}} />
+          <div style={{fontFamily:"'DM Mono',monospace",fontSize:13,color:'rgba(255,255,255,0.35)',letterSpacing:'0.1em',textTransform:'uppercase'}}>DisruptionHub</div>
         </div>
 
-        <div style={{fontSize:11,color:'#4a5260',fontFamily:'monospace',letterSpacing:'0.08em',marginBottom:20}}>
+        <div style={{fontSize:26,fontWeight:700,color:'rgba(255,255,255,0.92)',letterSpacing:'-0.5px',marginBottom:6}}>Sign in to start your shift</div>
+        <div style={{fontFamily:"'DM Mono',monospace",fontSize:9,color:'rgba(255,255,255,0.3)',letterSpacing:'0.1em',textTransform:'uppercase',marginBottom:20}}>
           {isReturning ? 'CONFIRM YOUR DETAILS' : 'FIRST TIME SETUP'}
         </div>
 
         {/* Name — pre-filled from history */}
-        <div style={{marginBottom:14}}>
-          <div style={{fontSize:13,color:'#8a9099',marginBottom:5}}>Your full name</div>
+        <div style={{marginBottom:12}}>
+          <div style={{fontFamily:"'DM Mono',monospace",fontSize:9,color:'rgba(255,255,255,0.3)',letterSpacing:'0.1em',textTransform:'uppercase',marginBottom:6}}>Your full name</div>
           <input
             value={driverInfo.name}
             onChange={e=>setDriverInfo(p=>({...p,name:e.target.value}))}
             placeholder='e.g. Carl Hughes'
-            style={{width:'100%',padding:'13px',background:'linear-gradient(135deg,#0d1520,#0a1018)',border:'1px solid rgba(255,255,255,0.1)',borderRadius:8,color:'#e8eaed',fontSize:16,outline:'none',boxSizing:'border-box'}}/>
+            style={{width:'100%',padding:'13px',background:'rgba(255,255,255,0.06)',border:'1px solid rgba(255,255,255,0.09)',borderRadius:14,color:'rgba(255,255,255,0.92)',fontSize:16,fontFamily:"'DM Sans',sans-serif",outline:'none',boxSizing:'border-box'}}/>
         </div>
 
         {/* Phone — pre-filled from history */}
@@ -1086,7 +1084,7 @@ export default function DriverApp() {
             onChange={e=>setDriverInfo(p=>({...p,phone:e.target.value}))}
             placeholder='e.g. 07810 499983'
             inputMode='tel'
-            style={{width:'100%',padding:'13px',background:'linear-gradient(135deg,#0d1520,#0a1018)',border:'1px solid rgba(255,255,255,0.1)',borderRadius:8,color:'#e8eaed',fontSize:16,outline:'none',boxSizing:'border-box'}}/>
+            style={{width:'100%',padding:'13px',background:'rgba(255,255,255,0.06)',border:'1px solid rgba(255,255,255,0.09)',borderRadius:14,color:'rgba(255,255,255,0.92)',fontSize:16,fontFamily:"'DM Sans',sans-serif",outline:'none',boxSizing:'border-box'}}/>
         </div>
 
         {/* Vehicle reg — dropdown if history exists, plain input if not */}
@@ -1106,7 +1104,7 @@ export default function DriverApp() {
                     setDriverInfo(p=>({...p,vehicleReg:val,vehicleType:found?.type||p.vehicleType}))
                   }
                 }}
-                style={{width:'100%',padding:'13px',background:'linear-gradient(135deg,#0d1520,#0a1018)',border:'1px solid rgba(255,255,255,0.1)',borderRadius:8,color:driverInfo.vehicleReg?'#e8eaed':'#4a5260',fontSize:16,outline:'none',boxSizing:'border-box',cursor:'pointer'}}>
+                style={{width:'100%',padding:'13px',background:'rgba(255,255,255,0.06)',border:'1px solid rgba(255,255,255,0.09)',borderRadius:14,color:driverInfo.vehicleReg?'rgba(255,255,255,0.92)':'rgba(255,255,255,0.3)',fontSize:16,fontFamily:"'DM Sans',sans-serif",outline:'none',boxSizing:'border-box',cursor:'pointer'}}>
                 <option value=''>Select vehicle...</option>
                 {driverHistory.regs.map(r=>(
                   <option key={r.reg} value={r.reg}>
@@ -1128,7 +1126,7 @@ export default function DriverApp() {
                 onChange={e=>setDriverInfo(p=>({...p,vehicleReg:e.target.value.toUpperCase()}))}
                 placeholder='e.g. BK21 XYZ'
                 autoCapitalize='characters'
-                style={{width:'100%',padding:'13px',background:'linear-gradient(135deg,#0d1520,#0a1018)',border:'1px solid rgba(245,166,35,0.3)',borderRadius:8,color:'#e8eaed',fontSize:16,outline:'none',boxSizing:'border-box'}}/>
+                style={{width:'100%',padding:'13px',background:'rgba(255,255,255,0.06)',border:'1px solid rgba(245,166,35,0.3)',borderRadius:14,color:'rgba(255,255,255,0.92)',fontSize:16,fontFamily:"'DM Sans',sans-serif",outline:'none',boxSizing:'border-box'}}/>
               {hasHistory && (
                 <button onClick={()=>{setRegInputMode('dropdown');setDriverInfo(p=>({...p,vehicleReg:''}))}}
                   style={{marginTop:6,background:'none',border:'none',color:'#4a5260',fontSize:12,cursor:'pointer',padding:0}}>
@@ -1160,12 +1158,12 @@ export default function DriverApp() {
             value={driverInfo.clientId}
             onChange={e=>setDriverInfo(p=>({...p,clientId:e.target.value.toLowerCase().trim()}))}
             placeholder='Given by your manager'
-            style={{width:'100%',padding:'13px',background:'linear-gradient(135deg,#0d1520,#0a1018)',border:'1px solid rgba(255,255,255,0.1)',borderRadius:8,color:'#e8eaed',fontSize:16,outline:'none',boxSizing:'border-box'}}/>
+            style={{width:'100%',padding:'13px',background:'rgba(255,255,255,0.06)',border:'1px solid rgba(255,255,255,0.09)',borderRadius:14,color:'rgba(255,255,255,0.92)',fontSize:16,fontFamily:"'DM Sans',sans-serif",outline:'none',boxSizing:'border-box'}}/>
         </div>
 
         {!ready && <div style={{fontSize:12,color:'#4a5260',textAlign:'center',marginBottom:10}}>All fields required to continue</div>}
         <button onClick={saveDriverInfo} disabled={!ready || duplicateChecking}
-          style={{width:'100%',padding:15,background:(ready&&!duplicateChecking)?'#f5a623':'rgba(245,166,35,0.3)',border:'none',borderRadius:10,color:'#000',fontWeight:700,fontSize:16,cursor:(ready&&!duplicateChecking)?'pointer':'default'}}>
+          style={{width:'100%',padding:18,background:(ready&&!duplicateChecking)?'#f5a623':'rgba(255,255,255,0.06)',border:'none',borderRadius:16,color:(ready&&!duplicateChecking)?'#000':'rgba(255,255,255,0.25)',fontWeight:700,fontSize:17,fontFamily:"'DM Sans',sans-serif",letterSpacing:'-0.2px',cursor:(ready&&!duplicateChecking)?'pointer':'default',boxShadow:(ready&&!duplicateChecking)?'0 6px 24px rgba(245,166,35,0.3)':'none',marginTop:8}}>
           {duplicateChecking ? 'Checking...' : isReturning ? 'Start shift →' : 'Get started →'}
         </button>
       </div>
@@ -1200,21 +1198,20 @@ export default function DriverApp() {
     const allChecked = checks.every(c=>preShiftChecks[c.id]!==undefined)
     const hasFails = checks.some(c=>preShiftChecks[c.id]===false)
     return (
-      <div style={{minHeight:'100vh',background:'#090b0d',color:'#e8eaed',fontFamily:'Barlow,sans-serif',paddingBottom:40,touchAction:'manipulation'}}>
-        <div style={{padding:'14px 16px',display:'flex',alignItems:'center',justifyContent:'space-between',borderBottom:'1px solid rgba(255,255,255,0.06)'}}>
-          <div style={{display:'flex',alignItems:'center',gap:10}}>
-            <div style={{width:26,height:26,background:'#f5a623',clipPath:'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)'}} />
-            <div><div style={{fontSize:13,fontWeight:500}}>{driverInfo.name}</div><div style={{fontSize:10,color:'#4a5260',fontFamily:'monospace'}}>{driverInfo.vehicleReg} · {VEHICLE_TYPES.find(v=>v.id===driverInfo.vehicleType)?.label||''}</div></div>
+      <div style={{minHeight:'100vh',background:'#0a0a0f',color:'rgba(255,255,255,0.92)',fontFamily:"'DM Sans',-apple-system,sans-serif",paddingBottom:40,touchAction:'manipulation'}}>
+        <div style={{padding:'56px 24px 20px'}}>
+          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:16}}>
+            <div>
+              <div style={{fontFamily:"'DM Mono',monospace",fontSize:9,color:'#f5a623',letterSpacing:'0.12em',textTransform:'uppercase',marginBottom:6}}>PRE-SHIFT</div>
+              <div style={{fontSize:28,fontWeight:700,color:'rgba(255,255,255,0.92)',letterSpacing:'-0.6px'}}>Vehicle Check</div>
+            </div>
+            {view==='preshift'&&<button onClick={()=>setView('run')} style={{background:'none',border:'none',color:'rgba(255,255,255,0.3)',fontSize:13,cursor:'pointer',fontFamily:"'DM Sans',sans-serif"}}>Skip →</button>}
           </div>
-          {view==='preshift'&&<button onClick={()=>setView('run')} style={{background:'none',border:'none',color:'#4a5260',fontSize:13,cursor:'pointer'}}>Skip →</button>}
-        </div>
-        <div style={{padding:'22px 16px 16px'}}>
-          <div style={{fontSize:22,fontWeight:700,marginBottom:3}}>Pre-Shift Check</div>
-          <div style={{fontSize:14,color:'#8a9099',marginBottom:22}}>Check each item before starting. This is a legal record.</div>
+          <div style={{fontFamily:"'DM Mono',monospace",fontSize:11,color:'rgba(255,255,255,0.3)',marginBottom:20}}>{driverInfo.vehicleReg} · {VEHICLE_TYPES.find(v=>v.id===driverInfo.vehicleType)?.label||''}</div>
           {checks.map(check=>{
             const passed=preShiftChecks[check.id]; const failed=preShiftChecks[check.id]===false
             return (
-              <div key={check.id} style={{display:'flex',alignItems:'center',gap:12,padding:'15px',background:failed?'rgba(239,68,68,0.06)':passed?'rgba(245,166,35,0.04)':'#0f1826',border:`1px solid ${failed?'rgba(239,68,68,0.3)':passed?'rgba(245,166,35,0.2)':'rgba(255,255,255,0.06)'}`,borderRadius:10,marginBottom:8,transition:'background 0s,border 0s'}}>
+              <div key={check.id} style={{display:'flex',alignItems:'center',gap:14,padding:'16px 18px',background:failed?'rgba(255,69,58,0.06)':passed?'rgba(255,255,255,0.03)':'rgba(255,255,255,0.05)',border:`1px solid ${failed?'rgba(255,69,58,0.2)':passed?'rgba(245,166,35,0.15)':'rgba(255,255,255,0.07)'}`,borderRadius:16,marginBottom:8,opacity:passed?0.6:1,transition:'opacity 0.2s'}}>
                 <span style={{fontSize:22,flexShrink:0}}>{check.icon}</span>
                 <div style={{flex:1,fontSize:15,color:failed?'#ef4444':passed?'#f5a623':'#e8eaed',fontWeight:passed||failed?500:400}}>{check.label}</div>
                 <div style={{display:'flex',gap:8}}>
@@ -1297,33 +1294,34 @@ export default function DriverApp() {
 
   // ── SHIFT SUMMARY ─────────────────────────────────────────────────────────
   if (shiftEnded && shiftSummary) return (
-    <div style={{minHeight:'100vh',background:'#090b0d',color:'#e8eaed',fontFamily:'Barlow,sans-serif',display:'flex',alignItems:'center',justifyContent:'center',padding:24}}>
+    <div style={{minHeight:'100vh',background:'#0a0a0f',color:'rgba(255,255,255,0.92)',fontFamily:"'DM Sans',-apple-system,sans-serif",display:'flex',alignItems:'center',justifyContent:'center',padding:'32px 24px'}}>
       <div style={{width:'100%',maxWidth:400}}>
         <div style={{textAlign:'center',marginBottom:28}}>
-          <div style={{fontSize:52,marginBottom:10}}>🏁</div>
-          <div style={{fontSize:24,fontWeight:700,color:'#f5a623',marginBottom:3}}>Shift Complete</div>
-          <div style={{fontSize:13,color:'#4a5260'}}>Signed off {shiftSummary.endTime}</div>
+          <div style={{width:44,height:44,background:'#f5a623',clipPath:'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',margin:'0 auto 20px'}} />
+          <div style={{fontFamily:"'DM Mono',monospace",fontSize:10,color:'#f5a623',letterSpacing:'0.12em',textTransform:'uppercase',marginBottom:8}}>Shift Complete</div>
+          <div style={{fontSize:28,fontWeight:700,color:'rgba(255,255,255,0.92)',letterSpacing:'-0.5px'}}>{driverInfo.name||'Driver'}</div>
+          <div style={{fontFamily:"'DM Mono',monospace",fontSize:11,color:'rgba(255,255,255,0.3)',marginTop:6}}>Signed off {shiftSummary.endTime}</div>
         </div>
-        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8,marginBottom:10}}>
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8,marginBottom:12}}>
           {[
-            {val:shiftSummary.completed,  sub:'Delivered',   color:'#f5a623', bg:'rgba(245,166,35,0.06)',  border:'rgba(245,166,35,0.2)'},
-            {val:shiftSummary.total,      sub:'Total runs',  color:'#3b82f6', bg:'rgba(59,130,246,0.06)', border:'rgba(59,130,246,0.2)'},
-            {val:shiftSummary.incidents,  sub:'Incidents',   color:shiftSummary.incidents>0?'#f59e0b':'#f5a623', bg:'#0f1826', border:'rgba(255,255,255,0.06)'},
-            {val:shiftSummary.duration?`${shiftSummary.duration}m`:'—', sub:'Duration', color:'#e8eaed', bg:'#0f1826', border:'rgba(255,255,255,0.06)'},
+            {val:shiftSummary.completed,  sub:'Delivered'},
+            {val:shiftSummary.total,      sub:'Total runs'},
+            {val:shiftSummary.incidents,  sub:'Incidents'},
+            {val:shiftSummary.duration?`${shiftSummary.duration}m`:'—', sub:'Duration'},
           ].map((s,i)=>(
-            <div key={i} style={{padding:'16px',background:s.bg,border:`1px solid ${s.border}`,borderRadius:10,textAlign:'center'}}>
-              <div style={{fontSize:30,fontWeight:700,color:s.color,fontFamily:'monospace'}}>{s.val}</div>
-              <div style={{fontSize:12,color:'#8a9099',marginTop:3}}>{s.sub}</div>
+            <div key={i} style={{padding:'18px 16px',background:'rgba(255,255,255,0.05)',border:'1px solid rgba(255,255,255,0.07)',borderRadius:16,textAlign:'center'}}>
+              <div style={{fontSize:28,fontWeight:700,color:'rgba(255,255,255,0.92)',letterSpacing:'-0.5px',fontFamily:"'DM Sans',sans-serif"}}>{s.val}</div>
+              <div style={{fontFamily:"'DM Mono',monospace",fontSize:9,color:'rgba(255,255,255,0.3)',letterSpacing:'0.1em',textTransform:'uppercase',marginTop:4}}>{s.sub}</div>
             </div>
           ))}
         </div>
-        {shiftSummary.mileage&&<div style={{padding:'10px 14px',background:'linear-gradient(135deg,#0d1520,#0a1018)',border:'1px solid rgba(255,255,255,0.06)',borderRadius:8,marginBottom:8,fontSize:13,color:'#8a9099'}}>Mileage: <span style={{color:'#e8eaed'}}>{shiftSummary.mileage}</span></div>}
-        {shiftSummary.unresolved>0&&<div style={{padding:'10px 14px',background:'rgba(245,158,11,0.06)',border:'1px solid rgba(245,158,11,0.2)',borderRadius:8,marginBottom:8,fontSize:13,color:'#f59e0b'}}>⚠ {shiftSummary.unresolved} unresolved job{shiftSummary.unresolved>1?'s':''} — ops have been notified</div>}
-        {shiftSummary.notes&&<div style={{padding:'10px 14px',background:'linear-gradient(135deg,#0d1520,#0a1018)',border:'1px solid rgba(255,255,255,0.06)',borderRadius:8,marginBottom:8,fontSize:13,color:'#8a9099'}}>Notes: <span style={{color:'#e8eaed'}}>{shiftSummary.notes}</span></div>}
-        {shiftSummary.completed===shiftSummary.total&&<div style={{padding:'12px',background:'rgba(245,166,35,0.05)',border:'1px solid rgba(245,166,35,0.2)',borderRadius:9,textAlign:'center',marginBottom:12,fontSize:14,color:'#f5a623',fontWeight:500}}>✓ Full shift — all runs delivered</div>}
+        {shiftSummary.mileage&&<div style={{padding:'12px 14px',background:'rgba(255,255,255,0.05)',border:'1px solid rgba(255,255,255,0.07)',borderRadius:12,marginBottom:8,fontSize:13,color:'rgba(255,255,255,0.45)'}}>Mileage: <span style={{color:'rgba(255,255,255,0.92)'}}>{shiftSummary.mileage}</span></div>}
+        {shiftSummary.unresolved>0&&<div style={{padding:'12px 14px',background:'rgba(255,69,58,0.08)',border:'1px solid rgba(255,69,58,0.2)',borderRadius:12,marginBottom:8,fontSize:13,color:'#ff453a'}}>⚠ {shiftSummary.unresolved} unresolved job{shiftSummary.unresolved>1?'s':''} — ops notified</div>}
+        {shiftSummary.notes&&<div style={{padding:'12px 14px',background:'rgba(255,255,255,0.05)',border:'1px solid rgba(255,255,255,0.07)',borderRadius:12,marginBottom:8,fontSize:13,color:'rgba(255,255,255,0.45)'}}>Notes: <span style={{color:'rgba(255,255,255,0.92)'}}>{shiftSummary.notes}</span></div>}
+        {shiftSummary.completed===shiftSummary.total&&<div style={{padding:'12px',background:'rgba(245,166,35,0.06)',border:'1px solid rgba(245,166,35,0.18)',borderRadius:12,textAlign:'center',marginBottom:12,fontSize:14,color:'#f5a623',fontWeight:600}}>✓ Full shift — all runs delivered</div>}
         <button onClick={()=>{['dh_driver_info','dh_shift_started','dh_shift_started_at','dh_last_alert','dh_prior_alert','dh_job_progress','dh_ops_messages','dh_ops_messages_read','dh_session_id'].forEach(k=>localStorage.removeItem(k));setSetupDone(false);setShiftStarted(false);setShiftEnded(false);setJobs([]);setActiveJob(null);setShiftSummary(null)}}
-          style={{width:'100%',padding:'14px',background:'linear-gradient(135deg,#0d1520,#0a1018)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:10,color:'#4a5260',fontWeight:500,fontSize:14,cursor:'pointer'}}>
-          Sign out
+          style={{width:'100%',padding:18,background:'#f5a623',border:'none',borderRadius:16,color:'#000',fontWeight:700,fontSize:17,fontFamily:"'DM Sans',sans-serif",letterSpacing:'-0.2px',cursor:'pointer',boxShadow:'0 6px 24px rgba(245,166,35,0.3)',marginTop:8}}>
+          Start New Shift
         </button>
       </div>
     </div>
