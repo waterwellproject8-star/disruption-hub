@@ -6,6 +6,7 @@ import TypewriterText from '../components/TypewriterText'
 import AnimatedStat from '../components/AnimatedStat'
 import ScrambleText from '../components/ScrambleText'
 import GlitchText from '../components/GlitchText'
+import LiveTicker from '../components/LiveTicker'
 
 // ── DESIGN TOKENS ─────────────────────────────────────────────────────────────
 const T = {
@@ -122,9 +123,6 @@ export default function HomePage() {
         @keyframes tl-fill { from{width:0%} to{width:100%} }
         @keyframes tl-fill-v { from{height:0%} to{height:100%} }
         @keyframes dot-travel { 0%{left:0} 100%{left:calc(100% - 6px)} }
-        @keyframes marquee { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
-        .ticker-track { animation: marquee 60s linear infinite; }
-        .ticker-track:hover { animation-play-state: paused; }
         .amber-glow { text-shadow: 0 0 30px rgba(245,166,35,0.65), 0 0 60px rgba(245,166,35,0.3); }
         .amber-btn-glow { box-shadow: 0 0 25px rgba(245,166,35,0.5), 0 0 50px rgba(245,166,35,0.2) !important; }
         .amber-btn-glow:hover { box-shadow: 0 0 35px rgba(245,166,35,0.7), 0 0 70px rgba(245,166,35,0.35) !important; transform: translateY(-2px); }
@@ -338,22 +336,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── LIVE INCIDENT TICKER ─────────────────────────────────────────────── */}
-      <div style={{ background: '#0a0c0e', padding: '14px 0', marginTop: 0, paddingTop: 0, marginBottom: 0, overflow: 'hidden' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 0 }}>
-          <div style={{ paddingLeft: 32, flexShrink: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
-            <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#00e5b0', animation: 'pulse 2s infinite' }} />
-            <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 9, color: '#4a5260', letterSpacing: '0.15em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>LIVE FEED</span>
-          </div>
-          <div style={{ flex: 1, overflow: 'hidden' }}>
-            <div className="ticker-track" style={{ color: '#f5a623', textShadow: '0 0 15px rgba(245,166,35,0.5)', fontSize: 9, fontFamily: "'IBM Plex Mono', monospace", letterSpacing: '0.08em', textTransform: 'uppercase', display: 'inline-flex', gap: 0, whiteSpace: 'nowrap' }}>
-              {['REEFER FAULT · M62 J27 · RESOLVED IN 28s','INVOICE RECOVERY · £4,280 OVERCHARGE DISPUTED · RECOVERED IN 24HRS','TEMP ALARM · NHS LOAD · SLA PROTECTED £2,400','LICENCE CHECK · EXPIRED CPC DETECTED · DRIVER STOOD DOWN','DRIVER HOURS · CASCADE PREVENTED · £900 SAVED','FAILED DELIVERY · NHS SUPPLY CHAIN · CONSIGNEE REBOOKED · SLA SAVED','PANIC BUTTON · DRIVER SAFE · OPS NOTIFIED IN 12s','ROUTE DEVIATION · A1(M) NORTHBOUND · OPS MANAGER ALERTED · JOB PROTECTED','JOB DELAYED · TESCO DC · AUTO-REROUTED · £1,200 PROTECTED','REEFER FAULT · M62 J27 · RESOLVED IN 28s','INVOICE RECOVERY · £4,280 OVERCHARGE DISPUTED · RECOVERED IN 24HRS','TEMP ALARM · NHS LOAD · SLA PROTECTED £2,400','LICENCE CHECK · EXPIRED CPC DETECTED · DRIVER STOOD DOWN','DRIVER HOURS · CASCADE PREVENTED · £900 SAVED','FAILED DELIVERY · NHS SUPPLY CHAIN · CONSIGNEE REBOOKED · SLA SAVED','PANIC BUTTON · DRIVER SAFE · OPS NOTIFIED IN 12s','ROUTE DEVIATION · A1(M) NORTHBOUND · OPS MANAGER ALERTED · JOB PROTECTED','JOB DELAYED · TESCO DC · AUTO-REROUTED · £1,200 PROTECTED'].map((item, i) => (
-                <span key={i} style={{ flexShrink: 0, paddingLeft: 20, paddingRight: 20 }}><span style={{ color: 'rgba(245,166,35,0.4)', marginRight: 12 }}>⬥</span>{item}</span>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
+      <LiveTicker />
 
       <div style={{ height: '2px', background: 'linear-gradient(to right, rgba(245,166,35,0.03), rgba(245,166,35,0.4), rgba(245,166,35,0.03))' }} />
 
