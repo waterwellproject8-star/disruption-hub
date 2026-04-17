@@ -48,6 +48,7 @@ function HexMark({ size = 28 }) {
 export default function HomePage() {
 
   const [videoOpen, setVideoOpen] = useState(false)
+  const [featOpen, setFeatOpen] = useState(false)
   const timelineRef = useRef(null)
   const [tlStep, setTlStep] = useState(-1)
 
@@ -163,6 +164,12 @@ export default function HomePage() {
     return () => observer.disconnect()
   }, [])
 
+  useEffect(() => {
+    const handler = (e) => { if (e.key === 'Escape') setFeatOpen(false) }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [])
+
   const handleMailto = (e) => {
     const href = e.currentTarget.getAttribute('href')
     let left = true
@@ -198,6 +205,38 @@ export default function HomePage() {
         .statement-divider-text { font-family:'Barlow Condensed',sans-serif; font-size:clamp(18px,3vw,28px); font-weight:700; text-transform:uppercase; letter-spacing:0.04em; color:#e8eaed; text-align:center; max-width:800px; line-height:1.3; opacity:0; transform:translateY(12px); transition:opacity 0.6s ease,transform 0.6s ease; }
         .statement-divider-text.visible { opacity:1; transform:translateY(0); }
         .statement-divider-text em { color:#f5a623; font-style:normal; }
+        .feat-modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.85); backdrop-filter:blur(6px); z-index:200; display:flex; align-items:center; justify-content:center; padding:20px; opacity:0; pointer-events:none; transition:opacity 0.3s ease; }
+        .feat-modal-overlay.open { opacity:1; pointer-events:all; }
+        .feat-modal { background:#0a0c0e; border:1px solid rgba(255,255,255,0.08); border-top:2px solid #f5a623; border-radius:4px; width:100%; max-width:860px; max-height:88vh; overflow:hidden; display:flex; flex-direction:column; transform:translateY(24px) scale(0.98); transition:transform 0.35s cubic-bezier(0.25,0.46,0.45,0.94); box-shadow:0 40px 120px rgba(0,0,0,0.8),0 0 60px rgba(245,166,35,0.06); }
+        .feat-modal-overlay.open .feat-modal { transform:translateY(0) scale(1); }
+        .feat-modal-header { padding:24px 32px 20px; border-bottom:1px solid rgba(255,255,255,0.08); display:flex; align-items:flex-start; justify-content:space-between; flex-shrink:0; background:#0d1014; }
+        .feat-modal-scroll-wrap { position:relative; flex:1; overflow:hidden; display:flex; flex-direction:column; }
+        .feat-modal-body { overflow-y:auto; padding:32px; flex:1; }
+        .feat-modal-body::-webkit-scrollbar { width:4px; }
+        .feat-modal-body::-webkit-scrollbar-thumb { background:rgba(245,166,35,0.5); border-radius:2px; }
+        .feat-scroll-fade { position:absolute; bottom:0; left:0; right:0; height:80px; background:linear-gradient(to bottom,transparent,rgba(10,12,14,0.97)); pointer-events:none; z-index:10; display:flex; align-items:flex-end; justify-content:center; padding-bottom:10px; transition:opacity 0.3s; }
+        .feat-scroll-fade.hidden { opacity:0; }
+        .feat-scroll-nudge { display:flex; flex-direction:column; align-items:center; gap:4px; animation:feat-bounce 1.4s ease-in-out infinite; }
+        .feat-scroll-nudge span { font-family:'IBM Plex Mono',monospace; font-size:9px; color:#f5a623; letter-spacing:0.1em; text-transform:uppercase; opacity:0.8; }
+        .feat-scroll-arrow { width:14px; height:14px; border-right:1.5px solid #f5a623; border-bottom:1.5px solid #f5a623; transform:rotate(45deg); opacity:0.7; }
+        @keyframes feat-bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(4px)} }
+        .feat-modal-footer { padding:16px 32px; border-top:1px solid rgba(255,255,255,0.08); display:flex; align-items:center; justify-content:space-between; flex-shrink:0; background:#0d1014; gap:16px; flex-wrap:wrap; }
+        .feat-cat-label { font-family:'IBM Plex Mono',monospace; font-size:9px; color:#4a5260; letter-spacing:0.2em; text-transform:uppercase; margin-bottom:12px; padding-bottom:8px; border-bottom:1px solid rgba(255,255,255,0.06); display:flex; align-items:center; gap:8px; }
+        .feat-cat-label::before { content:''; width:16px; height:1px; background:#f5a623; display:inline-block; flex-shrink:0; }
+        .feat-modules-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+        .feat-core-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+        .feat-tag { display:flex; align-items:center; gap:8px; padding:10px 12px; background:#0d1014; border:1px solid rgba(255,255,255,0.07); border-radius:3px; font-family:'IBM Plex Mono',monospace; font-size:10px; color:#c8cdd4; letter-spacing:0.03em; line-height:1.4; transition:border-color 0.2s; }
+        .feat-tag:hover { border-color:rgba(245,166,35,0.25); }
+        .feat-tag.hl { border-color:rgba(245,166,35,0.2); background:rgba(245,166,35,0.04); color:#e8eaed; }
+        .feat-tag-dot { width:5px; height:5px; border-radius:50%; background:#f5a623; flex-shrink:0; }
+        .feat-tag.hl .feat-tag-dot { box-shadow:0 0 6px #f5a623; }
+        .feat-core-item { display:flex; align-items:flex-start; gap:10px; padding:12px 14px; background:#0d1014; border:1px solid rgba(255,255,255,0.07); border-radius:3px; }
+        .feat-trigger-btn { display:inline-flex; align-items:center; gap:10px; background:transparent; border:1px solid rgba(245,166,35,0.3); color:#f5a623; font-family:'IBM Plex Mono',monospace; font-size:11px; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; padding:12px 28px; cursor:pointer; border-radius:3px; transition:all 0.2s; }
+        .feat-trigger-btn:hover { border-color:#f5a623; background:rgba(245,166,35,0.06); box-shadow:0 0 20px rgba(245,166,35,0.1); }
+        .feat-trigger-icon { width:18px; height:18px; border:1px solid #f5a623; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:14px; transition:transform 0.3s; flex-shrink:0; line-height:1; }
+        .feat-trigger-btn:hover .feat-trigger-icon { transform:rotate(45deg); }
+        .feat-close-btn { background:none; border:1px solid rgba(255,255,255,0.1); color:#8a9099; width:36px; height:36px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0; margin-left:16px; transition:all 0.2s; }
+        .feat-close-btn:hover { border-color:#f5a623; color:#f5a623; }
         @keyframes scan-move { 0%{left:0%} 100%{left:100%} }
         @keyframes blink-cursor { 0%,100%{opacity:1} 50%{opacity:0} }
         @keyframes think-pulse { 0%,100%{opacity:0.3;transform:scale(0.8)} 50%{opacity:1;transform:scale(1)} }
@@ -251,6 +290,11 @@ export default function HomePage() {
           .how-connector { display: none !important; }
           .real-scenario-section { display: none !important; }
           .statement-divider { padding: 32px 24px !important; }
+          .feat-modules-grid { grid-template-columns: 1fr 1fr !important; }
+          .feat-core-grid { grid-template-columns: 1fr !important; }
+          .feat-modal-body { padding: 20px !important; }
+          .feat-modal-header { padding: 20px !important; }
+          .feat-modal-footer { padding: 12px 20px !important; }
           .how-step-card { transition: transform 0.5s cubic-bezier(0.25,0.46,0.45,0.94), box-shadow 0.5s cubic-bezier(0.25,0.46,0.45,0.94), scale 0.5s cubic-bezier(0.25,0.46,0.45,0.94); transform: translateY(0px) scale(1); box-shadow: none; will-change: transform; }
           .how-step-card.card-lifted { transform: translateY(-16px) scale(1.03) !important; box-shadow: 0 24px 60px rgba(245,166,35,0.22), 0 8px 24px rgba(245,166,35,0.12), 0 0 0 1px rgba(245,166,35,0.08) !important; }
           .card-anim-wrap { display:inline-flex; align-items:center; gap:6px; height:22px; margin-left:8px; vertical-align:middle; }
@@ -858,6 +902,14 @@ export default function HomePage() {
           </motion.div>
           </div>
 
+          <div style={{ textAlign: 'center', margin: '32px 0 0' }}>
+            <div style={{ fontFamily: FF.mono, fontSize: 11, color: T.textDim, letterSpacing: '0.15em', textTransform: 'uppercase', marginBottom: 12 }}>Everything included in every plan</div>
+            <button className="feat-trigger-btn" onClick={() => setFeatOpen(true)}>
+              <span className="feat-trigger-icon">+</span>
+              Full Feature List
+            </button>
+          </div>
+
           {/* ENTERPRISE — full width below the 4-column grid */}
           <div className="pricing-card enterprise-card" style={{
             background: T.navyCard,
@@ -1030,6 +1082,55 @@ export default function HomePage() {
               color: T.textFaint, letterSpacing: '0.06em',
             }}>
               £149 pilot · 30 days · bank transfer or PayPal
+            </div>
+          </div>
+        </div>
+
+        {/* ── FULL FEATURE MODAL ── */}
+        <div className={`feat-modal-overlay${featOpen ? ' open' : ''}`} onClick={(e) => { if (e.target === e.currentTarget) setFeatOpen(false) }}>
+          <div className="feat-modal">
+            <div className="feat-modal-header">
+              <div>
+                <div style={{ fontFamily: FF.mono, fontSize: 10, color: T.amber, letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: 6 }}>Everything Included</div>
+                <div style={{ fontFamily: FF.condensed, fontSize: 'clamp(22px, 4vw, 34px)', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.02em', color: '#fff', lineHeight: 1 }}>Full Platform <span style={{ color: T.amber }}>Features</span></div>
+                <div style={{ fontFamily: FF.mono, fontSize: 11, color: T.textDim, marginTop: 8 }}>Every plan · No tiers · No add-ons</div>
+              </div>
+              <button className="feat-close-btn" onClick={() => setFeatOpen(false)}>×</button>
+            </div>
+            <div className="feat-modal-scroll-wrap">
+              <div className="feat-scroll-fade" id="featScrollFade">
+                <div className="feat-scroll-nudge"><span>Scroll for more</span><div className="feat-scroll-arrow" /></div>
+              </div>
+              <div className="feat-modal-body" onScroll={(e) => { const el = e.currentTarget; const fade = document.getElementById('featScrollFade'); if (!fade) return; fade.classList.toggle('hidden', el.scrollTop + el.clientHeight >= el.scrollHeight - 20) }}>
+                <div style={{ marginBottom: 32 }}>
+                  <div className="feat-cat-label">Core Platform</div>
+                  <div className="feat-core-grid">
+                    {['Live AI disruption agent — unlimited analyses, 30-second response','SMS command centre — ops manager approves by replying YES from anywhere','Driver app — job list, pre-shift defect check, GPS alerts, POD confirmation','Operations dashboard — live incident feed, severity scoring, one-click actions','Consignee voice calls — AI contacts consignee automatically on approval','Monthly performance report — auto-generated, financial exposure tracked'].map(item => (
+                      <div key={item} className="feat-core-item"><span style={{ color: '#00e5b0', fontSize: 12, flexShrink: 0, marginTop: 1 }}>✓</span><span style={{ fontFamily: FF.mono, fontSize: 10, color: '#c8cdd4', lineHeight: 1.5 }}>{item}</span></div>
+                    ))}
+                  </div>
+                </div>
+                <div style={{ marginBottom: 32 }}>
+                  <div className="feat-cat-label">22 Intelligence Modules</div>
+                  <div className="feat-modules-grid">
+                    {[{name:'Invoice Recovery',hl:true},{name:'Licence & CPC Expiry',hl:true},{name:'SLA Breach Prediction',hl:true},{name:'Cargo Theft Prevention',hl:true},{name:'Ghost Freight Detection',hl:true},{name:'Driver Hours Monitor',hl:false},{name:'Vehicle Health Score',hl:false},{name:'Cold Chain Compliance',hl:false},{name:'Hazmat / ADR Check',hl:false},{name:'Subcontractor Scoring',hl:false},{name:'Client Churn Prediction',hl:false},{name:'Cash Flow Forecast',hl:false},{name:'Workforce Pipeline',hl:false},{name:'Tender Intelligence',hl:false},{name:'Fuel Optimisation',hl:false},{name:'Carbon & ESG Report',hl:false},{name:'Carrier Scorecard',hl:false},{name:'Demand Forecasting',hl:false},{name:'Rate Benchmarking',hl:false},{name:'Insurance Pre-emption',hl:false},{name:'Regulation Monitor',hl:false},{name:'Load Consolidation',hl:false}].map(({name,hl}) => (
+                      <div key={name} className={`feat-tag${hl ? ' hl' : ''}`}><div className="feat-tag-dot" />{name}</div>
+                    ))}
+                  </div>
+                </div>
+                <div style={{ marginBottom: 8 }}>
+                  <div className="feat-cat-label">Compliance & Safety</div>
+                  <div className="feat-modules-grid">
+                    {['WTD driver hours enforcement','ADR hazmat route compliance','Cold chain temp thresholds','DVSA inspection readiness','Operator licence monitoring','Driver medical flag alerts'].map(item => (
+                      <div key={item} className="feat-tag"><div className="feat-tag-dot" />{item}</div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="feat-modal-footer">
+              <span style={{ fontFamily: FF.mono, fontSize: 10, color: T.textDim, letterSpacing: '0.04em' }}>All features included from day one · No setup fees · Cancel anytime</span>
+              <a href="mailto:hello@disruptionhub.ai?subject=Demo request — DisruptionHub" onClick={handleMailto} style={{ background: T.amber, color: '#000', fontFamily: FF.mono, fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', padding: '10px 24px', borderRadius: 3, textDecoration: 'none', whiteSpace: 'nowrap', display: 'inline-block' }}>Book a Demo →</a>
             </div>
           </div>
         </div>
