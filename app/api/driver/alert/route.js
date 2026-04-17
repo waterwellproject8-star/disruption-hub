@@ -95,20 +95,19 @@ function extractFirstAction(text) {
 // Never dump raw AI action text — ops needs to scan in 2 seconds
 function buildOpsSMS({ severity, vehicle_reg, human_description, financialImpact, detectedType, force_alert, force_financial_zero }) {
   const sev = force_alert && severity === 'MEDIUM' ? 'HIGH' : severity
-  const situation = (human_description || 'Driver alert').substring(0, 55).replace(/\n/g, ' ')
-  const money = (!force_financial_zero && financialImpact > 0) ? `£${financialImpact.toLocaleString()} ` : ''
+  const situation = (human_description || 'Driver alert').substring(0, 50).replace(/\n/g, ' ')
+  const money = (!force_financial_zero && financialImpact > 0) ? `\nSLA risk: £${financialImpact.toLocaleString()} if slot missed.` : ''
 
-  // Tell ops exactly what YES will trigger
-  const yesLabel = {
-    dispatch:  'YES=dispatch recovery',
-    sms:       'YES=send driver instruction',
-    reroute:   'YES=reroute driver',
-    call:      'YES=call carrier',
-    emergency: 'YES=emergency confirmed',
-    preshift:  'YES=clear driver to depart',
-  }[detectedType] || 'YES'
+  const yesAction = {
+    dispatch:  'dispatch recovery vehicle',
+    sms:       'send driver instruction',
+    reroute:   'reroute driver',
+    call:      'call carrier for recovery',
+    emergency: 'confirm emergency dispatch',
+    preshift:  'clear driver to depart',
+  }[detectedType] || 'execute action'
 
-  return `DH ${sev} ${vehicle_reg || ''}\n${situation}\n${money}${yesLabel} / NO / OPEN`
+  return `DisruptionHub — ${sev}\n${vehicle_reg || ''}: ${situation}.${money}\nReply YES to ${yesAction}, NO to reject, OPEN for dashboard.`
 }
 
 function extractCarrierPhone(systemPrompt) {

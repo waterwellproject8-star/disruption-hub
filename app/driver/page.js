@@ -625,7 +625,7 @@ export default function DriverApp() {
       hours_running_out:`DRIVER HOURS CRITICAL. ${driverInfo.name} (${driverInfo.vehicleReg}). Location:${loc}. Current job:${job?.route||'?'}. Remaining jobs:${remainingList||'none'}. Calculate legal remaining drive time. Which jobs legally completable?`,
       adrhazmat:        `ADR/HAZMAT ISSUE. Driver ${driverInfo.name} (${driverInfo.vehicleReg}). Location:${loc}. Cargo:${cargo}. Issue:${input}. Legal requirements. Can driver continue?`,
       cant_complete:    `CANNOT COMPLETE ALL RUNS. Driver ${driverInfo.name} (${driverInfo.vehicleReg}). Location:${loc}. Current job:${job?.route||'?'}. Reason:${input}. Remaining:${remainingList||'none'}. Prioritise which to attempt. Customer notifications. Relief vehicle needed?`,
-      breakdown:        `BREAKDOWN EMERGENCY. ${driverInfo.vehicleReg} (${vtype}), ${driverInfo.name}. Location:${loc}. ${input?'Issue:'+input:'Vehicle broken down.'}. Job:${job?.route||'?'}. Cargo:${cargo}. Safety first, then recovery, then SLA.`,
+      breakdown:        `BREAKDOWN EMERGENCY. ${driverInfo.vehicleReg} (${vtype}), ${driverInfo.name}. Location:${loc}. ${input?'Issue:'+input:'Vehicle broken down.'}. Job:${job?.route||'?'}. Cargo:${cargo}. IMPORTANT: Tell the driver to stay with their vehicle — ops have been notified and are arranging recovery. Driver will receive confirmation shortly. Then assess SLA risk.`,
       medical:          `MEDICAL EMERGENCY. Driver ${driverInfo.name} (${driverInfo.vehicleReg}). Location:${loc}. Situation:${input||'medical emergency reported'}. Is driver safe? What should they do?`,
     }
     return p[issueId]||`Driver ${driverInfo.name} reports: ${input||issueId}. Location:${loc}. Job:${job?.route||'?'}.`
@@ -647,7 +647,9 @@ export default function DriverApp() {
       if (panelIssue?.id === 'medical' && lastAlert && lastAlert.issueId !== 'medical') {
         setPriorAlert(lastAlert); localStorage.setItem('dh_prior_alert', JSON.stringify(lastAlert))
       }
-      const placeholder = { headline:`${panelIssue.label} — ops alerted`, severity:'HIGH', actions:['Ops manager has been notified — awaiting instructions'], detail:'', issueId:panelIssue.id, issueLabel:panelIssue.label, time:new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}) }
+      // Clear stale ops messages/instructions from prior incidents
+      setOpsMessages([]); try { localStorage.removeItem('dh_ops_messages') } catch {}
+      const placeholder = { headline:`${panelIssue.label} — ops alerted`, severity:'HIGH', actions:['Stay with your vehicle. Ops have been notified and are arranging recovery — you will receive confirmation shortly.'], detail:'', issueId:panelIssue.id, issueLabel:panelIssue.label, time:new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}) }
       setLastAlert(placeholder); localStorage.setItem('dh_last_alert',JSON.stringify(placeholder))
     }
 

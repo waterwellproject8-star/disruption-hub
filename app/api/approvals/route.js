@@ -59,10 +59,19 @@ async function makeCall(to, twimlMessage, rawTwiml) {
 
 function extractPhoneNumber(text) {
   if (!text) return null
-  // Match +44 international, 07/01/02/0800 UK formats
   const match = text.match(/(\+44[\s\d]{10,12}|\b0800[\s\d]{8,12}|\b07[\d\s]{9,11}|\b01[\d\s]{9,11}|\b02[\d\s]{9,11})/)
   if (!match) return null
   return match[1].replace(/\s/g, '')
+}
+
+function twimlSafe(name) {
+  if (!name) return 'your delivery contact'
+  return name.replace(/\b([A-Z]{2,})\b/g, (match) => match.split('').join('. ') + '.')
+}
+
+function speakReg(reg) {
+  if (!reg) return 'unknown'
+  return reg.replace(/\s/g, '').replace(/./g, c => c + '. ').trim()
 }
 
 function buildCarrierVoiceMessage({ carrierName, vehicleReg, clientName, incidentDescription, opsPhone, ref }) {
@@ -262,7 +271,7 @@ export async function POST(request) {
           } catch {}
         }
         const affectedNote = affectedCount > 0 ? `\n${affectedCount} delivery${affectedCount > 1 ? 'ies' : 'y'} affected — ops managing consignee notifications.` : ''
-        const msg = `DisruptionHub OPS UPDATE${details.ref ? ` — ${details.ref}` : ''}\n\nOps confirmed. Recovery/assistance dispatched.\nStay with vehicle. Help is coming.${affectedNote}`
+        const msg = `DisruptionHub — Confirmed.\n${details.vehicle_reg || ''}: Recovery dispatched. Driver notified.${affectedNote}`
         const result = await sendSMS(driverPhone, msg)
 
         if (details.vehicle_reg) {
@@ -337,22 +346,27 @@ export async function POST(request) {
 
     // ── CONSIGNEE DELAY ALERT — one-way notification call ──────────────
     if (['call', 'emergency', 'make_call'].includes(actionType) && details.call_type === 'consignee_delay_alert') {
-      // FIX 1: consignee calls prefer details.consignee_phone, then fall back to
-      // a phone extracted from client.system_prompt. Keeps the chain predictable.
+      // FIX 3: delay > 60 mins → manual rebook, no automated call
+      if (details.delay_minutes && details.delay_minutes > 60) {
+        if (client?.contact_phone) {
+          await sendSMS(client.contact_phone, `DisruptionHub — Action needed.\n${details.vehicle_reg || ''}: Delay over 60 mins — ${details.consignee_name || 'consignee'} slot rebook required.\nCall ${details.consignee_name || 'consignee'} directly to rearrange.\nDashboard: disruptionhub.ai/unlock`).catch(err => console.error('[approvals] manual rebook SMS failed:', err?.message))
+        }
+        await finalise(false, 'delay_exceeds_60_mins_manual_rebook_required')
+        return Response.json({ success: true, action: 'failed', note: 'Delay >60 mins — manual rebook required' })
+      }
+
       const rawConsigneePhone = details.consignee_phone || extractPhoneNumber(client?.system_prompt)
       if (rawConsigneePhone) {
-        const spokenReg = details.vehicle_reg ? details.vehicle_reg.replace(/\s/g, '').split('').join(', ') : null
-        const spellOut = s => s ? s.replace(/[^a-zA-Z0-9]/g, '').split('').join(', ') : ''
         const contactName = client?.contact_name || 'your supplier'
-        const parts = [`Hello. This is an automated delivery update from ${contactName}.`]
-        if (details.consignee_name) parts.push(`This message is for the goods in team at ${details.consignee_name}.`)
-        parts.push(spokenReg
-          ? `Vehicle ${spokenReg} is running approximately ${formatDelayForSpeech(details.delay_minutes)} late.`
-          : `Your scheduled delivery is running late.`)
-        if (details.revised_eta) parts.push(`Revised estimated arrival is ${details.revised_eta}.`)
-        if (details.delay_reason) parts.push(`Reason: ${String(details.delay_reason).substring(0, 120)}.`)
-        if (details.ref) parts.push(`Delivery reference: ${spellOut(details.ref)}.`)
-        parts.push(`No action is required from you. Thank you.`)
+        const consigneeSafe = twimlSafe(details.consignee_name)
+        const spokenVehicle = speakReg(details.vehicle_reg)
+        const parts = [
+          `This is an automated message from DisruptionHub on behalf of ${contactName}.`,
+          `Your delivery from vehicle ${spokenVehicle} is running approximately ${formatDelayForSpeech(details.delay_minutes)} late.`,
+          details.revised_eta ? `Expected arrival is now ${details.revised_eta}.` : '',
+          `Please contact the operations team if you need to discuss.`,
+          `Thank you.`
+        ].filter(Boolean)
 
         const safe = parts.join(' ').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
         const twiml = `<?xml version="1.0" encoding="UTF-8"?><Response><Say voice="Polly.Amy" language="en-GB">${safe}</Say><Pause length="1"/><Say voice="Polly.Amy" language="en-GB">I will repeat that message.</Say><Pause length="1"/><Say voice="Polly.Amy" language="en-GB">${safe}</Say></Response>`
@@ -369,7 +383,7 @@ export async function POST(request) {
 
         const driverPhone = await resolveDriverPhone()
         if (driverPhone) {
-          await sendSMS(driverPhone, `DisruptionHub OPS${details.ref ? ` — ${details.ref}` : ''}\n\nOps approved. ${details.consignee_name || 'Consignee'} being called automatically.\nContinue to destination.`).catch(err => console.error('[approvals] sendSMS to driver failed:', err?.message))
+          await sendSMS(driverPhone, `DisruptionHub — Confirmed.\n${details.vehicle_reg || ''}: ${details.consignee_name || 'Consignee'} being called. Continue to destination.`).catch(err => console.error('[approvals] sendSMS to driver failed:', err?.message))
         }
 
         const callSuccess = callResult.success && !callResult.simulated

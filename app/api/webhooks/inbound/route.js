@@ -112,47 +112,22 @@ async function sendOpsSMS(toPhone, body) {
   }
 }
 
-// Build targeted ops SMS per action type — each tells ops exactly what YES executes
 function buildActionSMS(eventType, payload, severity, financialImpact, action) {
-  const reg        = payload?.vehicle_reg || 'Unknown'
-  const location   = payload?.location || payload?.current_location || payload?.current_position || ''
-  const consignee  = payload?.consignee || action?.consignee_name || ''
-  const delayMins  = payload?.delay_minutes || ''
-  const sevEmoji   = severity === 'CRITICAL' ? '🔴' : severity === 'HIGH' ? '🟠' : '🟡'
-  const eventLabel = eventType.replace(/_/g, ' ').toUpperCase()
+  const reg = payload?.vehicle_reg || 'Unknown'
+  const eventLabel = eventType.replace(/_/g, ' ').toLowerCase()
   const actionType = action?.type || 'send_sms'
-  const callType   = action?.call_type || ''
+  const callType = action?.call_type || ''
+  const money = financialImpact > 0 ? `\nSLA risk: £${financialImpact.toLocaleString()} if slot missed.` : ''
 
-  // Line 1: severity + event
-  // Line 2: vehicle + location + delay
-  // Line 3: consignee + exposure
-  // Line 4: what YES does — specific to this action
-  // Line 5: reply options
+  let yesAction = 'execute action'
+  if (actionType === 'send_sms' || actionType === 'sms' || actionType === 'reroute' || actionType === 'notify') yesAction = 'notify driver of situation'
+  else if (actionType === 'dispatch') yesAction = 'dispatch recovery vehicle and notify driver'
+  else if (actionType === 'call' && callType === 'consignee_delay_alert') yesAction = `call ${action?.consignee_name || 'consignee'} with delay notification`
+  else if (actionType === 'call' && callType === 'carrier_alert') yesAction = `call ${action?.carrier_name || 'carrier'} for recovery`
+  else if (actionType === 'call') yesAction = 'place automated call'
+  else if (actionType === 'emergency') yesAction = 'confirm emergency dispatch'
 
-  const line1 = `${sevEmoji} ${severity} — ${eventLabel}`
-  const line2 = [reg, location ? location : '', delayMins ? `${delayMins}min` : ''].filter(Boolean).join(' · ')
-  const line3 = [consignee, financialImpact > 0 ? `£${financialImpact.toLocaleString()} exposure` : ''].filter(Boolean).join(' · ')
-
-  let line4 = ''
-  if (actionType === 'send_sms' || actionType === 'sms' || actionType === 'reroute' || actionType === 'notify') {
-    line4 = 'YES = notify driver of situation'
-  } else if (actionType === 'dispatch') {
-    line4 = 'YES = dispatch recovery + notify driver'
-  } else if (actionType === 'call' && callType === 'consignee_delay_alert') {
-    const name = action?.consignee_name || consignee || 'consignee'
-    line4 = `YES = call ${name} automatically`
-  } else if (actionType === 'call' && callType === 'carrier_alert') {
-    const name = action?.carrier_name || 'carrier'
-    line4 = `YES = call ${name} for recovery`
-  } else if (actionType === 'call') {
-    line4 = 'YES = make automated call'
-  } else if (actionType === 'emergency') {
-    line4 = 'YES = emergency dispatch + 999 if needed'
-  } else {
-    line4 = 'YES = execute action'
-  }
-
-  return [line1, line2, line3, line4, 'Reply YES · NO · OPEN'].filter(Boolean).join('\n')
+  return `DisruptionHub — ${severity}\n${reg}: ${eventLabel}.${money}\nReply YES to ${yesAction}, NO to reject, OPEN for dashboard.`
 }
 
 // ── EVENT CATEGORIES FOR CALL ROUTING ────────────────────────────────────────

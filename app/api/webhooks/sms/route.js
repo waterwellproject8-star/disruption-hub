@@ -59,6 +59,16 @@ async function makeCall(to, twimlMessage) {
   }
 }
 
+function twimlSafe(name) {
+  if (!name) return 'your delivery contact'
+  return name.replace(/\b([A-Z]{2,})\b/g, (match) => match.split('').join('. ') + '.')
+}
+
+function speakReg(reg) {
+  if (!reg) return 'unknown'
+  return reg.replace(/\s/g, '').replace(/./g, c => c + '. ').trim()
+}
+
 function twimlReply(msg) {
   const safe = msg.substring(0, 155)
   return new Response(
@@ -536,7 +546,7 @@ export async function POST(request) {
       // ── DISPATCH ─────────────────────────────────────────────────────────
       if (actionType === 'dispatch') {
         const driverPhone = await resolveDriverPhone()
-        const msg = `DisruptionHub OPS UPDATE${details.ref ? ` — ${details.ref}` : ''}\n\nOps confirmed. Recovery dispatched.\nStay with vehicle. Hazards on.`
+        const msg = `DisruptionHub — Confirmed.\n${details.vehicle_reg || ''}: Recovery dispatched. Driver notified.`
         await writeInstructionToApp(msg)
         if (driverPhone) {
           const result = await sendSMS(driverPhone, msg)
@@ -588,10 +598,14 @@ export async function POST(request) {
 
         // ── CONSIGNEE DELAY ALERT ─────────────────────────────────────────────
         if (callType === 'consignee_delay_alert') {
-          // Resolve consignee phone — explicit field first, then match consignee_name
-          // in system_prompt CONSIGNEE CONTACTS, then generic extraction from system_prompt
-          let rawConsigneePhone = details.consignee_phone || null
+          // FIX 3: delay > 60 mins → manual rebook, no automated call
+          if (details.delay_minutes && details.delay_minutes > 60) {
+            await sendSMS(client.contact_phone || from, `DisruptionHub — Action needed.\n${details.vehicle_reg || ''}: Delay over 60 mins — ${details.consignee_name || 'consignee'} slot rebook required.\nCall ${details.consignee_name || 'consignee'} directly to rearrange.\nDashboard: disruptionhub.ai/unlock`)
+            await finaliseApproval({ success: false, failure_reason: 'delay_exceeds_60_mins_manual_rebook_required' })
+            return twimlReply('DH: Delay >60 mins — call consignee directly to rebook.')
+          }
 
+          let rawConsigneePhone = details.consignee_phone || null
           if (!rawConsigneePhone && details.consignee_name && client.system_prompt) {
             for (const line of client.system_prompt.split('\n')) {
               if (line.toLowerCase().includes(details.consignee_name.toLowerCase())) {
@@ -600,34 +614,26 @@ export async function POST(request) {
               }
             }
           }
-
-          if (!rawConsigneePhone) {
-            rawConsigneePhone = extractPhoneNumber(client.system_prompt)
-          }
+          if (!rawConsigneePhone) rawConsigneePhone = extractPhoneNumber(client.system_prompt)
 
           const consigneePhone = toE164UK(rawConsigneePhone)
           console.log('[DH Voice] consignee_delay_alert raw:', rawConsigneePhone, '→ E.164:', consigneePhone)
 
           if (consigneePhone) {
-            // One-way notification — no callback instruction
-            // Ops contacts consignee directly if rescheduling needed
-            const spokenReg = details.vehicle_reg ? details.vehicle_reg.replace(/\s/g,'').split('').join(', ') : null
-
-            const parts = [`Hello. This is an automated delivery update from ${contactName || 'your supplier'}.`]
-            if (details.consignee_name) parts.push(`This message is for the goods in team at ${details.consignee_name}.`)
-            parts.push(spokenReg
-              ? `Vehicle ${spokenReg} is running approximately ${formatDelayForSpeech(details.delay_minutes)} late.`
-              : `Your scheduled delivery is running late.`)
-            if (details.revised_eta)  parts.push(`Revised estimated arrival is ${details.revised_eta}.`)
-            if (details.delay_reason) parts.push(`Reason: ${String(details.delay_reason).substring(0,120)}.`)
-            if (details.ref)          parts.push(`Delivery reference: ${spellOut(details.ref)}.`)
-            parts.push(`No action is required from you. Thank you.`)
+            const spokenVehicle = speakReg(details.vehicle_reg)
+            const parts = [
+              `This is an automated message from DisruptionHub on behalf of ${contactName || 'your supplier'}.`,
+              `Your delivery from vehicle ${spokenVehicle} is running approximately ${formatDelayForSpeech(details.delay_minutes)} late.`,
+              details.revised_eta ? `Expected arrival is now ${details.revised_eta}.` : '',
+              `Please contact the operations team if you need to discuss.`,
+              `Thank you.`
+            ].filter(Boolean)
 
             const voiceMessage = parts.join(' ')
             const callResult = await makeCall(consigneePhone, voiceMessage)
 
             const driverPhone = await resolveDriverPhone()
-            const driverMsg = `DisruptionHub OPS${details.ref ? ` — ${details.ref}` : ''}\n\nOps approved. ${details.consignee_name || 'Consignee'} being called automatically.\nContinue to destination. Reply DONE when acknowledged.`
+            const driverMsg = `DisruptionHub — Confirmed.\n${details.vehicle_reg || ''}: ${details.consignee_name || 'Consignee'} being called. Continue to destination.`
             await writeInstructionToApp(driverMsg)
             if (driverPhone) await sendSMS(driverPhone, driverMsg).catch(err => console.error('[sms-yes] sendSMS to driver failed:', err?.message))
 
@@ -683,7 +689,7 @@ export async function POST(request) {
 
           const callResult = await makeCall(carrierPhone, voiceMessage)
           const driverPhone = await resolveDriverPhone()
-          const driverMsg = `DisruptionHub OPS${details.ref ? ` — ${details.ref}` : ''}\n\nOps approved. Carrier being contacted now.\nStay safe. Help is coming.`
+          const driverMsg = `DisruptionHub — Confirmed.\n${details.vehicle_reg || ''}: Carrier being contacted. Stay safe.`
           await writeInstructionToApp(driverMsg)
           if (driverPhone) await sendSMS(driverPhone, driverMsg).catch(err => console.error('[sms-yes] sendSMS to driver failed:', err?.message))
 
