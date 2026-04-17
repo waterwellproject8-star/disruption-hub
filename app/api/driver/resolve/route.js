@@ -106,7 +106,7 @@ In one sentence: give a revised ETA with 1.5x buffer applied, and state in plain
 
     // SMS ops manager
     if (contactPhone) {
-      const smsBody = `✅ DH RESOLVED — ${vehicle_reg}\n${resolution}\n${revisedEta ? revisedEta.substring(0, 80) : 'Back on track.'}`
+      const smsBody = `DisruptionHub — Resolved.\n${vehicle_reg}: ${(original_issue || 'alert').replace(/_/g, ' ')} resolved by driver.\n${driver_name || 'Driver'} is back on track.${ref ? `\nRef: ${ref}` : ''}`
       await sendSMS(contactPhone, smsBody).catch(err => console.error('[resolve] sendSMS failed:', err?.message))
     }
 
