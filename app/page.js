@@ -109,7 +109,7 @@ export default function HomePage() {
     <div style={{ background: '#0a0c0e', color: T.text, fontFamily: FF.body, overflowX: 'hidden' }}>
 
       <style>{`
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
         html { scroll-behavior: smooth; }
         @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
         @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }

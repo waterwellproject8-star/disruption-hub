@@ -41,6 +41,8 @@ export default function LiveTicker() {
       overflow: 'hidden',
       borderTop: '1px solid rgba(255,255,255,0.04)',
       borderBottom: '1px solid rgba(255,255,255,0.04)',
+      WebkitTextSizeAdjust: '100%',
+      textSizeAdjust: '100%',
     }}>
       <div style={{
         display: 'flex',
@@ -79,6 +81,8 @@ export default function LiveTicker() {
               display: 'inline-flex',
               whiteSpace: 'nowrap',
               willChange: 'transform',
+              WebkitTextSizeAdjust: '100%',
+              textSizeAdjust: '100%',
             }}
           >
             {doubled.map((item, i) => (
