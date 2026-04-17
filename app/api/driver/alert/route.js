@@ -93,9 +93,10 @@ function extractFirstAction(text) {
 
 // Build a clean ops SMS — what happened, exposure, what YES does
 // Never dump raw AI action text — ops needs to scan in 2 seconds
-function buildOpsSMS({ severity, vehicle_reg, human_description, financialImpact, detectedType, force_alert, force_financial_zero }) {
+function buildOpsSMS({ severity, vehicle_reg, human_description, financialImpact, detectedType, force_alert, force_financial_zero, location_description }) {
   const sev = force_alert && severity === 'MEDIUM' ? 'HIGH' : severity
   const situation = (human_description || 'Driver alert').substring(0, 50).replace(/\n/g, ' ')
+  const loc = location_description ? ` Driver at ${location_description}.` : ''
   const money = (!force_financial_zero && financialImpact > 0) ? `\nSLA risk: £${financialImpact.toLocaleString()} if slot missed.` : ''
 
   const yesAction = {
@@ -107,7 +108,7 @@ function buildOpsSMS({ severity, vehicle_reg, human_description, financialImpact
     preshift:  'clear driver to depart',
   }[detectedType] || 'execute action'
 
-  return `DisruptionHub — ${sev}\n${vehicle_reg || ''}: ${situation}.${money}\nReply YES to ${yesAction}, NO to reject, OPEN for dashboard.`
+  return `DisruptionHub — ${sev}\n${vehicle_reg || ''}: ${situation}.${loc}${money}\nReply YES to ${yesAction}, NO to reject, OPEN for dashboard.`
 }
 
 function extractCarrierPhone(systemPrompt) {
@@ -497,7 +498,8 @@ Provide immediate disruption analysis and action plan.`
         financialImpact,
         detectedType,
         force_alert,
-        force_financial_zero
+        force_financial_zero,
+        location_description
       })
       if (primaryApprovalId) smsBody += `\nRef: ${primaryApprovalId.slice(0, 8)}`
       const result = await sendSMS(contactPhone, smsBody)
