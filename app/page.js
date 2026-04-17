@@ -172,6 +172,9 @@ export default function HomePage() {
           .how-timeline-grid { grid-template-columns: 1fr !important; gap: 12px !important; }
           .tl-desktop { display: none !important; }
           .tl-mobile { display: flex !important; }
+          .tl-mobile .tl-node-dot { width: 36px !important; height: 36px !important; }
+          .tl-mobile .tl-node-dot svg { width: 12px !important; height: 12px !important; }
+          .tl-mobile .tl-node-dot-text { font-size: 13px !important; }
           .pricing-grid { grid-template-columns: 1fr !important; gap: 20px !important; }
           .pricing-card { padding: 24px 20px 32px !important; }
           .pricing-card .pc-spacer { height: 8px !important; }
@@ -520,7 +523,7 @@ export default function HomePage() {
                   {steps.map((s, i) => (
                     <div key={i} style={{ display: 'flex', gap: 14, alignItems: 'flex-start' }}>
                       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                        <div style={{ width: s.big ? 48 : 36, height: s.big ? 48 : 36, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: FF.mono, fontSize: s.dot === '!' ? 16 : 9, fontWeight: s.dot === '!' ? 900 : 700, flexShrink: 0, transition: 'all 0.4s', ...nodeStyle(i) }}>{s.dot === 'tick' ? <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2.5 7L5.5 10L11.5 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg> : s.dot}</div>
+                        <div className="tl-node-dot" style={{ width: s.big ? 48 : 36, height: s.big ? 48 : 36, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: FF.mono, fontSize: s.dot === '!' ? 16 : 9, fontWeight: s.dot === '!' ? 900 : 700, flexShrink: 0, transition: 'all 0.4s', ...nodeStyle(i) }}>{s.dot === 'tick' ? <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2.5 7L5.5 10L11.5 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg> : <span className="tl-node-dot-text">{s.dot}</span>}</div>
                         {i < steps.length - 1 && (
                           <div style={{ width: 2, flex: 1, minHeight: 24, margin: '4px auto', background: 'rgba(255,255,255,0.07)', position: 'relative', overflow: 'hidden' }}>
                             <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', background: 'linear-gradient(to bottom, #00e5b0, #f5a623)', height: tlStep > i ? '100%' : '0%', transition: 'height 0.6s ease-out' }} />
