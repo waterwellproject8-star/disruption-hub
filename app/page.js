@@ -91,13 +91,17 @@ export default function HomePage() {
   useEffect(() => {
     if (typeof window === 'undefined') return
     if (window.innerWidth > 768) return
-    const cards = document.querySelectorAll('.how-step-card')
+    const cards = Array.from(document.querySelectorAll('.how-step-card'))
     const observer = new IntersectionObserver((entries) => {
       entries.forEach((entry) => {
-        if (entry.isIntersecting) entry.target.classList.add('card-lifted')
-        else entry.target.classList.remove('card-lifted')
+        if (entry.isIntersecting) {
+          cards.forEach((c) => { if (c !== entry.target) c.classList.remove('card-lifted') })
+          entry.target.classList.add('card-lifted')
+        } else {
+          entry.target.classList.remove('card-lifted')
+        }
       })
-    }, { threshold: 0.3, rootMargin: '0px 0px -80px 0px' })
+    }, { threshold: 0.45, rootMargin: '0px 0px -60px 0px' })
     cards.forEach((card) => observer.observe(card))
     return () => observer.disconnect()
   }, [])
@@ -132,7 +136,6 @@ export default function HomePage() {
         .cta-primary-btn:active { transform: translateY(0px); box-shadow: 0 0 0 1px rgba(245,166,35,0.6), 0 0 10px rgba(245,166,35,0.3); }
         @keyframes dh-glitch { 0%{transform:translate(0);opacity:1;color:#fff} 10%{transform:translate(-3px,1px);opacity:0.8;color:#f5a623} 20%{transform:translate(3px,-1px);opacity:1;color:#fff} 30%{transform:translate(-2px,2px);opacity:0.9;color:#f5a623} 40%{transform:translate(2px,-2px);opacity:1;color:#fff} 50%{transform:translate(-1px,1px);clip-path:inset(30% 0 20% 0);color:#f5a623} 60%{transform:translate(1px,-1px);clip-path:inset(0);opacity:0.95;color:#fff} 70%{transform:translate(-2px,0);opacity:1;color:#fff} 85%{transform:translate(1px,0);color:#f5a623} 100%{transform:translate(0);opacity:1;color:#fff} }
         @keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
-        .how-step-card { transition: transform 0.5s cubic-bezier(0.25,0.46,0.45,0.94), box-shadow 0.5s cubic-bezier(0.25,0.46,0.45,0.94); will-change: transform; }
         @keyframes tl-pulse { 0%{box-shadow:0 0 0 0 rgba(245,166,35,0.6)} 70%{box-shadow:0 0 0 10px rgba(245,166,35,0)} 100%{box-shadow:0 0 0 0 rgba(245,166,35,0)} }
         @keyframes tl-pulse-red { 0%{box-shadow:0 0 0 0 rgba(239,68,68,0.6)} 70%{box-shadow:0 0 0 10px rgba(239,68,68,0)} 100%{box-shadow:0 0 0 0 rgba(239,68,68,0)} }
         @keyframes tl-fill { from{width:0%} to{width:100%} }
@@ -180,8 +183,8 @@ export default function HomePage() {
           .stats-grid { grid-template-columns: 1fr 1fr !important; }
           .how-grid { grid-template-columns: 1fr !important; }
           .how-connector { display: none !important; }
-          .how-step-card { transform: translateY(0px); box-shadow: none; }
-          .how-step-card.card-lifted { transform: translateY(-12px) !important; box-shadow: 0 20px 60px rgba(245,166,35,0.18), 0 0 40px rgba(245,166,35,0.07) !important; }
+          .how-step-card { transition: transform 0.5s cubic-bezier(0.25,0.46,0.45,0.94), box-shadow 0.5s cubic-bezier(0.25,0.46,0.45,0.94), scale 0.5s cubic-bezier(0.25,0.46,0.45,0.94); transform: translateY(0px) scale(1); box-shadow: none; will-change: transform; }
+          .how-step-card.card-lifted { transform: translateY(-16px) scale(1.03) !important; box-shadow: 0 24px 60px rgba(245,166,35,0.22), 0 8px 24px rgba(245,166,35,0.12), 0 0 0 1px rgba(245,166,35,0.08) !important; }
           .how-timeline-grid { grid-template-columns: 1fr !important; gap: 12px !important; }
           .tl-desktop { display: none !important; }
           .tl-mobile { display: flex !important; }
