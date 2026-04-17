@@ -152,6 +152,17 @@ export default function HomePage() {
     return () => { clearInterval(connectInterval); clearInterval(analyseInterval); clearInterval(decideInterval) }
   }, [])
 
+  useEffect(() => {
+    const els = document.querySelectorAll('[data-reveal]')
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) { entry.target.classList.add('visible'); observer.unobserve(entry.target) }
+      })
+    }, { threshold: 0.4 })
+    els.forEach(el => observer.observe(el))
+    return () => observer.disconnect()
+  }, [])
+
   const handleMailto = (e) => {
     const href = e.currentTarget.getAttribute('href')
     let left = true
@@ -181,6 +192,12 @@ export default function HomePage() {
         .cta-primary-btn:hover { box-shadow: 0 0 0 1px rgba(245,166,35,0.8), 0 0 20px rgba(245,166,35,0.4), 0 0 40px rgba(245,166,35,0.15); transform: translateY(-1px); }
         .cta-primary-btn:active { transform: translateY(0px); box-shadow: 0 0 0 1px rgba(245,166,35,0.6), 0 0 10px rgba(245,166,35,0.3); }
         @keyframes dh-glitch { 0%{transform:translate(0);opacity:1;color:#fff} 10%{transform:translate(-3px,1px);opacity:0.8;color:#f5a623} 20%{transform:translate(3px,-1px);opacity:1;color:#fff} 30%{transform:translate(-2px,2px);opacity:0.9;color:#f5a623} 40%{transform:translate(2px,-2px);opacity:1;color:#fff} 50%{transform:translate(-1px,1px);clip-path:inset(30% 0 20% 0);color:#f5a623} 60%{transform:translate(1px,-1px);clip-path:inset(0);opacity:0.95;color:#fff} 70%{transform:translate(-2px,0);opacity:1;color:#fff} 85%{transform:translate(1px,0);color:#f5a623} 100%{transform:translate(0);opacity:1;color:#fff} }
+        .statement-divider { padding:40px 40px; background:#0a0c0e; display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden; }
+        .statement-divider::before { content:''; position:absolute; top:0; left:0; right:0; height:1px; background:linear-gradient(to right,rgba(245,166,35,0.03),rgba(245,166,35,0.35),rgba(245,166,35,0.03)); }
+        .statement-divider::after { content:''; position:absolute; bottom:0; left:0; right:0; height:1px; background:linear-gradient(to right,rgba(245,166,35,0.03),rgba(245,166,35,0.35),rgba(245,166,35,0.03)); }
+        .statement-divider-text { font-family:'Barlow Condensed',sans-serif; font-size:clamp(18px,3vw,28px); font-weight:700; text-transform:uppercase; letter-spacing:0.04em; color:#e8eaed; text-align:center; max-width:800px; line-height:1.3; opacity:0; transform:translateY(12px); transition:opacity 0.6s ease,transform 0.6s ease; }
+        .statement-divider-text.visible { opacity:1; transform:translateY(0); }
+        .statement-divider-text em { color:#f5a623; font-style:normal; }
         @keyframes scan-move { 0%{left:0%} 100%{left:100%} }
         @keyframes blink-cursor { 0%,100%{opacity:1} 50%{opacity:0} }
         @keyframes think-pulse { 0%,100%{opacity:0.3;transform:scale(0.8)} 50%{opacity:1;transform:scale(1)} }
@@ -233,6 +250,7 @@ export default function HomePage() {
           .how-grid { grid-template-columns: 1fr !important; }
           .how-connector { display: none !important; }
           .real-scenario-section { display: none !important; }
+          .statement-divider { padding: 32px 24px !important; }
           .how-step-card { transition: transform 0.5s cubic-bezier(0.25,0.46,0.45,0.94), box-shadow 0.5s cubic-bezier(0.25,0.46,0.45,0.94), scale 0.5s cubic-bezier(0.25,0.46,0.45,0.94); transform: translateY(0px) scale(1); box-shadow: none; will-change: transform; }
           .how-step-card.card-lifted { transform: translateY(-16px) scale(1.03) !important; box-shadow: 0 24px 60px rgba(245,166,35,0.22), 0 8px 24px rgba(245,166,35,0.12), 0 0 0 1px rgba(245,166,35,0.08) !important; }
           .card-anim-wrap { display:inline-flex; align-items:center; gap:6px; height:22px; margin-left:8px; vertical-align:middle; }
@@ -384,11 +402,11 @@ export default function HomePage() {
 
           {/* Subheadline */}
           <p className="hero-sub" style={{
-            fontSize: 18, color: T.textDim,
+            fontSize: 18, color: '#8a9099',
             maxWidth: 520, margin: '0 0 44px',
             lineHeight: 1.7, fontWeight: 400,
           }}>
-            <TypewriterText text="It's 2:30am. A reefer fault hits on the M62. One SMS. One tap. Back to sleep." speed={28} delay={600} />
+            Stops SLA breaches before they become penalty clauses.
           </p>
 
           {/* CTAs */}
@@ -424,7 +442,11 @@ export default function HomePage() {
 
       <LiveTicker />
 
-      <div style={{ height: '2px', background: 'linear-gradient(to right, rgba(245,166,35,0.03), rgba(245,166,35,0.4), rgba(245,166,35,0.03))' }} />
+      <div className="statement-divider">
+        <p className="statement-divider-text" data-reveal>
+          Industry response time: <em>20–40 minutes.</em>{' '}Ours: <em>30 seconds.</em>
+        </p>
+      </div>
 
       {/* ── HOW IT WORKS ─────────────────────────────────────────────────────── */}
       <section id="how" style={{ background: '#0a0c0e', padding: '80px 40px 60px' }}>
@@ -635,7 +657,11 @@ export default function HomePage() {
         </div>
       </section>
 
-      <div style={{ height: '2px', background: 'linear-gradient(to right, rgba(245,166,35,0.03), rgba(245,166,35,0.4), rgba(245,166,35,0.03))' }} />
+      <div className="statement-divider">
+        <p className="statement-divider-text" data-reveal>
+          Not a replacement for your ops manager.{' '}Just the <em>25 minutes you're losing</em> every incident.
+        </p>
+      </div>
 
       {/* ── PRICING ──────────────────────────────────────────────────────────── */}
       <section id="pricing" style={{
@@ -885,7 +911,11 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div style={{ height: '2px', marginTop: 64, background: 'linear-gradient(to right, rgba(245,166,35,0.03), rgba(245,166,35,0.4), rgba(245,166,35,0.03))' }} />
+          <div className="statement-divider" style={{ marginTop: 64 }}>
+            <p className="statement-divider-text" data-reveal>
+              One prevented SLA breach <em>pays for a year.</em>
+            </p>
+          </div>
 
           {/* ── FOUNDER ────────────────────────────────────────────────────── */}
           <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.4 }}>
