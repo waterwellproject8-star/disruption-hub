@@ -337,28 +337,36 @@ Provide immediate disruption analysis and action plan.`
         if (severity === 'CRITICAL' || severity === 'HIGH') {
           let consigneeName = null
           let consigneePhone = null
+          let shipmentEta = null
           if (ref) {
             try {
               const { data: shipment } = await db.from('shipments')
-                .select('consignee, consignee_phone')
+                .select('consignee, consignee_phone, eta')
                 .eq('client_id', client_id)
                 .eq('ref', ref)
                 .maybeSingle()
               if (shipment) {
                 consigneeName = shipment.consignee || null
                 consigneePhone = shipment.consignee_phone || null
+                shipmentEta = shipment.eta || null
               }
             } catch (e) {
               console.error('shipment lookup for consignee_phone failed:', e?.message)
             }
           }
+          if (!consigneeName) consigneeName = ref || 'consignee'
           if (!consigneePhone) {
             console.warn(`[alert] consignee_phone missing for ${ref} — approval will be failed at execute time (no fallback — never auto-dial ops manager)`)
+          }
+          let delayMins = 30
+          if (shipmentEta) {
+            const calc = Math.round((new Date(shipmentEta).getTime() - Date.now()) / 60000)
+            delayMins = calc > 0 ? calc : 0
           }
           const { error: consigneeErr } = await db.from('approvals').insert({
             client_id,
             action_type: 'call',
-            action_label: `Notify ${consigneeName || 'consignee'} of delay — automated call`,
+            action_label: `Notify ${consigneeName} of delay — automated call`,
             action_details: {
               vehicle_reg,
               ref: ref || 'DRIVER-ALERT',
@@ -368,7 +376,7 @@ Provide immediate disruption analysis and action plan.`
               consignee_name: consigneeName,
               consignee_phone: consigneePhone,
               delay_reason: human_description || issueContext || null,
-              delay_minutes: extractDelayMinutes(fullResponse),
+              delay_minutes: delayMins,
               source: 'driver_alert',
               severity
             },
@@ -401,12 +409,18 @@ Provide immediate disruption analysis and action plan.`
                 .eq('client_id', client_id)
                 .in('ref', otherRefs)
               for (const s of (shipments || [])) {
-                const revisedEta = s.eta ? new Date(new Date().getTime() + delayMins * 60000).toISOString() : null
+                let cascadeDelayMins = delayMins
+                if (s.eta) {
+                  const calc = Math.round((new Date(s.eta).getTime() - Date.now()) / 60000)
+                  cascadeDelayMins = calc > 0 ? calc : 0
+                }
+                const revisedEta = s.eta ? new Date(new Date().getTime() + cascadeDelayMins * 60000).toISOString() : null
                 const slaBreach = s.sla_window && revisedEta ? new Date(revisedEta) > new Date(s.sla_window.split('-')[1]?.trim() || s.sla_window) : false
                 const penalty = s.penalty_if_breached || 0
+                const cascadeConsignee = s.consignee || s.ref || 'consignee'
                 const label = slaBreach
-                  ? `⚠ SLA AT RISK — Notify ${s.consignee || 'consignee'} of delay — £${penalty.toLocaleString()} exposure`
-                  : `Notify ${s.consignee || 'consignee'} of delay — automated call`
+                  ? `⚠ SLA AT RISK — Notify ${cascadeConsignee} of delay — £${penalty.toLocaleString()} exposure`
+                  : `Notify ${cascadeConsignee} of delay — automated call`
                 const cascadePhone = s.consignee_phone || null
                 if (!cascadePhone) {
                   console.warn(`[cascade] consignee_phone missing for ${s.ref} — approval will be failed at execute time (no fallback — never auto-dial ops manager)`)
@@ -421,10 +435,10 @@ Provide immediate disruption analysis and action plan.`
                     driver_name: driver_name || null,
                     driver_phone: driver_phone || null,
                     call_type: 'consignee_delay_alert',
-                    consignee_name: s.consignee || null,
+                    consignee_name: cascadeConsignee,
                     consignee_phone: cascadePhone,
                     delay_reason: human_description || issueContext || null,
-                    delay_minutes: delayMins,
+                    delay_minutes: cascadeDelayMins,
                     revised_eta: revisedEta,
                     sla_breach: slaBreach,
                     penalty_gbp: penalty,
