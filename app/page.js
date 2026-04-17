@@ -1008,6 +1008,10 @@ export default function HomePage() {
             London, UK
           </span>
         </div>
+        <div style={{ textAlign: 'center', marginTop: 24 }}>
+          <img src="/qr.png" alt="Scan to visit DisruptionHub" style={{ width: 120, height: 120, borderRadius: 8 }} />
+          <p style={{ color: '#9ca3af', fontSize: 12, marginTop: 8, fontFamily: FF.mono }}>Scan to visit disruptionhub.ai</p>
+        </div>
       </footer>
 
 
