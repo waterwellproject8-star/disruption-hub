@@ -1442,7 +1442,7 @@ export default function DriverApp() {
                 <div style={{fontSize:10,color:'#4a5260',flexShrink:0,marginLeft:8}}>Tap →</div>
               </div>
               {(lastAlert.issueId==='medical'||lastAlert.issueId==='driver_unwell')&&(
-                <button onClick={async(e)=>{e.stopPropagation();try{await fetch('/api/driver/resolve',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({client_id:driverInfo.clientId,vehicle_reg:driverInfo.vehicleReg,driver_name:driverInfo.name,ref:activeJob?.ref||'MEDICAL',resolution:'Driver confirmed OK — resuming shift',original_issue:lastAlert.issueId})})}catch{}setLastAlert(null);localStorage.removeItem('dh_last_alert');showToast('Medical cleared — ops notified','ok')}} style={{margin:'0 14px 10px',width:'calc(100% - 28px)',padding:'10px',background:'rgba(0,229,176,0.1)',border:'1px solid rgba(0,229,176,0.25)',borderRadius:8,color:'#00e5b0',fontWeight:600,fontSize:13,cursor:'pointer'}}>
+                <button onClick={async(e)=>{e.stopPropagation();try{await fetch('/api/driver/resolve',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({client_id:driverInfo.clientId,vehicle_reg:driverInfo.vehicleReg,driver_name:driverInfo.name,ref:activeJob?.ref||'MEDICAL',resolution:'Driver confirmed OK — resuming shift',original_issue:lastAlert.issueId})})}catch{}setLastAlert(null);localStorage.removeItem('dh_last_alert');showToast('Medical cleared — ops notified','ok')}} style={{margin:'0 14px 10px',width:'calc(100% - 28px)',padding:'10px',background:'rgba(245,166,35,0.1)',border:'1px solid rgba(245,166,35,0.3)',borderRadius:8,color:'#f5a623',fontWeight:600,fontSize:13,cursor:'pointer'}}>
                   ✅ I'm OK — Continue shift
                 </button>
               )}
@@ -1496,9 +1496,9 @@ export default function DriverApp() {
                       const isCurrent = step.status===activeJob.status || (activeJob.status==='on-track'&&i===0) || (activeJob.status==='pending'&&i===0)
                       return (
                         <button key={step.id} onClick={()=>{if(!isDoneStep)logProgress(step)}} disabled={isDoneStep}
-                          style={{width:'100%',marginBottom:7,padding:'11px 13px',background:isDoneStep?'rgba(0,229,176,0.04)':isCurrent?'rgba(245,166,35,0.07)':'rgba(255,255,255,0.02)',border:`1px solid ${isDoneStep?'rgba(0,229,176,0.15)':isCurrent?'rgba(245,166,35,0.3)':'rgba(255,255,255,0.05)'}`,borderRadius:10,cursor:isDoneStep?'default':'pointer',display:'flex',alignItems:'center',gap:10,boxShadow:isCurrent?'0 0 14px rgba(245,166,35,0.08)':'none'}}>
-                          <span style={{fontSize:20,flexShrink:0,color:isDoneStep?'#00e5b0':undefined}}>{isDoneStep?'✓':step.icon}</span>
-                          <span style={{fontSize:15,color:isDoneStep?'#00e5b0':isCurrent?step.color:'#2a3040',fontWeight:isDoneStep?600:isCurrent?700:400}}>{step.label}</span>
+                          style={{width:'100%',marginBottom:7,padding:'11px 13px',background:isDoneStep?'rgba(245,166,35,0.04)':isCurrent?'rgba(245,166,35,0.07)':'rgba(255,255,255,0.02)',border:`1px solid ${isDoneStep?'rgba(245,166,35,0.15)':isCurrent?'rgba(245,166,35,0.3)':'rgba(255,255,255,0.05)'}`,borderRadius:10,cursor:isDoneStep?'default':'pointer',display:'flex',alignItems:'center',gap:10,boxShadow:isCurrent?'0 0 14px rgba(245,166,35,0.08)':'none'}}>
+                          <span style={{fontSize:20,flexShrink:0,color:isDoneStep?'#f5a623':undefined}}>{isDoneStep?'✓':step.icon}</span>
+                          <span style={{fontSize:15,color:isDoneStep?'#f5a623':isCurrent?step.color:'#2a3040',fontWeight:isDoneStep?600:isCurrent?700:400}}>{step.label}</span>
                           {isCurrent&&<span style={{marginLeft:'auto',fontSize:11,color:step.color,fontFamily:'monospace'}}>TAP →</span>}
                         </button>
                       )
