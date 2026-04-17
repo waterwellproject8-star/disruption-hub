@@ -902,7 +902,7 @@ export default function HomePage() {
           </motion.div>
           </div>
 
-          <div style={{ textAlign: 'center', margin: '32px 0 0' }}>
+          <div style={{ textAlign: 'center', margin: '32px 0 32px' }}>
             <div style={{ fontFamily: FF.mono, fontSize: 11, color: T.textDim, letterSpacing: '0.15em', textTransform: 'uppercase', marginBottom: 12 }}>Everything included in every plan</div>
             <button className="feat-trigger-btn" onClick={() => setFeatOpen(true)}>
               <span className="feat-trigger-icon">+</span>
@@ -915,7 +915,7 @@ export default function HomePage() {
             background: T.navyCard,
             border: `1px solid ${T.border}`,
             borderRadius: 4, padding: '32px 36px',
-            marginBottom: 48,
+            marginTop: 16, marginBottom: 48,
             display: 'flex', alignItems: 'center', gap: 40, flexWrap: 'wrap',
             transition: 'transform 0.2s',
             boxShadow: '0 0 0 1px rgba(255,255,255,0.06), 0 4px 24px rgba(0,0,0,0.4)',
