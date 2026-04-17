@@ -1492,6 +1492,7 @@ export default function DriverApp() {
 
           {/* ── STATUS BAR ── */}
           <div className="dh-sb-wrap">
+            <div/>
             <div style={{display:'flex',alignItems:'center',gap:10,position:'relative'}}>
               <div className="dh-synced">SYNCED</div>
               <div className="dh-more-btn" onClick={()=>setShowMoreMenu(v=>!v)}>···</div>
