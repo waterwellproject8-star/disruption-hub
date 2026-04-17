@@ -1507,22 +1507,33 @@ export default function DriverApp() {
       )}
 
       {view==='run'&&(
-        <div>
+        <div style={{fontFamily:"'DM Sans',-apple-system,sans-serif",paddingBottom:120}}>
 
-          {/* ── DATE + RUN COUNT STRIP ── */}
-          <div style={{padding:'8px 16px',borderBottom:'1px solid rgba(255,255,255,0.04)',display:'flex',alignItems:'center',justifyContent:'space-between',background:'#090b0d'}}>
-            <div style={{fontSize:11,color:'#4a5260',fontFamily:'monospace',letterSpacing:'0.06em'}}>
-              {new Date().toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'}).toUpperCase()}
-            </div>
-            <div style={{display:'flex',alignItems:'center',gap:10}}>
-              {loading
-                ? <div style={{fontSize:11,color:'#4a5260',fontFamily:'monospace'}}>Loading...</div>
-                : <div style={{fontSize:11,fontFamily:'monospace',color:'#4a5260'}}>
-                    <span style={{color:'#f5a623',fontWeight:700}}>{jobs.filter(j=>j.status==='completed').length}</span>
-                    <span style={{color:'#4a5260'}}> / {jobs.length} runs</span>
+          {/* ── STATUS BAR ── */}
+          <div className="dh-sb-wrap">
+            <span className="dh-time">{new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',timeZone:'Europe/London'})}</span>
+            <div style={{display:'flex',alignItems:'center',gap:10,position:'relative'}}>
+              <div className="dh-synced">SYNCED</div>
+              <div className="dh-more-btn" onClick={()=>setShowMoreMenu(v=>!v)}>···</div>
+              {showMoreMenu&&(
+                <div className="dh-more-pop">
+                  <div className="dh-pop-item" onClick={()=>{setShowMoreMenu(false);setView('preshift')}}>
+                    <span style={{fontSize:17}}>🔍</span>
+                    <div><div style={{fontSize:14,fontWeight:600,color:'rgba(255,255,255,0.9)'}}>Vehicle Check</div><div style={{fontSize:11,color:'rgba(255,255,255,0.3)',marginTop:1}}>Pre/post shift defects</div></div>
                   </div>
-              }
+                  <div className="dh-pop-item" onClick={()=>{setShowMoreMenu(false);if(driverInfo.vehicleReg||driverInfo.phone){fetch('/api/driver/end-shift',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({client_id:driverInfo.clientId,vehicle_reg:driverInfo.vehicleReg||null,driver_phone:driverInfo.phone||null,reason:'driver_change'})}).catch(()=>{})};['dh_driver_info','dh_shift_started','dh_shift_started_at','dh_last_alert','dh_prior_alert','dh_job_progress','dh_ops_messages','dh_ops_messages_read','dh_session_id'].forEach(k=>localStorage.removeItem(k));setSetupDone(false);setShiftStarted(false);setJobs([]);setActiveJob(null)}}>
+                    <span style={{fontSize:17}}>↩</span>
+                    <div><div style={{fontSize:14,fontWeight:600,color:'rgba(255,255,255,0.9)'}}>Change Driver</div><div style={{fontSize:11,color:'rgba(255,255,255,0.3)',marginTop:1}}>Switch to different profile</div></div>
+                  </div>
+                </div>
+              )}
             </div>
+          </div>
+          <div className="dh-greeting">{new Date().getHours()<12?'Good morning,':new Date().getHours()<18?'Good afternoon,':'Good evening,'}</div>
+          <div className="dh-driver-name">{driverInfo.name||'Driver'}</div>
+          <div className="dh-pips-row">
+            {jobs.map((j)=>(<div key={j.ref} className={'dh-pip'+(j.status==='completed'?' done':'')+(j.ref===activeJob?.ref&&j.status!=='completed'?' active':'')}/>))}
+            {!loading&&jobs.length>0&&(<span className="dh-pip-txt">Run {jobs.filter(j=>j.status==='completed').length+1} of {jobs.length}</span>)}
           </div>
 
           {/* ── LAST ALERT BANNER ── */}
@@ -1685,12 +1696,18 @@ export default function DriverApp() {
             </div>
           )}
 
-          {/* ── REMAINING RUNS ── */}
-          {jobs.filter(j=>j.status!=='completed'&&j.ref!==activeJob?.ref).length > 0 && (
-            <div style={{margin:'12px 12px 0'}}>
-              <div style={{fontSize:9,color:'#4a5260',fontFamily:'monospace',letterSpacing:'0.08em',marginBottom:6,paddingLeft:2}}>
-                REMAINING RUNS — {jobs.filter(j=>j.status!=='completed'&&j.ref!==activeJob?.ref).length} to go
+          {/* ── COLLAPSIBLE SECTIONS ── */}
+          <div style={{padding:'4px 14px 0'}}>
+          {/* UP NEXT */}
+          {jobs.filter(j=>j.status!=='completed'&&j.ref!==activeJob?.ref).length>0&&(
+            <div className={`dh-section${secUpNext?' dh-open':''}`}>
+              <div className="dh-sec-toggle" onClick={()=>setSecUpNext(v=>!v)}>
+                <div className="dh-sec-icon" style={{background:'rgba(245,166,35,0.08)'}}>📦</div>
+                <span className="dh-sec-title" style={{color:'rgba(255,255,255,0.9)'}}>Up Next</span>
+                <span className="dh-sec-count">{jobs.filter(j=>j.status!=='completed'&&j.ref!==activeJob?.ref).length} runs</span>
+                <span className="dh-sec-chev">▾</span>
               </div>
+              <div className="dh-sec-body">
               {jobs.filter(j=>j.status!=='completed'&&j.ref!==activeJob?.ref).map(job=>{
                 const sc = STATUS_COLORS[job.status]||STATUS_COLORS['on-track']
                 const isAtRisk = job.status==='at_risk'||job.status==='part_delivered'
@@ -1720,26 +1737,28 @@ export default function DriverApp() {
             </div>
           )}
 
-          {/* ── COMPLETED RUNS ── */}
-          {jobs.filter(j=>j.status==='completed').length > 0 && (
-            <div style={{margin:'10px 12px 0'}}>
-              <div style={{fontSize:9,color:'#4a5260',fontFamily:'monospace',letterSpacing:'0.08em',marginBottom:6,paddingLeft:2}}>
-                COMPLETED — {jobs.filter(j=>j.status==='completed').length} done
+          {/* COMPLETED */}
+          {jobs.filter(j=>j.status==='completed').length>0&&(
+            <div className={`dh-section${secCompleted?' dh-open':''}`}>
+              <div className="dh-sec-toggle" onClick={()=>setSecCompleted(v=>!v)}>
+                <div className="dh-sec-icon" style={{background:'rgba(245,166,35,0.06)'}}>✓</div>
+                <span className="dh-sec-title" style={{color:'rgba(255,255,255,0.4)'}}>Completed</span>
+                <span className="dh-sec-count">{jobs.filter(j=>j.status==='completed').length} done</span>
+                <span className="dh-sec-chev">▾</span>
               </div>
-              {jobs.filter(j=>j.status==='completed').map(job=>(
-                <div key={job.ref} style={{padding:'8px 12px',background:'rgba(255,255,255,0.02)',border:'1px solid rgba(255,255,255,0.04)',borderRadius:8,marginBottom:4,display:'flex',alignItems:'center',gap:10,opacity:0.5}}>
-                  <div style={{width:6,height:6,borderRadius:'50%',background:'#4a5260',flexShrink:0}}/>
-                  <div style={{flex:1,minWidth:0}}>
-                    <span style={{fontFamily:'monospace',fontSize:11,color:'#4a5260',fontWeight:600,marginRight:8}}>{job.ref}</span>
-                    <span style={{fontSize:11,color:'#4a5260',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{job.route}</span>
+              <div className="dh-sec-body">
+                {jobs.filter(j=>j.status==='completed').map(job=>(
+                  <div key={job.ref} className="dh-comp-item">
+                    <div className="dh-comp-chk">✓</div>
+                    <div style={{flex:1,minWidth:0}}><div className="dh-comp-ref">{job.ref}</div><div className="dh-comp-route">{job.route}</div></div>
+                    <span className="dh-comp-time">✓ DONE</span>
                   </div>
-                  <span style={{fontSize:10,color:'#4a5260',fontFamily:'monospace'}}>✓ DONE</span>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           )}
 
-          {/* ── ISSUE GROUPS ── */}
+          {/* REPORT AN ISSUE */}
           {jobs.some(j=>j.status!=='completed')&&(
             <div style={{marginTop:16}}>
               <div style={{padding:'0 16px 8px',fontSize:9,color:'#4a5260',fontFamily:'monospace',letterSpacing:'0.08em'}}>REPORT AN ISSUE</div>
@@ -1763,28 +1782,8 @@ export default function DriverApp() {
             </div>
           )}
 
-          {/* ── BOTTOM UTILITIES ── */}
-          <div style={{padding:'6px 12px 12px',marginTop:8,display:'flex',gap:8}}>
-            <button onClick={()=>setView('preshift')} style={{flex:1,padding:'10px',background:'transparent',border:'1px solid rgba(255,255,255,0.06)',borderRadius:8,color:'#4a5260',fontSize:11,cursor:'pointer'}}>
-              🔍 Check
-            </button>
-            <button onClick={endShift}
-              style={{flex:2,padding:'10px',background:'rgba(245,166,35,0.08)',border:'1px solid rgba(245,166,35,0.25)',borderRadius:8,color:'#f5a623',fontSize:12,fontWeight:600,cursor:'pointer'}}>
-              ✓ End Shift
-            </button>
-            <button onClick={()=>{
-              if (driverInfo.vehicleReg || driverInfo.phone) {
-                fetch('/api/driver/end-shift', {
-                  method:'POST', headers:{'Content-Type':'application/json'},
-                  body: JSON.stringify({ client_id: driverInfo.clientId, vehicle_reg: driverInfo.vehicleReg||null, driver_phone: driverInfo.phone||null, reason:'driver_change' })
-                }).catch(()=>{})
-              }
-              ;['dh_driver_info','dh_shift_started','dh_shift_started_at','dh_last_alert','dh_prior_alert','dh_job_progress','dh_ops_messages','dh_ops_messages_read','dh_session_id'].forEach(k=>localStorage.removeItem(k))
-              setSetupDone(false);setShiftStarted(false);setJobs([]);setActiveJob(null)
-            }}
-              style={{flex:1,padding:'10px',background:'transparent',border:'1px solid rgba(255,255,255,0.06)',borderRadius:8,color:'#4a5260',fontSize:11,cursor:'pointer'}}>
-              ↩ Change
-            </button>
+          {/* END SHIFT */}
+          {jobs.length>0&&(<button className="dh-end-btn" onClick={endShift}>✓ End Shift</button>)}
           </div>
 
         </div>
@@ -1837,35 +1836,19 @@ export default function DriverApp() {
         </div>
       )}
 
-      {/* STICKY BAR */}
-      {(() => {
-        const alertActive = !!lastAlert || panelState === 'sent' || panelState === 'result' || panelState === 'resolving_loading'
+      {/* BOTTOM BAR */}
+      {(()=>{
+        const alertActive = !!lastAlert||panelState==='sent'||panelState==='result'||panelState==='resolving_loading'
         return (
-        <div style={{position:'fixed',bottom:0,left:0,right:0,padding:'9px 14px',paddingBottom:'calc(env(safe-area-inset-bottom, 0px) + 10px)',background:'rgba(9,11,13,0.97)',borderTop:'1px solid rgba(255,255,255,0.06)',backdropFilter:'blur(10px)',zIndex:100,display:'grid',gridTemplateColumns:'5fr 3fr 3fr',gap:8}}>
-          {alertActive ? (<>
-            <div style={{padding:'13px',background:'rgba(239,68,68,0.08)',border:'1px solid rgba(239,68,68,0.2)',borderRadius:10,color:'#ef4444',fontWeight:600,fontSize:12,display:'flex',alignItems:'center',justifyContent:'center',gap:6}}>
-              ⚠ Alert active — resolve first
-            </div>
-            <button onClick={()=>openIssue({id:'medical',label:'Medical Emergency',icon:'🚑',needsText:false})}
-              style={{padding:'13px',background:'rgba(59,130,246,0.08)',border:'1px solid rgba(59,130,246,0.2)',borderRadius:10,color:'#3b82f6',fontWeight:600,fontSize:11,cursor:'pointer',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:3}}>
-              <span style={{fontSize:18}}>🚑</span><span>Medical</span>
-            </button>
-            <div />
-          </>) : (<>
-            <button onClick={()=>openIssue({id:'breakdown',label:'Breakdown',icon:'🚨',needsText:true,placeholder:'What happened?'})}
-              style={{padding:'13px',background:'#ef4444',border:'none',borderRadius:10,color:'#fff',fontWeight:800,fontSize:15,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:7,letterSpacing:'0.05em',boxShadow:'0 4px 20px rgba(239,68,68,0.3)'}}>
-              🚨 BREAKDOWN
-            </button>
-            <button onClick={()=>openIssue({id:'medical',label:'Medical Emergency',icon:'🚑',needsText:false})}
-              style={{padding:'13px',background:'rgba(59,130,246,0.08)',border:'1px solid rgba(59,130,246,0.2)',borderRadius:10,color:'#3b82f6',fontWeight:600,fontSize:11,cursor:'pointer',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:3}}>
-              <span style={{fontSize:18}}>🚑</span><span>Medical</span>
-            </button>
-            <button onClick={()=>setRunningLateModal(true)}
-              style={{padding:'13px',background:'rgba(245,166,35,0.07)',border:'1px solid rgba(245,166,35,0.2)',borderRadius:10,color:'#f5a623',fontWeight:600,fontSize:11,cursor:'pointer',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:3}}>
-              <span style={{fontSize:18}}>⏱</span><span>Running Late</span>
-            </button>
-          </>)}
-        </div>
+          <div className="dh-bottom-bar">
+            {alertActive?(<>
+              <div style={{padding:'14px 16px',background:'rgba(255,69,58,0.08)',border:'1px solid rgba(255,69,58,0.2)',borderRadius:16,color:'#ff453a',fontWeight:600,fontSize:12,display:'flex',alignItems:'center',justifyContent:'center',gap:6,fontFamily:"'DM Sans',sans-serif"}}>⚠ Alert active — resolve first</div>
+              <button onClick={()=>openIssue({id:'medical',label:'Medical Emergency',icon:'🚑',needsText:false})} className="dh-bar-btn md" style={{border:'none',cursor:'pointer'}}><div className="dh-bar-inner"><span style={{fontSize:20}}>🚑</span><div><span className="dh-bar-lbl">Medical</span><span className="dh-bar-sub">Emergency alert</span></div></div></button>
+            </>):(<>
+              <button onClick={()=>openIssue({id:'breakdown',label:'Breakdown',icon:'🚨',needsText:true,placeholder:'What happened?'})} className="dh-bar-btn bd" style={{border:'none',cursor:'pointer'}}><div className="dh-bar-inner"><span style={{fontSize:20}}>🚨</span><div><span className="dh-bar-lbl">Breakdown</span><span className="dh-bar-sub">Alert ops now</span></div></div></button>
+              <button onClick={()=>openIssue({id:'medical',label:'Medical Emergency',icon:'🚑',needsText:false})} className="dh-bar-btn md" style={{border:'none',cursor:'pointer'}}><div className="dh-bar-inner"><span style={{fontSize:20}}>🚑</span><div><span className="dh-bar-lbl">Medical</span><span className="dh-bar-sub">Emergency alert</span></div></div></button>
+            </>)}
+          </div>
         )
       })()}
 
