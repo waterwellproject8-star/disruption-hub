@@ -183,7 +183,7 @@ export default function HomePage() {
           .enterprise-card .enterprise-cta { width: 100% !important; text-align: center !important; }
           .footer-cols { flex-direction: column !important; gap: 32px !important; }
           /* Hero — center on mobile */
-          .hero-section { justify-content: center; padding: 80px 20px 60px !important; }
+          .hero-section { justify-content: center; padding: 80px 20px 40px !important; }
           .hero-truck-bg { display: none !important; }
           .hero-overlay { display: none !important; }
           .hero-glow { display: none !important; }
@@ -345,9 +345,9 @@ export default function HomePage() {
             <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 9, color: '#4a5260', letterSpacing: '0.15em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>LIVE FEED</span>
           </div>
           <div style={{ flex: 1, overflow: 'hidden' }}>
-            <div className="ticker-track ticker-content" style={{ color: '#f5a623', textShadow: '0 0 15px rgba(245,166,35,0.5)' }}>
+            <div className="ticker-track ticker-content" style={{ color: '#f5a623', textShadow: '0 0 15px rgba(245,166,35,0.5)', fontSize: 'clamp(9px, 2.5vw, 11px)' }}>
               {['REEFER FAULT · M62 J27 · RESOLVED IN 28s','INVOICE RECOVERY · £4,280 OVERCHARGE DISPUTED · RECOVERED IN 24HRS','TEMP ALARM · NHS LOAD · SLA PROTECTED £2,400','LICENCE CHECK · EXPIRED CPC DETECTED · DRIVER STOOD DOWN','DRIVER HOURS · CASCADE PREVENTED · £900 SAVED','FAILED DELIVERY · NHS SUPPLY CHAIN · CONSIGNEE REBOOKED · SLA SAVED','PANIC BUTTON · DRIVER SAFE · OPS NOTIFIED IN 12s','ROUTE DEVIATION · A1(M) NORTHBOUND · OPS MANAGER ALERTED · JOB PROTECTED','JOB DELAYED · TESCO DC · AUTO-REROUTED · £1,200 PROTECTED','REEFER FAULT · M62 J27 · RESOLVED IN 28s','INVOICE RECOVERY · £4,280 OVERCHARGE DISPUTED · RECOVERED IN 24HRS','TEMP ALARM · NHS LOAD · SLA PROTECTED £2,400','LICENCE CHECK · EXPIRED CPC DETECTED · DRIVER STOOD DOWN','DRIVER HOURS · CASCADE PREVENTED · £900 SAVED','FAILED DELIVERY · NHS SUPPLY CHAIN · CONSIGNEE REBOOKED · SLA SAVED','PANIC BUTTON · DRIVER SAFE · OPS NOTIFIED IN 12s','ROUTE DEVIATION · A1(M) NORTHBOUND · OPS MANAGER ALERTED · JOB PROTECTED','JOB DELAYED · TESCO DC · AUTO-REROUTED · £1,200 PROTECTED'].map((item, i) => (
-                <span key={i} style={{ flexShrink: 0, paddingLeft: 40, paddingRight: 40 }}><span style={{ color: 'rgba(245,166,35,0.4)', marginRight: 12 }}>⬥</span>{item}</span>
+                <span key={i} style={{ flexShrink: 0, paddingLeft: 'clamp(16px, 4vw, 40px)', paddingRight: 'clamp(16px, 4vw, 40px)', fontSize: 'clamp(9px, 2.5vw, 11px)', fontFamily: "'IBM Plex Mono', monospace", letterSpacing: '0.1em', textTransform: 'uppercase' }}><span style={{ color: 'rgba(245,166,35,0.4)', marginRight: 12 }}>⬥</span>{item}</span>
               ))}
             </div>
           </div>
