@@ -232,6 +232,7 @@ export default function HomePage() {
           .stats-grid { grid-template-columns: 1fr 1fr !important; }
           .how-grid { grid-template-columns: 1fr !important; }
           .how-connector { display: none !important; }
+          .real-scenario-section { display: none !important; }
           .how-step-card { transition: transform 0.5s cubic-bezier(0.25,0.46,0.45,0.94), box-shadow 0.5s cubic-bezier(0.25,0.46,0.45,0.94), scale 0.5s cubic-bezier(0.25,0.46,0.45,0.94); transform: translateY(0px) scale(1); box-shadow: none; will-change: transform; }
           .how-step-card.card-lifted { transform: translateY(-16px) scale(1.03) !important; box-shadow: 0 24px 60px rgba(245,166,35,0.22), 0 8px 24px rgba(245,166,35,0.12), 0 0 0 1px rgba(245,166,35,0.08) !important; }
           .card-anim-wrap { display:inline-flex; align-items:center; gap:6px; height:22px; margin-left:8px; vertical-align:middle; }
@@ -580,7 +581,7 @@ export default function HomePage() {
               return { background: '#0a0c0e', border: '2px solid rgba(255,255,255,0.08)', color: '#4a5260' }
             }
             return (
-              <div ref={timelineRef} style={{ marginTop: 56, padding: '32px 24px', background: T.navyCard, border: '1px solid rgba(255,255,255,0.12)', borderRadius: 8, boxShadow: '0 0 0 1px rgba(255,255,255,0.06), 0 4px 24px rgba(0,0,0,0.4)' }}>
+              <div className="real-scenario-section" ref={timelineRef} style={{ marginTop: 56, padding: '32px 24px', background: T.navyCard, border: '1px solid rgba(255,255,255,0.12)', borderRadius: 8, boxShadow: '0 0 0 1px rgba(255,255,255,0.06), 0 4px 24px rgba(0,0,0,0.4)' }}>
                 <div style={{ fontFamily: FF.mono, fontSize: 10, color: '#8a9099', letterSpacing: '0.1em', marginBottom: 20, textAlign: 'center' }}>REAL SCENARIO — 2:30AM REEFER FAULT ON M62</div>
 
                 {/* DESKTOP */}
