@@ -1572,52 +1572,52 @@ export default function DriverApp() {
             </div>
           )}
 
-          {/* ── ACTIVE JOB — PROMINENT ── */}
-          {activeJob && activeJob.status!=='completed' ? (()=>{
-            const isAtRisk = activeJob.status==='at_risk'
-            const sc = STATUS_COLORS[activeJob.status]||STATUS_COLORS['on-track']
-            const currentStepIndex = PROGRESS_STEPS.findIndex(s=>s.status===activeJob.status)
+          {/* ── ACTIVE JOB CARD ── */}
+          {activeJob&&activeJob.status!=='completed'?(()=>{
+            const isAtRisk=activeJob.status==='at_risk'
+            const sc=STATUS_COLORS[activeJob.status]||STATUS_COLORS['on-track']
+            const currentStepIndex=PROGRESS_STEPS.findIndex(s=>s.status===activeJob.status)
+            const currentStep=PROGRESS_STEPS[currentStepIndex]
+            const prevStep=currentStepIndex>0?PROGRESS_STEPS[currentStepIndex-1]:null
+            const [routeFrom,routeTo]=(activeJob.route||'').split('→').map(s=>s?.trim())
             return (
-              <div style={{margin:'12px 14px 0',background:'linear-gradient(135deg,#0d1520,#0a1018)',border:`1px solid ${sc.border}`,borderRadius:14,overflow:'hidden',boxShadow:'0 0 30px rgba(245,166,35,0.06)'}}>
-                {/* Active job header */}
-                <div style={{padding:'12px 14px',borderBottom:'1px solid rgba(255,255,255,0.05)',background:sc.bg}}>
-                  <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:4}}>
-                    <span style={{fontFamily:'monospace',fontSize:13,color:sc.dot,fontWeight:700}}>{activeJob.ref}</span>
-                    <div style={{display:'flex',alignItems:'center',gap:5}}>
-                      <div style={{width:7,height:7,borderRadius:'50%',background:sc.dot,animation:isAtRisk?'pulse 1.5s infinite':'none'}}/>
-                      <span style={{fontFamily:'monospace',fontSize:10,color:sc.dot}}>{sc.label}</span>
+              <div style={{padding:'0 14px'}}>
+                <div className="dh-job-card">
+                  <div className="dh-job-top">
+                    <div className="dh-job-row">
+                      <span className="dh-job-ref">{activeJob.ref}</span>
+                      <div className="dh-status-pill" style={{color:sc.dot,background:`${sc.dot}20`,border:`1px solid ${sc.dot}33`}}><div className="dh-pill-dot"/>{sc.label}</div>
+                    </div>
+                    {routeFrom&&<div className="dh-job-from">{routeFrom}</div>}
+                    <div className="dh-job-dest">{routeTo||activeJob.route}</div>
+                    <div className="dh-chips">
+                      {activeJob.cargo_type&&<span className="dh-chip">{cargoIcon(activeJob.cargo_type)} {activeJob.cargo_type}</span>}
+                      {activeJob.sla_window&&<span className="dh-chip">Slot {activeJob.sla_window}</span>}
+                      {activeJob.penalty_if_breached>0&&<span className={`dh-chip${activeJob.status==='at_risk'?' dh-chip-warn':''}`}>£{activeJob.penalty_if_breached.toLocaleString()} if late</span>}
                     </div>
                   </div>
-                  <div style={{fontSize:15,color:'#e8eaed',fontWeight:600,marginBottom:4}}>{activeJob.route}</div>
-                  <div style={{display:'flex',gap:12,fontSize:11,color:'#4a5260',flexWrap:'wrap'}}>
-                    {activeJob.eta&&<span>ETA {activeJob.eta}</span>}
-                    {activeJob.sla_window&&<span style={{color:activeJob.status==='at_risk'?'#ef4444':'#f59e0b'}}>⏱ Slot {activeJob.sla_window}</span>}
-                    {activeJob.cargo_type&&<span>{cargoIcon(activeJob.cargo_type)} {activeJob.cargo_type}</span>}
-                    {activeJob.penalty_if_breached>0&&<span style={{color:'#ef4444'}}>£{activeJob.penalty_if_breached.toLocaleString()} if late</span>}
-                  </div>
+                  {!isAtRisk&&(
+                    <div className="dh-prog-row">
+                      {PROGRESS_STEPS.map((step,i)=>{const isDone=currentStepIndex>i;const isCurr=step.status===activeJob.status||(activeJob.status==='on-track'&&i===0)||(activeJob.status==='pending'&&i===0);return(<React.Fragment key={step.id}><div className={`dh-pd${isDone?' done':isCurr?' active':''}`}><div className={`dh-pd-dot${isDone?' done':isCurr?' active':''}`}/>{step.label.split(' ')[0]}</div>{i<PROGRESS_STEPS.length-1&&<div className={`dh-pd-line${isDone?' done':''}`}/>}</React.Fragment>)})}
+                      <div className="dh-pd-line"/><div className="dh-pd"><div className="dh-pd-dot"/>Deliver</div>
+                    </div>
+                  )}
                 </div>
-
-                {/* Progress steps */}
                 {!isAtRisk&&(
-                  <div style={{padding:'10px 14px 6px'}}>
-                    {PROGRESS_STEPS.map((step,i)=>{
-                      const isDoneStep = currentStepIndex > i
-                      const isCurrent = step.status===activeJob.status || (activeJob.status==='on-track'&&i===0) || (activeJob.status==='pending'&&i===0)
-                      return (
-                        <button key={step.id} onClick={()=>{if(!isDoneStep)logProgress(step)}} disabled={isDoneStep}
-                          style={{width:'100%',marginBottom:7,padding:'11px 13px',background:isDoneStep?'rgba(245,166,35,0.04)':isCurrent?'rgba(245,166,35,0.07)':'rgba(255,255,255,0.02)',border:`1px solid ${isDoneStep?'rgba(245,166,35,0.15)':isCurrent?'rgba(245,166,35,0.3)':'rgba(255,255,255,0.05)'}`,borderRadius:10,cursor:isDoneStep?'default':'pointer',display:'flex',alignItems:'center',gap:10,boxShadow:isCurrent?'0 0 14px rgba(245,166,35,0.08)':'none'}}>
-                          <span style={{fontSize:20,flexShrink:0,color:isDoneStep?'#f5a623':undefined}}>{isDoneStep?'✓':step.icon}</span>
-                          <span style={{fontSize:15,color:isDoneStep?'#f5a623':isCurrent?step.color:'#2a3040',fontWeight:isDoneStep?600:isCurrent?700:400}}>{step.label}</span>
-                          {isCurrent&&<span style={{marginLeft:'auto',fontSize:11,color:step.color,fontFamily:'monospace'}}>TAP →</span>}
-                        </button>
-                      )
-                    })}
-                    <button onClick={initiateDelivered}
-                      style={{width:'100%',padding:'14px',borderRadius:10,border:'none',background:'#f5a623',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:10,marginBottom:6,boxShadow:'0 4px 18px rgba(245,166,35,0.3)'}}>
-                      <span style={{fontSize:22}}>📦</span>
-                      <span style={{fontSize:16,color:'#000',fontWeight:800}}>Mark as Delivered</span>
-                    </button>
-                  </div>
+                  <>
+                    {prevStep&&currentStepIndex>0&&(
+                      <div style={{display:'flex',alignItems:'center',gap:8,padding:'6px 2px 4px',opacity:0.38}}>
+                        <span style={{fontSize:12,color:'#f5a623'}}>✓</span>
+                        <span style={{fontSize:12,color:'#f5a623',fontWeight:500,flex:1}}>{prevStep.label}</span>
+                        <span style={{fontFamily:"'DM Mono',monospace",fontSize:10,color:'rgba(255,255,255,0.24)'}}>done</span>
+                      </div>
+                    )}
+                    {currentStep?(
+                      <button className="dh-cta" onClick={()=>logProgress(currentStep)}><div><div className="dh-cta-hint">Tap to confirm</div><div className="dh-cta-label">{currentStep.label}</div></div><div className="dh-cta-arrow">→</div></button>
+                    ):(
+                      <button className="dh-cta" onClick={initiateDelivered}><div><div className="dh-cta-hint">All steps complete</div><div className="dh-cta-label">Mark as Delivered</div></div><div className="dh-cta-arrow">📦</div></button>
+                    )}
+                  </>
                 )}
 
                 {/* AT RISK state */}
