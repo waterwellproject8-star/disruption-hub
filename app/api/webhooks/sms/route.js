@@ -546,7 +546,7 @@ export async function POST(request) {
       // ── DISPATCH ─────────────────────────────────────────────────────────
       if (actionType === 'dispatch') {
         const driverPhone = await resolveDriverPhone()
-        const msg = `DisruptionHub — Confirmed.\n${details.vehicle_reg || ''}: Recovery dispatched. Driver notified.`
+        const msg = `DisruptionHub OPS${details.ref ? ` — ${details.ref}` : ''}\n\nOps have confirmed. Recovery is being arranged — you will receive a further update shortly. Stay with your vehicle, hazards on.`
         await writeInstructionToApp(msg)
         if (driverPhone) {
           const result = await sendSMS(driverPhone, msg)

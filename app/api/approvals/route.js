@@ -271,7 +271,7 @@ export async function POST(request) {
           } catch {}
         }
         const affectedNote = affectedCount > 0 ? `\n${affectedCount} delivery${affectedCount > 1 ? 'ies' : 'y'} affected — ops managing consignee notifications.` : ''
-        const msg = `DisruptionHub — Confirmed.\n${details.vehicle_reg || ''}: Recovery dispatched. Driver notified.${affectedNote}`
+        const msg = `DisruptionHub OPS${details.ref ? ` — ${details.ref}` : ''}\n\nOps have confirmed. Recovery is being arranged — you will receive a further update shortly. Stay with your vehicle, hazards on.${affectedNote}`
         const result = await sendSMS(driverPhone, msg)
 
         if (details.vehicle_reg) {
@@ -279,7 +279,7 @@ export async function POST(request) {
             await db
               .from('driver_progress')
               .update({
-                alert: `OPS_MSG: Recovery dispatched. Stay with vehicle.${affectedCount > 0 ? ` ${affectedCount} delivery${affectedCount > 1 ? 'ies' : 'y'} affected — ops managing notifications.` : ''}`,
+                alert: `OPS_MSG: Ops have confirmed. Recovery is being arranged — you will receive a further update shortly. Stay with your vehicle, hazards on.${affectedCount > 0 ? ` ${affectedCount} delivery${affectedCount > 1 ? 'ies' : 'y'} affected — ops managing notifications.` : ''}`,
                 updated_at: new Date().toISOString()
               })
               .eq('vehicle_reg', details.vehicle_reg.trim())
@@ -458,7 +458,7 @@ export async function POST(request) {
       // No carrier phone — still notify driver
       const resolvedDriverPhone2 = await resolveDriverPhone()
       if (resolvedDriverPhone2) {
-        const driverMsg = `DisruptionHub OPS${details.ref ? ` — ${details.ref}` : ''}\n\nOps has reviewed your situation. Action approved.\nHelp is being arranged.`
+        const driverMsg = `DisruptionHub OPS${details.ref ? ` — ${details.ref}` : ''}\n\nOps have confirmed. Recovery is being arranged — you will receive a further update shortly. Stay with your vehicle, hazards on.`
         const result = await sendSMS(resolvedDriverPhone2, driverMsg)
         await finalise(false, 'no_carrier_phone_driver_notified_only')
         return Response.json({ success: true, action: 'failed', driver_notified: result.success, note: 'No carrier phone — driver notified directly' })
