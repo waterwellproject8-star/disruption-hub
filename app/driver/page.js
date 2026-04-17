@@ -159,6 +159,7 @@ export default function DriverApp() {
   const [secReport, setSecReport] = useState(false)
   const [secCompleted, setSecCompleted] = useState(false)
   const [showMoreMenu, setShowMoreMenu] = useState(false)
+  const [rptOpen, setRptOpen] = useState({})
   const [lateMinutes, setLateMinutes]     = useState('')
   const [lateReason, setLateReason]       = useState('Traffic')
 
@@ -1765,22 +1766,29 @@ export default function DriverApp() {
                 <span className="dh-sec-chev">▾</span>
               </div>
               <div className="dh-sec-body">
-                {ISSUE_GROUPS.map(group=>(
-                  <div key={group.id} style={{padding:'7px 10px 3px'}}>
-                    <div style={{fontSize:9,color:group.color,fontFamily:"'DM Mono',monospace",fontWeight:700,letterSpacing:'0.1em',marginBottom:6,paddingLeft:2}}>{group.label}</div>
-                    <div className="dh-rpt-grid" style={{padding:0}}>
-                      {group.issues.map(issue=>{
-                        const alertActive=!!lastAlert||panelState==='sent'||panelState==='result'||panelState==='resolving_loading'
-                        const isDelay=issue.id==='delayed'
-                        return (
-                          <button key={issue.id} onClick={()=>!alertActive&&openIssue(issue)} disabled={alertActive}
-                            className={`dh-rpt-btn${isDelay?' dh-hl':''}`} style={{opacity:alertActive?0.4:1}}>
-                            <span className="dh-rpt-ico">{issue.icon}</span>
-                            <span className={`dh-rpt-lbl${isDelay?' hl':''}`}>{isDelay?'Report Delay':issue.label}</span>
-                          </button>
-                        )
-                      })}
+                {ISSUE_GROUPS.map((group,gi)=>(
+                  <div key={group.id} style={{borderBottom:gi<ISSUE_GROUPS.length-1?'1px solid rgba(255,255,255,0.06)':'none'}}>
+                    <div onClick={()=>setRptOpen(prev=>({...prev,[group.id]:!prev[group.id]}))} style={{display:'flex',alignItems:'center',gap:12,padding:'12px 16px',cursor:'pointer',WebkitTapHighlightColor:'transparent',userSelect:'none'}}>
+                      <div style={{width:8,height:8,borderRadius:'50%',background:group.color,flexShrink:0,opacity:0.8}}/>
+                      <span style={{flex:1,fontSize:13,fontWeight:600,color:group.color,fontFamily:"'DM Mono',monospace",letterSpacing:'0.08em',textTransform:'uppercase'}}>{group.label}</span>
+                      <span style={{fontSize:11,color:'rgba(255,255,255,0.24)',transition:'transform 0.22s ease',display:'inline-block',transform:rptOpen[group.id]?'rotate(180deg)':'none'}}>▾</span>
                     </div>
+                    {rptOpen[group.id]&&(
+                      <div className="dh-rpt-grid" style={{padding:'0 10px 12px'}}>
+                        {group.issues.map(issue=>{
+                          const alertActive=!!lastAlert||panelState==='sent'||panelState==='result'||panelState==='resolving_loading'
+                          const isDelay=issue.id==='delayed'
+                          return (
+                            <button key={issue.id} onClick={()=>!alertActive&&openIssue(issue)} disabled={alertActive}
+                              className={`dh-rpt-btn${isDelay?' dh-hl':''}`} style={{opacity:alertActive?0.4:1}}>
+                              <span className="dh-rpt-ico">{issue.icon}</span>
+                              <span className={`dh-rpt-lbl${isDelay?' hl':''}`}>{isDelay?'Report Delay':issue.label}</span>
+                              <span className="dh-rpt-sub">{issue.placeholder?issue.placeholder.split('?')[0].substring(0,28):issue.note?issue.note.substring(0,28):''}</span>
+                            </button>
+                          )
+                        })}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
