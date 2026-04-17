@@ -1004,7 +1004,7 @@ export default function DriverApp() {
   // ── SESSION SUPERSEDED (hard lockout — takes precedence over everything) ──
   if (sessionSuperseded) {
     return (
-      <div style={{minHeight:'100vh',background:'#080c14',color:'#e8eaed',fontFamily:'Barlow,sans-serif',display:'flex',alignItems:'center',justifyContent:'center',padding:24}}>
+      <div style={{minHeight:'100vh',background:'#090b0d',color:'#e8eaed',fontFamily:'Barlow,sans-serif',display:'flex',alignItems:'center',justifyContent:'center',padding:24}}>
         <div style={{width:'100%',maxWidth:380,textAlign:'center'}}>
           <div style={{width:56,height:56,margin:'0 auto 24px',background:'#ef4444',clipPath:'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)'}} />
           <div style={{fontSize:12,fontFamily:'monospace',color:'#ef4444',fontWeight:700,letterSpacing:'0.1em',marginBottom:10}}>SESSION ENDED</div>
@@ -1021,7 +1021,7 @@ export default function DriverApp() {
       ? new Date(duplicateSession.activeSince).toLocaleString('en-GB',{weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})
       : null
     return (
-      <div style={{minHeight:'100vh',background:'#080c14',color:'#e8eaed',fontFamily:'Barlow,sans-serif',display:'flex',alignItems:'center',justifyContent:'center',padding:24}}>
+      <div style={{minHeight:'100vh',background:'#090b0d',color:'#e8eaed',fontFamily:'Barlow,sans-serif',display:'flex',alignItems:'center',justifyContent:'center',padding:24}}>
         <div style={{width:'100%',maxWidth:380}}>
           <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:22}}>
             <div style={{width:32,height:32,background:'#f5a623',clipPath:'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)'}} />
@@ -1050,7 +1050,7 @@ export default function DriverApp() {
     const ready = driverInfo.name && driverInfo.phone && driverInfo.vehicleType && driverInfo.clientId && driverInfo.vehicleReg
 
     return (
-    <div style={{minHeight:'100vh',background:'#080c14',color:'#e8eaed',fontFamily:'Barlow,sans-serif',display:'flex',alignItems:'center',justifyContent:'center',padding:24}}>
+    <div style={{minHeight:'100vh',background:'#090b0d',color:'#e8eaed',fontFamily:'Barlow,sans-serif',display:'flex',alignItems:'center',justifyContent:'center',padding:24}}>
       <div style={{width:'100%',maxWidth:380}}>
         <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:24}}>
           <div style={{width:36,height:36,background:'#f5a623',clipPath:'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)'}} />
@@ -1071,7 +1071,7 @@ export default function DriverApp() {
             value={driverInfo.name}
             onChange={e=>setDriverInfo(p=>({...p,name:e.target.value}))}
             placeholder='e.g. Carl Hughes'
-            style={{width:'100%',padding:'13px',background:'#0f1826',border:'1px solid rgba(255,255,255,0.1)',borderRadius:8,color:'#e8eaed',fontSize:16,outline:'none',boxSizing:'border-box'}}/>
+            style={{width:'100%',padding:'13px',background:'linear-gradient(135deg,#0d1520,#0a1018)',border:'1px solid rgba(255,255,255,0.1)',borderRadius:8,color:'#e8eaed',fontSize:16,outline:'none',boxSizing:'border-box'}}/>
         </div>
 
         {/* Phone — pre-filled from history */}
@@ -1082,7 +1082,7 @@ export default function DriverApp() {
             onChange={e=>setDriverInfo(p=>({...p,phone:e.target.value}))}
             placeholder='e.g. 07810 499983'
             inputMode='tel'
-            style={{width:'100%',padding:'13px',background:'#0f1826',border:'1px solid rgba(255,255,255,0.1)',borderRadius:8,color:'#e8eaed',fontSize:16,outline:'none',boxSizing:'border-box'}}/>
+            style={{width:'100%',padding:'13px',background:'linear-gradient(135deg,#0d1520,#0a1018)',border:'1px solid rgba(255,255,255,0.1)',borderRadius:8,color:'#e8eaed',fontSize:16,outline:'none',boxSizing:'border-box'}}/>
         </div>
 
         {/* Vehicle reg — dropdown if history exists, plain input if not */}
@@ -1102,7 +1102,7 @@ export default function DriverApp() {
                     setDriverInfo(p=>({...p,vehicleReg:val,vehicleType:found?.type||p.vehicleType}))
                   }
                 }}
-                style={{width:'100%',padding:'13px',background:'#0f1826',border:'1px solid rgba(255,255,255,0.1)',borderRadius:8,color:driverInfo.vehicleReg?'#e8eaed':'#4a5260',fontSize:16,outline:'none',boxSizing:'border-box',cursor:'pointer'}}>
+                style={{width:'100%',padding:'13px',background:'linear-gradient(135deg,#0d1520,#0a1018)',border:'1px solid rgba(255,255,255,0.1)',borderRadius:8,color:driverInfo.vehicleReg?'#e8eaed':'#4a5260',fontSize:16,outline:'none',boxSizing:'border-box',cursor:'pointer'}}>
                 <option value=''>Select vehicle...</option>
                 {driverHistory.regs.map(r=>(
                   <option key={r.reg} value={r.reg}>
@@ -1124,7 +1124,7 @@ export default function DriverApp() {
                 onChange={e=>setDriverInfo(p=>({...p,vehicleReg:e.target.value.toUpperCase()}))}
                 placeholder='e.g. BK21 XYZ'
                 autoCapitalize='characters'
-                style={{width:'100%',padding:'13px',background:'#0f1826',border:'1px solid rgba(245,166,35,0.3)',borderRadius:8,color:'#e8eaed',fontSize:16,outline:'none',boxSizing:'border-box'}}/>
+                style={{width:'100%',padding:'13px',background:'linear-gradient(135deg,#0d1520,#0a1018)',border:'1px solid rgba(245,166,35,0.3)',borderRadius:8,color:'#e8eaed',fontSize:16,outline:'none',boxSizing:'border-box'}}/>
               {hasHistory && (
                 <button onClick={()=>{setRegInputMode('dropdown');setDriverInfo(p=>({...p,vehicleReg:''}))}}
                   style={{marginTop:6,background:'none',border:'none',color:'#4a5260',fontSize:12,cursor:'pointer',padding:0}}>
@@ -1156,7 +1156,7 @@ export default function DriverApp() {
             value={driverInfo.clientId}
             onChange={e=>setDriverInfo(p=>({...p,clientId:e.target.value.toLowerCase().trim()}))}
             placeholder='Given by your manager'
-            style={{width:'100%',padding:'13px',background:'#0f1826',border:'1px solid rgba(255,255,255,0.1)',borderRadius:8,color:'#e8eaed',fontSize:16,outline:'none',boxSizing:'border-box'}}/>
+            style={{width:'100%',padding:'13px',background:'linear-gradient(135deg,#0d1520,#0a1018)',border:'1px solid rgba(255,255,255,0.1)',borderRadius:8,color:'#e8eaed',fontSize:16,outline:'none',boxSizing:'border-box'}}/>
         </div>
 
         {!ready && <div style={{fontSize:12,color:'#4a5260',textAlign:'center',marginBottom:10}}>All fields required to continue</div>}
@@ -1170,7 +1170,7 @@ export default function DriverApp() {
 
   // ── STALE SESSION ─────────────────────────────────────────────────────────
   if (setupDone && staleSession) return (
-    <div style={{minHeight:'100vh',background:'#080c14',color:'#e8eaed',fontFamily:'Barlow,sans-serif',display:'flex',alignItems:'center',justifyContent:'center',padding:24}}>
+    <div style={{minHeight:'100vh',background:'#090b0d',color:'#e8eaed',fontFamily:'Barlow,sans-serif',display:'flex',alignItems:'center',justifyContent:'center',padding:24}}>
       <div style={{width:'100%',maxWidth:380}}>
         <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:28}}>
           <div style={{width:32,height:32,background:'#f5a623',clipPath:'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)'}} />
@@ -1196,7 +1196,7 @@ export default function DriverApp() {
     const allChecked = checks.every(c=>preShiftChecks[c.id]!==undefined)
     const hasFails = checks.some(c=>preShiftChecks[c.id]===false)
     return (
-      <div style={{minHeight:'100vh',background:'#080c14',color:'#e8eaed',fontFamily:'Barlow,sans-serif',paddingBottom:40,touchAction:'manipulation'}}>
+      <div style={{minHeight:'100vh',background:'#090b0d',color:'#e8eaed',fontFamily:'Barlow,sans-serif',paddingBottom:40,touchAction:'manipulation'}}>
         <div style={{padding:'14px 16px',display:'flex',alignItems:'center',justifyContent:'space-between',borderBottom:'1px solid rgba(255,255,255,0.06)'}}>
           <div style={{display:'flex',alignItems:'center',gap:10}}>
             <div style={{width:26,height:26,background:'#f5a623',clipPath:'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)'}} />
@@ -1252,7 +1252,7 @@ export default function DriverApp() {
       try { const draft=JSON.parse(localStorage.getItem('dh_postshift_draft')||'{}'); if(draft.mileage)setShiftMileage(draft.mileage); if(draft.notes)setShiftNotes(draft.notes) } catch {}
     }
     return (
-    <div style={{minHeight:'100vh',background:'#080c14',color:'#e8eaed',fontFamily:'Barlow,sans-serif',paddingBottom:40}}>
+    <div style={{minHeight:'100vh',background:'#090b0d',color:'#e8eaed',fontFamily:'Barlow,sans-serif',paddingBottom:40}}>
       <div style={{padding:'14px 16px',borderBottom:'1px solid rgba(255,255,255,0.06)'}}>
         <div style={{fontSize:16,fontWeight:600}}>Return Check</div>
         <div style={{fontSize:12,color:'#4a5260',marginTop:2}}>Vehicle walkaround before handing back</div>
@@ -1276,10 +1276,10 @@ export default function DriverApp() {
             Mileage at end of shift {mileageError&&'— required ⚠'}
           </div>
           <input value={shiftMileage} onChange={e=>{setShiftMileage(e.target.value);setMileageError(false);try{localStorage.setItem('dh_postshift_draft',JSON.stringify({mileage:e.target.value,notes:shiftNotes}))}catch{}}} placeholder='e.g. 48,320' inputMode='numeric'
-            style={{width:'100%',padding:'12px',background:'#0f1826',border:`1px solid ${mileageError?'rgba(239,68,68,0.6)':'rgba(255,255,255,0.1)'}`,borderRadius:8,color:'#e8eaed',fontSize:15,outline:'none',boxSizing:'border-box',marginBottom:14,transition:'border 0.2s'}}/>
+            style={{width:'100%',padding:'12px',background:'linear-gradient(135deg,#0d1520,#0a1018)',border:`1px solid ${mileageError?'rgba(239,68,68,0.6)':'rgba(255,255,255,0.1)'}`,borderRadius:8,color:'#e8eaed',fontSize:15,outline:'none',boxSizing:'border-box',marginBottom:14,transition:'border 0.2s'}}/>
           <div style={{fontSize:13,color:'#8a9099',marginBottom:6}}>Shift notes (optional)</div>
           <textarea value={shiftNotes} onChange={e=>{setShiftNotes(e.target.value);try{localStorage.setItem('dh_postshift_draft',JSON.stringify({mileage:shiftMileage,notes:e.target.value}))}catch{}}} rows={3} placeholder='Any notes for ops — customer issues, delays, anything to flag...'
-            style={{width:'100%',padding:'12px',background:'#0f1826',border:'1px solid rgba(255,255,255,0.1)',borderRadius:8,color:'#e8eaed',fontSize:14,outline:'none',resize:'none',boxSizing:'border-box',lineHeight:1.6}}/>
+            style={{width:'100%',padding:'12px',background:'linear-gradient(135deg,#0d1520,#0a1018)',border:'1px solid rgba(255,255,255,0.1)',borderRadius:8,color:'#e8eaed',fontSize:14,outline:'none',resize:'none',boxSizing:'border-box',lineHeight:1.6}}/>
         </div>
         {Object.values(postShiftChecks).some(v=>v===false)&&(
           <div style={{padding:'10px 12px',background:'rgba(239,68,68,0.06)',border:'1px solid rgba(239,68,68,0.2)',borderRadius:7,marginTop:10,fontSize:12,color:'#ef4444'}}>⚠ Defects noted — ops will be informed in shift summary</div>
@@ -1293,7 +1293,7 @@ export default function DriverApp() {
 
   // ── SHIFT SUMMARY ─────────────────────────────────────────────────────────
   if (shiftEnded && shiftSummary) return (
-    <div style={{minHeight:'100vh',background:'#080c14',color:'#e8eaed',fontFamily:'Barlow,sans-serif',display:'flex',alignItems:'center',justifyContent:'center',padding:24}}>
+    <div style={{minHeight:'100vh',background:'#090b0d',color:'#e8eaed',fontFamily:'Barlow,sans-serif',display:'flex',alignItems:'center',justifyContent:'center',padding:24}}>
       <div style={{width:'100%',maxWidth:400}}>
         <div style={{textAlign:'center',marginBottom:28}}>
           <div style={{fontSize:52,marginBottom:10}}>🏁</div>
@@ -1313,12 +1313,12 @@ export default function DriverApp() {
             </div>
           ))}
         </div>
-        {shiftSummary.mileage&&<div style={{padding:'10px 14px',background:'#0f1826',border:'1px solid rgba(255,255,255,0.06)',borderRadius:8,marginBottom:8,fontSize:13,color:'#8a9099'}}>Mileage: <span style={{color:'#e8eaed'}}>{shiftSummary.mileage}</span></div>}
+        {shiftSummary.mileage&&<div style={{padding:'10px 14px',background:'linear-gradient(135deg,#0d1520,#0a1018)',border:'1px solid rgba(255,255,255,0.06)',borderRadius:8,marginBottom:8,fontSize:13,color:'#8a9099'}}>Mileage: <span style={{color:'#e8eaed'}}>{shiftSummary.mileage}</span></div>}
         {shiftSummary.unresolved>0&&<div style={{padding:'10px 14px',background:'rgba(245,158,11,0.06)',border:'1px solid rgba(245,158,11,0.2)',borderRadius:8,marginBottom:8,fontSize:13,color:'#f59e0b'}}>⚠ {shiftSummary.unresolved} unresolved job{shiftSummary.unresolved>1?'s':''} — ops have been notified</div>}
-        {shiftSummary.notes&&<div style={{padding:'10px 14px',background:'#0f1826',border:'1px solid rgba(255,255,255,0.06)',borderRadius:8,marginBottom:8,fontSize:13,color:'#8a9099'}}>Notes: <span style={{color:'#e8eaed'}}>{shiftSummary.notes}</span></div>}
+        {shiftSummary.notes&&<div style={{padding:'10px 14px',background:'linear-gradient(135deg,#0d1520,#0a1018)',border:'1px solid rgba(255,255,255,0.06)',borderRadius:8,marginBottom:8,fontSize:13,color:'#8a9099'}}>Notes: <span style={{color:'#e8eaed'}}>{shiftSummary.notes}</span></div>}
         {shiftSummary.completed===shiftSummary.total&&<div style={{padding:'12px',background:'rgba(245,166,35,0.05)',border:'1px solid rgba(245,166,35,0.2)',borderRadius:9,textAlign:'center',marginBottom:12,fontSize:14,color:'#f5a623',fontWeight:500}}>✓ Full shift — all runs delivered</div>}
         <button onClick={()=>{['dh_driver_info','dh_shift_started','dh_shift_started_at','dh_last_alert','dh_prior_alert','dh_job_progress','dh_ops_messages','dh_ops_messages_read','dh_session_id'].forEach(k=>localStorage.removeItem(k));setSetupDone(false);setShiftStarted(false);setShiftEnded(false);setJobs([]);setActiveJob(null);setShiftSummary(null)}}
-          style={{width:'100%',padding:'14px',background:'#0f1826',border:'1px solid rgba(255,255,255,0.08)',borderRadius:10,color:'#4a5260',fontWeight:500,fontSize:14,cursor:'pointer'}}>
+          style={{width:'100%',padding:'14px',background:'linear-gradient(135deg,#0d1520,#0a1018)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:10,color:'#4a5260',fontWeight:500,fontSize:14,cursor:'pointer'}}>
           Sign out
         </button>
       </div>
@@ -1328,7 +1328,7 @@ export default function DriverApp() {
   // ── POD CONFIRMATION ──────────────────────────────────────────────────────
   if (podFlow) return (
     <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.9)',zIndex:300,display:'flex',alignItems:'center',justifyContent:'center',padding:24}}>
-      <div style={{width:'100%',maxWidth:360,background:'#0f1826',borderRadius:14,padding:24,border:'1px solid rgba(255,255,255,0.08)'}}>
+      <div style={{width:'100%',maxWidth:360,background:'linear-gradient(135deg,#0d1520,#0a1018)',borderRadius:14,padding:24,border:'1px solid rgba(255,255,255,0.08)'}}>
         <div style={{fontSize:18,fontWeight:700,color:'#e8eaed',marginBottom:6}}>Delivery confirmation</div>
         <div style={{fontSize:13,color:'#8a9099',marginBottom:20}}>How was the delivery confirmed?</div>
         {[
@@ -1338,7 +1338,7 @@ export default function DriverApp() {
           {id:'safe_place',label:'📦 Safe place delivery',   sub:'Left in agreed safe location'},
         ].map(opt=>(
           <button key={opt.id} onClick={()=>confirmDelivered(opt.id)}
-            style={{width:'100%',marginBottom:8,padding:'13px',background:'rgba(245,166,35,0.04)',border:'1px solid rgba(245,166,35,0.12)',borderRadius:10,cursor:'pointer',textAlign:'left',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+            style={{width:'100%',marginBottom:7,padding:'12px 13px',background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.07)',borderRadius:10,cursor:'pointer',textAlign:'left',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
             <div><div style={{fontSize:14,color:'#e8eaed',fontWeight:500}}>{opt.label}</div><div style={{fontSize:11,color:'#4a5260',marginTop:2}}>{opt.sub}</div></div>
             <span style={{color:'#f5a623',fontSize:15}}>→</span>
           </button>
@@ -1350,7 +1350,7 @@ export default function DriverApp() {
 
   // ── MAIN RUN VIEW ─────────────────────────────────────────────────────────
   return (
-    <div style={{minHeight:'100vh',background:'#080c14',color:'#e8eaed',fontFamily:'Barlow,sans-serif',paddingBottom:90}}>
+    <div style={{minHeight:'100vh',background:'#090b0d',color:'#e8eaed',fontFamily:'Barlow,sans-serif',paddingBottom:90}}>
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}`}</style>
 
       {/* Sync indicator */}
@@ -1412,7 +1412,7 @@ export default function DriverApp() {
         <div>
 
           {/* ── DATE + RUN COUNT STRIP ── */}
-          <div style={{padding:'8px 16px',borderBottom:'1px solid rgba(255,255,255,0.04)',display:'flex',alignItems:'center',justifyContent:'space-between',background:'#0d1420'}}>
+          <div style={{padding:'8px 16px',borderBottom:'1px solid rgba(255,255,255,0.04)',display:'flex',alignItems:'center',justifyContent:'space-between',background:'#090b0d'}}>
             <div style={{fontSize:11,color:'#4a5260',fontFamily:'monospace',letterSpacing:'0.06em'}}>
               {new Date().toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'}).toUpperCase()}
             </div>
@@ -1429,20 +1429,20 @@ export default function DriverApp() {
 
           {/* ── LAST ALERT BANNER ── */}
           {lastAlert&&(
-            <div style={{margin:'8px 12px 0',padding:'12px 14px',borderRadius:10,border:`1px solid ${SEV[lastAlert.severity]?.border||'rgba(245,158,11,0.35)'}`,background:SEV[lastAlert.severity]?.bg}}>
-              <div onClick={reopenLastAlert} style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',cursor:'pointer'}}>
+            <div style={{margin:'10px 14px 0',borderRadius:12,overflow:'hidden',border:`1px solid ${SEV[lastAlert.severity]?.border||'rgba(245,158,11,0.35)'}`,background:SEV[lastAlert.severity]?.bg,boxShadow:'0 4px 20px rgba(0,0,0,0.3)'}}>
+              <div onClick={reopenLastAlert} style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',cursor:'pointer',padding:'10px 14px 9px',borderBottom:'1px solid rgba(255,255,255,0.05)'}}>
                 <div style={{display:'flex',gap:9,flex:1}}>
                   <span style={{fontSize:18,flexShrink:0}}>{SEV[lastAlert.severity]?.icon||'⚠️'}</span>
                   <div>
-                    <div style={{fontSize:9,color:SEV[lastAlert.severity]?.color,fontFamily:'monospace',fontWeight:700,letterSpacing:'0.06em',marginBottom:2}}>LAST ALERT · {lastAlert.time}</div>
-                    <div style={{fontSize:14,color:'#e8eaed',fontWeight:600,lineHeight:1.4}}>{lastAlert.headline}</div>
+                    <div style={{fontSize:9,color:SEV[lastAlert.severity]?.color,fontFamily:'monospace',fontWeight:700,letterSpacing:'0.1em',marginBottom:2}}>LAST ALERT · {lastAlert.time}</div>
+                    <div style={{fontSize:16,color:'#e8eaed',fontWeight:700,lineHeight:1.4}}>{lastAlert.headline}</div>
                     {lastAlert.actions?.[0]&&<div style={{fontSize:11,color:'#8a9099',marginTop:4}}>→ {lastAlert.actions[0]}</div>}
                   </div>
                 </div>
                 <div style={{fontSize:10,color:'#4a5260',flexShrink:0,marginLeft:8}}>Tap →</div>
               </div>
               {(lastAlert.issueId==='medical'||lastAlert.issueId==='driver_unwell')&&(
-                <button onClick={async(e)=>{e.stopPropagation();try{await fetch('/api/driver/resolve',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({client_id:driverInfo.clientId,vehicle_reg:driverInfo.vehicleReg,driver_name:driverInfo.name,ref:activeJob?.ref||'MEDICAL',resolution:'Driver confirmed OK — resuming shift',original_issue:lastAlert.issueId})})}catch{}setLastAlert(null);localStorage.removeItem('dh_last_alert');showToast('Medical cleared — ops notified','ok')}} style={{marginTop:10,width:'100%',padding:'11px',background:'rgba(0,229,176,0.1)',border:'1px solid rgba(0,229,176,0.3)',borderRadius:8,color:'#00e5b0',fontWeight:600,fontSize:13,cursor:'pointer'}}>
+                <button onClick={async(e)=>{e.stopPropagation();try{await fetch('/api/driver/resolve',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({client_id:driverInfo.clientId,vehicle_reg:driverInfo.vehicleReg,driver_name:driverInfo.name,ref:activeJob?.ref||'MEDICAL',resolution:'Driver confirmed OK — resuming shift',original_issue:lastAlert.issueId})})}catch{}setLastAlert(null);localStorage.removeItem('dh_last_alert');showToast('Medical cleared — ops notified','ok')}} style={{margin:'0 14px 10px',width:'calc(100% - 28px)',padding:'10px',background:'rgba(0,229,176,0.1)',border:'1px solid rgba(0,229,176,0.25)',borderRadius:8,color:'#00e5b0',fontWeight:600,fontSize:13,cursor:'pointer'}}>
                   ✅ I'm OK — Continue shift
                 </button>
               )}
@@ -1451,17 +1451,15 @@ export default function DriverApp() {
 
           {/* ── PRIOR ALERT BANNER (e.g. breakdown preserved during medical) ── */}
           {priorAlert && (
-            <div style={{margin:'6px 12px 0', padding:'10px 14px', borderRadius:10, border:`1px solid ${SEV[priorAlert.severity]?.border||'rgba(245,158,11,0.35)'}`, background:SEV[priorAlert.severity]?.bg||'rgba(245,158,11,0.05)'}}>
-              <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', gap:10}}>
-                <div onClick={()=>{ setPanelIssue({id:priorAlert.issueId, label:priorAlert.issueLabel}); setParsedResult(priorAlert); setPanelState('result'); setPanelOpen(true); setShowDetail(false) }} style={{flex:1, cursor:'pointer', display:'flex', gap:9, alignItems:'flex-start'}}>
-                  <span style={{fontSize:16, flexShrink:0}}>{SEV[priorAlert.severity]?.icon||'⚠️'}</span>
-                  <div>
-                    <div style={{fontSize:9, color:SEV[priorAlert.severity]?.color, fontFamily:'monospace', fontWeight:700, letterSpacing:'0.06em', marginBottom:2}}>PRIOR · {priorAlert.issueLabel||'BREAKDOWN'} · {priorAlert.time}</div>
-                    <div style={{fontSize:13, color:'#e8eaed', fontWeight:600, lineHeight:1.4}}>{priorAlert.headline}</div>
-                  </div>
+            <div style={{margin:'6px 14px 0', padding:'9px 13px', background:SEV[priorAlert.severity]?.bg||'rgba(245,158,11,0.05)', border:`1px solid ${SEV[priorAlert.severity]?.border||'rgba(245,158,11,0.3)'}`, borderRadius:8, display:'flex', alignItems:'center', gap:8}}>
+              <div onClick={()=>{ setPanelIssue({id:priorAlert.issueId, label:priorAlert.issueLabel}); setParsedResult(priorAlert); setPanelState('result'); setPanelOpen(true); setShowDetail(false) }} style={{flex:1, cursor:'pointer', display:'flex', gap:9, alignItems:'flex-start'}}>
+                <span style={{fontSize:16, flexShrink:0}}>{SEV[priorAlert.severity]?.icon||'⚠️'}</span>
+                <div>
+                  <div style={{fontSize:9, color:SEV[priorAlert.severity]?.color, fontFamily:'monospace', fontWeight:700, letterSpacing:'0.1em', marginBottom:2}}>PRIOR · {priorAlert.issueLabel||'BREAKDOWN'} · {priorAlert.time}</div>
+                  <div style={{fontSize:13, color:'#e8eaed', fontWeight:600, lineHeight:1.4}}>{priorAlert.headline}</div>
                 </div>
-                <button onClick={resolvePriorAlert} style={{padding:'6px 10px', background:'transparent', border:'1px solid rgba(245,166,35,0.28)', borderRadius:6, color:'#f5a623', fontSize:11, fontWeight:600, cursor:'pointer', flexShrink:0}}>✅ Resolved</button>
               </div>
+              <button onClick={resolvePriorAlert} style={{padding:'5px 10px', background:'transparent', border:'1px solid rgba(245,166,35,0.25)', borderRadius:6, color:'#f5a623', fontSize:11, fontWeight:600, cursor:'pointer', flexShrink:0}}>✅ Resolved</button>
             </div>
           )}
 
@@ -1471,7 +1469,7 @@ export default function DriverApp() {
             const sc = STATUS_COLORS[activeJob.status]||STATUS_COLORS['on-track']
             const currentStepIndex = PROGRESS_STEPS.findIndex(s=>s.status===activeJob.status)
             return (
-              <div style={{margin:'10px 12px 0',background:'#0f1826',border:`1px solid ${sc.border}`,borderRadius:14,overflow:'hidden'}}>
+              <div style={{margin:'12px 14px 0',background:'linear-gradient(135deg,#0d1520,#0a1018)',border:`1px solid ${sc.border}`,borderRadius:14,overflow:'hidden',boxShadow:'0 0 30px rgba(245,166,35,0.06)'}}>
                 {/* Active job header */}
                 <div style={{padding:'12px 14px',borderBottom:'1px solid rgba(255,255,255,0.05)',background:sc.bg}}>
                   <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:4}}>
@@ -1498,17 +1496,17 @@ export default function DriverApp() {
                       const isCurrent = step.status===activeJob.status || (activeJob.status==='on-track'&&i===0) || (activeJob.status==='pending'&&i===0)
                       return (
                         <button key={step.id} onClick={()=>{if(!isDoneStep)logProgress(step)}} disabled={isDoneStep}
-                          style={{width:'100%',marginBottom:7,padding:'13px',background:isDoneStep?'rgba(245,166,35,0.03)':isCurrent?'rgba(245,166,35,0.06)':'rgba(255,255,255,0.02)',border:`1px solid ${isDoneStep?'rgba(245,166,35,0.12)':isCurrent?'rgba(245,166,35,0.3)':'rgba(255,255,255,0.06)'}`,borderRadius:10,cursor:isDoneStep?'default':'pointer',display:'flex',alignItems:'center',gap:12,opacity:isDoneStep?0.5:1}}>
-                          <span style={{fontSize:20,flexShrink:0}}>{isDoneStep?'✓':step.icon}</span>
-                          <span style={{fontSize:15,color:isDoneStep?'#4a5260':isCurrent?step.color:'#e8eaed',fontWeight:isCurrent?600:400}}>{step.label}</span>
+                          style={{width:'100%',marginBottom:7,padding:'11px 13px',background:isDoneStep?'rgba(0,229,176,0.04)':isCurrent?'rgba(245,166,35,0.07)':'rgba(255,255,255,0.02)',border:`1px solid ${isDoneStep?'rgba(0,229,176,0.15)':isCurrent?'rgba(245,166,35,0.3)':'rgba(255,255,255,0.05)'}`,borderRadius:10,cursor:isDoneStep?'default':'pointer',display:'flex',alignItems:'center',gap:10,boxShadow:isCurrent?'0 0 14px rgba(245,166,35,0.08)':'none'}}>
+                          <span style={{fontSize:20,flexShrink:0,color:isDoneStep?'#00e5b0':undefined}}>{isDoneStep?'✓':step.icon}</span>
+                          <span style={{fontSize:15,color:isDoneStep?'#00e5b0':isCurrent?step.color:'#2a3040',fontWeight:isDoneStep?600:isCurrent?700:400}}>{step.label}</span>
                           {isCurrent&&<span style={{marginLeft:'auto',fontSize:11,color:step.color,fontFamily:'monospace'}}>TAP →</span>}
                         </button>
                       )
                     })}
                     <button onClick={initiateDelivered}
-                      style={{width:'100%',padding:'15px',borderRadius:10,border:'2px solid rgba(245,166,35,0.4)',background:'rgba(245,166,35,0.07)',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:10,marginBottom:6}}>
+                      style={{width:'100%',padding:'14px',borderRadius:10,border:'none',background:'#f5a623',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:10,marginBottom:6,boxShadow:'0 4px 18px rgba(245,166,35,0.3)'}}>
                       <span style={{fontSize:22}}>📦</span>
-                      <span style={{fontSize:16,color:'#f5a623',fontWeight:700}}>Mark as Delivered</span>
+                      <span style={{fontSize:16,color:'#000',fontWeight:800}}>Mark as Delivered</span>
                     </button>
                   </div>
                 )}
@@ -1600,7 +1598,7 @@ export default function DriverApp() {
                 const isAtRisk = job.status==='at_risk'||job.status==='part_delivered'
                 return (
                   <div key={job.ref} onClick={()=>setActiveJob(job)}
-                    style={{padding:'10px 12px',background:'#0f1826',border:`1px solid ${isAtRisk?sc.border:'rgba(255,255,255,0.06)'}`,borderRadius:10,marginBottom:6,cursor:'pointer',display:'flex',alignItems:'center',gap:10,transition:'all 0.15s'}}>
+                    style={{padding:'10px 12px',background:'linear-gradient(135deg,#0d1520,#0a1018)',border:`1px solid ${isAtRisk?sc.border:'rgba(255,255,255,0.06)'}`,borderRadius:10,marginBottom:6,cursor:'pointer',display:'flex',alignItems:'center',gap:10,transition:'all 0.15s'}}>
                     <div style={{width:6,height:6,borderRadius:'50%',background:sc.dot,flexShrink:0}}/>
                     <div style={{flex:1,minWidth:0}}>
                       <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:2}}>
@@ -1655,7 +1653,7 @@ export default function DriverApp() {
                       const alertActive = !!lastAlert || panelState === 'sent' || panelState === 'result' || panelState === 'resolving_loading'
                       return (
                       <button key={issue.id} onClick={()=>!alertActive&&openIssue(issue)} disabled={alertActive}
-                        style={{padding:'12px 10px',borderRadius:9,background:'#0f1826',border:'1px solid rgba(255,255,255,0.07)',display:'flex',alignItems:'center',gap:9,cursor:alertActive?'default':'pointer',outline:'none',textAlign:'left',opacity:alertActive?0.4:1}}>
+                        style={{padding:'12px 10px',borderRadius:9,background:'linear-gradient(135deg,#0d1520,#0a1018)',border:'1px solid rgba(255,255,255,0.07)',display:'flex',alignItems:'center',gap:9,cursor:alertActive?'default':'pointer',outline:'none',textAlign:'left',opacity:alertActive?0.4:1}}>
                         <span style={{fontSize:20,flexShrink:0}}>{issue.icon}</span>
                         <span style={{fontSize:13,color:'#e8eaed',lineHeight:1.3}}>{issue.label}</span>
                       </button>
@@ -1715,7 +1713,7 @@ export default function DriverApp() {
       {/* RUNNING LATE MODAL */}
       {runningLateModal && (
         <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.85)',zIndex:200,display:'flex',alignItems:'center',justifyContent:'center',padding:24}}>
-          <div style={{maxWidth:360,width:'100%',background:'#0a0c0e',border:'1px solid rgba(245,166,35,0.25)',borderRadius:12,padding:'28px 24px'}}>
+          <div style={{maxWidth:360,width:'100%',background:'#0f1117',border:'1px solid rgba(245,166,35,0.2)',borderRadius:16,padding:'28px 24px',borderTop:'2px solid #f5a623'}}>
             <div style={{fontFamily:'monospace',fontSize:10,color:'#f5a623',letterSpacing:'0.08em',marginBottom:16}}>REPORT DELAY</div>
             <div style={{marginBottom:14}}>
               <label style={{fontSize:12,color:'#8a9099',display:'block',marginBottom:6}}>How many minutes late?</label>
@@ -1745,27 +1743,27 @@ export default function DriverApp() {
       {(() => {
         const alertActive = !!lastAlert || panelState === 'sent' || panelState === 'result' || panelState === 'resolving_loading'
         return (
-        <div style={{position:'fixed',bottom:0,left:0,right:0,padding:'9px 12px 22px',background:'rgba(10,12,14,0.97)',borderTop:'1px solid rgba(255,255,255,0.06)',backdropFilter:'blur(10px)',zIndex:100,display:'grid',gridTemplateColumns:'5fr 3fr 3fr',gap:8}}>
+        <div style={{position:'fixed',bottom:0,left:0,right:0,padding:'9px 14px 24px',background:'rgba(9,11,13,0.97)',borderTop:'1px solid rgba(255,255,255,0.06)',backdropFilter:'blur(10px)',zIndex:100,display:'grid',gridTemplateColumns:'5fr 3fr 3fr',gap:8}}>
           {alertActive ? (<>
             <div style={{padding:'13px',background:'rgba(239,68,68,0.08)',border:'1px solid rgba(239,68,68,0.2)',borderRadius:10,color:'#ef4444',fontWeight:600,fontSize:12,display:'flex',alignItems:'center',justifyContent:'center',gap:6}}>
               ⚠ Alert active — resolve first
             </div>
             <button onClick={()=>openIssue({id:'medical',label:'Medical Emergency',icon:'🚑',needsText:false})}
-              style={{padding:'13px',background:'rgba(239,68,68,0.1)',border:'1px solid rgba(239,68,68,0.3)',borderRadius:10,color:'#ef4444',fontWeight:600,fontSize:11,cursor:'pointer',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:2}}>
+              style={{padding:'13px',background:'rgba(59,130,246,0.08)',border:'1px solid rgba(59,130,246,0.2)',borderRadius:10,color:'#3b82f6',fontWeight:600,fontSize:11,cursor:'pointer',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:3}}>
               <span style={{fontSize:18}}>🚑</span><span>Medical</span>
             </button>
             <div />
           </>) : (<>
             <button onClick={()=>openIssue({id:'breakdown',label:'Breakdown',icon:'🚨',needsText:true,placeholder:'What happened?'})}
-              style={{padding:'13px',background:'#ef4444',border:'none',borderRadius:10,color:'#fff',fontWeight:700,fontSize:14,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:7}}>
+              style={{padding:'13px',background:'#ef4444',border:'none',borderRadius:10,color:'#fff',fontWeight:800,fontSize:15,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:7,letterSpacing:'0.05em',boxShadow:'0 4px 20px rgba(239,68,68,0.3)'}}>
               🚨 BREAKDOWN
             </button>
             <button onClick={()=>openIssue({id:'medical',label:'Medical Emergency',icon:'🚑',needsText:false})}
-              style={{padding:'13px',background:'rgba(239,68,68,0.1)',border:'1px solid rgba(239,68,68,0.3)',borderRadius:10,color:'#ef4444',fontWeight:600,fontSize:11,cursor:'pointer',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:2}}>
+              style={{padding:'13px',background:'rgba(59,130,246,0.08)',border:'1px solid rgba(59,130,246,0.2)',borderRadius:10,color:'#3b82f6',fontWeight:600,fontSize:11,cursor:'pointer',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:3}}>
               <span style={{fontSize:18}}>🚑</span><span>Medical</span>
             </button>
             <button onClick={()=>setRunningLateModal(true)}
-              style={{padding:'13px',background:'rgba(245,166,35,0.08)',border:'1px solid rgba(245,166,35,0.25)',borderRadius:10,color:'#f5a623',fontWeight:600,fontSize:11,cursor:'pointer',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:2}}>
+              style={{padding:'13px',background:'rgba(245,166,35,0.07)',border:'1px solid rgba(245,166,35,0.2)',borderRadius:10,color:'#f5a623',fontWeight:600,fontSize:11,cursor:'pointer',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:3}}>
               <span style={{fontSize:18}}>⏱</span><span>Running Late</span>
             </button>
           </>)}
@@ -1776,13 +1774,14 @@ export default function DriverApp() {
       {/* ISSUE PANEL */}
       {panelOpen&&(
         <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.85)',zIndex:200,display:'flex',alignItems:'flex-end'}}>
-          <div style={{width:'100%',background:'#0d1420',borderRadius:'16px 16px 0 0',maxHeight:'90vh',overflowY:'auto',padding:'20px 16px 36px'}}>
+          <div style={{width:'100%',background:'#0f1117',borderRadius:'20px 20px 0 0',maxHeight:'90vh',overflowY:'auto',padding:'20px 16px 36px',borderTop:`2px solid ${['breakdown','accident','vehicle_theft','theft_threat','cant_complete'].includes(panelIssue?.id)?'#ef4444':panelIssue?.id==='medical'||panelIssue?.id==='driver_unwell'?'#3b82f6':'#f5a623'}`}}>
+            <div style={{display:'flex',justifyContent:'center',marginBottom:12,marginTop:-8}}><div style={{width:36,height:4,borderRadius:2,background:'rgba(255,255,255,0.15)'}}/></div>
             <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:16}}>
               <div>
-                <div style={{fontSize:9,color:'#4a5260',fontFamily:'monospace',letterSpacing:'0.08em',marginBottom:3}}>ISSUE REPORT</div>
-                <div style={{fontSize:18,fontWeight:700,color:'#e8eaed'}}>{panelIssue?.icon} {panelIssue?.label}</div>
+                <div style={{fontSize:9,color:'#4a5260',fontFamily:'monospace',letterSpacing:'0.1em',marginBottom:4}}>ISSUE REPORT</div>
+                <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:24,fontWeight:900,textTransform:'uppercase',letterSpacing:'0.03em',color:'#fff'}}>{panelIssue?.icon} {panelIssue?.label}</div>
               </div>
-              <button onClick={closePanel} style={{width:34,height:34,borderRadius:8,background:'rgba(255,255,255,0.06)',border:'none',color:'#8a9099',fontSize:18,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>✕</button>
+              <button onClick={closePanel} style={{width:34,height:34,borderRadius:8,background:'rgba(255,255,255,0.05)',border:'1px solid rgba(255,255,255,0.08)',color:'#8a9099',fontSize:18,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>✕</button>
             </div>
 
             {/* GPS status */}
@@ -1864,9 +1863,9 @@ export default function DriverApp() {
                       </div>}
                     </div>
                   )}
-                  <button onClick={closePanel} style={{width:'100%',padding:15,background:'#f5a623',border:'none',borderRadius:10,color:'#000',fontWeight:700,fontSize:16,cursor:'pointer',marginBottom:9}}>Got it — close</button>
+                  <button onClick={closePanel} style={{width:'100%',padding:14,background:'#f5a623',border:'none',borderRadius:12,color:'#000',fontWeight:800,fontSize:16,cursor:'pointer',marginBottom:9,fontFamily:"'Barlow Condensed',sans-serif",textTransform:'uppercase'}}>Got it — close</button>
                   {!['cant_complete','hours_running_out','medical','vehicle_theft'].includes(panelIssue?.id)&&(
-                    <button onClick={()=>setPanelState('resolving')} style={{width:'100%',padding:13,background:'transparent',border:'1px solid rgba(245,166,35,0.28)',borderRadius:10,color:'#f5a623',fontWeight:500,fontSize:14,cursor:'pointer'}}>
+                    <button onClick={()=>setPanelState('resolving')} style={{width:'100%',padding:13,background:'transparent',border:'1px solid rgba(245,166,35,0.25)',borderRadius:12,color:'#f5a623',fontWeight:600,fontSize:14,cursor:'pointer'}}>
                       ✅ Issue resolved — back on track
                     </button>
                   )}
@@ -1890,7 +1889,7 @@ export default function DriverApp() {
                   {id:'other_resolved',label:'✅ Other — resolved',sub:'Issue no longer active'},
                 ].map(opt=>(
                   <button key={opt.id} onClick={()=>resolveIssue(opt.label)}
-                    style={{width:'100%',marginBottom:8,padding:'13px',background:'rgba(245,166,35,0.04)',border:'1px solid rgba(245,166,35,0.12)',borderRadius:10,cursor:'pointer',textAlign:'left',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+                    style={{width:'100%',marginBottom:7,padding:'12px 13px',background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.07)',borderRadius:10,cursor:'pointer',textAlign:'left',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
                     <div><div style={{fontSize:14,color:'#e8eaed',fontWeight:500}}>{opt.label}</div><div style={{fontSize:11,color:'#4a5260',marginTop:2}}>{opt.sub}</div></div>
                     <span style={{color:'#f5a623',fontSize:15}}>→</span>
                   </button>
@@ -1949,7 +1948,7 @@ export default function DriverApp() {
                   <textarea value={inputText} onChange={e=>setInputText(e.target.value)} rows={4}
                     onFocus={e=>{setTimeout(()=>e.target.scrollIntoView({behavior:'smooth',block:'center'}),350)}}
                     placeholder={panelIssue.placeholder||'Describe what has happened...'}
-                    style={{width:'100%',padding:'13px',background:'#1a1f26',border:'2px solid rgba(255,255,255,0.16)',borderRadius:10,color:'#e8eaed',fontSize:16,lineHeight:1.6,outline:'none',resize:'none',boxSizing:'border-box',marginBottom:13,WebkitAppearance:'none'}}/>
+                    style={{width:'100%',padding:'13px',background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.1)',borderRadius:10,color:'#e8eaed',fontSize:16,lineHeight:1.6,outline:'none',resize:'none',boxSizing:'border-box',marginBottom:13,WebkitAppearance:'none',minHeight:88}}/>
                 )}
                 {activeJob&&(
                   <div style={{padding:'8px 11px',background:'rgba(245,166,35,0.03)',border:'1px solid rgba(245,166,35,0.1)',borderRadius:7,fontSize:12,color:'#8a9099',marginBottom:14}}>
@@ -1957,7 +1956,7 @@ export default function DriverApp() {
                   </div>
                 )}
                 <button onClick={sendAlert}
-                  style={{width:'100%',padding:15,background:['breakdown','cant_complete','theft_threat','driver_unwell','medical','accident','vehicle_theft'].includes(panelIssue?.id)?'#ef4444':'#f5a623',border:'none',borderRadius:10,color:['breakdown','cant_complete','theft_threat','driver_unwell','medical','accident','vehicle_theft'].includes(panelIssue?.id)?'#fff':'#000',fontWeight:700,fontSize:16,cursor:'pointer',marginBottom:9}}>
+                  style={{width:'100%',padding:15,background:panelIssue?.id==='medical'||panelIssue?.id==='driver_unwell'?'#3b82f6':['breakdown','cant_complete','theft_threat','accident','vehicle_theft'].includes(panelIssue?.id)?'#ef4444':'#f5a623',border:'none',borderRadius:12,color:['breakdown','cant_complete','theft_threat','accident','vehicle_theft','medical','driver_unwell'].includes(panelIssue?.id)?'#fff':'#000',fontFamily:"'Barlow Condensed',sans-serif",fontWeight:900,fontSize:18,letterSpacing:'0.05em',textTransform:'uppercase',cursor:'pointer',marginBottom:9,boxShadow:panelIssue?.id==='medical'||panelIssue?.id==='driver_unwell'?'0 6px 24px rgba(59,130,246,0.3)':['breakdown','cant_complete','theft_threat','accident','vehicle_theft'].includes(panelIssue?.id)?'0 6px 24px rgba(239,68,68,0.35)':'none'}}>
                   {panelIssue?.id==='breakdown'?'🚨 Alert ops now':
                    panelIssue?.id==='accident'?'💥 Alert ops — accident':
                    panelIssue?.id==='medical'?'🚑 Alert ops — medical':
