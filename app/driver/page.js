@@ -1354,7 +1354,7 @@ export default function DriverApp() {
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}`}</style>
 
       {/* Sync indicator */}
-      <div style={{position:'fixed',top:8,right:12,zIndex:450,display:'flex',alignItems:'center',gap:4}}>
+      <div style={{position:'fixed',top:'calc(env(safe-area-inset-top, 0px) + 8px)',right:12,zIndex:450,display:'flex',alignItems:'center',gap:4}}>
         <div style={{width:7,height:7,borderRadius:'50%',background:syncStatus==='ok'?'#22c55e':syncStatus==='pending'?'#f59e0b':'#ef4444',transition:'background 0.3s'}}/>
         <span style={{fontSize:9,color:'#4a5260',fontFamily:'monospace'}}>{syncStatus==='ok'?'SYNCED':syncStatus==='pending'?'SYNCING':'OFFLINE'}</span>
       </div>
@@ -1368,7 +1368,7 @@ export default function DriverApp() {
 
       {/* Undo bar */}
       {pendingUndo&&(
-        <div style={{position:'fixed',top:0,left:0,right:0,zIndex:400,padding:'12px 16px',background:'rgba(245,158,11,0.95)',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+        <div style={{position:'fixed',top:'env(safe-area-inset-top, 0px)',left:0,right:0,zIndex:400,padding:'calc(env(safe-area-inset-top, 0px) + 12px) 16px 12px',background:'rgba(245,158,11,0.95)',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
           <span style={{fontSize:13,color:'#000',fontWeight:600}}>Marked as delivered</span>
           <button onClick={undoDelivered} style={{padding:'6px 14px',background:'#000',border:'none',borderRadius:6,color:'#f59e0b',fontWeight:700,fontSize:12,cursor:'pointer'}}>UNDO ({undoCountdown}s)</button>
         </div>
