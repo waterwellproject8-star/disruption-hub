@@ -1,5 +1,17 @@
 import { createClient } from '@supabase/supabase-js'
 
+async function sendSMS(to, body) {
+  const sid = process.env.TWILIO_ACCOUNT_SID
+  const token = process.env.TWILIO_AUTH_TOKEN
+  const from = process.env.TWILIO_PHONE_NUMBER
+  if (!sid || !token || !from || sid.includes('placeholder') || sid.startsWith('AC_')) return { success: false, simulated: true }
+  try {
+    const res = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${sid}/Messages.json`, { method: 'POST', headers: { 'Authorization': 'Basic ' + Buffer.from(`${sid}:${token}`).toString('base64'), 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ To: to, From: from, Body: body }) })
+    const data = await res.json()
+    return { success: res.ok, sid: data.sid, error: data.message }
+  } catch (e) { return { success: false, error: e.message } }
+}
+
 function getDB() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -32,6 +44,11 @@ export async function POST(request) {
         .limit(1)
       const active = (activeRows || [])[0]
       if (active && active.session_id && active.session_id !== session_id) {
+        // Notify the superseded driver via SMS
+        if (driver_phone) {
+          sendSMS(driver_phone, `DisruptionHub: Your session for ${vehicle_reg} has been ended — a new driver has taken over. Contact ops if unexpected.`)
+            .catch(err => console.error('[progress] superseded driver SMS failed:', err?.message))
+        }
         return Response.json({
           error: 'session_superseded',
           message: 'Another driver has taken over this vehicle. Your session has ended.'

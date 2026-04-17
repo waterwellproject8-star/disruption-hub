@@ -408,6 +408,23 @@ export async function POST(request) {
       return Response.json({ success: true, action: 'failed', driver_notified: !!driverPhone, note: `No consignee phone for ${details.consignee_name || 'this delivery'} — call manually` })
     }
 
+    // ── FAILED DELIVERY CALLBACK — one-way notification call ──────────────
+    if (['call', 'make_call'].includes(actionType) && details.call_type === 'failed_delivery_callback') {
+      const fdPhone = details.consignee_phone || extractPhoneNumber(client?.system_prompt)
+      if (fdPhone) {
+        const contactName = client?.contact_name || 'your supplier'
+        const fdMsg = `${contactName} is calling to advise that we attempted delivery of your order today but were unable to complete it. Please contact our operations team to rearrange. Thank you.`
+        const fdSafe = fdMsg.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
+        const fdTwiml = `<?xml version="1.0" encoding="UTF-8"?><Response><Say voice="Polly.Amy" language="en-GB">${fdSafe}</Say><Pause length="1"/><Say voice="Polly.Amy" language="en-GB">I will repeat that message.</Say><Pause length="1"/><Say voice="Polly.Amy" language="en-GB">${fdSafe}</Say></Response>`
+        const callResult = await makeCall(fdPhone, null, fdTwiml)
+        const callSuccess = callResult.success && !callResult.simulated
+        await finalise(callSuccess, !callResult.success ? (callResult.error || 'twilio_call_failed') : callResult.simulated ? 'twilio_not_configured' : null, callSuccess ? { twilio_sid: callResult.sid } : null)
+        return Response.json({ success: true, action: callSuccess ? 'executed' : 'failed', call_result: callResult.success ? 'placed' : callResult.simulated ? 'simulated' : 'failed' })
+      }
+      await finalise(false, 'no_consignee_phone')
+      return Response.json({ success: true, action: 'failed', note: 'No consignee phone for failed delivery callback' })
+    }
+
     // ── CALL / EMERGENCY / MAKE_CALL — Phase 3 voice call to carrier ────
     if (['call', 'emergency', 'make_call'].includes(actionType)) {
       const carrierPhone = details.carrier_phone

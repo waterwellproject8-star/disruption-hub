@@ -90,6 +90,19 @@ In one sentence: give a revised ETA with 1.5x buffer applied, and state in plain
         if (pendingErr) console.error('resolve pending update:', pendingErr.message, pendingErr.code)
       }
 
+      // Cancel pending cascade call approvals for this vehicle (last 2 hours)
+      if (vehicle_reg) {
+        const twoHoursAgo = new Date(Date.now() - 7200000).toISOString()
+        const { error: cascadeErr } = await db.from('approvals')
+          .update({ status: 'expired' })
+          .eq('client_id', client_id)
+          .eq('status', 'pending')
+          .eq('action_type', 'call')
+          .gte('created_at', twoHoursAgo)
+          .filter('action_details->>vehicle_reg', 'eq', vehicle_reg)
+        if (cascadeErr) console.error('resolve cascade cancel:', cascadeErr.message, cascadeErr.code)
+      }
+
       // Insert a visible resolve record into approvals so ops dashboard shows it
       const { error: resolveErr } = await db.from('approvals').insert({
         client_id,

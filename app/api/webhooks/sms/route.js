@@ -546,15 +546,18 @@ export async function POST(request) {
       // ── DISPATCH ─────────────────────────────────────────────────────────
       if (actionType === 'dispatch') {
         const driverPhone = await resolveDriverPhone()
-        const msg = `DisruptionHub OPS${details.ref ? ` — ${details.ref}` : ''}\n\nOps have confirmed. Recovery is being arranged — you will receive a further update shortly. Stay with your vehicle, hazards on.`
-        await writeInstructionToApp(msg)
+        const driverMsg = `DisruptionHub OPS${details.ref ? ` — ${details.ref}` : ''}\n\nOps have confirmed. Recovery is being arranged — you will receive a further update shortly. Stay with your vehicle, hazards on.`
+        await writeInstructionToApp(driverMsg)
         if (driverPhone) {
-          const result = await sendSMS(driverPhone, msg)
+          const result = await sendSMS(driverPhone, driverMsg)
           await finaliseApproval(result.success
             ? { success: true, sms_sent: true }
             : { success: false, failure_reason: result.error || 'driver_sms_failed' })
           await sendNextPendingActionSMS()
-          return twimlReply(result.success ? 'DH: Driver notified. Recovery confirmed.' : 'DH: Approved. Call driver directly — SMS failed.')
+          const carrierPhone = details.carrier_phone || extractPhoneNumber(client.system_prompt)
+          const carrierLine = carrierPhone ? `\nCall your recovery provider: ${carrierPhone}.` : ''
+          const locLine = details.location_description ? ` Driver at ${details.location_description}.` : ''
+          return twimlReply(result.success ? `DH: Confirmed. ${details.vehicle_reg || ''}: Recovery being arranged.${locLine}${carrierLine}\nDriver notified.` : 'DH: Approved. Call driver directly — SMS failed.')
         }
         await finaliseApproval({ success: false, failure_reason: 'no_driver_phone_on_file' })
         await sendNextPendingActionSMS()
@@ -657,6 +660,21 @@ export async function POST(request) {
           if (driverPhone) await sendSMS(driverPhone, driverMsg).catch(err => console.error('[sms-yes] sendSMS to driver failed:', err?.message))
           await finaliseApproval({ success: false, failure_reason: 'no_consignee_phone' })
           return twimlReply(`DH: Approved. No consignee phone for ${details.consignee_name || 'this delivery'} — call them manually.`)
+        }
+
+        // ── FAILED DELIVERY CALLBACK ──────────────────────────────────────────
+        if (callType === 'failed_delivery_callback') {
+          const fdPhone = toE164UK(details.consignee_phone || extractPhoneNumber(client.system_prompt))
+          if (fdPhone) {
+            const fdMsg = `${contactName || 'your supplier'} is calling to advise that we attempted delivery of your order today but were unable to complete it. Please contact our operations team to rearrange. Thank you.`
+            const callResult = await makeCall(fdPhone, fdMsg)
+            if (callResult.success) { await finaliseApproval({ success: true, twilio_sid: callResult.sid }); return twimlReply('DH: Calling consignee about failed delivery.') }
+            if (callResult.simulated) { await finaliseApproval({ success: false, simulated: true, reason: 'twilio_not_configured' }); return twimlReply(`DH: Call consignee manually: ${details.consignee_phone || 'no number'}`) }
+            await finaliseApproval({ success: false, failure_reason: callResult.error || 'call_error' })
+            return twimlReply(`DH: Call failed — dial consignee manually.`)
+          }
+          await finaliseApproval({ success: false, failure_reason: 'no_consignee_phone' })
+          return twimlReply('DH: No consignee phone — call manually.')
         }
 
         // ── CARRIER / RECOVERY ALERT ──────────────────────────────────────────

@@ -465,6 +465,28 @@ Provide immediate disruption analysis and action plan.`
         }
       }
 
+      // Failed/refused delivery — create consignee callback approval
+      if (issue_type === 'goods_refused' || issue_type === 'short_load' || issue_type === 'damage_found') {
+        let fdConsignee = null
+        let fdPhone = null
+        if (ref) {
+          try {
+            const { data: s } = await db.from('shipments').select('consignee, consignee_phone').eq('client_id', client_id).eq('ref', ref).maybeSingle()
+            if (s) { fdConsignee = s.consignee || ref; fdPhone = s.consignee_phone || null }
+          } catch {}
+        }
+        const { error: fdErr } = await db.from('approvals').insert({
+          client_id,
+          action_type: 'call',
+          action_label: `Call ${fdConsignee || ref || 'consignee'} — failed delivery callback`,
+          action_details: { vehicle_reg, ref: ref || 'DRIVER-ALERT', driver_name: driver_name || null, driver_phone: driver_phone || null, call_type: 'failed_delivery_callback', consignee_name: fdConsignee || ref, consignee_phone: fdPhone, source: 'driver_alert', severity },
+          financial_value: 0,
+          status: 'pending',
+          escalation_at: new Date(Date.now() + 20 * 60 * 1000).toISOString()
+        })
+        if (fdErr) console.error('failed delivery callback insert:', fdErr.message, fdErr.code)
+      }
+
       // Pre-shift defect — action_type is 'sms' so YES sends instruction to driver
       if (force_alert && force_financial_zero) {
         const { error: preshiftErr } = await db.from('approvals').insert({
@@ -491,16 +513,21 @@ Provide immediate disruption analysis and action plan.`
     // SMS ops manager
     let smsSent = false
     if ((force_alert || severity === 'CRITICAL' || severity === 'HIGH') && contactPhone) {
-      let smsBody = buildOpsSMS({
-        severity,
-        vehicle_reg,
-        human_description,
-        financialImpact,
-        detectedType,
-        force_alert,
-        force_financial_zero,
-        location_description
-      })
+      let smsBody
+      if (issue_type === 'medical' || issue_type === 'driver_unwell') {
+        smsBody = `DisruptionHub — CRITICAL\n${vehicle_reg || ''}: Medical emergency. Driver: ${driver_name || 'Unknown'}.${driver_phone ? `\nCall driver: ${driver_phone}.` : ''}${location_description ? `\nDriver at: ${location_description}.` : ''}\nReply YES to acknowledge, NO to dismiss, OPEN for dashboard.\nIf driver unresponsive — call 999 immediately.`
+      } else {
+        smsBody = buildOpsSMS({
+          severity,
+          vehicle_reg,
+          human_description,
+          financialImpact,
+          detectedType,
+          force_alert,
+          force_financial_zero,
+          location_description
+        })
+      }
       if (primaryApprovalId) smsBody += `\nRef: ${primaryApprovalId.slice(0, 8)}`
       const result = await sendSMS(contactPhone, smsBody)
       smsSent = result.success || false

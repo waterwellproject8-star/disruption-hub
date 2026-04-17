@@ -212,7 +212,8 @@ export async function POST(request) {
           .eq('id', client_id)
           .single()
         if (clientRow?.contact_phone) {
-          const smsBody = `DisruptionHub — Shift ended.\n${vehicle_reg || 'unknown'}: ${driver_name || 'Driver'} ended shift with ${unresolvedJobs.length} unresolved job${unresolvedJobs.length > 1 ? 's' : ''}.\nReview required. Dashboard: disruptionhub.ai/unlock`
+          const jobLines = unresolvedJobs.slice(0, 3).map(j => `${j.ref}: ${j.status}${j.alert ? ' — ' + j.alert.substring(0, 40) : ''}`).join('\n')
+          const smsBody = `DisruptionHub — Shift ended.\n${driver_name || 'Driver'}, ${vehicle_reg || 'unknown'} ended shift with ${unresolvedJobs.length} unresolved job${unresolvedJobs.length > 1 ? 's' : ''}:\n${jobLines}\nReview required. Dashboard: disruptionhub.ai/unlock`
           const smsResult = await sendSMS(clientRow.contact_phone, smsBody)
           if (!smsResult.success) console.error('[end-shift] ops SMS failed:', smsResult.error)
         }
