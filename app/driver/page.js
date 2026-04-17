@@ -1825,33 +1825,56 @@ export default function DriverApp() {
       )}
 
       {/* RUNNING LATE MODAL */}
-      {runningLateModal && (
-        <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.85)',zIndex:200,display:'flex',alignItems:'center',justifyContent:'center',padding:24}}>
-          <div style={{maxWidth:360,width:'100%',background:'#0f1117',border:'1px solid rgba(245,166,35,0.2)',borderRadius:16,padding:'28px 24px',borderTop:'2px solid #f5a623'}}>
-            <div style={{fontFamily:'monospace',fontSize:10,color:'#f5a623',letterSpacing:'0.08em',marginBottom:16}}>REPORT DELAY</div>
-            <div style={{marginBottom:14}}>
-              <label style={{fontSize:12,color:'#8a9099',display:'block',marginBottom:6}}>How many minutes late?</label>
-              <input type="number" value={lateMinutes} onChange={e=>setLateMinutes(e.target.value)} placeholder="e.g. 25" style={{width:'100%',padding:'10px 12px',background:'#111418',border:'1px solid rgba(255,255,255,0.12)',borderRadius:6,color:'#e8eaed',fontSize:14,outline:'none',boxSizing:'border-box'}} />
+      {runningLateModal&&(<>
+        <div onClick={()=>setRunningLateModal(false)} style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.75)',backdropFilter:'blur(6px)',WebkitBackdropFilter:'blur(6px)',zIndex:300}}/>
+        <div style={{position:'fixed',bottom:0,left:0,right:0,background:'#0e0e12',borderTop:'1px solid rgba(245,166,35,0.2)',borderRadius:'24px 24px 0 0',padding:'0 0 40px',zIndex:301,fontFamily:"'DM Sans',-apple-system,sans-serif"}}>
+          <div style={{position:'absolute',top:0,left:0,right:0,height:80,pointerEvents:'none',background:'radial-gradient(ellipse 60% 80px at 50% 0%,rgba(245,166,35,0.07),transparent)'}}/>
+          <div style={{padding:'12px 0 0',display:'flex',justifyContent:'center'}}><div style={{width:36,height:5,borderRadius:3,background:'rgba(255,255,255,0.18)'}}/></div>
+          <div style={{padding:'10px 24px 0',position:'relative',zIndex:1}}>
+            <div style={{fontFamily:"'DM Mono',monospace",fontSize:11,fontWeight:500,color:'#f5a623',letterSpacing:'0.1em',textTransform:'uppercase',marginBottom:6}}>🕐 Report Delay</div>
+            <div style={{fontSize:30,fontWeight:700,color:'rgba(255,255,255,0.92)',letterSpacing:'-0.8px',marginBottom:4}}>How Late?</div>
+            <div style={{fontSize:14,color:'rgba(255,255,255,0.45)',marginBottom:24}}>Ops will be notified and SLA assessed</div>
+
+            <div style={{fontFamily:"'DM Mono',monospace",fontSize:10,color:'rgba(255,255,255,0.3)',letterSpacing:'0.1em',textTransform:'uppercase',marginBottom:8}}>Minutes late</div>
+            <div style={{display:'flex',gap:8,marginBottom:20}}>
+              {['10','20','30','45','60'].map(m=>(
+                <button key={m} onClick={()=>setLateMinutes(m)} style={{flex:1,padding:'13px 4px',borderRadius:12,background:lateMinutes===m?'rgba(245,166,35,0.15)':'rgba(255,255,255,0.05)',border:lateMinutes===m?'1px solid rgba(245,166,35,0.35)':'1px solid rgba(255,255,255,0.08)',color:lateMinutes===m?'#f5a623':'rgba(255,255,255,0.45)',fontSize:15,fontWeight:700,cursor:'pointer',textAlign:'center',fontFamily:"'DM Sans',sans-serif",transition:'all 0.15s'}}>{m==='60'?'60+':m}</button>
+              ))}
             </div>
-            <div style={{marginBottom:18}}>
-              <label style={{fontSize:12,color:'#8a9099',display:'block',marginBottom:6}}>Reason</label>
-              <select value={lateReason} onChange={e=>setLateReason(e.target.value)} style={{width:'100%',padding:'10px 12px',background:'#111418',border:'1px solid rgba(255,255,255,0.12)',borderRadius:6,color:'#e8eaed',fontSize:14,outline:'none',boxSizing:'border-box'}}>
-                {['Traffic','Roadworks','Customer delay','Loading delay','Other'].map(r=><option key={r} value={r}>{r}</option>)}
+
+            <div style={{fontFamily:"'DM Mono',monospace",fontSize:10,color:'rgba(255,255,255,0.3)',letterSpacing:'0.1em',textTransform:'uppercase',marginBottom:8}}>Reason</div>
+            <div style={{marginBottom:20}}>
+              <select value={lateReason} onChange={e=>setLateReason(e.target.value)} style={{width:'100%',padding:14,background:'rgba(255,255,255,0.06)',border:'1px solid rgba(255,255,255,0.1)',borderRadius:14,color:lateReason?'rgba(255,255,255,0.92)':'rgba(255,255,255,0.3)',fontSize:15,outline:'none',fontFamily:"'DM Sans',sans-serif",appearance:'none',WebkitAppearance:'none',cursor:'pointer'}}>
+                <option value="">Select reason...</option>
+                <option value="Traffic">Traffic</option>
+                <option value="Roadworks">Roadworks</option>
+                <option value="Customer delay">Customer delay</option>
+                <option value="Loading delay">Loading delay</option>
+                <option value="Vehicle issue">Vehicle issue</option>
+                <option value="Weather">Weather</option>
+                <option value="Other">Other</option>
               </select>
             </div>
-            <div style={{display:'flex',gap:8}}>
-              <button onClick={()=>setRunningLateModal(false)} style={{flex:1,padding:'11px',background:'transparent',border:'1px solid rgba(255,255,255,0.12)',borderRadius:6,color:'#8a9099',fontSize:13,cursor:'pointer'}}>Cancel</button>
-              <button onClick={async()=>{
-                const mins = parseInt(lateMinutes,10)||0
-                if(!mins){showToast('Enter minutes','error');return}
-                try{await fetch('/api/driver/alert',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({client_id:driverInfo.clientId,driver_name:driverInfo.name,driver_phone:driverInfo.phone||null,vehicle_reg:driverInfo.vehicleReg,ref:activeJob?.ref,issue_type:'delayed',issue_description:`DRIVER RUNNING LATE. ${driverInfo.name} (${driverInfo.vehicleReg}). ${mins} minutes. Reason: ${lateReason}. Job: ${activeJob?.route||'?'}.`,human_description:`Running ${mins}min late — ${lateReason}`,location_description:gpsDescription||null,latitude:gpsCoords?.latitude,longitude:gpsCoords?.longitude})})}catch{}
-                setRunningLateModal(false);setLateMinutes('');setLateReason('Traffic')
-                showToast(mins>15?'Delay reported — ops notified':'Delay logged','ok')
-              }} style={{flex:1,padding:'11px',background:'#f5a623',border:'none',borderRadius:6,color:'#000',fontWeight:700,fontSize:13,cursor:'pointer'}}>Report Delay</button>
-            </div>
+
+            {activeJob?.penalty_if_breached>0&&lateMinutes&&(
+              <div style={{padding:'12px 14px',background:'rgba(255,69,58,0.08)',border:'1px solid rgba(255,69,58,0.2)',borderRadius:12,marginBottom:20,fontSize:13,color:'#ff453a',lineHeight:1.5}}>
+                ⚠ {lateMinutes}{lateMinutes==='60'?'+':''} min delay — £{activeJob.penalty_if_breached.toLocaleString()} penalty exposure
+              </div>
+            )}
+
+            <button disabled={!lateMinutes||!lateReason} onClick={async()=>{
+              const mins=parseInt(lateMinutes,10)||0
+              if(!mins){showToast('Enter minutes','error');return}
+              try{await fetch('/api/driver/alert',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({client_id:driverInfo.clientId,driver_name:driverInfo.name,driver_phone:driverInfo.phone||null,vehicle_reg:driverInfo.vehicleReg,ref:activeJob?.ref,issue_type:'delayed',issue_description:`DRIVER RUNNING LATE. ${driverInfo.name} (${driverInfo.vehicleReg}). ${mins} minutes. Reason: ${lateReason}. Job: ${activeJob?.route||'?'}.`,human_description:`Running ${mins}min late — ${lateReason}`,location_description:gpsDescription||null,latitude:gpsCoords?.latitude,longitude:gpsCoords?.longitude})})}catch{}
+              setRunningLateModal(false);setLateMinutes('');setLateReason('Traffic')
+              showToast(mins>15?'Delay reported — ops notified':'Delay logged','ok')
+            }} style={{width:'100%',padding:18,background:lateMinutes&&lateReason?'#f5a623':'rgba(255,255,255,0.06)',border:'none',borderRadius:16,color:lateMinutes&&lateReason?'#000':'rgba(255,255,255,0.2)',fontWeight:700,fontSize:17,cursor:lateMinutes&&lateReason?'pointer':'default',marginBottom:10,fontFamily:"'DM Sans',sans-serif",letterSpacing:'-0.2px',boxShadow:lateMinutes&&lateReason?'0 6px 24px rgba(245,166,35,0.3)':'none',transition:'all 0.2s'}}>
+              {lateMinutes?`🕐 Report ${lateMinutes==='60'?'60+':lateMinutes}-min Delay`:'Select minutes to continue'}
+            </button>
+            <button onClick={()=>setRunningLateModal(false)} style={{width:'100%',padding:12,background:'none',border:'none',color:'rgba(255,255,255,0.4)',fontSize:15,cursor:'pointer',fontFamily:"'DM Sans',sans-serif"}}>Cancel</button>
           </div>
         </div>
-      )}
+      </>)}
 
       {/* BOTTOM BAR */}
       {(()=>{
