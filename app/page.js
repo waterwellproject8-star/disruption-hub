@@ -88,6 +88,20 @@ export default function HomePage() {
     }
   }, [])
 
+  useEffect(() => {
+    if (typeof window === 'undefined' || window.innerWidth > 768) return
+    const cards = document.querySelectorAll('.how-step-card')
+    if (!cards.length) return
+    const obs = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) e.target.classList.add('card-in-view')
+        else e.target.classList.remove('card-in-view')
+      })
+    }, { threshold: 0.4 })
+    cards.forEach(c => obs.observe(c))
+    return () => obs.disconnect()
+  }, [])
+
   const handleMailto = (e) => {
     const href = e.currentTarget.getAttribute('href')
     let left = true
@@ -118,6 +132,8 @@ export default function HomePage() {
         .cta-primary-btn:active { transform: translateY(0px); box-shadow: 0 0 0 1px rgba(245,166,35,0.6), 0 0 10px rgba(245,166,35,0.3); }
         @keyframes dh-glitch { 0%{transform:translate(0);opacity:1;color:#fff} 10%{transform:translate(-3px,1px);opacity:0.8;color:#f5a623} 20%{transform:translate(3px,-1px);opacity:1;color:#fff} 30%{transform:translate(-2px,2px);opacity:0.9;color:#f5a623} 40%{transform:translate(2px,-2px);opacity:1;color:#fff} 50%{transform:translate(-1px,1px);clip-path:inset(30% 0 20% 0);color:#f5a623} 60%{transform:translate(1px,-1px);clip-path:inset(0);opacity:0.95;color:#fff} 70%{transform:translate(-2px,0);opacity:1;color:#fff} 85%{transform:translate(1px,0);color:#f5a623} 100%{transform:translate(0);opacity:1;color:#fff} }
         @keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes card-lift { 0%{transform:translateY(0);box-shadow:0 0 0 rgba(245,166,35,0)} 50%{transform:translateY(-8px);box-shadow:0 12px 40px rgba(245,166,35,0.25),0 0 20px rgba(245,166,35,0.1)} 100%{transform:translateY(0);box-shadow:0 0 0 rgba(245,166,35,0)} }
+        .card-in-view { animation: card-lift 0.6s ease forwards; }
         @keyframes tl-pulse { 0%{box-shadow:0 0 0 0 rgba(245,166,35,0.6)} 70%{box-shadow:0 0 0 10px rgba(245,166,35,0)} 100%{box-shadow:0 0 0 0 rgba(245,166,35,0)} }
         @keyframes tl-pulse-red { 0%{box-shadow:0 0 0 0 rgba(239,68,68,0.6)} 70%{box-shadow:0 0 0 10px rgba(239,68,68,0)} 100%{box-shadow:0 0 0 0 rgba(239,68,68,0)} }
         @keyframes tl-fill { from{width:0%} to{width:100%} }
@@ -165,6 +181,8 @@ export default function HomePage() {
           .stats-grid { grid-template-columns: 1fr 1fr !important; }
           .how-grid { grid-template-columns: 1fr !important; }
           .how-connector { display: none !important; }
+          .how-heading-wrap { text-align: center !important; }
+          .how-title-line1, .how-title-line2 { display: block !important; }
           .how-timeline-grid { grid-template-columns: 1fr !important; gap: 12px !important; }
           .tl-desktop { display: none !important; }
           .tl-mobile { display: flex !important; }
@@ -351,13 +369,14 @@ export default function HomePage() {
             }}>
               How It Works
             </div>
-            <h2 style={{
+            <h2 className="how-heading-wrap" style={{
               fontFamily: FF.condensed, fontSize: 'clamp(32px, 4vw, 48px)',
               fontWeight: 800, textTransform: 'uppercase',
               letterSpacing: '0.02em', color: '#fff',
               textAlign: 'center', marginBottom: 64,
             }}>
-              Three Steps. Thirty Seconds.
+              <span className="how-title-line1">3 Steps.</span>{' '}
+              <span className="how-title-line2">30 Seconds.</span>
             </h2>
           </motion.div>
 
@@ -367,7 +386,7 @@ export default function HomePage() {
           }}>
             {/* ── Card 1: CONNECT ── */}
             <motion.div initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '-60px' }} transition={{ duration: 0.5, delay: 0 }}>
-            <div style={{ background: T.navyCard, border: '1px solid rgba(255,255,255,0.12)', borderRadius: 8, padding: '32px 24px', position: 'relative', overflow: 'hidden', boxShadow: '0 0 0 1px rgba(255,255,255,0.06), 0 4px 24px rgba(0,0,0,0.4)' }}>
+            <div className="how-step-card" style={{ background: T.navyCard, border: '1px solid rgba(255,255,255,0.12)', borderRadius: 8, padding: '32px 24px', position: 'relative', overflow: 'hidden', boxShadow: '0 0 0 1px rgba(255,255,255,0.06), 0 4px 24px rgba(0,0,0,0.4)' }}>
               <div style={{ position: 'absolute', top: 12, right: 16, fontFamily: 'monospace', fontSize: 64, fontWeight: 900, color: 'rgba(245,166,35,0.10)', lineHeight: 1, zIndex: 0 }}>01</div>
               <div style={{ marginBottom: 16, position: 'relative', zIndex: 1 }}>
                 <svg width="28" height="28" viewBox="0 0 18 18"><polygon points="9,1 17,5 17,13 9,17 1,13 1,5" fill="#f5a623"/></svg>
@@ -398,7 +417,7 @@ export default function HomePage() {
 
             {/* ── Card 2: ANALYSE ── */}
             <motion.div initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '-60px' }} transition={{ duration: 0.5, delay: 0.15 }}>
-            <div style={{ background: T.navyCard, border: '1px solid rgba(255,255,255,0.12)', borderRadius: 8, padding: '32px 24px', position: 'relative', overflow: 'hidden', boxShadow: '0 0 0 1px rgba(255,255,255,0.06), 0 4px 24px rgba(0,0,0,0.4)' }}>
+            <div className="how-step-card" style={{ background: T.navyCard, border: '1px solid rgba(255,255,255,0.12)', borderRadius: 8, padding: '32px 24px', position: 'relative', overflow: 'hidden', boxShadow: '0 0 0 1px rgba(255,255,255,0.06), 0 4px 24px rgba(0,0,0,0.4)' }}>
               <div style={{ position: 'absolute', top: 12, right: 16, fontFamily: 'monospace', fontSize: 64, fontWeight: 900, color: 'rgba(245,166,35,0.10)', lineHeight: 1, zIndex: 0 }}>02</div>
               <div style={{ marginBottom: 16, position: 'relative', zIndex: 1 }}>
                 <svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="#f5a623" strokeWidth="1.5" strokeLinecap="round">
@@ -433,7 +452,7 @@ export default function HomePage() {
 
             {/* ── Card 3: DECIDE ── */}
             <motion.div initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '-60px' }} transition={{ duration: 0.5, delay: 0.3 }}>
-            <div style={{ background: T.navyCard, border: '1px solid rgba(255,255,255,0.12)', borderRadius: 8, padding: '32px 24px', position: 'relative', overflow: 'hidden', boxShadow: '0 0 0 1px rgba(255,255,255,0.06), 0 4px 24px rgba(0,0,0,0.4)' }}>
+            <div className="how-step-card" style={{ background: T.navyCard, border: '1px solid rgba(255,255,255,0.12)', borderRadius: 8, padding: '32px 24px', position: 'relative', overflow: 'hidden', boxShadow: '0 0 0 1px rgba(255,255,255,0.06), 0 4px 24px rgba(0,0,0,0.4)' }}>
               <div style={{ position: 'absolute', top: 12, right: 16, fontFamily: 'monospace', fontSize: 64, fontWeight: 900, color: 'rgba(245,166,35,0.10)', lineHeight: 1, zIndex: 0 }}>03</div>
               <div style={{ marginBottom: 16, position: 'relative', zIndex: 1 }}>
                 <svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="#f5a623" strokeWidth="1.5" strokeLinecap="round">
