@@ -1496,7 +1496,7 @@ export default function DriverApp() {
               <div className="dh-synced">SYNCED</div>
               <div className="dh-more-btn" onClick={()=>setShowMoreMenu(v=>!v)}>···</div>
               {showMoreMenu&&(
-                <div className="dh-more-pop">
+                <div className="dh-more-pop" style={{position:'absolute',top:48,right:0,left:'auto',minWidth:200,zIndex:500}}>
                   <div className="dh-pop-item" onClick={()=>{setShowMoreMenu(false);setView('preshift')}}>
                     <span style={{fontSize:17}}>🔍</span>
                     <div><div style={{fontSize:14,fontWeight:600,color:'rgba(255,255,255,0.9)'}}>Vehicle Check</div><div style={{fontSize:11,color:'rgba(255,255,255,0.3)',marginTop:1}}>Pre/post shift defects</div></div>
