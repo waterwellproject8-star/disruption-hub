@@ -184,7 +184,7 @@ export default function HomePage() {
           .enterprise-card .enterprise-cta { width: 100% !important; text-align: center !important; }
           .footer-cols { flex-direction: column !important; gap: 32px !important; }
           /* Hero — center on mobile */
-          .hero-section { justify-content: center; padding: 80px 20px 40px !important; }
+          .hero-section { justify-content: center; padding: 80px 20px 16px !important; }
           .hero-truck-bg { display: none !important; }
           .hero-overlay { display: none !important; }
           .hero-glow { display: none !important; }
@@ -327,7 +327,7 @@ export default function HomePage() {
 
           {/* Social proof */}
           <div className="hero-badge" style={{
-            marginTop: 48, display: 'flex',
+            marginTop: 48, marginBottom: 16, display: 'flex',
             alignItems: 'center', gap: 8,
           }}>
             <div style={{ width: 7, height: 7, borderRadius: '50%', background: T.green, animation: 'pulse 2s infinite' }} />
@@ -339,7 +339,7 @@ export default function HomePage() {
       </section>
 
       {/* ── LIVE INCIDENT TICKER ─────────────────────────────────────────────── */}
-      <div style={{ background: '#0a0c0e', padding: '14px 0', marginBottom: 0, overflow: 'hidden' }}>
+      <div style={{ background: '#0a0c0e', padding: '14px 0', marginTop: 0, paddingTop: 0, marginBottom: 0, overflow: 'hidden' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 0 }}>
           <div style={{ paddingLeft: 32, flexShrink: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
             <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#00e5b0', animation: 'pulse 2s infinite' }} />
