@@ -1472,17 +1472,6 @@ export default function DriverApp() {
         </div>
       )}
 
-      {/* Header */}
-      <div style={{padding:'12px 16px',borderBottom:'1px solid rgba(255,255,255,0.06)',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
-        <div style={{display:'flex',alignItems:'center',gap:10}}>
-          <div style={{width:28,height:28,background:'#f5a623',clipPath:'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)'}} />
-          <div><div style={{fontSize:13,fontWeight:500}}>{driverInfo.name}</div><div style={{fontSize:10,color:'#4a5260',fontFamily:'monospace'}}>{driverInfo.vehicleReg}</div></div>
-        </div>
-        <div style={{display:'flex',gap:8,alignItems:'center'}}>
-          {loading&&<div style={{width:16,height:16,border:'2px solid rgba(245,166,35,0.2)',borderTop:'2px solid #f5a623',borderRadius:'50%',animation:'spin 0.8s linear infinite'}}/>}
-        </div>
-      </div>
-
       {/* Ops messages banner */}
       {opsMessages.length>0&&(
         <div style={{margin:'8px 12px 0',padding:'10px 13px',background:'rgba(59,130,246,0.08)',border:'1px solid rgba(59,130,246,0.25)',borderRadius:9}}>
@@ -1511,7 +1500,7 @@ export default function DriverApp() {
 
           {/* ── STATUS BAR ── */}
           <div className="dh-sb-wrap">
-            <span className="dh-time">{new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',timeZone:'Europe/London'})}</span>
+            <span className="dh-time">{new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})}</span>
             <div style={{display:'flex',alignItems:'center',gap:10,position:'relative'}}>
               <div className="dh-synced">SYNCED</div>
               <div className="dh-more-btn" onClick={()=>setShowMoreMenu(v=>!v)}>···</div>
@@ -1592,13 +1581,13 @@ export default function DriverApp() {
                     <div className="dh-job-dest">{routeTo||activeJob.route}</div>
                     <div className="dh-chips">
                       {activeJob.cargo_type&&<span className="dh-chip">{cargoIcon(activeJob.cargo_type)} {activeJob.cargo_type}</span>}
-                      {activeJob.sla_window&&<span className="dh-chip">Slot {activeJob.sla_window}</span>}
+                      {activeJob.sla_window&&<span className="dh-chip">Slot {activeJob.sla_window.includes('T')?new Date(activeJob.sla_window).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}):activeJob.sla_window}</span>}
                       {activeJob.penalty_if_breached>0&&<span className={`dh-chip${activeJob.status==='at_risk'?' dh-chip-warn':''}`}>£{activeJob.penalty_if_breached.toLocaleString()} if late</span>}
                     </div>
                   </div>
                   {!isAtRisk&&(
                     <div className="dh-prog-row">
-                      {PROGRESS_STEPS.map((step,i)=>{const isDone=currentStepIndex>i;const isCurr=step.status===activeJob.status||(activeJob.status==='on-track'&&i===0)||(activeJob.status==='pending'&&i===0);return(<React.Fragment key={step.id}><div className={`dh-pd${isDone?' done':isCurr?' active':''}`}><div className={`dh-pd-dot${isDone?' done':isCurr?' active':''}`}/>{step.label.split(' ')[0]}</div>{i<PROGRESS_STEPS.length-1&&<div className={`dh-pd-line${isDone?' done':''}`}/>}</React.Fragment>)})}
+                      {(()=>{const SHORT={arrived_collection:'Collection',loading_complete:'Loaded',arrived_delivery:'Customer'};return PROGRESS_STEPS.map((step,i)=>{const isDone=currentStepIndex>i;const isCurr=step.status===activeJob.status||(activeJob.status==='on-track'&&i===0)||(activeJob.status==='pending'&&i===0);return(<React.Fragment key={step.id}><div className={`dh-pd${isDone?' done':isCurr?' active':''}`}><div className={`dh-pd-dot${isDone?' done':isCurr?' active':''}`}/>{SHORT[step.id]||step.label.split(' ')[0]}</div>{i<PROGRESS_STEPS.length-1&&<div className={`dh-pd-line${isDone?' done':''}`}/>}</React.Fragment>)})})()}
                       <div className="dh-pd-line"/><div className="dh-pd"><div className="dh-pd-dot"/>Deliver</div>
                     </div>
                   )}
@@ -1702,7 +1691,7 @@ export default function DriverApp() {
           {jobs.filter(j=>j.status!=='completed'&&j.ref!==activeJob?.ref).length>0&&(
             <div className={`dh-section${secUpNext?' dh-open':''}`}>
               <div className="dh-sec-toggle" onClick={()=>setSecUpNext(v=>!v)}>
-                <div className="dh-sec-icon" style={{background:'rgba(245,166,35,0.08)'}}>📦</div>
+                <div className="dh-sec-icon" style={{background:'rgba(245,166,35,0.08)'}}><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#f5a623" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="4" cy="8" r="1.5" fill="#f5a623" stroke="none"/><circle cx="12" cy="8" r="1.5" fill="rgba(245,166,35,0.4)" stroke="none"/><line x1="5.5" y1="8" x2="10.5" y2="8"/><polyline points="9,5.5 12,8 9,10.5"/></svg></div>
                 <span className="dh-sec-title" style={{color:'rgba(255,255,255,0.9)'}}>Up Next</span>
                 <span className="dh-sec-count">{jobs.filter(j=>j.status!=='completed'&&j.ref!==activeJob?.ref).length} runs</span>
                 <span className="dh-sec-chev">▾</span>
@@ -1761,25 +1750,35 @@ export default function DriverApp() {
 
           {/* REPORT AN ISSUE */}
           {jobs.some(j=>j.status!=='completed')&&(
-            <div style={{marginTop:16}}>
-              <div style={{padding:'0 16px 8px',fontSize:9,color:'#4a5260',fontFamily:'monospace',letterSpacing:'0.08em'}}>REPORT AN ISSUE</div>
-              {ISSUE_GROUPS.map(group=>(
-                <div key={group.id} style={{marginBottom:4}}>
-                  <div style={{padding:'5px 16px',fontSize:9,color:group.color,fontFamily:'monospace',fontWeight:700,letterSpacing:'0.1em'}}>{group.label}</div>
-                  <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:7,padding:'0 12px 8px'}}>
-                    {group.issues.map(issue=>{
-                      const alertActive = !!lastAlert || panelState === 'sent' || panelState === 'result' || panelState === 'resolving_loading'
-                      return (
-                      <button key={issue.id} onClick={()=>!alertActive&&openIssue(issue)} disabled={alertActive}
-                        style={{padding:'12px 10px',borderRadius:9,background:'linear-gradient(135deg,#0d1520,#0a1018)',border:'1px solid rgba(255,255,255,0.07)',display:'flex',alignItems:'center',gap:9,cursor:alertActive?'default':'pointer',outline:'none',textAlign:'left',opacity:alertActive?0.4:1}}>
-                        <span style={{fontSize:20,flexShrink:0}}>{issue.icon}</span>
-                        <span style={{fontSize:13,color:'#e8eaed',lineHeight:1.3}}>{issue.label}</span>
-                      </button>
-                      )
-                    })}
-                  </div>
+            <div className={`dh-section${secReport?' dh-open':''}`}>
+              <div className="dh-sec-toggle" onClick={()=>setSecReport(v=>!v)}>
+                <div className="dh-sec-icon" style={{background:'rgba(255,69,58,0.08)'}}>
+                  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="rgba(255,69,58,0.75)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="8" cy="8" r="6"/><line x1="8" y1="5" x2="8" y2="8.5"/><circle cx="8" cy="11" r="0.75" fill="rgba(255,69,58,0.75)" stroke="none"/></svg>
                 </div>
-              ))}
+                <span className="dh-sec-title" style={{color:'rgba(255,255,255,0.6)'}}>Report an Issue</span>
+                <span className="dh-sec-count"></span>
+                <span className="dh-sec-chev">▾</span>
+              </div>
+              <div className="dh-sec-body">
+                {ISSUE_GROUPS.map(group=>(
+                  <div key={group.id} style={{padding:'7px 10px 3px'}}>
+                    <div style={{fontSize:9,color:group.color,fontFamily:"'DM Mono',monospace",fontWeight:700,letterSpacing:'0.1em',marginBottom:6,paddingLeft:2}}>{group.label}</div>
+                    <div className="dh-rpt-grid" style={{padding:0}}>
+                      {group.issues.map(issue=>{
+                        const alertActive=!!lastAlert||panelState==='sent'||panelState==='result'||panelState==='resolving_loading'
+                        const isDelay=issue.id==='delayed'
+                        return (
+                          <button key={issue.id} onClick={()=>!alertActive&&openIssue(issue)} disabled={alertActive}
+                            className={`dh-rpt-btn${isDelay?' dh-hl':''}`} style={{opacity:alertActive?0.4:1}}>
+                            <span className="dh-rpt-ico">{issue.icon}</span>
+                            <span className={`dh-rpt-lbl${isDelay?' hl':''}`}>{isDelay?'Report Delay':issue.label}</span>
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
 
