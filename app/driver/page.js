@@ -1734,6 +1734,7 @@ export default function DriverApp() {
                   </div>
                 )
               })}
+              </div>
             </div>
           )}
 
@@ -1783,7 +1784,11 @@ export default function DriverApp() {
           )}
 
           {/* END SHIFT */}
-          {jobs.length>0&&(<button className="dh-end-btn" onClick={endShift}>✓ End Shift</button>)}
+          {jobs.length>0&&(
+            <button className="dh-end-btn" onClick={endShift}>
+              {'✓ End Shift'}
+            </button>
+          )}
           </div>
 
         </div>
