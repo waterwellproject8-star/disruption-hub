@@ -377,7 +377,7 @@ export default function DriverApp() {
     return () => window.removeEventListener('beforeunload', warn)
   }, [shiftStarted])
 
-  const showToast = (msg, type='ok') => { setToast({msg,type}); setTimeout(()=>setToast(null),3500) }
+  const showToast = (msg, type='ok', sub=null) => { setToast({msg,type,sub}); setTimeout(()=>setToast(null),4000) }
 
   function saveJobProgress(updatedJobs) {
     const progress = {}
@@ -1446,21 +1446,35 @@ export default function DriverApp() {
         .dh-bar-btn.bd .dh-bar-sub{color:rgba(255,255,255,0.7)}
         .dh-bar-btn.md .dh-bar-lbl{color:#0a84ff}
         .dh-bar-btn.md .dh-bar-sub{color:rgba(10,132,255,0.7)}
+        @keyframes dh-banner-in{from{opacity:0;transform:translateY(-16px) scale(0.97)}to{opacity:1;transform:translateY(0) scale(1)}}
+        @keyframes dh-toast-drain{from{width:100%}to{width:0%}}
         .dh-end-btn{width:100%;padding:12px;margin-top:6px;border-radius:12px;border:1px solid rgba(245,166,35,0.18);background:rgba(245,166,35,0.06);color:#f5a623;font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',-apple-system,sans-serif;letter-spacing:-0.1px;-webkit-tap-highlight-color:transparent}
       `}</style>
 
       {/* Toast */}
       {toast&&(
-        <div style={{position:'fixed',top:'calc(env(safe-area-inset-top, 0px) + 12px)',left:'50%',transform:'translateX(-50%)',zIndex:500,padding:'10px 18px',borderRadius:10,background:toast.type==='error'?'rgba(239,68,68,0.95)':'rgba(245,166,35,0.95)',color:toast.type==='error'?'#fff':'#000',fontWeight:600,fontSize:13,boxShadow:'0 4px 20px rgba(0,0,0,0.4)',whiteSpace:'nowrap'}}>
-          {toast.msg}
+        <div style={{position:'fixed',top:58,left:16,right:16,background:'#1e1e26',border:'1px solid rgba(255,255,255,0.1)',borderRadius:18,padding:'13px 14px',display:'flex',alignItems:'center',gap:12,boxShadow:'0 10px 40px rgba(0,0,0,0.6)',zIndex:500,overflow:'hidden',fontFamily:"'DM Sans',-apple-system,sans-serif",animation:'dh-banner-in 0.35s cubic-bezier(0.34,1.56,0.64,1)'}}>
+          <div style={{width:36,height:36,borderRadius:11,background:toast.type==='error'?'rgba(255,69,58,0.12)':'rgba(48,209,88,0.12)',border:`1px solid ${toast.type==='error'?'rgba(255,69,58,0.2)':'rgba(48,209,88,0.2)'}`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:17,flexShrink:0}}>{toast.type==='error'?'⚠️':'✅'}</div>
+          <div style={{flex:1}}>
+            <div style={{fontSize:14,fontWeight:700,color:'rgba(255,255,255,0.92)',marginBottom:1}}>{toast.msg}</div>
+            {toast.sub&&<div style={{fontSize:11,color:'rgba(255,255,255,0.35)',fontFamily:"'DM Mono',monospace",letterSpacing:'0.04em'}}>{toast.sub}</div>}
+          </div>
+          <div style={{position:'absolute',bottom:0,left:0,height:2,background:'#f5a623',opacity:0.5,borderRadius:'0 2px 2px 0',animation:'dh-toast-drain 4s linear forwards'}}/>
         </div>
       )}
 
       {/* Undo bar */}
       {pendingUndo&&(
-        <div style={{position:'fixed',top:'env(safe-area-inset-top, 0px)',left:0,right:0,zIndex:400,padding:'calc(env(safe-area-inset-top, 0px) + 12px) 16px 12px',background:'rgba(245,158,11,0.95)',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
-          <span style={{fontSize:13,color:'#000',fontWeight:600}}>Marked as delivered</span>
-          <button onClick={undoDelivered} style={{padding:'6px 14px',background:'#000',border:'none',borderRadius:6,color:'#f59e0b',fontWeight:700,fontSize:12,cursor:'pointer'}}>UNDO ({undoCountdown}s)</button>
+        <div style={{position:'fixed',top:58,left:16,right:16,background:'#1e1e26',border:'1px solid rgba(255,255,255,0.1)',borderRadius:18,padding:'13px 14px',display:'flex',alignItems:'center',gap:12,boxShadow:'0 10px 40px rgba(0,0,0,0.6)',zIndex:400,overflow:'hidden',fontFamily:"'DM Sans',-apple-system,sans-serif",animation:'dh-banner-in 0.35s cubic-bezier(0.34,1.56,0.64,1)'}}>
+          <div style={{width:36,height:36,borderRadius:11,background:'rgba(48,209,88,0.12)',border:'1px solid rgba(48,209,88,0.2)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:17,flexShrink:0}}>📦</div>
+          <div style={{flex:1}}>
+            <div style={{fontSize:14,fontWeight:700,color:'rgba(255,255,255,0.92)'}}>Marked as delivered</div>
+          </div>
+          <button onClick={undoDelivered} style={{padding:'7px 14px',background:'rgba(245,166,35,0.1)',border:'1px solid rgba(245,166,35,0.2)',borderRadius:10,fontSize:13,fontWeight:700,color:'#f5a623',cursor:'pointer',flexShrink:0,fontFamily:"'DM Sans',sans-serif",display:'flex',alignItems:'center',gap:6}}>
+            <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="5" stroke="rgba(245,166,35,0.5)" strokeWidth="1.5"/><path d="M6 3v3l2 1.5" stroke="rgba(245,166,35,0.9)" strokeWidth="1.3" strokeLinecap="round"/></svg>
+            Undo ({undoCountdown}s)
+          </button>
+          <div style={{position:'absolute',bottom:0,left:0,height:2,background:'#f5a623',opacity:0.5,borderRadius:'0 2px 2px 0',animation:'dh-toast-drain 5s linear forwards'}}/>
         </div>
       )}
 
