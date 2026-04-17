@@ -163,8 +163,6 @@ export default function HomePage() {
           .enterprise-card .enterprise-cta { width: 100% !important; text-align: center !important; }
         }
         @media (max-width: 768px) {
-          .ticker-track { font-size: 9px !important; letter-spacing: 0.06em !important; }
-          .ticker-track span { padding-left: 20px !important; padding-right: 20px !important; }
           .nav-links-desktop { display: none !important; }
           .stats-grid { grid-template-columns: 1fr 1fr !important; }
           .how-grid { grid-template-columns: 1fr !important; }
@@ -211,6 +209,10 @@ export default function HomePage() {
           .founder-grid { display: flex !important; flex-direction: column !important; align-items: flex-start !important; gap: 24px !important; width: 100% !important; }
           .founder-grid > * { width: 100% !important; max-width: 100% !important; }
           .founder-bio { font-size: 15px !important; line-height: 1.8 !important; padding: 0 !important; }
+        }
+        @media (max-width: 480px) {
+          .ticker-track { font-size: 9px !important; letter-spacing: 0.05em !important; }
+          .ticker-track span { padding-left: 20px !important; padding-right: 20px !important; }
         }
       `}</style>
 
@@ -348,9 +350,9 @@ export default function HomePage() {
             <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 9, color: '#4a5260', letterSpacing: '0.15em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>LIVE FEED</span>
           </div>
           <div style={{ flex: 1, overflow: 'hidden' }}>
-            <div className="ticker-track ticker-content" style={{ color: '#f5a623', textShadow: '0 0 15px rgba(245,166,35,0.5)', fontSize: 'clamp(9px, 2.5vw, 11px)' }}>
+            <div className="ticker-track ticker-content" style={{ color: '#f5a623', textShadow: '0 0 15px rgba(245,166,35,0.5)' }}>
               {['REEFER FAULT · M62 J27 · RESOLVED IN 28s','INVOICE RECOVERY · £4,280 OVERCHARGE DISPUTED · RECOVERED IN 24HRS','TEMP ALARM · NHS LOAD · SLA PROTECTED £2,400','LICENCE CHECK · EXPIRED CPC DETECTED · DRIVER STOOD DOWN','DRIVER HOURS · CASCADE PREVENTED · £900 SAVED','FAILED DELIVERY · NHS SUPPLY CHAIN · CONSIGNEE REBOOKED · SLA SAVED','PANIC BUTTON · DRIVER SAFE · OPS NOTIFIED IN 12s','ROUTE DEVIATION · A1(M) NORTHBOUND · OPS MANAGER ALERTED · JOB PROTECTED','JOB DELAYED · TESCO DC · AUTO-REROUTED · £1,200 PROTECTED','REEFER FAULT · M62 J27 · RESOLVED IN 28s','INVOICE RECOVERY · £4,280 OVERCHARGE DISPUTED · RECOVERED IN 24HRS','TEMP ALARM · NHS LOAD · SLA PROTECTED £2,400','LICENCE CHECK · EXPIRED CPC DETECTED · DRIVER STOOD DOWN','DRIVER HOURS · CASCADE PREVENTED · £900 SAVED','FAILED DELIVERY · NHS SUPPLY CHAIN · CONSIGNEE REBOOKED · SLA SAVED','PANIC BUTTON · DRIVER SAFE · OPS NOTIFIED IN 12s','ROUTE DEVIATION · A1(M) NORTHBOUND · OPS MANAGER ALERTED · JOB PROTECTED','JOB DELAYED · TESCO DC · AUTO-REROUTED · £1,200 PROTECTED'].map((item, i) => (
-                <span key={i} style={{ flexShrink: 0, paddingLeft: 'clamp(16px, 4vw, 40px)', paddingRight: 'clamp(16px, 4vw, 40px)', fontSize: 'clamp(9px, 2.5vw, 11px)', fontFamily: "'IBM Plex Mono', monospace", letterSpacing: '0.1em', textTransform: 'uppercase' }}><span style={{ color: 'rgba(245,166,35,0.4)', marginRight: 12 }}>⬥</span>{item}</span>
+                <span key={i} style={{ flexShrink: 0, paddingLeft: 32, paddingRight: 32 }}><span style={{ color: 'rgba(245,166,35,0.4)', marginRight: 12 }}>⬥</span>{item}</span>
               ))}
             </div>
           </div>
