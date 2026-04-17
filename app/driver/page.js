@@ -1693,25 +1693,14 @@ export default function DriverApp() {
                 const sc = STATUS_COLORS[job.status]||STATUS_COLORS['on-track']
                 const isAtRisk = job.status==='at_risk'||job.status==='part_delivered'
                 return (
-                  <div key={job.ref} onClick={()=>setActiveJob(job)}
-                    style={{padding:'10px 12px',background:'linear-gradient(135deg,#0d1520,#0a1018)',border:`1px solid ${isAtRisk?sc.border:'rgba(255,255,255,0.06)'}`,borderRadius:10,marginBottom:6,cursor:'pointer',display:'flex',alignItems:'center',gap:10,transition:'all 0.15s'}}>
-                    <div style={{width:6,height:6,borderRadius:'50%',background:sc.dot,flexShrink:0}}/>
+                  <div key={job.ref} className="dh-up-item" onClick={()=>setActiveJob(job)}>
+                    <div className="dh-up-bar" style={{background:sc.dot}}/>
                     <div style={{flex:1,minWidth:0}}>
-                      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:2}}>
-                        <span style={{fontFamily:'monospace',fontSize:12,fontWeight:700,color:'#e8eaed'}}>{job.ref}</span>
-                        <span style={{fontFamily:'monospace',fontSize:9,color:sc.dot}}>{sc.label}</span>
-                      </div>
-                      <div style={{fontSize:12,color:'#8a9099',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{job.route}</div>
-                      <div style={{display:'flex',gap:8,fontSize:10,color:'#4a5260',marginTop:2,flexWrap:'wrap'}}>
-                        {job.eta&&<span>ETA {job.eta}</span>}
-                        {job.sla_window&&<span style={{color:isAtRisk?'#ef4444':'#f59e0b'}}>Slot {job.sla_window}</span>}
-                        {job.cargo_type&&<span>{cargoIcon(job.cargo_type)} {job.cargo_type}</span>}
-                        {job.penalty_if_breached>0&&isAtRisk&&<span style={{color:'#ef4444'}}>£{job.penalty_if_breached.toLocaleString()} at risk</span>}
-                        {job.revised_eta&&isAtRisk&&<span style={{color:'#f59e0b',fontWeight:600}}>Revised: {typeof job.revised_eta==='string'&&job.revised_eta.includes('T')?new Date(job.revised_eta).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}):job.revised_eta}</span>}
-                        {job.sla_breach&&<span style={{color:'#ef4444',fontWeight:700}}>⚠ SLA AT RISK</span>}
-                      </div>
+                      <div className="dh-up-ref">{job.ref}</div>
+                      <div className="dh-up-route">{job.route}</div>
+                      {job.cargo_type&&<div className="dh-up-sub">{cargoIcon(job.cargo_type)} {job.cargo_type}{job.penalty_if_breached>0&&isAtRisk?` · £${job.penalty_if_breached.toLocaleString()} at risk`:''}</div>}
                     </div>
-                    <span style={{fontSize:12,color:'#4a5260',flexShrink:0}}>→</span>
+                    <span className="dh-up-sp" style={{color:sc.dot,background:`${sc.dot}18`}}>{sc.label}</span>
                   </div>
                 )
               })}
