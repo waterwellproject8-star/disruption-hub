@@ -1557,10 +1557,19 @@ export default function DriverApp() {
           {activeJob&&activeJob.status!=='completed'?(()=>{
             const isAtRisk=activeJob.status==='at_risk'
             const sc=STATUS_COLORS[activeJob.status]||STATUS_COLORS['on-track']
-            let currentStepIndex=PROGRESS_STEPS.findIndex(s=>s.status===activeJob.status)
-            if(currentStepIndex===-1&&(activeJob.status==='on-track'||activeJob.status==='pending'||!activeJob.status))currentStepIndex=0
-            const currentStep=PROGRESS_STEPS[currentStepIndex]||null
-            const prevStep=currentStepIndex>0?PROGRESS_STEPS[currentStepIndex-1]:null
+            const isInitialStatus = !activeJob.status||activeJob.status==='on-track'||activeJob.status==='pending'
+            const completedIndex = PROGRESS_STEPS.findIndex(s=>s.status===activeJob.status)
+            let nextStepIndex
+            if (completedIndex >= 0) {
+              nextStepIndex = completedIndex + 1
+            } else if (isInitialStatus) {
+              nextStepIndex = 0
+            } else {
+              nextStepIndex = PROGRESS_STEPS.length
+            }
+            const currentStepIndex = nextStepIndex
+            const currentStep = nextStepIndex < PROGRESS_STEPS.length ? PROGRESS_STEPS[nextStepIndex] : null
+            const prevStep = nextStepIndex > 0 ? PROGRESS_STEPS[nextStepIndex - 1] : null
             const [routeFrom,routeTo]=(activeJob.route||'').split('→').map(s=>s?.trim())
             return (
               <div style={{padding:'0 14px'}}>
