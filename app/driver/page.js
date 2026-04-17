@@ -1143,9 +1143,9 @@ export default function DriverApp() {
           <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:7}}>
             {VEHICLE_TYPES.map(v=>(
               <button key={v.id} onClick={()=>setDriverInfo(p=>({...p,vehicleType:v.id}))}
-                style={{padding:'10px 6px',borderRadius:8,border:`1px solid ${driverInfo.vehicleType===v.id?'#f5a623':'rgba(255,255,255,0.08)'}`,background:driverInfo.vehicleType===v.id?'rgba(245,166,35,0.1)':'#0f1826',display:'flex',flexDirection:'column',alignItems:'center',gap:4,cursor:'pointer'}}>
+                style={{padding:'10px 6px',borderRadius:12,border:`1px solid ${driverInfo.vehicleType===v.id?'#f5a623':'rgba(255,255,255,0.09)'}`,background:driverInfo.vehicleType===v.id?'rgba(245,166,35,0.1)':'rgba(255,255,255,0.06)',display:'flex',flexDirection:'column',alignItems:'center',gap:4,cursor:'pointer'}}>
                 <span style={{fontSize:18}}>{v.icon}</span>
-                <span style={{fontSize:10,color:driverInfo.vehicleType===v.id?'#f5a623':'#8a9099',textAlign:'center',lineHeight:1.2}}>{v.label}</span>
+                <span style={{fontSize:10,color:driverInfo.vehicleType===v.id?'#f5a623':'rgba(255,255,255,0.45)',textAlign:'center',lineHeight:1.2}}>{v.label}</span>
               </button>
             ))}
           </div>
@@ -1556,8 +1556,9 @@ export default function DriverApp() {
           {activeJob&&activeJob.status!=='completed'?(()=>{
             const isAtRisk=activeJob.status==='at_risk'
             const sc=STATUS_COLORS[activeJob.status]||STATUS_COLORS['on-track']
-            const currentStepIndex=PROGRESS_STEPS.findIndex(s=>s.status===activeJob.status)
-            const currentStep=PROGRESS_STEPS[currentStepIndex]
+            let currentStepIndex=PROGRESS_STEPS.findIndex(s=>s.status===activeJob.status)
+            if(currentStepIndex===-1&&(activeJob.status==='on-track'||activeJob.status==='pending'||!activeJob.status))currentStepIndex=0
+            const currentStep=PROGRESS_STEPS[currentStepIndex]||null
             const prevStep=currentStepIndex>0?PROGRESS_STEPS[currentStepIndex-1]:null
             const [routeFrom,routeTo]=(activeJob.route||'').split('→').map(s=>s?.trim())
             return (
