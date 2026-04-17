@@ -1481,12 +1481,12 @@ export default function DriverApp() {
 
       {/* Ops messages banner */}
       {opsMessages.length>0&&(
-        <div style={{margin:'8px 12px 0',padding:'10px 13px',background:'rgba(59,130,246,0.08)',border:'1px solid rgba(59,130,246,0.25)',borderRadius:9}}>
-          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:4}}>
-            <div style={{fontSize:9,color:'#3b82f6',fontFamily:'monospace',fontWeight:700,letterSpacing:'0.08em'}}>OPS MESSAGE</div>
-            <button onClick={()=>{const msg=opsMessages[opsMessages.length-1];if(msg){try{const read=JSON.parse(localStorage.getItem('dh_ops_messages_read')||'[]');read.push(msg);localStorage.setItem('dh_ops_messages_read',JSON.stringify(read))}catch{}}setOpsMessages(prev=>prev.filter(m=>m!==msg))}} style={{background:'none',border:'none',color:'#4a5260',fontSize:16,cursor:'pointer',padding:'0 2px',lineHeight:1}}>✕</button>
+        <div style={{margin:'8px 14px 0',background:'#1e1e26',border:'1px solid rgba(255,255,255,0.09)',borderRadius:16,overflow:'hidden',boxShadow:'0 4px 20px rgba(0,0,0,0.4)'}}>
+          <div style={{padding:'10px 14px 8px',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+            <div style={{fontFamily:"'DM Mono',monospace",fontSize:9,fontWeight:700,color:'#f5a623',letterSpacing:'0.12em'}}>OPS MESSAGE</div>
+            <button onClick={()=>{const msg=opsMessages[opsMessages.length-1];if(msg){try{const read=JSON.parse(localStorage.getItem('dh_ops_messages_read')||'[]');read.push(msg);localStorage.setItem('dh_ops_messages_read',JSON.stringify(read))}catch{}}setOpsMessages(prev=>prev.filter(m=>m!==msg))}} style={{background:'transparent',border:'none',color:'rgba(255,255,255,0.35)',fontSize:16,cursor:'pointer',padding:'0 2px',lineHeight:1}}>✕</button>
           </div>
-          <div style={{fontSize:13,color:'#e8eaed'}}>{opsMessages[opsMessages.length-1]}</div>
+          <div style={{padding:'0 14px 14px',fontSize:14,color:'rgba(255,255,255,0.8)',lineHeight:1.5,fontFamily:"'DM Sans',-apple-system,sans-serif"}}>{opsMessages[opsMessages.length-1]}</div>
         </div>
       )}
 
