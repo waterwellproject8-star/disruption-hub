@@ -1887,9 +1887,13 @@ export default function DriverApp() {
             <button disabled={!lateMinutes||!lateReason} onClick={async()=>{
               const mins=parseInt(lateMinutes,10)||0
               if(!mins){showToast('Enter minutes','error');return}
-              try{await fetch('/api/driver/alert',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({client_id:driverInfo.clientId,driver_name:driverInfo.name,driver_phone:driverInfo.phone||null,vehicle_reg:driverInfo.vehicleReg,ref:activeJob?.ref,issue_type:'delayed',issue_description:`DRIVER RUNNING LATE. ${driverInfo.name} (${driverInfo.vehicleReg}). ${mins} minutes. Reason: ${lateReason}. Job: ${activeJob?.route||'?'}.`,human_description:`Running ${mins}min late — ${lateReason}`,location_description:gpsDescription||null,latitude:gpsCoords?.latitude,longitude:gpsCoords?.longitude})})}catch{}
-              setRunningLateModal(false);setLateMinutes('');setLateReason('Traffic')
-              showToast(mins>15?'Delay reported — ops notified':'Delay logged','ok')
+              try{
+                const res=await fetch('/api/driver/alert',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({client_id:driverInfo.clientId,driver_name:driverInfo.name,driver_phone:driverInfo.phone||null,vehicle_reg:driverInfo.vehicleReg,ref:activeJob?.ref,session_id:sessionId,issue_type:'running_late',delay_minutes:mins,reason:lateReason,issue_description:`DRIVER RUNNING LATE. ${driverInfo.name} (${driverInfo.vehicleReg}). ${mins} minutes. Reason: ${lateReason}. Job: ${activeJob?.route||'?'}.`,human_description:`Running ${mins}min late — ${lateReason}`,location_description:gpsDescription||null,latitude:gpsCoords?.latitude,longitude:gpsCoords?.longitude})})
+                const data=await res.json()
+                if(!res.ok||data.error){showToast(data.error||'Failed to report delay','error');return}
+                setRunningLateModal(false);setLateMinutes('');setLateReason('Traffic')
+                showToast(data.severity==='LOW'?'Delay logged':data.sms_sent?'Delay reported — ops notified':'Delay reported','ok')
+              }catch(e){console.error('[running late]',e?.message);showToast('Network error — try again','error')}
             }} style={{width:'100%',padding:18,background:lateMinutes&&lateReason?'#f5a623':'rgba(255,255,255,0.06)',border:'none',borderRadius:16,color:lateMinutes&&lateReason?'#000':'rgba(255,255,255,0.2)',fontWeight:700,fontSize:17,cursor:lateMinutes&&lateReason?'pointer':'default',marginBottom:10,fontFamily:"'DM Sans',sans-serif",letterSpacing:'-0.2px',boxShadow:lateMinutes&&lateReason?'0 6px 24px rgba(245,166,35,0.3)':'none',transition:'all 0.2s'}}>
               {lateMinutes?`⏱ Report ${lateMinutes==='60'?'60+':lateMinutes}-min Delay`:'Select minutes to continue'}
             </button>

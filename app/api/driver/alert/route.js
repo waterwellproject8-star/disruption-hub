@@ -186,6 +186,8 @@ export async function POST(request) {
       force_financial_zero,
       issue_type,
       at_risk_refs,
+      delay_minutes,
+      reason,
     } = body
     if (client_id) client_id = client_id.toLowerCase().trim()
     if (vehicle_reg) vehicle_reg = vehicle_reg.toUpperCase().trim()
@@ -241,6 +243,80 @@ Provide immediate disruption analysis and action plan.`
         systemPrompt = data.system_prompt
         contactPhone = data.contact_phone
       }
+    }
+
+    // ── RUNNING LATE — fast path, no AI call needed ──────────────────────
+    if (issue_type === 'running_late' && delay_minutes && db) {
+      const mins = parseInt(delay_minutes, 10) || 0
+      let slaWindow = null
+      let consigneeName = null
+      let consigneePhone = null
+      let penalty = 0
+      let timeToSla = 999
+
+      if (ref && client_id) {
+        try {
+          const { data: shipment } = await db.from('shipments')
+            .select('sla_window, consignee, consignee_phone, penalty_if_breached')
+            .eq('client_id', client_id).eq('ref', ref).maybeSingle()
+          if (shipment) {
+            slaWindow = shipment.sla_window
+            consigneeName = shipment.consignee || ref
+            consigneePhone = shipment.consignee_phone || null
+            penalty = shipment.penalty_if_breached || 0
+            if (slaWindow) {
+              const slaEnd = slaWindow.includes('-') ? slaWindow.split('-')[1].trim() : slaWindow
+              const today = new Date().toLocaleDateString('en-CA')
+              const slaDate = slaEnd.includes('T') ? new Date(slaEnd) : new Date(`${today}T${slaEnd}:00`)
+              timeToSla = Math.round((slaDate.getTime() - Date.now()) / 60000)
+            }
+          }
+        } catch (e) { console.error('[running_late] shipment lookup:', e?.message) }
+      }
+
+      let severity
+      if (mins >= timeToSla) severity = 'HIGH'
+      else if (mins >= 15) severity = 'MEDIUM'
+      else severity = 'LOW'
+
+      const { error: incErr } = await db.from('incidents').insert({
+        client_id, user_input: issue_description, ai_response: `Running late: ${mins}min delay. Reason: ${reason || 'not specified'}. SLA in ${timeToSla}min.`,
+        severity, financial_impact: severity === 'HIGH' ? penalty : 0, ref: ref || 'DRIVER-ALERT'
+      })
+      if (incErr) console.error('[running_late] incident insert:', incErr.message)
+
+      try {
+        await db.from('webhook_log').insert({
+          client_id, system_name: 'driver_pwa', direction: 'inbound', event_type: 'running_late',
+          severity, financial_impact: severity === 'HIGH' ? penalty : 0,
+          payload: { vehicle_reg, ref, driver_name, delay_minutes: mins, reason },
+          sms_fired: severity !== 'LOW' && !!contactPhone, created_at: new Date().toISOString()
+        })
+      } catch (e) { console.error('[running_late] webhook_log:', e?.message) }
+
+      let smsSent = false
+      if (severity === 'HIGH' && contactPhone) {
+        const smsBody = `DisruptionHub — HIGH\n${vehicle_reg || ''}: Running late — ${mins} mins delay reported.\nSLA breach now inevitable — £${penalty.toLocaleString()} at risk.\n${consigneeName || 'Consignee'} being notified automatically.\nReply OPEN for dashboard.`
+        const result = await sendSMS(contactPhone, smsBody)
+        smsSent = result.success || false
+
+        if (consigneePhone) {
+          const { error: consErr } = await db.from('approvals').insert({
+            client_id, action_type: 'call',
+            action_label: `Notify ${consigneeName} of ${mins}min delay — SLA breach`,
+            action_details: { vehicle_reg, ref, driver_name, driver_phone, call_type: 'consignee_delay_alert', consignee_name: consigneeName, consignee_phone: consigneePhone, delay_reason: reason || 'Running late', delay_minutes: mins, source: 'running_late', severity: 'HIGH' },
+            financial_value: penalty, status: 'pending',
+            escalation_at: new Date(Date.now() + 15 * 60 * 1000).toISOString()
+          })
+          if (consErr) console.error('[running_late] consignee approval:', consErr.message)
+        }
+      } else if (severity === 'MEDIUM' && contactPhone) {
+        const smsBody = `DisruptionHub — MEDIUM\n${vehicle_reg || ''}: Running late — ${mins} mins delay reported.\nReason: ${reason || 'not specified'}. SLA window: ${timeToSla} mins remaining.\nDashboard: disruptionhub.ai/unlock`
+        const result = await sendSMS(contactPhone, smsBody)
+        smsSent = result.success || false
+      }
+
+      return Response.json({ success: true, severity, financial_impact: severity === 'HIGH' ? penalty : 0, sms_sent: smsSent, action_type: 'running_late' })
     }
 
     const finalSystem = systemPrompt
