@@ -1901,7 +1901,7 @@ export default function DashboardPage() {
         .dh-cmd-panel-hdr { padding:13px 18px 11px; border-bottom:1px solid rgba(255,255,255,0.05); display:flex; align-items:center; justify-content:space-between; flex-shrink:0; background:#08080c; }
         .dh-cmd-panel-title { font-family:'DM Mono',monospace; font-size:9px; font-weight:500; color:rgba(255,255,255,0.24); letter-spacing:0.12em; text-transform:uppercase; }
         .dh-cmd-panel-count { font-family:'DM Mono',monospace; font-size:10px; color:rgba(255,255,255,0.12); }
-        .dh-cmd-scroll { flex:1; overflow-y:auto; padding:14px 14px; background:#08080c; }
+        .dh-cmd-scroll { flex:1; overflow-y:auto; padding:14px 14px; background:#08080c; height:0; }
         .dh-cmd-scroll::-webkit-scrollbar { width:3px; }
         .dh-cmd-scroll::-webkit-scrollbar-track { background:transparent; }
         .dh-cmd-scroll::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.08); border-radius:2px; }
@@ -2740,6 +2740,7 @@ export default function DashboardPage() {
                   <button className={`dh-toggle-btn${commandRightTab==='value'?' on':' off'}`} onClick={()=>setCommandRightTab('value')}>Value</button>
                 </div>
 
+                {/* Scrollable incidents list */}
                 <div className="dh-cmd-scroll">
                   {commandRightTab==='incidents'&&(
                     <>
@@ -2769,38 +2770,35 @@ export default function DashboardPage() {
                       })}
                     </>
                   )}
-
                   {commandRightTab==='value'&&(()=>{
-                    const totalSaved=whLog.reduce((sum,l)=>sum+(l.financial_impact||0),0)
-                    const hiCrit=whLog.filter(l=>l.severity==='HIGH'||l.severity==='CRITICAL')
                     const smsFired=whLog.filter(l=>l.sms_fired)
                     const timeSavedMins=smsFired.length*12
                     return (
-                      <>
-                        <div className="dh-value-card">
-                          <div className="dh-value-label">Total saved this month</div>
-                          <div className="dh-value-n">{'£'}{totalSaved.toLocaleString()}</div>
-                          <div className="dh-value-sub">across {whLog.length} incidents handled</div>
-                        </div>
-                        <div className="dh-divider"/>
-                        <div className="dh-value-card">
-                          <div className="dh-value-label">Response time saved</div>
-                          <div className="dh-value-n" style={{color:'#f5a623'}}>{timeSavedMins>=60?`${(timeSavedMins/60).toFixed(1)}h`:`${timeSavedMins}m`}</div>
-                          <div className="dh-value-sub">{smsFired.length} SMS-handled events · 12 min each</div>
-                        </div>
-                        <div className="dh-divider"/>
-                        <div className="dh-value-card">
-                          <div className="dh-value-label">Breakdown</div>
-                          {whLog.slice(0,8).map((log,i)=>(
-                            <div key={i} style={{display:'flex',justifyContent:'space-between',marginBottom:8,alignItems:'center'}}>
-                              <span style={{fontSize:12,color:'rgba(255,255,255,0.48)',fontFamily:"'DM Sans',sans-serif"}}>{(log.event_type||'').replace(/_/g,' ')}</span>
-                              <span style={{fontFamily:"'DM Mono',monospace",fontSize:12,color:'rgba(255,255,255,0.92)'}}>{log.financial_impact>0?`\u00A3${Number(log.financial_impact).toLocaleString()}`:'\u2014'}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </>
+                      <div className="dh-value-card">
+                        <div className="dh-value-label">Response time saved</div>
+                        <div className="dh-value-n" style={{color:'#f5a623'}}>{timeSavedMins>=60?`${(timeSavedMins/60).toFixed(1)}h`:`${timeSavedMins}m`}</div>
+                        <div className="dh-value-sub">{smsFired.length} SMS-handled events · 12 min each</div>
+                      </div>
                     )
                   })()}
+                </div>
+
+                {/* Pinned summary — always visible */}
+                <div style={{flexShrink:0,borderTop:'1px solid rgba(255,255,255,0.06)',padding:12,background:'#08080c'}}>
+                  <div className="dh-value-card" style={{marginBottom:8}}>
+                    <div className="dh-value-label">This month</div>
+                    <div className="dh-value-n">{'£'}{whLog.reduce((sum,l)=>sum+(l.financial_impact||0),0).toLocaleString()}</div>
+                    <div className="dh-value-sub">{whLog.length} incidents handled</div>
+                  </div>
+                  <div className="dh-value-card">
+                    <div className="dh-value-label">Breakdown</div>
+                    {whLog.slice(0,8).map((log,i)=>(
+                      <div key={i} style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:i<Math.min(whLog.length,8)-1?7:0}}>
+                        <span style={{fontSize:12,color:'rgba(255,255,255,0.45)',fontFamily:"'DM Sans',sans-serif"}}>{(log.event_type||'').replace(/_/g,' ')}</span>
+                        <span style={{fontFamily:"'DM Mono',monospace",fontSize:12,color:'rgba(255,255,255,0.9)'}}>{log.financial_impact>0?`\u00A3${Number(log.financial_impact).toLocaleString()}`:'\u2014'}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
 
