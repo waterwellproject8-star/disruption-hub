@@ -20,7 +20,7 @@ const ISSUE_GROUPS = [
   {
     id:'road', label:'ON THE ROAD', color:'#f59e0b',
     issues:[
-      { id:'delayed',         label:'Running Late',            icon:'⏰', needsText:true,  placeholder:'What is causing the delay?' },
+      { id:'delayed',         label:'Running Late',            icon:'⏱', needsText:true,  placeholder:'What is causing the delay?' },
       { id:'temp_alarm',      label:'Temp Alarm',              icon:'🌡', needsText:true,  placeholder:'Probe reading? e.g. 8°C — not the unit display' },
       { id:'load_movement',   label:'Load Movement',           icon:'📦', needsText:false, note:'Pull over safely before continuing.' },
       { id:'road_closure',    label:'Road Closure / Weather',  icon:'🌧', needsText:true,  placeholder:'e.g. M62 closed, flooding at J25' },
@@ -1799,7 +1799,7 @@ export default function DriverApp() {
                           const alertActive=!!lastAlert||panelState==='sent'||panelState==='result'||panelState==='resolving_loading'
                           const isDelay=issue.id==='delayed'
                           return (
-                            <button key={issue.id} onClick={()=>!alertActive&&openIssue(issue)} disabled={alertActive}
+                            <button key={issue.id} onClick={()=>{if(alertActive)return;if(isDelay){setRunningLateModal(true)}else{openIssue(issue)}}} disabled={alertActive}
                               className={`dh-rpt-btn${isDelay?' dh-hl':''}`} style={{opacity:alertActive?0.4:1}}>
                               <span className="dh-rpt-ico">{issue.icon}</span>
                               <span className={`dh-rpt-lbl${isDelay?' hl':''}`}>{isDelay?'Report Delay':issue.label}</span>
@@ -1851,7 +1851,7 @@ export default function DriverApp() {
           <div style={{position:'absolute',top:0,left:0,right:0,height:80,pointerEvents:'none',background:'radial-gradient(ellipse 60% 80px at 50% 0%,rgba(245,166,35,0.07),transparent)'}}/>
           <div style={{padding:'12px 0 0',display:'flex',justifyContent:'center'}}><div style={{width:36,height:5,borderRadius:3,background:'rgba(255,255,255,0.18)'}}/></div>
           <div style={{padding:'10px 24px 0',position:'relative',zIndex:1}}>
-            <div style={{fontFamily:"'DM Mono',monospace",fontSize:11,fontWeight:500,color:'#f5a623',letterSpacing:'0.1em',textTransform:'uppercase',marginBottom:6}}>🕐 Report Delay</div>
+            <div style={{fontFamily:"'DM Mono',monospace",fontSize:11,fontWeight:500,color:'#f5a623',letterSpacing:'0.1em',textTransform:'uppercase',marginBottom:6}}>⏱ Report Delay</div>
             <div style={{fontSize:30,fontWeight:700,color:'rgba(255,255,255,0.92)',letterSpacing:'-0.8px',marginBottom:4}}>How Late?</div>
             <div style={{fontSize:14,color:'rgba(255,255,255,0.45)',marginBottom:24}}>Ops will be notified and SLA assessed</div>
 
@@ -1889,7 +1889,7 @@ export default function DriverApp() {
               setRunningLateModal(false);setLateMinutes('');setLateReason('Traffic')
               showToast(mins>15?'Delay reported — ops notified':'Delay logged','ok')
             }} style={{width:'100%',padding:18,background:lateMinutes&&lateReason?'#f5a623':'rgba(255,255,255,0.06)',border:'none',borderRadius:16,color:lateMinutes&&lateReason?'#000':'rgba(255,255,255,0.2)',fontWeight:700,fontSize:17,cursor:lateMinutes&&lateReason?'pointer':'default',marginBottom:10,fontFamily:"'DM Sans',sans-serif",letterSpacing:'-0.2px',boxShadow:lateMinutes&&lateReason?'0 6px 24px rgba(245,166,35,0.3)':'none',transition:'all 0.2s'}}>
-              {lateMinutes?`🕐 Report ${lateMinutes==='60'?'60+':lateMinutes}-min Delay`:'Select minutes to continue'}
+              {lateMinutes?`⏱ Report ${lateMinutes==='60'?'60+':lateMinutes}-min Delay`:'Select minutes to continue'}
             </button>
             <button onClick={()=>setRunningLateModal(false)} style={{width:'100%',padding:12,background:'none',border:'none',color:'rgba(255,255,255,0.4)',fontSize:15,cursor:'pointer',fontFamily:"'DM Sans',sans-serif"}}>Cancel</button>
           </div>
