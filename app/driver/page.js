@@ -1330,25 +1330,34 @@ export default function DriverApp() {
 
   // ── POD CONFIRMATION ──────────────────────────────────────────────────────
   if (podFlow) return (
-    <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.9)',zIndex:300,display:'flex',alignItems:'center',justifyContent:'center',padding:24}}>
-      <div style={{width:'100%',maxWidth:360,background:'linear-gradient(135deg,#0d1520,#0a1018)',borderRadius:14,padding:24,border:'1px solid rgba(255,255,255,0.08)'}}>
-        <div style={{fontSize:18,fontWeight:700,color:'#e8eaed',marginBottom:6}}>Delivery confirmation</div>
-        <div style={{fontSize:13,color:'#8a9099',marginBottom:20}}>How was the delivery confirmed?</div>
-        {[
-          {id:'signature',label:'✍ Signature obtained',     sub:'Consignee signed POD'},
-          {id:'photo',    label:'📸 Photo evidence taken',   sub:'Photographed at delivery point'},
-          {id:'refused',  label:'❌ Delivery refused',        sub:'Consignee refused — reason logged'},
-          {id:'safe_place',label:'📦 Safe place delivery',   sub:'Left in agreed safe location'},
-        ].map(opt=>(
-          <button key={opt.id} onClick={()=>confirmDelivered(opt.id)}
-            style={{width:'100%',marginBottom:7,padding:'12px 13px',background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.07)',borderRadius:10,cursor:'pointer',textAlign:'left',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-            <div><div style={{fontSize:14,color:'#e8eaed',fontWeight:500}}>{opt.label}</div><div style={{fontSize:11,color:'#4a5260',marginTop:2}}>{opt.sub}</div></div>
-            <span style={{color:'#f5a623',fontSize:15}}>→</span>
-          </button>
-        ))}
-        <button onClick={()=>setPodFlow(null)} style={{width:'100%',padding:10,background:'transparent',border:'none',color:'#4a5260',fontSize:12,cursor:'pointer',marginTop:4}}>← Cancel</button>
+    <>
+      <div onClick={()=>setPodFlow(null)} style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.75)',backdropFilter:'blur(6px)',WebkitBackdropFilter:'blur(6px)',zIndex:300}}/>
+      <div style={{position:'fixed',bottom:0,left:0,right:0,background:'#0e0e12',borderTop:'1px solid rgba(245,166,35,0.2)',borderRadius:'24px 24px 0 0',padding:'0 0 40px',zIndex:301,fontFamily:"'DM Sans',-apple-system,sans-serif"}}>
+        <div style={{position:'absolute',top:0,left:0,right:0,height:80,pointerEvents:'none',background:'radial-gradient(ellipse 60% 80px at 50% 0%,rgba(245,166,35,0.07),transparent)'}}/>
+        <div style={{padding:'12px 0 0',display:'flex',justifyContent:'center'}}><div style={{width:36,height:5,borderRadius:3,background:'rgba(255,255,255,0.18)'}}/></div>
+        <div style={{padding:'10px 24px 0',position:'relative',zIndex:1}}>
+          <div style={{fontFamily:"'DM Mono',monospace",fontSize:10,color:'#f5a623',letterSpacing:'0.12em',textTransform:'uppercase',marginBottom:6}}>PROOF OF DELIVERY</div>
+          <div style={{fontSize:26,fontWeight:700,color:'rgba(255,255,255,0.92)',letterSpacing:'-0.5px',marginBottom:4}}>Delivery Confirmation</div>
+          <div style={{fontSize:14,color:'rgba(255,255,255,0.45)',marginBottom:24}}>How was the delivery confirmed?</div>
+          {[
+            {id:'signature',label:'✍ Signature obtained',sub:'Consignee signed POD'},
+            {id:'photo',label:'📸 Photo evidence taken',sub:'Photographed at delivery point'},
+            {id:'refused',label:'❌ Delivery refused',sub:'Consignee refused — reason logged'},
+            {id:'safe_place',label:'📦 Safe place delivery',sub:'Left in agreed safe location'},
+          ].map(opt=>(
+            <button key={opt.id} onClick={()=>confirmDelivered(opt.id)}
+              style={{width:'100%',marginBottom:8,padding:'14px 16px',background:'rgba(255,255,255,0.05)',border:'1px solid rgba(255,255,255,0.09)',borderRadius:14,cursor:'pointer',textAlign:'left',display:'flex',justifyContent:'space-between',alignItems:'center',fontFamily:"'DM Sans',sans-serif",WebkitTapHighlightColor:'transparent',transition:'background 0.15s'}}>
+              <div>
+                <div style={{fontSize:15,color:'rgba(255,255,255,0.92)',fontWeight:600}}>{opt.label}</div>
+                <div style={{fontSize:12,color:'rgba(255,255,255,0.35)',marginTop:2}}>{opt.sub}</div>
+              </div>
+              <span style={{color:'#f5a623',fontSize:15,flexShrink:0}}>→</span>
+            </button>
+          ))}
+          <button onClick={()=>setPodFlow(null)} style={{width:'100%',padding:12,background:'none',border:'none',color:'rgba(255,255,255,0.4)',fontSize:15,cursor:'pointer',fontFamily:"'DM Sans',sans-serif",marginTop:4}}>Cancel</button>
+        </div>
       </div>
-    </div>
+    </>
   )
 
   // ── MAIN RUN VIEW ─────────────────────────────────────────────────────────
