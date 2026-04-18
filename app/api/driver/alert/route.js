@@ -303,14 +303,41 @@ Provide immediate disruption analysis and action plan.`
         smsSent = result.success || false
 
         if (consigneePhone) {
-          const { error: consErr } = await db.from('approvals').insert({
+          const nowIso = new Date().toISOString()
+          const { data: consRow, error: consErr } = await db.from('approvals').insert({
             client_id, action_type: 'call',
-            action_label: `Notify ${consigneeName} of ${mins}min delay — SLA breach`,
+            action_label: `Auto-notified ${consigneeName} of ${mins}min delay — SLA breach`,
             action_details: { vehicle_reg, ref, driver_name, driver_phone, call_type: 'consignee_delay_alert', consignee_name: consigneeName, consignee_phone: consigneePhone, delay_reason: reason || 'Running late', delay_minutes: mins, source: 'running_late', severity: 'HIGH' },
-            financial_value: penalty, status: 'pending',
-            escalation_at: new Date(Date.now() + 15 * 60 * 1000).toISOString()
-          })
+            financial_value: penalty, status: 'executed', approved_by: 'system_auto', approved_at: nowIso, executed_at: nowIso
+          }).select('id').single()
           if (consErr) console.error('[running_late] consignee approval:', consErr.message)
+
+          // Fire consignee call immediately — no ops approval needed for delay notifications
+          try {
+            const sid = process.env.TWILIO_ACCOUNT_SID
+            const token = process.env.TWILIO_AUTH_TOKEN
+            const from = process.env.TWILIO_PHONE_NUMBER
+            if (sid && token && from && !sid.includes('placeholder') && !sid.startsWith('AC_')) {
+              const spokenVehicle = (vehicle_reg || '').replace(/\s/g, '').replace(/./g, c => c + '. ').trim()
+              const delaySpoken = mins >= 60 ? `${Math.floor(mins / 60)} hour${Math.floor(mins / 60) > 1 ? 's' : ''}${mins % 60 > 0 ? ` and ${mins % 60} minutes` : ''}` : `${mins} minutes`
+              const voiceMsg = `This is an automated call from DisruptionHub. Your delivery from vehicle ${spokenVehicle} is running approximately ${delaySpoken} late. ${reason ? `The reason given is ${reason}.` : ''} No action is required from you at this time. If you need to discuss, please contact the operations team. Thank you.`
+              const safe = voiceMsg.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&apos;')
+              const twiml = `<?xml version="1.0" encoding="UTF-8"?><Response><Say voice="Polly.Amy" language="en-GB">${safe}</Say><Pause length="1"/><Say voice="Polly.Amy" language="en-GB">I will repeat that message.</Say><Pause length="1"/><Say voice="Polly.Amy" language="en-GB">${safe}</Say></Response>`
+              const e164 = consigneePhone.startsWith('+') ? consigneePhone : consigneePhone.startsWith('0') ? '+44' + consigneePhone.slice(1) : consigneePhone
+              const callRes = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${sid}/Calls.json`, {
+                method: 'POST',
+                headers: { 'Authorization': 'Basic ' + Buffer.from(`${sid}:${token}`).toString('base64'), 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({ To: e164, From: from, Twiml: twiml })
+              })
+              const callData = await callRes.json()
+              if (consRow?.id) {
+                await db.from('approvals').update({ execution_result: { twilio_sid: callData.sid, twilio_status: callData.status, auto_fired: true } }).eq('id', consRow.id)
+              }
+              console.log('[running_late] consignee call fired:', callRes.ok ? 'ok' : 'failed', callData.sid || callData.message)
+            } else {
+              console.log('[running_late] consignee call skipped — Twilio not configured')
+            }
+          } catch (callErr) { console.error('[running_late] consignee call error:', callErr?.message) }
         }
       } else if (severity === 'MEDIUM' && contactPhone) {
         const smsBody = `DisruptionHub — MEDIUM\n${vehicle_reg || ''}: Running late — ${mins} mins delay reported.\nReason: ${reason || 'not specified'}. SLA window: ${timeToSla} mins remaining.\nDashboard: disruptionhub.ai/unlock`
