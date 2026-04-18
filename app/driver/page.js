@@ -507,6 +507,17 @@ export default function DriverApp() {
     if (!job) return
     const prevStatus = job.status
     setPodFlow(null)
+
+    if (podOption === 'refused') {
+      setJobs(prev=>{const u=prev.map(j=>j.ref===job.ref?{...j,status:'at_risk',alert:'Delivery refused — awaiting ops'}:j);saveJobProgress(u);return u})
+      setActiveJob(prev=>({...prev,status:'at_risk',alert:'Delivery refused — awaiting ops'}))
+      pushProgressToSupabase(job.ref,'at_risk','Delivery refused — awaiting ops')
+      fetch('/api/driver/alert',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({client_id:driverInfo.clientId,driver_name:driverInfo.name,driver_phone:driverInfo.phone||null,vehicle_reg:driverInfo.vehicleReg,ref:job.ref,issue_type:'goods_refused',issue_description:`DELIVERY REFUSED. ${driverInfo.name} (${driverInfo.vehicleReg}). Job: ${job.route||'?'}. Ref: ${job.ref}.`,human_description:'Delivery refused by consignee',location_description:gpsDescription||null,latitude:gpsCoords?.latitude,longitude:gpsCoords?.longitude})}).catch(()=>{})
+      setFailedDeliveryHold('refused')
+      setTimeout(()=>setFailedDeliveryHold(null),10*60*1000)
+      return
+    }
+
     setJobs(prev=>{
       const updated = prev.map(j=>j.ref===job.ref?{...j,status:'completed',alert:null,pod:podOption}:j)
       const reordered = [...updated.filter(j=>j.status!=='completed'),...updated.filter(j=>j.status==='completed')]
