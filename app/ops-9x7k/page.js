@@ -1895,21 +1895,21 @@ export default function DashboardPage() {
 
         /* ── COMMAND tab layout ── */
         @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
-        .dh-cmd-layout { display:grid; grid-template-columns:280px 1fr 300px; height:calc(100vh - 105px); overflow:hidden; background:#08080c; }
+        .dh-cmd-layout { display:grid; grid-template-columns:300px 1fr 320px; height:calc(100vh - 105px); overflow:hidden; background:#08080c; width:100%; }
         .dh-cmd-panel { border-right:1px solid rgba(255,255,255,0.05); display:flex; flex-direction:column; overflow:hidden; }
         .dh-cmd-panel:last-child { border-right:none; }
         .dh-cmd-panel-hdr { padding:13px 18px 11px; border-bottom:1px solid rgba(255,255,255,0.05); display:flex; align-items:center; justify-content:space-between; flex-shrink:0; background:#08080c; }
         .dh-cmd-panel-title { font-family:'DM Mono',monospace; font-size:9px; font-weight:500; color:rgba(255,255,255,0.24); letter-spacing:0.12em; text-transform:uppercase; }
         .dh-cmd-panel-count { font-family:'DM Mono',monospace; font-size:10px; color:rgba(255,255,255,0.12); }
-        .dh-cmd-scroll { flex:1; overflow-y:auto; padding:12px; background:#08080c; }
+        .dh-cmd-scroll { flex:1; overflow-y:auto; padding:14px 14px; background:#08080c; }
         .dh-cmd-scroll::-webkit-scrollbar { width:3px; }
         .dh-cmd-scroll::-webkit-scrollbar-track { background:transparent; }
         .dh-cmd-scroll::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.08); border-radius:2px; }
         .dh-fleet-stats { display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; margin-bottom:10px; }
         .dh-fstat { background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.07); border-radius:10px; padding:10px 8px; text-align:center; }
-        .dh-fstat-n { font-size:20px; font-weight:700; letter-spacing:-0.5px; margin-bottom:2px; font-family:'DM Sans',sans-serif; }
+        .dh-fstat-n { font-size:24px; font-weight:700; letter-spacing:-0.5px; margin-bottom:2px; font-family:'DM Sans',sans-serif; }
         .dh-fstat-l { font-family:'DM Mono',monospace; font-size:8px; color:rgba(255,255,255,0.24); letter-spacing:0.08em; text-transform:uppercase; }
-        .dh-vc { background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.07); border-radius:12px; padding:12px 13px; margin-bottom:7px; cursor:pointer; position:relative; overflow:hidden; transition:border-color 0.15s; font-family:'DM Sans',sans-serif; }
+        .dh-vc { background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.07); border-radius:14px; padding:14px 16px; margin-bottom:8px; cursor:pointer; position:relative; overflow:hidden; transition:border-color 0.15s; font-family:'DM Sans',sans-serif; }
         .dh-vc.disrupted { border-color:rgba(255,69,58,0.3); }
         .dh-vc.disrupted::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:#ff453a; opacity:0.8; }
         .dh-vc.delayed { border-color:rgba(255,214,10,0.2); }
@@ -2056,7 +2056,7 @@ export default function DashboardPage() {
         </div>}
 
         {/* ── RIGHT PANEL ───────────────────────────────────────────────────── */}
-        <div style={{ display:'flex', flexDirection:'column', background:'#080c14', overflow:'hidden' }}>
+        <div style={{ display:'flex', flexDirection:'column', background:'#080c14', overflow:'hidden', ...(activeTab==='approvals'?{padding:0,maxWidth:'none',width:'100%'}:{}) }}>
 
           {/* Tab bar */}
           <div style={{ padding:'10px 20px', borderBottom:'1px solid rgba(255,255,255,0.05)', background:'#08080c', display:'flex', alignItems:'center', gap:8 }}>
@@ -2658,7 +2658,16 @@ export default function DashboardPage() {
                 <div className="dh-cmd-scroll">
                   {/* Pending approvals */}
                   {pendingApprovals.filter(a=>a.status==='pending').length===0 && localApprovals.length===0 && (
-                    <div style={{padding:'32px 16px',textAlign:'center',fontFamily:"'DM Mono',monospace",fontSize:10,color:'rgba(255,255,255,0.2)',letterSpacing:'0.08em'}}>NO PENDING ACTIONS</div>
+                    <div style={{padding:'24px 0'}}>
+                      <div style={{padding:'32px 16px',textAlign:'center',fontFamily:"'DM Mono',monospace",fontSize:10,color:'rgba(255,255,255,0.2)',letterSpacing:'0.08em',marginBottom:24}}>NO PENDING ACTIONS</div>
+                      <div style={{background:'rgba(48,209,88,0.06)',border:'1px solid rgba(48,209,88,0.15)',borderRadius:12,padding:'14px 16px',display:'flex',alignItems:'center',gap:12,fontFamily:"'DM Sans',sans-serif"}}>
+                        <div style={{width:32,height:32,borderRadius:'50%',background:'rgba(48,209,88,0.12)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:15,flexShrink:0}}>{'✓'}</div>
+                        <div>
+                          <div style={{fontSize:13,fontWeight:600,color:'rgba(255,255,255,0.7)',marginBottom:2}}>Fleet is under control</div>
+                          <div style={{fontSize:11,color:'rgba(255,255,255,0.3)'}}>No decisions required right now</div>
+                        </div>
+                      </div>
+                    </div>
                   )}
 
                   {/* Session-executed (local) */}
