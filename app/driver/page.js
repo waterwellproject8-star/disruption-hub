@@ -1893,13 +1893,19 @@ export default function DriverApp() {
               if(!mins){showToast('Enter minutes','error');return}
               try{
                 const alertBody={client_id:driverInfo.clientId,driver_name:driverInfo.name,driver_phone:driverInfo.phone||null,vehicle_reg:driverInfo.vehicleReg,ref:activeJob?.ref||null,session_id:sessionId,issue_type:'running_late',delay_minutes:mins,reason:lateReason,issue_description:`DRIVER RUNNING LATE. ${driverInfo.name} (${driverInfo.vehicleReg}). ${mins} minutes. Reason: ${lateReason}. Job: ${activeJob?.route||'?'}.`,human_description:`Running ${mins}min late — ${lateReason}`,location_description:gpsDescription||null,latitude:gpsCoords?.latitude||null,longitude:gpsCoords?.longitude||null}
-                const res=await fetch('/api/driver/alert',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(alertBody)})
-                if(!res.ok){const err=await res.text().catch(()=>'');console.error('[running-late] alert failed:',res.status,err);showToast('Failed to report delay — try again','error');return}
+                console.log('[running-late] submitting with:',{vehicleReg:driverInfo.vehicleReg,clientId:driverInfo.clientId,driverName:driverInfo.name,driverPhone:driverInfo.phone,sessionId,delayMinutes:mins,reason:lateReason,ref:activeJob?.ref})
+                let res
+                try{
+                  res=await fetch('/api/driver/alert',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(alertBody)})
+                }catch(fetchErr){console.error('[running-late] fetch threw:',fetchErr.message);showToast('Network error — check connection','error');return}
+                console.log('[running-late] response status:',res.status)
+                if(!res.ok){const errText=await res.text().catch(()=>'');console.error('[running-late] server error:',res.status,errText);showToast('Failed to report delay — try again','error');return}
                 const data=await res.json()
-                if(data.error){showToast(data.error,'error');return}
+                console.log('[running-late] response data:',data)
+                if(data.error){console.error('[running-late] API error:',data.error);showToast(data.error,'error');return}
                 setRunningLateModal(false);setLateMinutes('');setLateReason('Traffic')
                 showToast(data.severity==='LOW'?'Delay logged':data.sms_sent?'Delay reported — ops notified':'Delay reported','ok')
-              }catch(e){console.error('[running-late] exception:',e);showToast('Network error — try again','error')}
+              }catch(e){console.error('[running-late] outer exception:',e);showToast('Network error — try again','error')}
             }} style={{width:'100%',padding:18,background:lateMinutes&&lateReason?'#f5a623':'rgba(255,255,255,0.06)',border:'none',borderRadius:16,color:lateMinutes&&lateReason?'#000':'rgba(255,255,255,0.2)',fontWeight:700,fontSize:17,cursor:lateMinutes&&lateReason?'pointer':'default',marginBottom:10,fontFamily:"'DM Sans',sans-serif",letterSpacing:'-0.2px',boxShadow:lateMinutes&&lateReason?'0 6px 24px rgba(245,166,35,0.3)':'none',transition:'all 0.2s'}}>
               {lateMinutes?`⏱ Report ${lateMinutes==='60'?'60+':lateMinutes}-min Delay`:'Select minutes to continue'}
             </button>
