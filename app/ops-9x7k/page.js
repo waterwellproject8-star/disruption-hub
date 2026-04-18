@@ -1996,10 +1996,10 @@ export default function DashboardPage() {
         </div>
       </nav>
 
-      <div className="dh-layout">
+      <div className="dh-layout" style={activeTab==='approvals'?{gridTemplateColumns:'1fr'}:undefined}>
 
         {/* ── LEFT SIDEBAR ──────────────────────────────────────────────────── */}
-        <div className="dh-sidebar">
+        {activeTab!=='approvals'&&<div className="dh-sidebar">
 
           {/* Metrics */}
           <div style={{ padding:'14px', borderBottom:'1px solid rgba(255,255,255,0.06)' }}>
@@ -2047,13 +2047,13 @@ export default function DashboardPage() {
                   <span style={{ fontFamily:'monospace', fontSize:11, color:STATUS_COLORS[s.status], textTransform:'uppercase' }}>{s.status}</span>
                 </div>
                 <div style={{ fontSize:12, color:'#8a9099', marginBottom:2 }}>{s.route}</div>
-                <div style={{ fontSize:12, color:'#4a5260' }}>{s.carrier} · ETA {s.eta}</div>
+                <div style={{ fontSize:12, color:'#4a5260' }}>{s.carrier} · ETA {(()=>{const e=s.eta;if(!e||e==='???')return'???';if(e.includes('T')||e.includes(' ')){try{return new Date(e).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})}catch{return e}}return e})()}</div>
                 {s.alert && <div style={{ marginTop:5, fontSize:11, color:'#f59e0b', background:'rgba(245,158,11,0.08)', padding:'3px 6px', borderRadius:3 }}>⚠ {s.alert}</div>}
               </div>
             ))}
           </div>
 
-        </div>
+        </div>}
 
         {/* ── RIGHT PANEL ───────────────────────────────────────────────────── */}
         <div style={{ display:'flex', flexDirection:'column', background:'#080c14', overflow:'hidden' }}>
@@ -2065,7 +2065,6 @@ export default function DashboardPage() {
             </button>
             <button style={TAB_STYLE(activeTab==='agent')} onClick={() => setActiveTab('agent')}>AGENT</button>
             <button style={TAB_STYLE(activeTab==='modules')} onClick={() => setActiveTab('modules')}>INTELLIGENCE</button>
-            <button style={TAB_STYLE(activeTab==='invoices')} onClick={() => { setActiveTab('invoices'); loadInvoices() }}>INVOICES</button>
             <button style={TAB_STYLE(activeTab==='scenarios')} onClick={() => setActiveTab('scenarios')}>SCENARIOS</button>
             <button style={TAB_STYLE(activeTab==='integrations')} onClick={() => { setActiveTab('integrations'); loadWebhookLog(); loadActiveDrivers() }}>SETUP</button>
             <div style={{ marginLeft:'auto', display:'flex', alignItems:'center', gap:8 }}>
@@ -2638,7 +2637,7 @@ export default function DashboardPage() {
                         </div>
                         <div className="dh-vc-route">{s.route}</div>
                         <div className="dh-vc-meta">
-                          <span className="dh-vc-eta">ETA {s.eta||'???'}</span>
+                          <span className="dh-vc-eta">ETA {(()=>{const e=s.eta;if(!e||e==='???')return'???';if(e.includes('T')||e.includes(' ')){try{return new Date(e).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})}catch{return e}}return e})()}</span>
                           {isDisrupted&&<span className="dh-sla-badge" style={{color:'#ff453a',background:'rgba(255,69,58,0.1)'}}>SLA AT RISK</span>}
                           {isDelayed&&<span className="dh-sla-badge" style={{color:'#ffd60a',background:'rgba(255,214,10,0.1)'}}>SLA TIGHT</span>}
                           {isOnTrack&&<span className="dh-sla-badge" style={{color:'#30d158',background:'rgba(48,209,88,0.1)'}}>SLA SAFE</span>}
