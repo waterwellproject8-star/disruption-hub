@@ -222,12 +222,12 @@ const WEBHOOK_SYSTEMS = {
 
 
 const TAB_STYLE = (active) => ({
-  padding: '6px 16px', borderRadius: 3, fontSize: 12, cursor: 'pointer',
-  fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: '0.06em',
-  fontWeight: active ? 700 : 500, textTransform: 'uppercase',
-  border: active ? '1px solid #f5a623' : '1px solid rgba(255,255,255,0.08)',
-  background: active ? 'rgba(245,166,35,0.1)' : 'transparent',
-  color: active ? '#f5a623' : '#8a9099', transition: 'all 0.15s'
+  padding: '6px 16px', borderRadius: 0, fontSize: 10, cursor: 'pointer',
+  fontFamily: "'DM Mono', monospace", letterSpacing: '0.1em',
+  fontWeight: active ? 600 : 500, textTransform: 'uppercase',
+  border: 'none', borderBottom: active ? '2px solid #f5a623' : '2px solid transparent',
+  background: 'transparent',
+  color: active ? '#f5a623' : 'rgba(255,255,255,0.3)', transition: 'all 0.15s'
 })
 
 // ── PIN GATE ─────────────────────────────────────────────────────────────────
@@ -1892,6 +1892,80 @@ export default function DashboardPage() {
           .dh-cmd-centre { flex: none !important; width: 100% !important; border-right: none !important; border-bottom: 2px solid rgba(255,255,255,0.06) !important; overflow: visible !important; min-height: 300px; }
           .dh-cmd-right { width: 100% !important; max-height: none !important; overflow: visible !important; }
         }
+
+        /* ── COMMAND tab layout ── */
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+        .dh-cmd-layout { display:grid; grid-template-columns:280px 1fr 300px; height:calc(100vh - 105px); overflow:hidden; background:#08080c; }
+        .dh-cmd-panel { border-right:1px solid rgba(255,255,255,0.05); display:flex; flex-direction:column; overflow:hidden; }
+        .dh-cmd-panel:last-child { border-right:none; }
+        .dh-cmd-panel-hdr { padding:13px 18px 11px; border-bottom:1px solid rgba(255,255,255,0.05); display:flex; align-items:center; justify-content:space-between; flex-shrink:0; background:#08080c; }
+        .dh-cmd-panel-title { font-family:'DM Mono',monospace; font-size:9px; font-weight:500; color:rgba(255,255,255,0.24); letter-spacing:0.12em; text-transform:uppercase; }
+        .dh-cmd-panel-count { font-family:'DM Mono',monospace; font-size:10px; color:rgba(255,255,255,0.12); }
+        .dh-cmd-scroll { flex:1; overflow-y:auto; padding:12px; background:#08080c; }
+        .dh-cmd-scroll::-webkit-scrollbar { width:3px; }
+        .dh-cmd-scroll::-webkit-scrollbar-track { background:transparent; }
+        .dh-cmd-scroll::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.08); border-radius:2px; }
+        .dh-fleet-stats { display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; margin-bottom:10px; }
+        .dh-fstat { background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.07); border-radius:10px; padding:10px 8px; text-align:center; }
+        .dh-fstat-n { font-size:20px; font-weight:700; letter-spacing:-0.5px; margin-bottom:2px; font-family:'DM Sans',sans-serif; }
+        .dh-fstat-l { font-family:'DM Mono',monospace; font-size:8px; color:rgba(255,255,255,0.24); letter-spacing:0.08em; text-transform:uppercase; }
+        .dh-vc { background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.07); border-radius:12px; padding:12px 13px; margin-bottom:7px; cursor:pointer; position:relative; overflow:hidden; transition:border-color 0.15s; font-family:'DM Sans',sans-serif; }
+        .dh-vc.disrupted { border-color:rgba(255,69,58,0.3); }
+        .dh-vc.disrupted::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:#ff453a; opacity:0.8; }
+        .dh-vc.delayed { border-color:rgba(255,214,10,0.2); }
+        .dh-vc.delayed::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:#ffd60a; opacity:0.6; }
+        .dh-vc-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; }
+        .dh-vc-reg { font-family:'DM Mono',monospace; font-size:12px; font-weight:500; color:rgba(255,255,255,0.92); letter-spacing:0.05em; }
+        .dh-vc-badge { font-family:'DM Mono',monospace; font-size:8px; font-weight:600; padding:2px 8px; border-radius:20px; letter-spacing:0.08em; }
+        .dh-vc-route { font-size:12px; color:rgba(255,255,255,0.45); margin-bottom:5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .dh-vc-meta { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+        .dh-vc-eta { font-family:'DM Mono',monospace; font-size:10px; color:rgba(255,255,255,0.24); }
+        .dh-sla-badge { font-family:'DM Mono',monospace; font-size:8px; padding:2px 7px; border-radius:6px; letter-spacing:0.06em; }
+        .dh-aq { background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.07); border-radius:12px; margin-bottom:8px; overflow:hidden; font-family:'DM Sans',sans-serif; }
+        .dh-aq.urgent { border-color:rgba(255,69,58,0.3); }
+        .dh-aq.warning { border-color:rgba(255,214,10,0.2); }
+        .dh-aq-body { padding:12px 14px 10px; }
+        .dh-aq-top { display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; }
+        .dh-aq-sev { font-family:'DM Mono',monospace; font-size:8px; font-weight:700; letter-spacing:0.1em; display:flex; align-items:center; gap:5px; }
+        .dh-aq-sev::before { content:''; width:5px; height:5px; border-radius:50%; background:currentColor; }
+        .dh-aq-time { font-family:'DM Mono',monospace; font-size:9px; color:rgba(255,255,255,0.24); }
+        .dh-aq-headline { font-size:14px; font-weight:700; color:rgba(255,255,255,0.92); letter-spacing:-0.3px; margin-bottom:5px; line-height:1.35; }
+        .dh-aq-detail { font-size:12px; color:rgba(255,255,255,0.48); line-height:1.5; margin-bottom:10px; }
+        .dh-aq-chips { display:flex; gap:6px; margin-bottom:10px; flex-wrap:wrap; }
+        .dh-aq-chip { font-family:'DM Mono',monospace; font-size:9px; padding:3px 9px; border-radius:6px; letter-spacing:0.04em; }
+        .dh-aq-btns { display:flex; gap:7px; padding:0 14px 12px; }
+        .dh-aq-approve { flex:1; padding:10px 14px; background:#f5a623; border:none; border-radius:9px; color:#000; font-size:13px; font-weight:700; cursor:pointer; font-family:'DM Sans',sans-serif; box-shadow:0 3px 12px rgba(245,166,35,0.3); transition:opacity 0.15s; }
+        .dh-aq-approve:disabled { opacity:0.5; cursor:default; }
+        .dh-aq-reject { flex:1; padding:10px 14px; background:transparent; border:1px solid rgba(255,255,255,0.1); border-radius:9px; color:rgba(255,255,255,0.45); font-size:13px; font-weight:600; cursor:pointer; font-family:'DM Sans',sans-serif; transition:opacity 0.15s; }
+        .dh-aq-reject:disabled { opacity:0.5; cursor:default; }
+        .dh-done-hdr { display:flex; align-items:center; gap:8px; padding:8px 2px; cursor:pointer; margin-top:4px; }
+        .dh-done-label { font-family:'DM Mono',monospace; font-size:9px; color:rgba(255,255,255,0.2); letter-spacing:0.1em; text-transform:uppercase; flex:1; }
+        .dh-done-card { background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.04); border-radius:10px; padding:10px 12px; margin-bottom:5px; display:flex; align-items:center; gap:10px; opacity:0.5; font-family:'DM Sans',sans-serif; }
+        .dh-done-chk { width:18px; height:18px; border-radius:50%; background:rgba(48,209,88,0.12); display:flex; align-items:center; justify-content:center; font-size:9px; flex-shrink:0; color:#30d158; }
+        .dh-toggle-row { display:flex; gap:4px; padding:10px 12px; border-bottom:1px solid rgba(255,255,255,0.05); flex-shrink:0; background:#08080c; }
+        .dh-toggle-btn { flex:1; padding:7px 10px; border-radius:8px; font-family:'DM Mono',monospace; font-size:9px; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; cursor:pointer; text-align:center; border:1px solid transparent; transition:all 0.15s; background:none; }
+        .dh-toggle-btn.on { background:rgba(245,166,35,0.1); border-color:rgba(245,166,35,0.25); color:#f5a623; }
+        .dh-toggle-btn.off { color:rgba(255,255,255,0.24); }
+        .dh-inc { background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.07); border-radius:10px; padding:11px 13px; margin-bottom:7px; display:flex; align-items:flex-start; gap:10px; font-family:'DM Sans',sans-serif; }
+        .dh-inc-dot { width:8px; height:8px; border-radius:50%; margin-top:4px; flex-shrink:0; }
+        .dh-inc-ref { font-family:'DM Mono',monospace; font-size:9px; color:rgba(255,255,255,0.24); margin-bottom:2px; }
+        .dh-inc-type { font-size:13px; font-weight:600; color:rgba(255,255,255,0.92); letter-spacing:-0.2px; margin-bottom:1px; }
+        .dh-inc-sub { font-size:11px; color:rgba(255,255,255,0.35); }
+        .dh-inc-saved { margin-left:auto; text-align:right; flex-shrink:0; }
+        .dh-inc-saved-n { font-size:14px; font-weight:700; color:#30d158; letter-spacing:-0.3px; font-family:'DM Sans',sans-serif; }
+        .dh-inc-saved-l { font-family:'DM Mono',monospace; font-size:8px; color:rgba(255,255,255,0.2); letter-spacing:0.06em; }
+        .dh-value-card { background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.07); border-radius:12px; padding:14px 16px; margin-bottom:8px; font-family:'DM Sans',sans-serif; }
+        .dh-value-label { font-family:'DM Mono',monospace; font-size:9px; color:rgba(255,255,255,0.24); letter-spacing:0.1em; text-transform:uppercase; margin-bottom:6px; }
+        .dh-value-n { font-size:28px; font-weight:700; color:#30d158; letter-spacing:-0.8px; margin-bottom:2px; }
+        .dh-value-sub { font-size:12px; color:rgba(255,255,255,0.35); }
+        .dh-divider { height:1px; background:rgba(255,255,255,0.05); margin:8px 0; }
+
+        @media (max-width: 768px) {
+          .dh-cmd-layout { grid-template-columns:1fr !important; height:auto !important; overflow-y:auto !important; }
+          .dh-cmd-panel { border-right:none !important; border-bottom:1px solid rgba(255,255,255,0.05); overflow:visible !important; }
+          .dh-cmd-panel:last-child { border-bottom:none; }
+          .dh-cmd-scroll { max-height:400px; }
+        }
       `}</style>
 
       {/* NAV */}
@@ -1899,7 +1973,7 @@ export default function DashboardPage() {
         <div style={{ display:'flex', alignItems:'center', gap:16 }}>
           <Link href="/" style={{ display:'flex', alignItems:'center', gap:8, textDecoration:'none' }}>
             <div style={{ width:24, height:24, background:'#f5a623', clipPath:'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)', flexShrink:0 }} />
-            <span style={{ fontFamily:'monospace', fontSize:12, color:'#8a9099' }}>DisruptionHub</span>
+            <span style={{ fontFamily:"'DM Mono', monospace", fontSize:13, color:'rgba(255,255,255,0.92)' }}>DisruptionHub</span>
           </Link>
           <span style={{ color:'rgba(255,255,255,0.1)' }}>|</span>
           <span style={{ fontSize:12, color:'#e8eaed', fontWeight:500 }}>Operations Dashboard</span>
@@ -1985,9 +2059,9 @@ export default function DashboardPage() {
         <div style={{ display:'flex', flexDirection:'column', background:'#080c14', overflow:'hidden' }}>
 
           {/* Tab bar */}
-          <div style={{ padding:'10px 20px', borderBottom:'1px solid rgba(255,255,255,0.06)', display:'flex', alignItems:'center', gap:8 }}>
-            <button style={{ ...TAB_STYLE(activeTab==='approvals'), ...((pendingApprovals.length>0||fleet.length>0)?{borderColor:'rgba(239,68,68,0.4)',color:'#ef4444',background:'rgba(239,68,68,0.08)'}:{}) }} onClick={() => { setActiveTab('approvals'); loadApprovals(); loadFleet(); loadActiveDrivers(); loadWebhookLog() }}>
-              COMMAND {pendingApprovals.length > 0 ? `(${pendingApprovals.length})` : ''}
+          <div style={{ padding:'10px 20px', borderBottom:'1px solid rgba(255,255,255,0.05)', background:'#08080c', display:'flex', alignItems:'center', gap:8 }}>
+            <button style={TAB_STYLE(activeTab==='approvals')} onClick={() => { setActiveTab('approvals'); loadApprovals(); loadFleet(); loadActiveDrivers(); loadWebhookLog() }}>
+              COMMAND {pendingApprovals.filter(a=>a.status==='pending').length > 0 ? `(${pendingApprovals.filter(a=>a.status==='pending').length})` : ''}
             </button>
             <button style={TAB_STYLE(activeTab==='agent')} onClick={() => setActiveTab('agent')}>AGENT</button>
             <button style={TAB_STYLE(activeTab==='modules')} onClick={() => setActiveTab('modules')}>INTELLIGENCE</button>
@@ -2523,439 +2597,202 @@ export default function DashboardPage() {
             </div>
           )}
 
-          {/* ── APPROVALS TAB ──────────────────────────────────────────────── */}
+          {/* ── COMMAND TAB ──────────────────────────────────────────────── */}
           {activeTab === 'approvals' && (
-            <div className="dh-command" style={{ flex:1, display:'flex', overflow:'hidden', minHeight:0 }}>
+            <div className="dh-cmd-layout">
 
-              {/* ══ LEFT — LIVE FLEET ══ */}
-              <div className="dh-cmd-left" style={{ width:280, flexShrink:0, display:'flex', flexDirection:'column', borderRight:'2px solid rgba(255,255,255,0.06)', overflow:'hidden' }}>
-                <div style={{ background:'#0d1420', borderBottom:'1px solid rgba(255,255,255,0.06)', padding:'12px 16px', display:'flex', justifyContent:'space-between', alignItems:'center', flexShrink:0 }}>
-                  <div>
-                    <div style={{ fontSize:11, fontWeight:700, letterSpacing:'0.1em', color:'#e8eaed', fontFamily:'monospace' }}>LIVE FLEET</div>
-                    <div style={{ fontSize:11, color:'#4a5260', marginTop:2 }}>{activeDrivers.length} on shift</div>
+              {/* ══ LEFT: LIVE FLEET ══ */}
+              <div className="dh-cmd-panel">
+                <div className="dh-cmd-panel-hdr">
+                  <span className="dh-cmd-panel-title">Live Fleet</span>
+                  <span className="dh-cmd-panel-count">{(liveShipments.length > 0 ? liveShipments : ACTIVE_SHIPMENTS).length} vehicles</span>
+                </div>
+
+                <div className="dh-cmd-scroll">
+                  {/* Fleet stats */}
+                  <div className="dh-fleet-stats">
+                    <div className="dh-fstat">
+                      <div className="dh-fstat-n" style={{color:'#30d158'}}>{(liveShipments.length>0?liveShipments:ACTIVE_SHIPMENTS).filter(s=>s.status==='on-track').length}</div>
+                      <div className="dh-fstat-l">On Track</div>
+                    </div>
+                    <div className="dh-fstat">
+                      <div className="dh-fstat-n" style={{color:'#ffd60a'}}>{(liveShipments.length>0?liveShipments:ACTIVE_SHIPMENTS).filter(s=>s.status==='delayed').length}</div>
+                      <div className="dh-fstat-l">Delayed</div>
+                    </div>
+                    <div className="dh-fstat">
+                      <div className="dh-fstat-n" style={{color:'#ff453a'}}>{(liveShipments.length>0?liveShipments:ACTIVE_SHIPMENTS).filter(s=>s.status==='disrupted').length}</div>
+                      <div className="dh-fstat-l">Disrupted</div>
+                    </div>
                   </div>
-                  <button onClick={() => { loadActiveDrivers(); loadFleet() }} style={{ background:'none', border:'none', color:'#4a5260', fontSize:11, cursor:'pointer' }}>↻</button>
-                </div>
 
-                <div style={{ flex:1, overflowY:'auto' }}>
-                  {activeDrivers.length === 0 && fleet.length === 0 ? (
-                    <div style={{ padding:16, textAlign:'center' }}>
-                      <div style={{ fontSize:11, color:'#4a5260', marginBottom:4 }}>No drivers on shift</div>
-                      <div style={{ fontSize:11, color:'#4a5260', fontFamily:'monospace' }}>Start a shift in the driver app</div>
-                    </div>
-                  ) : (
-                    (activeDrivers.length > 0 ? activeDrivers : fleet).map((v, i) => {
-                      const reg = v.vehicle_reg
-                      const name = v.driver_name || v.driver_name || 'Unknown'
-                      const loc = v.last_known_location || null
-                      const cargo = v.cargo_type || null
-                      const route = v.current_route || null
-                      const status = v.status || 'active'
-                      const statusColor = status === 'disrupted' || status === 'at_risk' ? '#ef4444' : status === 'delayed' ? '#f59e0b' : '#f5a623'
-                      const cargoColor = cargo?.includes('pharma') ? '#a855f7' : cargo?.includes('chilled') || cargo?.includes('frozen') ? '#3b82f6' : '#4a5260'
-                      const fleetVehicle = fleet.find(fv => fv.vehicle_reg === reg)
-                      return (
-                        <div key={i} style={{ padding:'12px 16px', borderBottom:'1px solid rgba(255,255,255,0.04)', borderLeft:`3px solid ${statusColor}` }}>
-                          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:4 }}>
-                            <span style={{ fontFamily:'monospace', fontSize:15, fontWeight:700, color:'#e8eaed', letterSpacing:1 }}>{reg}</span>
-                            <span style={{ fontSize:12, padding:'2px 6px', background:`${statusColor}18`, color:statusColor, fontFamily:'monospace', fontWeight:700 }}>{status.replace(/_/g,' ').toUpperCase()}</span>
-                          </div>
-                          <div style={{ fontSize:13, color:'#8a9099', marginBottom:3 }}>{name}</div>
-                          {loc && <div style={{ fontSize:11, color:'#4a5260', marginBottom:2 }}>📍 {loc}</div>}
-                          {cargo && <div style={{ fontSize:11, color:cargoColor }}>{cargo.includes('pharma') ? '💊' : cargo.includes('chilled') ? '❄' : '📦'} {cargo}</div>}
-                          {route && <div style={{ fontSize:11, color:'#374151', marginTop:2 }}>→ {route}</div>}
-                          {(() => {
-                            const shipments = liveShipments.length > 0 ? liveShipments : []
-                            const driverJobs = fleetVehicle?.jobs || []
-                            const activeRef = driverJobs.find(j => j.status !== 'completed' && j.status !== 'cancelled')?.ref
-                            const shipment = activeRef ? shipments.find(s => s.ref === activeRef) : null
-                            if (!shipment?.sla_window) return null
-                            const slaParts = shipment.sla_window.split('-')
-                            const slaEnd = slaParts[1]?.trim()
-                            if (!slaEnd) return null
-                            const today = new Date().toLocaleDateString('en-CA')
-                            const slaTime = new Date(`${today}T${slaEnd}:00`)
-                            const now = new Date()
-                            const minsToSla = (slaTime - now) / 60000
-                            if (minsToSla < 0) return <div style={{ marginTop:4, fontSize:12, color:'#ef4444', fontWeight:700, background:'rgba(239,68,68,0.08)', padding:'2px 6px', borderRadius:3, display:'inline-block' }}>BREACH — SLA passed</div>
-                            if (minsToSla < 30) return <div style={{ marginTop:4, fontSize:12, color:'#f59e0b', fontWeight:700, background:'rgba(245,158,11,0.08)', padding:'2px 6px', borderRadius:3, display:'inline-block' }}>⚠ SLA in {Math.round(minsToSla)}min</div>
-                            return null
-                          })()}
-                          {fleetVehicle && fleetVehicle.jobs?.length > 0 && (
-                            <div style={{ marginTop:6, display:'flex', gap:6 }}>
-                              <button onClick={() => setCancelConfirm({ vehicle_reg: reg, cancel_all: true })}
-                                style={{ padding:'3px 8px', borderRadius:4, border:'1px solid rgba(239,68,68,0.3)', background:'rgba(239,68,68,0.06)', color:'#ef4444', fontSize:11, cursor:'pointer', fontFamily:'monospace' }}>
-                                Cancel all
-                              </button>
-                            </div>
-                          )}
+                  {/* Vehicle cards */}
+                  {(liveShipments.length>0?liveShipments:ACTIVE_SHIPMENTS).map(s=>{
+                    const isDisrupted = s.status==='disrupted'
+                    const isDelayed = s.status==='delayed'
+                    const isOnTrack = s.status==='on-track'
+                    return (
+                      <div key={s.ref} className={`dh-vc${isDisrupted?' disrupted':isDelayed?' delayed':''}`} onClick={()=>analyseShipment(s)}>
+                        <div className="dh-vc-row">
+                          <span className="dh-vc-reg">{s.ref}</span>
+                          <span className="dh-vc-badge" style={{color:STATUS_COLORS[s.status],background:`${STATUS_COLORS[s.status]}18`}}>{s.status.toUpperCase().replace('-',' ')}</span>
                         </div>
-                      )
-                    })
-                  )}
-
-                  {/* Unassigned queue */}
-                  {unassigned.length > 0 && (
-                    <div style={{ borderTop:'1px solid rgba(255,255,255,0.06)', padding:'10px 16px' }}>
-                      <div style={{ fontSize:11, color:'#f59e0b', fontFamily:'monospace', fontWeight:700, marginBottom:8 }}>UNASSIGNED — {unassigned.length}</div>
-                      {unassigned.map(job => (
-                        <div key={job.ref} style={{ background:'rgba(245,158,11,0.05)', border:'1px solid rgba(245,158,11,0.15)', borderRadius:6, padding:'8px 10px', marginBottom:6 }}>
-                          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:4 }}>
-                            <span style={{ fontFamily:'monospace', fontSize:11, color:'#e8eaed' }}>{job.ref}</span>
-                            <button onClick={() => { setReassignJobRef(job.ref); setReassignTo('') }}
-                              style={{ padding:'3px 8px', borderRadius:4, border:'1px solid rgba(245,166,35,0.3)', background:'rgba(245,166,35,0.06)', color:'#f5a623', fontSize:11, cursor:'pointer', fontFamily:'monospace' }}>
-                              Assign →
-                            </button>
-                          </div>
-                          <div style={{ fontSize:11, color:'#4a5260' }}>was {job.original_vehicle}</div>
-                          {reassignJobRef === job.ref && (
-                            <div style={{ display:'flex', gap:6, marginTop:6 }}>
-                              <select value={reassignTo} onChange={e => setReassignTo(e.target.value)}
-                                style={{ flex:1, padding:'4px 6px', background:'#080c14', border:'1px solid rgba(255,255,255,0.1)', borderRadius:4, color: reassignTo ? '#e8eaed' : '#4a5260', fontSize:11, outline:'none', fontFamily:'Barlow' }}>
-                                <option value=''>Pick driver...</option>
-                                {fleet.map(v => <option key={v.vehicle_reg} value={v.vehicle_reg}>{v.vehicle_reg}{v.driver_name ? ` — ${v.driver_name}` : ''}</option>)}
-                              </select>
-                              <button onClick={() => reassignTo && reassignUnassigned(job.ref, reassignTo, job.reason)} disabled={!reassignTo}
-                                style={{ padding:'4px 8px', borderRadius:4, border:'none', background: reassignTo ? '#f5a623' : 'rgba(245,166,35,0.2)', color: reassignTo ? '#000' : '#4a5260', fontSize:11, fontWeight:700, cursor: reassignTo ? 'pointer' : 'default', fontFamily:'monospace' }}>
-                                ✓
-                              </button>
-                              <button onClick={() => { setReassignJobRef(null); setReassignTo('') }}
-                                style={{ padding:'4px 7px', borderRadius:4, border:'1px solid rgba(255,255,255,0.08)', background:'transparent', color:'#4a5260', fontSize:11, cursor:'pointer' }}>✕</button>
-                            </div>
-                          )}
+                        <div className="dh-vc-route">{s.route}</div>
+                        <div className="dh-vc-meta">
+                          <span className="dh-vc-eta">ETA {s.eta||'???'}</span>
+                          {isDisrupted&&<span className="dh-sla-badge" style={{color:'#ff453a',background:'rgba(255,69,58,0.1)'}}>SLA AT RISK</span>}
+                          {isDelayed&&<span className="dh-sla-badge" style={{color:'#ffd60a',background:'rgba(255,214,10,0.1)'}}>SLA TIGHT</span>}
+                          {isOnTrack&&<span className="dh-sla-badge" style={{color:'#30d158',background:'rgba(48,209,88,0.1)'}}>SLA SAFE</span>}
                         </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Fleet footer stats */}
-                <div style={{ background:'#0d1420', borderTop:'1px solid rgba(255,255,255,0.06)', padding:'10px 16px', flexShrink:0, display:'flex', gap:16 }}>
-                  {[
-                    { n: fleet.filter(v=>v.jobs?.some(j=>j.status==='at_risk'||j.status==='disrupted')).length, l:'CRITICAL', c:'#ef4444' },
-                    { n: fleet.filter(v=>v.jobs?.some(j=>j.status==='delayed')).length, l:'DELAYED', c:'#f59e0b' },
-                    { n: activeDrivers.length, l:'ACTIVE', c:'#f5a623' }
-                  ].map(s => (
-                    <div key={s.l} style={{ textAlign:'center' }}>
-                      <div style={{ fontSize:16, fontWeight:700, color:s.c, fontFamily:'monospace' }}>{s.n}</div>
-                      <div style={{ fontSize:11, color:'#4a5260', letterSpacing:1 }}>{s.l}</div>
-                    </div>
-                  ))}
+                        {s.alert&&<div style={{marginTop:6,fontSize:11,color:isDisrupted?'#ff453a':'#ffd60a',lineHeight:1.4}}>{s.alert}</div>}
+                      </div>
+                    )
+                  })}
                 </div>
               </div>
 
-              {/* ══ CENTRE — ACTION QUEUE ══ */}
-              <div className="dh-cmd-centre" style={{ flex:1, display:'flex', flexDirection:'column', borderRight:'2px solid rgba(255,255,255,0.06)', overflow:'hidden' }}>
-                <div style={{ background:'#0d1420', borderBottom:'1px solid rgba(255,255,255,0.06)', padding:'12px 20px', display:'flex', justifyContent:'space-between', alignItems:'center', flexShrink:0 }}>
-                  <div>
-                    <div style={{ fontSize:11, fontWeight:700, letterSpacing:'0.1em', color:'#e8eaed', fontFamily:'monospace' }}>ACTION QUEUE</div>
-                    <div style={{ fontSize:11, color:'#4a5260', marginTop:2 }}>Decisions waiting · Auto-handled · Resolved</div>
-                  </div>
-                  <div style={{ display:'flex', gap:6 }}>
-                    {[
-                      { n: pendingApprovals.filter(a=>a.status==='pending').length, l:'PENDING', c:'#f59e0b' },
-                      { n: pendingApprovals.filter(a=>a.status==='executed'||a.status==='resolved').length, l:'DONE', c:'#f5a623' },
-                    ].map(s => (
-                      <div key={s.l} style={{ textAlign:'center', padding:'4px 10px', background:`${s.c}11`, border:`1px solid ${s.c}33` }}>
-                        <div style={{ fontSize:15, fontWeight:700, color:s.c, fontFamily:'monospace' }}>{s.n}</div>
-                        <div style={{ fontSize:11, color:`${s.c}88`, letterSpacing:1 }}>{s.l}</div>
-                      </div>
-                    ))}
-                  </div>
+              {/* ══ CENTRE: ACTION QUEUE ══ */}
+              <div className="dh-cmd-panel">
+                <div className="dh-cmd-panel-hdr">
+                  <span className="dh-cmd-panel-title">Action Queue</span>
+                  <span className="dh-cmd-panel-count">{pendingApprovals.filter(a=>a.status==='pending').length} pending</span>
                 </div>
-
-                <div style={{ flex:1, overflowY:'auto', padding:'14px 20px' }}>
-
-                  {/* Session executed */}
-                  {localApprovals.length > 0 && (
-                    <div style={{ marginBottom:12 }}>
-                      {localApprovals.map(a => (
-                        <div key={a.id} style={{ border:`1px solid ${a.border}`, borderRadius:8, background:a.bg, marginBottom:7, borderLeft:`3px solid #f5a623` }}>
-                          <div style={{ padding:'10px 14px', display:'flex', alignItems:'center', gap:10 }}>
-                            <span style={{ fontSize:15 }}>{a.ico}</span>
-                            <div style={{ flex:1, minWidth:0 }}>
-                              <div style={{ fontSize:12, color:'#e8eaed', fontWeight:500 }}>{a.action_label}</div>
-                              <div style={{ fontSize:11, color:'#4a5260', fontFamily:'monospace', marginTop:2 }}>{(a.action_type||'').toUpperCase()} · {a.executed_at}</div>
-                            </div>
-                            <div style={{ display:'flex', alignItems:'center', gap:5 }}>
-                              <div style={{ width:6, height:6, borderRadius:'50%', background:'#f5a623' }} />
-                              <span style={{ fontSize:11, color:'#f5a623', fontFamily:'monospace' }}>DONE</span>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                      {pendingApprovals.length > 0 && <div style={{ height:1, background:'rgba(255,255,255,0.05)', margin:'10px 0' }} />}
-                    </div>
+                <div className="dh-cmd-scroll">
+                  {/* Pending approvals */}
+                  {pendingApprovals.filter(a=>a.status==='pending').length===0 && localApprovals.length===0 && (
+                    <div style={{padding:'32px 16px',textAlign:'center',fontFamily:"'DM Mono',monospace",fontSize:10,color:'rgba(255,255,255,0.2)',letterSpacing:'0.08em'}}>NO PENDING ACTIONS</div>
                   )}
 
-                  {/* Section 1 — PENDING cards, always full size */}
-                  {(() => {
-                    const sorted = [...pendingApprovals].sort((a,b) => {
-                      const sevOrder = { CRITICAL: 0, HIGH: 1, MEDIUM: 2, LOW: 3 }
-                      const sevA = sevOrder[(a.action_details?.severity || '').toUpperCase()] ?? 3
-                      const sevB = sevOrder[(b.action_details?.severity || '').toUpperCase()] ?? 3
-                      if (sevA !== sevB) return sevA - sevB
-                      return new Date(b.created_at || 0) - new Date(a.created_at || 0)
-                    })
-                    const pending = sorted.filter(a => a.status === 'pending')
-                    const done = sorted.filter(a => a.status !== 'pending')
-                    const typeMap = { call:'📞', make_call:'📞', send_sms:'💬', sms:'💬', send_email:'✉', email:'✉', dispatch:'🚛', reroute:'🗺', notify:'📣', emergency:'🚨', driver_resolved:'✅' }
+                  {/* Session-executed (local) */}
+                  {localApprovals.map(a=>(
+                    <div key={a.id} className="dh-done-card" style={{opacity:1,marginBottom:8}}>
+                      <div className="dh-done-chk">{'✓'}</div>
+                      <div style={{flex:1,fontSize:12,color:'rgba(255,255,255,0.7)'}}>{a.action_label}</div>
+                      <div style={{fontFamily:"'DM Mono',monospace",fontSize:9,color:'rgba(255,255,255,0.3)'}}>{a.executed_at}</div>
+                    </div>
+                  ))}
 
-                    const renderFullCard = (a) => {
-                      const isPending = a.status === 'pending'
-                      const isExecuted = a.status === 'executed' || a.status === 'resolved'
-                      const isRejected = a.status === 'rejected' || a.status === 'expired'
-                      const isProcessing = approvingId === a.id
-                      const borderCol = isPending ? '#f59e0b' : isExecuted ? '#f5a623' : '#374151'
-                      const bgCol = isPending ? 'rgba(245,158,11,0.04)' : isExecuted ? 'rgba(245,166,35,0.03)' : 'rgba(55,65,81,0.03)'
-                      const ico = typeMap[a.action_type] || '⚡'
-                      const timeStr = a.executed_at ? new Date(a.executed_at).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}) : a.created_at ? new Date(a.created_at).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}) : ''
-                      const toggleExpand = () => setExpandedApprovals(prev => { const next = new Set(prev); next.has(a.id) ? next.delete(a.id) : next.add(a.id); return next })
-                      return (
-                        <div key={a.id} style={{ border:`1px solid ${borderCol}33`, borderLeft:`3px solid ${borderCol}`, borderRadius:8, background:bgCol, marginBottom:8 }}>
-                          <div style={{ padding:'12px 14px' }}>
-                            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:6 }}>
-                              <div style={{ display:'flex', gap:8, alignItems:'center' }}>
-                                <span style={{ fontSize:11, padding:'2px 7px', background:`${borderCol}22`, color:borderCol, fontFamily:'monospace', fontWeight:700 }}>
-                                  {isPending ? '⚠ PENDING' : isExecuted ? '✓ DONE' : isRejected ? '✕ REJECTED' : a.status?.toUpperCase()}
-                                </span>
-                                <span style={{ fontSize:13, color:'#f5a623', fontWeight:700, fontFamily:'monospace' }}>{a.action_details?.vehicle_reg || ''}</span>
-                              </div>
-                              <div style={{ display:'flex', alignItems:'center', gap:6 }}>
-                                <span style={{ fontSize:11, color:'#374151' }}>{timeStr}</span>
-                                {!isPending && <span onClick={toggleExpand} style={{ fontSize:11, color:'#4a5260', cursor:'pointer' }}>▼</span>}
-                              </div>
+                  {/* Pending cards */}
+                  {[...pendingApprovals].sort((a,b)=>{
+                    const so={CRITICAL:0,HIGH:1,MEDIUM:2,LOW:3}
+                    const sa=so[(a.action_details?.severity||'').toUpperCase()]??3
+                    const sb=so[(b.action_details?.severity||'').toUpperCase()]??3
+                    return sa!==sb?sa-sb:new Date(b.created_at||0)-new Date(a.created_at||0)
+                  }).filter(a=>a.status==='pending').map(a=>{
+                    const sev=(a.action_details?.severity||'').toUpperCase()
+                    const isCritical=sev==='CRITICAL'
+                    const isHigh=sev==='HIGH'
+                    const processing=approvingId===a.id
+                    const timeStr=a.created_at?new Date(a.created_at).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}):''
+                    return (
+                      <div key={a.id} className={`dh-aq${isCritical?' urgent':isHigh?' warning':''}`}>
+                        <div className="dh-aq-body">
+                          <div className="dh-aq-top">
+                            <span className="dh-aq-sev" style={{color:isCritical?'#ff453a':isHigh?'#ffd60a':'#f5a623'}}>{sev||'PENDING'} · {a.action_details?.vehicle_reg||''}</span>
+                            <span className="dh-aq-time">{timeStr}</span>
+                          </div>
+                          <div className="dh-aq-headline">{a.action_label||'Action required'}</div>
+                          {a.action_details?.content&&<div className="dh-aq-detail">{a.action_details.content.substring(0,160)}{a.action_details.content.length>160?'\u2026':''}</div>}
+                          {a.financial_value>0&&(
+                            <div className="dh-aq-chips">
+                              <span className="dh-aq-chip" style={{color:'#ff453a',background:'rgba(255,69,58,0.1)'}}>{'£'}{ Number(a.financial_value).toLocaleString()} at risk</span>
                             </div>
-                            <div style={{ fontSize:14, fontWeight:600, color:'#e8eaed', marginBottom:6, lineHeight:1.5 }}>{ico} {a.action_label}</div>
-                            {a.financial_value > 0 && <div style={{ fontSize:14, color:borderCol, fontWeight:700, marginBottom:8 }}>£{Number(a.financial_value).toLocaleString()}</div>}
-                            {isPending && (
-                              <div style={{ display:'flex', gap:6 }}>
-                                <button onClick={() => handleApproval(a.id,'approve')} disabled={isProcessing}
-                                  style={{ padding:'6px 16px', borderRadius:5, border:'none', background:'#f5a623', color:'#000', fontWeight:700, fontSize:11, cursor:isProcessing?'default':'pointer', fontFamily:'monospace' }}>
-                                  {isProcessing ? '...' : 'YES'}
-                                </button>
-                                <button onClick={() => assessCancelAction(a.id, a.sent_at)} disabled={isProcessing}
-                                  style={{ padding:'6px 12px', borderRadius:5, fontSize:11, cursor:'pointer', border:'1px solid rgba(245,158,11,0.4)', background:'rgba(245,158,11,0.06)', color:'#f59e0b', fontFamily:'monospace' }}>
-                                  NO
-                                </button>
+                          )}
+                        </div>
+                        <div className="dh-aq-btns">
+                          <button className="dh-aq-approve" onClick={()=>handleApproval(a.id,'approve')} disabled={!!approvingId}>{processing?'\u2026':'\u2713 Approve'}</button>
+                          <button className="dh-aq-reject" onClick={()=>assessCancelAction(a.id,a.sent_at)} disabled={!!approvingId}>{processing?'\u2026':'\u2717 Reject'}</button>
+                        </div>
+                      </div>
+                    )
+                  })}
+
+                  {/* Done section */}
+                  {pendingApprovals.filter(a=>a.status!=='pending').length>0&&(
+                    <>
+                      <div className="dh-done-hdr" onClick={()=>setDoneGroupExpanded(v=>!v)}>
+                        <span className="dh-done-label">Done today — {pendingApprovals.filter(a=>a.status!=='pending').length} resolved</span>
+                        <span style={{fontSize:9,color:'rgba(255,255,255,0.2)',transform:doneGroupExpanded?'rotate(180deg)':'none',transition:'transform 0.2s'}}>{'▾'}</span>
+                      </div>
+                      {doneGroupExpanded&&pendingApprovals.filter(a=>a.status!=='pending').map(a=>(
+                        <div key={a.id} className="dh-done-card">
+                          <div className="dh-done-chk">{'✓'}</div>
+                          <div style={{flex:1,fontSize:12,color:'rgba(255,255,255,0.45)'}}>{a.action_details?.vehicle_reg?`${a.action_details.vehicle_reg} · `:''}{a.action_label||'Resolved'}</div>
+                          <div style={{fontFamily:"'DM Mono',monospace",fontSize:9,color:'rgba(255,255,255,0.2)'}}>{new Date(a.executed_at||a.created_at).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})}</div>
+                        </div>
+                      ))}
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {/* ══ RIGHT: INCIDENTS / VALUE ══ */}
+              <div className="dh-cmd-panel">
+                <div className="dh-toggle-row">
+                  <button className={`dh-toggle-btn${commandRightTab==='incidents'?' on':' off'}`} onClick={()=>setCommandRightTab('incidents')}>Incidents</button>
+                  <button className={`dh-toggle-btn${commandRightTab==='value'?' on':' off'}`} onClick={()=>setCommandRightTab('value')}>Value</button>
+                </div>
+
+                <div className="dh-cmd-scroll">
+                  {commandRightTab==='incidents'&&(
+                    <>
+                      {whLog.length===0&&<div style={{padding:'32px 16px',textAlign:'center',fontFamily:"'DM Mono',monospace",fontSize:10,color:'rgba(255,255,255,0.2)',letterSpacing:'0.08em'}}>NO EVENTS LOGGED</div>}
+                      {[...whLog].sort((a,b)=>{
+                        const sr={CRITICAL:0,HIGH:1,MEDIUM:2,LOW:3}
+                        return (sr[a.severity]??4)-(sr[b.severity]??4)||new Date(b.created_at||0)-new Date(a.created_at||0)
+                      }).map((log,i)=>{
+                        const timeStr=log.created_at?new Date(log.created_at).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}):''
+                        const saved=log.financial_impact>0?`\u00A3${Number(log.financial_impact).toLocaleString()}`:null
+                        return (
+                          <div key={log.id||i} className="dh-inc" style={{borderColor:log.severity==='CRITICAL'?'rgba(255,69,58,0.25)':log.severity==='HIGH'?'rgba(255,214,10,0.18)':'rgba(255,255,255,0.07)'}}>
+                            <div className="dh-inc-dot" style={{background:SEV_COLORS[log.severity]||'rgba(255,255,255,0.2)'}}/>
+                            <div style={{flex:1,minWidth:0}}>
+                              <div className="dh-inc-ref">{log.payload?.vehicle_reg||log.system_name||''} · {timeStr}</div>
+                              <div className="dh-inc-type">{(log.event_type||'event').replace(/_/g,' ')}</div>
+                              <div className="dh-inc-sub">{log.severity} severity</div>
+                            </div>
+                            {saved&&(
+                              <div className="dh-inc-saved">
+                                <div className="dh-inc-saved-n">{saved}</div>
+                                <div className="dh-inc-saved-l">saved</div>
                               </div>
                             )}
-                            {isExecuted && <div style={{ fontSize:11, color:'#f5a623', fontFamily:'monospace' }}>✓ Actioned {timeStr} — no further action needed</div>}
-                            {isRejected && <div style={{ fontSize:11, color:'#4a5260', fontFamily:'monospace' }}>Dismissed</div>}
                           </div>
-                        </div>
-                      )
-                    }
+                        )
+                      })}
+                    </>
+                  )}
 
-                    if (pending.length === 0 && done.length === 0 && localApprovals.length === 0) {
-                      return (
-                        <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', height:'50%', opacity:0.3 }}>
-                          <div style={{ fontFamily:'monospace', fontSize:32, color:'#4a5260' }}>✓</div>
-                          <div style={{ fontSize:12, color:'#4a5260', marginTop:8 }}>All clear</div>
-                        </div>
-                      )
-                    }
-
+                  {commandRightTab==='value'&&(()=>{
+                    const totalSaved=whLog.reduce((sum,l)=>sum+(l.financial_impact||0),0)
+                    const hiCrit=whLog.filter(l=>l.severity==='HIGH'||l.severity==='CRITICAL')
+                    const smsFired=whLog.filter(l=>l.sms_fired)
+                    const timeSavedMins=smsFired.length*12
                     return (
                       <>
-                        {pending.map(a => renderFullCard(a))}
-
-                        {/* Section 2 — DONE group, collapsed by default */}
-                        {done.length > 0 && (
-                          <>
-                            <div onClick={() => setDoneGroupExpanded(prev => !prev)}
-                              style={{ display:'flex', alignItems:'center', gap:8, padding:'8px 12px', marginBottom:4, cursor:'pointer', borderRadius:6, border:'1px solid rgba(245,166,35,0.15)', background:'rgba(245,166,35,0.03)', transition:'all 0.15s' }}>
-                              <span style={{ fontSize:11, color:'#4a5260', flexShrink:0 }}>{doneGroupExpanded ? '▼' : '▶'}</span>
-                              <span style={{ fontSize:11, fontFamily:'monospace', fontWeight:700, color:'#f5a623' }}>DONE ({done.length})</span>
-                              <span style={{ fontSize:11, color:'#4a5260', fontFamily:'monospace' }}>· click to {doneGroupExpanded ? 'collapse' : 'expand'}</span>
+                        <div className="dh-value-card">
+                          <div className="dh-value-label">Total saved this month</div>
+                          <div className="dh-value-n">{'£'}{totalSaved.toLocaleString()}</div>
+                          <div className="dh-value-sub">across {whLog.length} incidents handled</div>
+                        </div>
+                        <div className="dh-divider"/>
+                        <div className="dh-value-card">
+                          <div className="dh-value-label">Response time saved</div>
+                          <div className="dh-value-n" style={{color:'#f5a623'}}>{timeSavedMins>=60?`${(timeSavedMins/60).toFixed(1)}h`:`${timeSavedMins}m`}</div>
+                          <div className="dh-value-sub">{smsFired.length} SMS-handled events · 12 min each</div>
+                        </div>
+                        <div className="dh-divider"/>
+                        <div className="dh-value-card">
+                          <div className="dh-value-label">Breakdown</div>
+                          {whLog.slice(0,8).map((log,i)=>(
+                            <div key={i} style={{display:'flex',justifyContent:'space-between',marginBottom:8,alignItems:'center'}}>
+                              <span style={{fontSize:12,color:'rgba(255,255,255,0.48)',fontFamily:"'DM Sans',sans-serif"}}>{(log.event_type||'').replace(/_/g,' ')}</span>
+                              <span style={{fontFamily:"'DM Mono',monospace",fontSize:12,color:'rgba(255,255,255,0.92)'}}>{log.financial_impact>0?`\u00A3${Number(log.financial_impact).toLocaleString()}`:'\u2014'}</span>
                             </div>
-                            {doneGroupExpanded && done.map(a => {
-                              const isExecuted = a.status === 'executed' || a.status === 'resolved'
-                              const isRejected = a.status === 'rejected' || a.status === 'expired'
-                              const borderCol = isExecuted ? '#f5a623' : '#374151'
-                              const bgCol = isExecuted ? 'rgba(245,166,35,0.03)' : 'rgba(55,65,81,0.03)'
-                              const ico = typeMap[a.action_type] || '⚡'
-                              const timeStr = a.executed_at ? new Date(a.executed_at).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}) : a.created_at ? new Date(a.created_at).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}) : ''
-                              const isExpanded = expandedApprovals.has(a.id)
-                              const toggleExpand = () => setExpandedApprovals(prev => { const next = new Set(prev); next.has(a.id) ? next.delete(a.id) : next.add(a.id); return next })
-
-                              if (isExpanded) return renderFullCard(a)
-
-                              return (
-                                <div key={a.id} onClick={toggleExpand} style={{ border:`1px solid ${borderCol}33`, borderLeft:`3px solid ${borderCol}`, borderRadius:6, background:bgCol, marginBottom:4, cursor:'pointer', padding:'8px 12px', display:'flex', alignItems:'center', gap:8, transition:'all 0.15s' }}>
-                                  <span style={{ fontSize:11, padding:'2px 7px', background:`${borderCol}22`, color:borderCol, fontFamily:'monospace', fontWeight:700, flexShrink:0 }}>
-                                    {isExecuted ? '✓ DONE' : isRejected ? '✕ REJECTED' : a.status?.toUpperCase()}
-                                  </span>
-                                  <span style={{ fontSize:12, color:'#8a9099', flex:1, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{ico} {a.action_label}</span>
-                                  <span style={{ fontSize:11, color:'#374151', flexShrink:0 }}>{timeStr}</span>
-                                  <span style={{ fontSize:11, color:'#4a5260', flexShrink:0 }}>▶</span>
-                                </div>
-                              )
-                            })}
-                          </>
-                        )}
+                          ))}
+                        </div>
                       </>
                     )
                   })()}
-                </div>
-              </div>
-
-              {/* ══ RIGHT — INCIDENT FEED + VALUE ══ */}
-              <div className="dh-cmd-right" style={{ width:280, flexShrink:0, display:'flex', flexDirection:'column', overflow:'hidden' }}>
-
-                {/* Toggle header */}
-                <div style={{ background:'#0d1420', borderBottom:'1px solid rgba(255,255,255,0.06)', flexShrink:0, display:'flex' }}>
-                  <button onClick={() => setCommandRightTab('incidents')}
-                    style={{ flex:1, padding:'12px 0', background:'transparent', border:'none', borderBottom: commandRightTab==='incidents' ? '2px solid #f5a623' : '2px solid transparent', color: commandRightTab==='incidents' ? '#e8eaed' : '#4a5260', fontSize:11, fontWeight:700, letterSpacing:'0.08em', cursor:'pointer', fontFamily:'monospace' }}>
-                    INCIDENTS
-                  </button>
-                  <button onClick={() => setCommandRightTab('value')}
-                    style={{ flex:1, padding:'12px 0', background:'transparent', border:'none', borderBottom: commandRightTab==='value' ? '2px solid #f5a623' : '2px solid transparent', color: commandRightTab==='value' ? '#f5a623' : '#4a5260', fontSize:11, fontWeight:700, letterSpacing:'0.08em', cursor:'pointer', fontFamily:'monospace' }}>
-                    VALUE ▲
-                  </button>
-                </div>
-
-                {/* Mini value banner — always visible */}
-                {(() => {
-                  const hiCrit = whLog.filter(l => l.severity === 'HIGH' || l.severity === 'CRITICAL')
-                  const totalProtected = hiCrit.reduce((s, l) => s + (l.financial_impact || 0), 0)
-                  const timeSavedMins = whLog.filter(l=>l.sms_fired).length * 12
-                  return (
-                    <div onClick={() => setCommandRightTab('value')} style={{ background:'rgba(245,166,35,0.04)', borderBottom:'1px solid rgba(245,166,35,0.12)', padding:'10px 16px', cursor:'pointer', flexShrink:0, display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-                      <div>
-                        <div style={{ fontSize:11, color:'#4a5260', letterSpacing:2, marginBottom:2 }}>SLA PROTECTED</div>
-                        <div style={{ fontSize:20, fontWeight:700, color:'#f5a623', fontFamily:'monospace', lineHeight:1 }}>£{totalProtected.toLocaleString()}</div>
-                      </div>
-                      <div style={{ textAlign:'right' }}>
-                        <div style={{ fontSize:11, color:'#4a5260', letterSpacing:2, marginBottom:2 }}>TIME SAVED</div>
-                        <div style={{ fontSize:20, fontWeight:700, color:'#f5a623', fontFamily:'monospace', lineHeight:1 }}>{timeSavedMins >= 60 ? `${(timeSavedMins/60).toFixed(1)}h` : `${timeSavedMins}m`}</div>
-                      </div>
-                    </div>
-                  )
-                })()}
-
-                {/* INCIDENTS tab */}
-                {commandRightTab === 'incidents' && (
-                  <div style={{ flex:1, overflowY:'auto' }}>
-                    {/* Severity filter pills */}
-                    <div style={{ display:'flex', gap:4, padding:'8px 12px', borderBottom:'1px solid rgba(255,255,255,0.04)', flexWrap:'wrap' }}>
-                      {['ALL','RECENT','CRITICAL','HIGH','MEDIUM','LOW'].map(f => {
-                        const active = incidentSeverityFilter === f
-                        return (
-                          <button key={f} type="button"
-                            onClick={(e) => { e.stopPropagation(); setIncidentSeverityFilter(f) }}
-                            style={{ padding:'3px 9px', fontSize:11, fontFamily:'monospace', fontWeight:700, borderRadius:4, cursor:'pointer', border: active ? '1px solid rgba(245,166,35,0.4)' : '1px solid rgba(255,255,255,0.06)', background: active ? 'rgba(245,166,35,0.12)' : 'transparent', color: active ? '#f5a623' : '#4a5260', letterSpacing:'0.04em', lineHeight:1.4, position:'relative', zIndex:1 }}>
-                            {f}
-                          </button>
-                        )
-                      })}
-                    </div>
-                    {(() => {
-                      const sevRank = { CRITICAL: 0, HIGH: 1, MEDIUM: 2, LOW: 3 }
-                      const normSeverity = (s) => (s || '').toUpperCase()
-                      const byNewest = (a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0)
-                      let filtered
-                      let sorted
-                      if (incidentSeverityFilter === 'ALL') {
-                        filtered = whLog
-                        sorted = [...filtered].sort((a, b) => {
-                          const ra = sevRank[normSeverity(a.severity)] ?? 4
-                          const rb = sevRank[normSeverity(b.severity)] ?? 4
-                          if (ra !== rb) return ra - rb
-                          return byNewest(a, b)
-                        })
-                      } else if (incidentSeverityFilter === 'RECENT') {
-                        sorted = [...whLog].sort(byNewest).slice(0, 10)
-                        filtered = sorted
-                      } else {
-                        filtered = whLog.filter(l => normSeverity(l.severity) === incidentSeverityFilter)
-                        sorted = [...filtered].sort(byNewest)
-                      }
-                      if (sorted.length === 0) {
-                        const emptyMsg = whLog.length === 0
-                          ? 'No events logged yet'
-                          : `No ${incidentSeverityFilter} events`
-                        return (
-                          <div style={{ padding:16, textAlign:'center', opacity:0.4 }}>
-                            <div style={{ fontSize:11, color:'#4a5260' }}>{emptyMsg}</div>
-                          </div>
-                        )
-                      }
-                      return sorted.map((log, i) => {
-                        const sc = log.severity==='CRITICAL'?'#ef4444':log.severity==='HIGH'?'#f59e0b':log.severity==='MEDIUM'?'#3b82f6':'#374151'
-                        const timeStr = log.created_at ? new Date(log.created_at).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}) : ''
-                        return (
-                          <div key={log.id || i} style={{ padding:'10px 16px', borderBottom:'1px solid rgba(255,255,255,0.04)', borderLeft:`3px solid ${sc}`, background: i===0 ? 'rgba(255,255,255,0.01)' : 'transparent' }}>
-                            <div style={{ display:'flex', gap:8, alignItems:'flex-start' }}>
-                              <span style={{ fontSize:11, padding:'2px 5px', background:`${sc}22`, color:sc, fontFamily:'monospace', fontWeight:700, flexShrink:0, marginTop:1 }}>{log.severity}</span>
-                              <div style={{ flex:1, minWidth:0 }}>
-                                <div style={{ fontSize:11, fontWeight:600, color: i===0 ? '#e8eaed' : '#8a9099', marginBottom:2, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
-                                  {log.event_type?.replace(/_/g,' ')} · {log.payload?.vehicle_reg || ''}
-                                </div>
-                                <div style={{ fontSize:11, color:'#4a5260' }}>{log.system_name} · {timeStr}</div>
-                                {log.financial_impact > 0 && <div style={{ fontSize:11, color: i===0 ? '#f59e0b' : '#f5a623', marginTop:2, fontWeight:600 }}>£{Number(log.financial_impact).toLocaleString()}</div>}
-                                {log.sms_fired && <div style={{ fontSize:11, color:'#f5a623', marginTop:1 }}>✓ SMS sent</div>}
-                              </div>
-                            </div>
-                          </div>
-                        )
-                      })
-                    })()}
-                  </div>
-                )}
-
-                {/* VALUE tab */}
-                {commandRightTab === 'value' && (() => {
-                  const hiCrit = whLog.filter(l => l.severity==='HIGH'||l.severity==='CRITICAL')
-                  const smsFired = whLog.filter(l => l.sms_fired)
-                  const totalProtected = hiCrit.reduce((s,l) => s + (l.financial_impact||0), 0)
-                  const payloadVerified = hiCrit.filter(l => l.financial_source === 'payload').length
-                  const aiEstimated = hiCrit.filter(l => l.financial_source === 'ai_estimate').length
-                  const timeSavedMins = smsFired.length * 12
-                  const opsValueGbp = Math.round(smsFired.length * (14.42 / 60) * 12)
-                  const driverValueGbp = Math.round(smsFired.length * (15.38 / 60) * 12)
-                  const canProject = whLog.length >= 20 // 3+ days of data
-                  const stats = [
-                    { label:'TOTAL SLA EXPOSURE PROTECTED', value:`£${totalProtected.toLocaleString()}`, sub:`${hiCrit.length} qualifying events · ${payloadVerified} payload-verified · ${aiEstimated} AI-estimated`, color:'#f5a623' },
-                    { label:'RESPONSE TIME SAVED', value: timeSavedMins >= 60 ? `${(timeSavedMins/60).toFixed(1)}h` : `${timeSavedMins}m`, sub:`${timeSavedMins} min · 12 min/SMS-handled event`, color:'#f5a623' },
-                    { label:'INCIDENTS LOGGED', value:String(whLog.length), sub:`${smsFired.length} ops SMS sent · ${hiCrit.length} HIGH/CRIT`, color:'#f59e0b' },
-                    { label:'OPS TIME RECOVERED', value:`£${opsValueGbp}`, sub:`£14.42/hr · 12 min per SMS event`, color:'#6366f1' },
-                    { label:'DRIVER TIME RECOVERED', value:`£${driverValueGbp}`, sub:`£15.38/hr · 12 min faster per instruction`, color:'#6366f1' },
-                  ]
-                  return (
-                    <div style={{ flex:1, overflowY:'auto', padding:'12px 16px' }}>
-                      {stats.map((s, i) => (
-                        <div key={i} style={{ background:'rgba(255,255,255,0.02)', border:`1px solid ${s.color}22`, borderLeft:`3px solid ${s.color}`, borderRadius:6, padding:'12px', marginBottom:8 }}>
-                          <div style={{ fontSize:11, color:'#4a5260', letterSpacing:'0.1em', marginBottom:6 }}>{s.label}</div>
-                          <div style={{ fontSize:24, fontWeight:700, color:s.color, fontFamily:'monospace', lineHeight:1, marginBottom:4 }}>{s.value}</div>
-                          <div style={{ fontSize:11, color:'#374151', lineHeight:1.5 }}>{s.sub}</div>
-                        </div>
-                      ))}
-                      <div style={{ padding:'10px 0', fontSize:11, color:'#374151', lineHeight:1.6, borderTop:'1px solid rgba(255,255,255,0.05)', marginTop:4 }}>
-                        {canProject
-                          ? `Annual projection: £${Math.round((totalProtected/whLog.length)*365/7*5).toLocaleString()} estimated`
-                          : 'Annual projection available after 3 days of data'
-                        }<br/>HIGH/CRITICAL only · Payload-verified figures preferred over AI estimates
-                      </div>
-                    </div>
-                  )
-                })()}
-
-                {/* Stats footer */}
-                <div style={{ background:'#0d1420', borderTop:'1px solid rgba(255,255,255,0.06)', padding:'10px 16px', flexShrink:0 }}>
-                  <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'5px 0' }}>
-                    {[
-                      ['WEBHOOKS', String(whLog.length)],
-                      ['SMS SENT', String(whLog.filter(l=>l.sms_fired).length)],
-                      ['PENDING', String(pendingApprovals.filter(a=>a.status==='pending').length)],
-                      ['EXECUTED', String(pendingApprovals.filter(a=>a.status==='executed').length)],
-                    ].map(([k,v]) => (
-                      <div key={k} style={{ display:'flex', justifyContent:'space-between', paddingRight:8 }}>
-                        <span style={{ fontSize:11, color:'#374151' }}>{k}</span>
-                        <span style={{ fontSize:11, color:'#9ca3af', fontWeight:700, fontFamily:'monospace' }}>{v}</span>
-                      </div>
-                    ))}
-                  </div>
                 </div>
               </div>
 
