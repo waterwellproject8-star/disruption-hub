@@ -1545,8 +1545,8 @@ export default function DriverApp() {
               )}
             </div>
           </div>
-          <div className="dh-greeting">{new Date().getHours()<12?'Good morning,':new Date().getHours()<18?'Good afternoon,':'Good evening,'}</div>
-          <div className="dh-driver-name">{driverInfo.name||'Driver'}</div>
+          <div className="dh-greeting">{driverInfo.name||'Driver'}</div>
+          <div className="dh-driver-name">{driverInfo.vehicleReg||''}</div>
           <div className="dh-pips-row">
             {jobs.map((j)=>(<div key={j.ref} className={'dh-pip'+(j.status==='completed'?' done':'')+(j.ref===activeJob?.ref&&j.status!=='completed'?' active':'')}/>))}
             {!loading&&jobs.length>0&&(<span className="dh-pip-txt">Run {jobs.filter(j=>j.status==='completed').length+1} of {jobs.length}</span>)}
