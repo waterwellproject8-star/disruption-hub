@@ -218,7 +218,8 @@ Provide immediate disruption analysis and action plan.`
     const db = getDB()
 
     // Dedup — skip if a pending approval already exists for this vehicle in the last 5 minutes
-    if (db && vehicle_reg && client_id) {
+    // Running late alerts bypass dedup — they should always log even if another alert is pending
+    if (db && vehicle_reg && client_id && issue_type !== 'running_late') {
       const since = new Date(Date.now() - 5 * 60 * 1000).toISOString()
       const { data: recent } = await db.from('approvals')
         .select('id')
@@ -246,7 +247,8 @@ Provide immediate disruption analysis and action plan.`
     }
 
     // ── RUNNING LATE — fast path, no AI call needed ──────────────────────
-    if (issue_type === 'running_late' && delay_minutes && db) {
+    if (issue_type === 'running_late' && delay_minutes) {
+      if (!db) return Response.json({ success: true, severity: 'LOW', financial_impact: 0, sms_sent: false, action_type: 'running_late' })
       const mins = parseInt(delay_minutes, 10) || 0
       let slaWindow = null
       let consigneeName = null
