@@ -1597,7 +1597,8 @@ export default function DriverApp() {
             const sc=STATUS_COLORS[activeJob.status]||STATUS_COLORS['on-track']
             const skipCollection = activeJob.multi_collection===false && (activeJob.collection_sequence||1) > 1
             const jobSteps = skipCollection ? PROGRESS_STEPS.filter(s=>s.id!=='arrived_collection'&&s.id!=='loading_complete') : PROGRESS_STEPS
-            const isInitialStatus = !activeJob.status||activeJob.status==='on-track'||activeJob.status==='pending'
+            const progressStatusValues = jobSteps.map(s=>s.status)
+            const isInitialStatus = !activeJob.status||activeJob.status==='on-track'||activeJob.status==='pending'||activeJob.status==='delayed'||activeJob.status==='disrupted'||activeJob.status==='part_delivered'||(!progressStatusValues.includes(activeJob.status)&&activeJob.status!=='completed'&&activeJob.status!=='at_risk')
             const completedIndex = jobSteps.findIndex(s=>s.status===activeJob.status)
             let nextStepIndex
             if (completedIndex >= 0) {
