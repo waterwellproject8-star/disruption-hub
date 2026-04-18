@@ -205,7 +205,8 @@ export default function DriverApp() {
         try {
           const all = JSON.parse(savedMessages)
           const readList = JSON.parse(localStorage.getItem('dh_ops_messages_read') || '[]')
-          setOpsMessages(all.filter(m => !readList.includes(m)))
+          const dismissed = JSON.parse(localStorage.getItem('dh_dismissed_notifications') || '[]')
+          setOpsMessages(all.filter(m => !readList.includes(m) && !dismissed.includes('ops_' + m.substring(0, 40))))
         } catch {}
       }
 
@@ -343,7 +344,9 @@ export default function DriverApp() {
           const latest = opsInstructions[opsInstructions.length - 1]
           const msg = latest.alert.replace('OPS_MSG:', '').trim()
           const msgKey = 'ops_msg_' + latest.updated_at
-          if (!notifiedCancellations.current.has(msgKey)) {
+          const dismissKey = 'ops_' + msg.substring(0, 40)
+          const alreadyDismissed = (() => { try { return JSON.parse(localStorage.getItem('dh_dismissed_notifications') || '[]').includes(dismissKey) } catch { return false } })()
+          if (!notifiedCancellations.current.has(msgKey) && !alreadyDismissed) {
             notifiedCancellations.current.add(msgKey)
             setOpsMessages(prev => {
               const updated = [...prev, msg]
@@ -397,7 +400,7 @@ export default function DriverApp() {
 
   function handleSessionSuperseded() {
     setSessionSuperseded(true)
-    ;['dh_driver_info','dh_shift_started','dh_shift_started_at','dh_last_alert','dh_prior_alert','dh_job_progress','dh_ops_messages','dh_ops_messages_read','dh_session_id','dh_postshift_draft'].forEach(k=>localStorage.removeItem(k))
+    ;['dh_driver_info','dh_shift_started','dh_shift_started_at','dh_last_alert','dh_prior_alert','dh_job_progress','dh_ops_messages','dh_ops_messages_read','dh_dismissed_notifications','dh_session_id','dh_postshift_draft'].forEach(k=>localStorage.removeItem(k))
   }
 
   function pushProgressToSupabase(ref, status, alert, pod=null) {
@@ -929,7 +932,7 @@ export default function DriverApp() {
     }
 
     // 2. Wipe shift/session keys — keep dh_driver_info so name + phone pre-fill on next login
-    ;['dh_shift_started','dh_shift_started_at','dh_last_alert','dh_prior_alert','dh_job_progress','dh_ops_messages','dh_ops_messages_read','dh_session_id','dh_postshift_draft'].forEach(k=>localStorage.removeItem(k))
+    ;['dh_shift_started','dh_shift_started_at','dh_last_alert','dh_prior_alert','dh_job_progress','dh_ops_messages','dh_ops_messages_read','dh_dismissed_notifications','dh_session_id','dh_postshift_draft'].forEach(k=>localStorage.removeItem(k))
 
     // 3-5. Reset state so the SHIFT EXPIRED guard (setupDone && staleSession) falsifies and setup screen re-renders.
     // Pre-populate name + phone from dh_driver_info (same driver, same phone every shift).
@@ -1002,10 +1005,10 @@ export default function DriverApp() {
           defect_details: null
         })
       }).then(res => {
-        if (res.ok) ['dh_shift_started','dh_shift_started_at','dh_last_alert','dh_prior_alert','dh_job_progress','dh_postshift_draft','dh_session_id'].forEach(k=>localStorage.removeItem(k))
+        if (res.ok) ['dh_shift_started','dh_shift_started_at','dh_last_alert','dh_prior_alert','dh_job_progress','dh_postshift_draft','dh_dismissed_notifications','dh_session_id'].forEach(k=>localStorage.removeItem(k))
       }).catch(() => {})
     } else {
-      ['dh_shift_started','dh_shift_started_at','dh_last_alert','dh_prior_alert','dh_job_progress','dh_session_id'].forEach(k=>localStorage.removeItem(k))
+      ['dh_shift_started','dh_shift_started_at','dh_last_alert','dh_prior_alert','dh_job_progress','dh_dismissed_notifications','dh_session_id'].forEach(k=>localStorage.removeItem(k))
     }
   }
 
@@ -1331,7 +1334,7 @@ export default function DriverApp() {
         {shiftSummary.unresolved>0&&<div style={{padding:'12px 14px',background:'rgba(255,69,58,0.08)',border:'1px solid rgba(255,69,58,0.2)',borderRadius:12,marginBottom:8,fontSize:13,color:'#ff453a'}}>⚠ {shiftSummary.unresolved} unresolved job{shiftSummary.unresolved>1?'s':''} — ops notified</div>}
         {shiftSummary.notes&&<div style={{padding:'12px 14px',background:'rgba(255,255,255,0.05)',border:'1px solid rgba(255,255,255,0.07)',borderRadius:12,marginBottom:8,fontSize:13,color:'rgba(255,255,255,0.45)'}}>Notes: <span style={{color:'rgba(255,255,255,0.92)'}}>{shiftSummary.notes}</span></div>}
         {shiftSummary.completed===shiftSummary.total&&<div style={{padding:'12px',background:'rgba(245,166,35,0.06)',border:'1px solid rgba(245,166,35,0.18)',borderRadius:12,textAlign:'center',marginBottom:12,fontSize:14,color:'#f5a623',fontWeight:600}}>✓ Full shift — all runs delivered</div>}
-        <button onClick={()=>{['dh_driver_info','dh_shift_started','dh_shift_started_at','dh_last_alert','dh_prior_alert','dh_job_progress','dh_ops_messages','dh_ops_messages_read','dh_session_id'].forEach(k=>localStorage.removeItem(k));setSetupDone(false);setShiftStarted(false);setShiftEnded(false);setJobs([]);setActiveJob(null);setShiftSummary(null)}}
+        <button onClick={()=>{['dh_driver_info','dh_shift_started','dh_shift_started_at','dh_last_alert','dh_prior_alert','dh_job_progress','dh_ops_messages','dh_ops_messages_read','dh_dismissed_notifications','dh_session_id'].forEach(k=>localStorage.removeItem(k));setSetupDone(false);setShiftStarted(false);setShiftEnded(false);setJobs([]);setActiveJob(null);setShiftSummary(null)}}
           style={{width:'100%',padding:18,background:'#f5a623',border:'none',borderRadius:16,color:'#000',fontWeight:700,fontSize:17,fontFamily:"'DM Sans',sans-serif",letterSpacing:'-0.2px',cursor:'pointer',boxShadow:'0 6px 24px rgba(245,166,35,0.3)',marginTop:8}}>
           Start New Shift
         </button>
@@ -1504,7 +1507,7 @@ export default function DriverApp() {
         <div style={{margin:'8px 14px 0',background:'#1e1e26',border:'1px solid rgba(255,255,255,0.09)',borderRadius:16,overflow:'hidden',boxShadow:'0 4px 20px rgba(0,0,0,0.4)'}}>
           <div style={{padding:'10px 14px 8px',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
             <div style={{fontFamily:"'DM Mono',monospace",fontSize:9,fontWeight:700,color:'#f5a623',letterSpacing:'0.12em'}}>OPS MESSAGE</div>
-            <button onClick={()=>{const msg=opsMessages[opsMessages.length-1];if(msg){try{const read=JSON.parse(localStorage.getItem('dh_ops_messages_read')||'[]');read.push(msg);localStorage.setItem('dh_ops_messages_read',JSON.stringify(read))}catch{}}setOpsMessages(prev=>prev.filter(m=>m!==msg))}} style={{background:'transparent',border:'none',color:'rgba(255,255,255,0.35)',fontSize:16,cursor:'pointer',padding:'0 2px',lineHeight:1}}>✕</button>
+            <button onClick={()=>{const msg=opsMessages[opsMessages.length-1];if(msg){try{const read=JSON.parse(localStorage.getItem('dh_ops_messages_read')||'[]');read.push(msg);localStorage.setItem('dh_ops_messages_read',JSON.stringify(read));const dismissed=JSON.parse(localStorage.getItem('dh_dismissed_notifications')||'[]');dismissed.push('ops_'+msg.substring(0,40));localStorage.setItem('dh_dismissed_notifications',JSON.stringify(dismissed))}catch{}}setOpsMessages(prev=>prev.filter(m=>m!==msg))}} style={{background:'transparent',border:'none',color:'rgba(255,255,255,0.35)',fontSize:16,cursor:'pointer',padding:'0 2px',lineHeight:1}}>✕</button>
           </div>
           <div style={{padding:'0 14px 14px',fontSize:14,color:'rgba(255,255,255,0.8)',lineHeight:1.5,fontFamily:"'DM Sans',-apple-system,sans-serif"}}>{opsMessages[opsMessages.length-1]}</div>
         </div>
@@ -1841,7 +1844,7 @@ export default function DriverApp() {
               <div>3. Do not reattempt without ops confirmation</div>
             </div>
             <div style={{fontFamily:'monospace',fontSize:10,color:'#f59e0b',letterSpacing:'0.08em',marginBottom:16}}>WAITING FOR OPS INSTRUCTIONS...</div>
-            <button onClick={()=>setFailedDeliveryHold(null)} style={{padding:'10px 24px',background:'transparent',border:'1px solid rgba(255,255,255,0.12)',borderRadius:6,color:'#8a9099',fontSize:12,cursor:'pointer'}}>Dismiss (after 10 min)</button>
+            <button onClick={()=>{try{const dismissed=JSON.parse(localStorage.getItem('dh_dismissed_notifications')||'[]');dismissed.push('fdh_'+activeJob?.ref+'_'+Date.now());localStorage.setItem('dh_dismissed_notifications',JSON.stringify(dismissed))}catch{};setFailedDeliveryHold(null)}} style={{padding:'10px 24px',background:'transparent',border:'1px solid rgba(255,255,255,0.12)',borderRadius:6,color:'#8a9099',fontSize:12,cursor:'pointer'}}>Dismiss</button>
           </div>
         </div>
       )}
