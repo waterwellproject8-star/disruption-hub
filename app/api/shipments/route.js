@@ -34,10 +34,10 @@ function buildPearsonShipments() {
   const r4SlaStart  = new Date(now.getTime() + 210 * 60000)
 
   return [
-    { ref:'PH-4421', route:'Leeds → Bradford (Tesco DC)', status:'on-track', eta:fmt(r1Eta), sla_window:window(r1SlaStart,60), carrier:'Pearson Haulage', cargo_type:'mixed retail', cargo_value:8400, penalty_if_breached:1200, alert:null, drops:1 },
-    { ref:'PH-8832', route:'Leeds → London (M1)', status:'disrupted', eta:'TBC — recovery in progress', sla_window:window(r2SlaStart,60), carrier:'Pearson Haulage', cargo_type:'mixed retail', cargo_value:18500, penalty_if_breached:2400, alert:'M1 breakdown — recovery dispatched', drops:1 },
-    { ref:'PH-5517', route:'Leeds → Sheffield (NHS Supply Chain)', status:'delayed', eta:fmt(r3Eta), sla_window:window(r3SlaStart,60), carrier:'Pearson Haulage', cargo_type:'pharmaceutical', cargo_value:12000, penalty_if_breached:2400, alert:'Delayed — cascade from London disruption', drops:2 },
-    { ref:'PH-9103', route:'Leeds → Edinburgh (A1)', status:'at_risk', eta:fmt(r4Eta), sla_window:window(r4SlaStart,60), carrier:'Pearson Haulage', cargo_type:'chilled 0-5C', cargo_value:9200, penalty_if_breached:1800, alert:'Cold chain — chilled cargo, slot at risk from cascade', drops:1 },
+    { ref:'PH-4421', route:'Leeds → Bradford (Tesco DC)', status:'on-track', eta:fmt(r1Eta), sla_window:window(r1SlaStart,60), carrier:'Pearson Haulage', cargo_type:'mixed retail', cargo_value:8400, penalty_if_breached:1200, alert:null, drops:1, multi_collection:false, collection_sequence:1 },
+    { ref:'PH-8832', route:'Leeds → London (M1)', status:'disrupted', eta:'TBC — recovery in progress', sla_window:window(r2SlaStart,60), carrier:'Pearson Haulage', cargo_type:'mixed retail', cargo_value:18500, penalty_if_breached:2400, alert:'M1 breakdown — recovery dispatched', drops:1, multi_collection:false, collection_sequence:2 },
+    { ref:'PH-5517', route:'Leeds → Sheffield (NHS Supply Chain)', status:'delayed', eta:fmt(r3Eta), sla_window:window(r3SlaStart,60), carrier:'Pearson Haulage', cargo_type:'pharmaceutical', cargo_value:12000, penalty_if_breached:2400, alert:'Delayed — cascade from London disruption', drops:2, multi_collection:false, collection_sequence:3 },
+    { ref:'PH-9103', route:'Leeds → Edinburgh (A1)', status:'at_risk', eta:fmt(r4Eta), sla_window:window(r4SlaStart,60), carrier:'Pearson Haulage', cargo_type:'chilled 0-5C', cargo_value:9200, penalty_if_breached:1800, alert:'Cold chain — chilled cargo, slot at risk from cascade', drops:1, multi_collection:false, collection_sequence:4 },
   ]
 }
 

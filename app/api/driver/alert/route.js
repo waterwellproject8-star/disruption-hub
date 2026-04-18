@@ -324,7 +324,8 @@ Provide immediate disruption analysis and action plan.`
             script: firstAction,
             source: 'driver_alert',
             issue_context: issueContext.substring(0, 100),
-            severity
+            severity,
+            ...((issue_type === 'goods_refused' || issue_type === 'access_problem' || issue_type === 'damage_found') ? { type: 'failed_delivery' } : {})
           },
           financial_value: force_financial_zero ? 0 : financialImpact,
           status: 'pending',
@@ -479,7 +480,7 @@ Provide immediate disruption analysis and action plan.`
           client_id,
           action_type: 'call',
           action_label: `Call ${fdConsignee || ref || 'consignee'} — failed delivery callback`,
-          action_details: { vehicle_reg, ref: ref || 'DRIVER-ALERT', driver_name: driver_name || null, driver_phone: driver_phone || null, call_type: 'failed_delivery_callback', consignee_name: fdConsignee || ref, consignee_phone: fdPhone, source: 'driver_alert', severity },
+          action_details: { vehicle_reg, ref: ref || 'DRIVER-ALERT', driver_name: driver_name || null, driver_phone: driver_phone || null, call_type: 'failed_delivery_callback', type: 'failed_delivery', consignee_name: fdConsignee || ref, consignee_phone: fdPhone, source: 'driver_alert', severity },
           financial_value: 0,
           status: 'pending',
           escalation_at: new Date(Date.now() + 20 * 60 * 1000).toISOString()
@@ -516,6 +517,10 @@ Provide immediate disruption analysis and action plan.`
       let smsBody
       if (issue_type === 'medical' || issue_type === 'driver_unwell') {
         smsBody = `DisruptionHub — CRITICAL\n${vehicle_reg || ''}: Medical emergency. Driver: ${driver_name || 'Unknown'}.${driver_phone ? `\nCall driver: ${driver_phone}.` : ''}${location_description ? `\nDriver at: ${location_description}.` : ''}\nReply YES to acknowledge, NO to dismiss, OPEN for dashboard.\nIf driver unresponsive — call 999 immediately.`
+      } else if (issue_type === 'goods_refused' || issue_type === 'access_problem' || issue_type === 'damage_found') {
+        const reason = (human_description || 'No reason given').substring(0, 60).replace(/\n/g, ' ')
+        const consignee = ref || 'consignee'
+        smsBody = `DisruptionHub — HIGH\n${vehicle_reg || ''}: Delivery refused at ${consignee}.\nReason: ${reason}.\nReply YES to return to depot, HOLD to keep driver on site, ALT for alternative delivery.\nDashboard: disruptionhub.ai/unlock`
       } else {
         smsBody = buildOpsSMS({
           severity,

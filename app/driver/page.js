@@ -432,7 +432,7 @@ export default function DriverApp() {
         ref:s.ref, route:s.route, carrier:s.carrier, status:s.status,
         eta:s.eta, sla_window:s.sla_window, cargo_type:s.cargo_type,
         alert:s.alert, penalty_if_breached:s.penalty_if_breached, cargo_value:s.cargo_value,
-        drops:s.drops||null
+        drops:s.drops||null, multi_collection:s.multi_collection??true, collection_sequence:s.collection_sequence??1
       }))
       const merged = mergeJobProgress(mapped, progData.progress||[])
 
@@ -1592,19 +1592,21 @@ export default function DriverApp() {
           {activeJob&&activeJob.status!=='completed'?(()=>{
             const isAtRisk=activeJob.status==='at_risk'
             const sc=STATUS_COLORS[activeJob.status]||STATUS_COLORS['on-track']
+            const skipCollection = activeJob.multi_collection===false && (activeJob.collection_sequence||1) > 1
+            const jobSteps = skipCollection ? PROGRESS_STEPS.filter(s=>s.id!=='arrived_collection'&&s.id!=='loading_complete') : PROGRESS_STEPS
             const isInitialStatus = !activeJob.status||activeJob.status==='on-track'||activeJob.status==='pending'
-            const completedIndex = PROGRESS_STEPS.findIndex(s=>s.status===activeJob.status)
+            const completedIndex = jobSteps.findIndex(s=>s.status===activeJob.status)
             let nextStepIndex
             if (completedIndex >= 0) {
               nextStepIndex = completedIndex + 1
             } else if (isInitialStatus) {
               nextStepIndex = 0
             } else {
-              nextStepIndex = PROGRESS_STEPS.length
+              nextStepIndex = jobSteps.length
             }
             const currentStepIndex = nextStepIndex
-            const currentStep = nextStepIndex < PROGRESS_STEPS.length ? PROGRESS_STEPS[nextStepIndex] : null
-            const prevStep = nextStepIndex > 0 ? PROGRESS_STEPS[nextStepIndex - 1] : null
+            const currentStep = nextStepIndex < jobSteps.length ? jobSteps[nextStepIndex] : null
+            const prevStep = nextStepIndex > 0 ? jobSteps[nextStepIndex - 1] : null
             const [routeFrom,routeTo]=(activeJob.route||'').split('→').map(s=>s?.trim())
             return (
               <div style={{padding:'0 14px'}}>
@@ -1624,7 +1626,7 @@ export default function DriverApp() {
                   </div>
                   {!isAtRisk&&(
                     <div className="dh-prog-row">
-                      {(()=>{const SHORT={arrived_collection:'Collection',loading_complete:'Loaded',arrived_delivery:'Customer'};return PROGRESS_STEPS.map((step,i)=>{const isDone=currentStepIndex>i;const isCurr=step.status===activeJob.status||(activeJob.status==='on-track'&&i===0)||(activeJob.status==='pending'&&i===0);return(<React.Fragment key={step.id}><div className={`dh-pd${isDone?' done':isCurr?' active':''}`}><div className={`dh-pd-dot${isDone?' done':isCurr?' active':''}`}/>{SHORT[step.id]||step.label.split(' ')[0]}</div>{i<PROGRESS_STEPS.length-1&&<div className={`dh-pd-line${isDone?' done':''}`}/>}</React.Fragment>)})})()}
+                      {(()=>{const SHORT={arrived_collection:'Collection',loading_complete:'Loaded',arrived_delivery:'Customer'};return jobSteps.map((step,i)=>{const isDone=currentStepIndex>i;const isCurr=step.status===activeJob.status||(activeJob.status==='on-track'&&i===0)||(activeJob.status==='pending'&&i===0);return(<React.Fragment key={step.id}><div className={`dh-pd${isDone?' done':isCurr?' active':''}`}><div className={`dh-pd-dot${isDone?' done':isCurr?' active':''}`}/>{SHORT[step.id]||step.label.split(' ')[0]}</div>{i<jobSteps.length-1&&<div className={`dh-pd-line${isDone?' done':''}`}/>}</React.Fragment>)})})()}
                       <div className="dh-pd-line"/><div className="dh-pd"><div className="dh-pd-dot"/>Deliver</div>
                     </div>
                   )}

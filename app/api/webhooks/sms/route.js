@@ -348,6 +348,57 @@ export async function POST(request) {
       return twimlReply('DH: Action rejected and logged.')
     }
 
+    // ── HOLD / ALT — failed delivery actions ────────────────────────────────
+    if (body === 'HOLD' || body === 'ALT') {
+      let pending = null
+      if (smsRef) {
+        const { data } = await db.from('approvals').select('*').eq('client_id', clientId).eq('status', 'pending').ilike('id', `${smsRef}%`).limit(1)
+        pending = data
+      }
+      if (!pending?.length) {
+        const { data } = await db.from('approvals').select('*').eq('client_id', clientId).eq('status', 'pending').order('created_at', { ascending: true }).limit(1)
+        pending = data
+      }
+      if (!pending?.length) return twimlReply('DH: No pending actions.')
+
+      const approval = pending[0]
+      const details = approval.action_details || {}
+      const refTag = details.ref ? ` — ${details.ref}` : ''
+
+      let driverMsg
+      if (body === 'HOLD') {
+        driverMsg = `DisruptionHub OPS${refTag}\nStay on site. Ops are making arrangements — you will receive further instructions shortly.\nDo not leave the vehicle.`
+      } else {
+        driverMsg = `DisruptionHub OPS${refTag}\nAlternative delivery being arranged. Ops will send the new address shortly.\nStand by at current location.`
+      }
+
+      await db.from('approvals').update({
+        status: 'executed',
+        approved_by: contactName,
+        approved_at: new Date().toISOString(),
+        executed_at: new Date().toISOString(),
+        execution_result: { action: body.toLowerCase() }
+      }).eq('id', approval.id)
+
+      let driverPhone = details.driver_phone || null
+      if (!driverPhone && details.vehicle_reg) {
+        const { data: byReg } = await db.from('driver_progress').select('driver_phone').eq('vehicle_reg', details.vehicle_reg).not('driver_phone', 'is', null).order('updated_at', { ascending: false }).limit(1).maybeSingle()
+        driverPhone = byReg?.driver_phone || null
+      }
+
+      if (details.vehicle_reg) {
+        try {
+          await db.from('driver_progress').update({ alert: `OPS_MSG:${driverMsg}`, updated_at: new Date().toISOString() }).eq('vehicle_reg', details.vehicle_reg).not('status', 'eq', 'completed')
+        } catch (e) { console.error('[HOLD/ALT] writeInstruction:', e?.message) }
+      }
+
+      if (driverPhone) {
+        await sendSMS(driverPhone, driverMsg)
+        return twimlReply(`DH: ${body === 'HOLD' ? 'Driver told to stay on site.' : 'Driver told to stand by — send new address when ready.'}`)
+      }
+      return twimlReply(`DH: ${body === 'HOLD' ? 'Hold' : 'Alt'} logged. No driver phone — contact them directly.`)
+    }
+
     // ── OPEN ────────────────────────────────────────────────────────────────
     if (body === 'OPEN') return twimlReply(`DH: Dashboard -> ${appUrl}/ops-9x7k`)
 
@@ -541,6 +592,24 @@ export async function POST(request) {
               .not('status', 'eq', 'completed')
           }
         } catch (e) { console.error('[writeInstructionToApp] exception:', e.message) }
+      }
+
+      // ── FAILED DELIVERY — YES means return to depot ────────────────────
+      if (details.type === 'failed_delivery') {
+        const driverPhone = await resolveDriverPhone()
+        const driverMsg = `DisruptionHub OPS${details.ref ? ` — ${details.ref}` : ''}\nReturn goods to depot. Secure the load and head back now.\nDo not leave goods unattended.`
+        await writeInstructionToApp(driverMsg)
+        if (driverPhone) {
+          const result = await sendSMS(driverPhone, driverMsg)
+          await finaliseApproval(result.success
+            ? { success: true, sms_sent: true, action: 'return_to_depot' }
+            : { success: false, failure_reason: result.error || 'driver_sms_failed' })
+          await sendNextPendingActionSMS()
+          return twimlReply(result.success ? `DH: Driver told to return to depot with goods. ${details.vehicle_reg || ''}` : 'DH: Approved. Call driver directly — SMS failed.')
+        }
+        await finaliseApproval({ success: false, failure_reason: 'no_driver_phone_on_file' })
+        await sendNextPendingActionSMS()
+        return twimlReply('DH: Approved. No driver phone — call them directly.')
       }
 
       // ── DISPATCH ─────────────────────────────────────────────────────────
