@@ -1960,7 +1960,53 @@ export default function DashboardPage() {
         .dh-value-sub { font-size:12px; color:rgba(255,255,255,0.35); }
         .dh-divider { height:1px; background:rgba(255,255,255,0.05); margin:8px 0; }
 
+        /* ── AGENT tab ── */
+        .dh-agent-layout { display:flex; flex:1; overflow:hidden; height:calc(100vh - 105px); }
+        .dh-agent-main { flex:1; display:flex; flex-direction:column; overflow:hidden; background:#08080c; }
+        .dh-ctx-strip { display:flex; align-items:center; gap:8px; padding:10px 24px; border-bottom:1px solid rgba(255,255,255,0.05); flex-shrink:0; overflow-x:auto; }
+        .dh-ctx-strip::-webkit-scrollbar { display:none; }
+        .dh-ctx-label { font-family:'DM Mono',monospace; font-size:9px; color:rgba(255,255,255,0.24); letter-spacing:0.1em; flex-shrink:0; }
+        .dh-ctx-pill { display:flex; align-items:center; gap:5px; padding:5px 12px; border-radius:20px; font-family:'DM Mono',monospace; font-size:9px; letter-spacing:0.06em; white-space:nowrap; border:1px solid transparent; flex-shrink:0; cursor:default; }
+        .dh-ctx-pill.on { background:rgba(245,166,35,0.1); border-color:rgba(245,166,35,0.25); color:#f5a623; }
+        .dh-ctx-pill.off { background:rgba(255,255,255,0.04); border-color:rgba(255,255,255,0.07); color:rgba(255,255,255,0.3); }
+        .dh-ctx-dot { width:5px; height:5px; border-radius:50%; background:currentColor; flex-shrink:0; }
+        .dh-chat-area { flex:1; overflow-y:auto; padding:24px 28px; height:0; }
+        .dh-chat-area::-webkit-scrollbar { width:3px; }
+        .dh-chat-area::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.06); border-radius:2px; }
+        .dh-msg-agent { display:flex; gap:10px; margin-bottom:20px; align-items:flex-start; }
+        .dh-msg-user { display:flex; justify-content:flex-end; margin-bottom:20px; }
+        .dh-agent-avatar { width:26px; height:26px; background:#f5a623; clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%); flex-shrink:0; margin-top:3px; }
+        .dh-bubble-agent { background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.07); border-radius:4px 18px 18px 18px; padding:14px 16px; max-width:76%; font-size:14px; color:rgba(255,255,255,0.7); line-height:1.65; font-family:'DM Sans',sans-serif; }
+        .dh-bubble-agent b,.dh-bubble-agent strong { color:rgba(255,255,255,0.92); font-weight:600; }
+        .dh-bubble-user { background:rgba(245,166,35,0.1); border:1px solid rgba(245,166,35,0.2); border-radius:18px 18px 4px 18px; padding:12px 16px; max-width:60%; font-size:14px; color:rgba(255,255,255,0.88); line-height:1.5; font-family:'DM Sans',sans-serif; }
+        .dh-action-card { background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:11px 14px; margin-top:10px; display:flex; align-items:center; gap:12px; font-family:'DM Sans',sans-serif; }
+        .dh-action-card.done { border-color:rgba(48,209,88,0.2); background:rgba(48,209,88,0.04); }
+        .dh-ac-label { font-size:13px; color:rgba(255,255,255,0.9); font-weight:500; margin-bottom:1px; }
+        .dh-ac-type { font-family:'DM Mono',monospace; font-size:9px; color:rgba(255,255,255,0.28); letter-spacing:0.08em; }
+        .dh-ac-fire { padding:6px 14px; background:#f5a623; border:none; border-radius:8px; color:#000; font-size:12px; font-weight:700; cursor:pointer; font-family:'DM Sans',sans-serif; flex-shrink:0; transition:opacity 0.15s; }
+        .dh-ac-fire:disabled { opacity:0.5; cursor:default; }
+        .dh-ac-sent { padding:6px 14px; background:rgba(48,209,88,0.1); border:1px solid rgba(48,209,88,0.25); border-radius:8px; color:#30d158; font-size:12px; font-weight:700; cursor:default; font-family:'DM Sans',sans-serif; flex-shrink:0; }
+        .dh-typing { display:flex; gap:4px; align-items:center; padding:6px 2px; }
+        .dh-typing-dot { width:6px; height:6px; border-radius:50%; background:rgba(255,255,255,0.3); animation:dh-blink 1.2s infinite; }
+        .dh-typing-dot:nth-child(2) { animation-delay:0.2s; }
+        .dh-typing-dot:nth-child(3) { animation-delay:0.4s; }
+        @keyframes dh-blink { 0%,80%,100%{opacity:0.3}40%{opacity:1} }
+        .dh-quick-row { display:flex; gap:7px; padding:10px 24px; overflow-x:auto; border-top:1px solid rgba(255,255,255,0.05); flex-shrink:0; }
+        .dh-quick-row::-webkit-scrollbar { display:none; }
+        .dh-qp { padding:7px 14px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.07); border-radius:20px; font-size:12px; color:rgba(255,255,255,0.45); cursor:pointer; white-space:nowrap; flex-shrink:0; font-family:'DM Sans',sans-serif; transition:all 0.15s; }
+        .dh-qp:hover { border-color:rgba(245,166,35,0.25); color:#f5a623; }
+        .dh-input-area { padding:12px 24px 20px; border-top:1px solid rgba(255,255,255,0.05); flex-shrink:0; }
+        .dh-input-row { display:flex; align-items:center; gap:10px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.09); border-radius:16px; padding:12px 16px; transition:border-color 0.15s; }
+        .dh-input-row:focus-within { border-color:rgba(245,166,35,0.3); }
+        .dh-chat-input { flex:1; background:none; border:none; outline:none; color:rgba(255,255,255,0.92); font-size:14px; font-family:'DM Sans',sans-serif; }
+        .dh-chat-input::placeholder { color:rgba(255,255,255,0.24); }
+        .dh-send-btn { width:34px; height:34px; border-radius:10px; background:#f5a623; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0; transition:opacity 0.15s; color:#000; }
+        .dh-send-btn:disabled { opacity:0.3; cursor:default; }
+
         @media (max-width: 768px) {
+          .dh-agent-layout { flex-direction:column !important; height:auto !important; overflow-y:auto !important; }
+          .dh-agent-layout .dh-cmd-panel { width:100% !important; border-right:none !important; border-bottom:1px solid rgba(255,255,255,0.05); max-height:300px; }
+          .dh-agent-main { min-height:60vh; }
           .dh-cmd-layout { grid-template-columns:1fr !important; height:auto !important; overflow-y:auto !important; }
           .dh-cmd-panel { border-right:none !important; border-bottom:1px solid rgba(255,255,255,0.05); overflow:visible !important; }
           .dh-cmd-panel:last-child { border-bottom:none; }
@@ -2078,86 +2124,120 @@ export default function DashboardPage() {
 
           {/* ── AGENT TAB ──────────────────────────────────────────────────── */}
           {activeTab === 'agent' && (
-            <>
-              <div style={{ flex:1, overflowY:'auto', padding:'20px' }} ref={responseRef}>
-                {!response && !loading && (
-                  <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', height:'100%', gap:14, opacity:0.3 }}>
-                    <div style={{ fontFamily:'monospace', fontSize:32, color:'#4a5260' }}>◈</div>
-                    <div style={{ fontSize:12, color:'#4a5260', textAlign:'center', maxWidth:280, lineHeight:1.7 }}>Click a shipment alert to trigger analysis, or type a disruption below</div>
-                  </div>
-                )}
-                {loading && !response && (
-                  <div style={{ display:'flex', gap:5, padding:'4px 0' }}>
-                    {[0,1,2].map(i => <div key={i} style={{ width:7, height:7, borderRadius:'50%', background:'#f5a623', animation:`pulse 1.2s ${i*0.2}s infinite` }} />)}
-                  </div>
-                )}
-                {response && <AgentResponse text={response} />}
-                {messages.length >= 2 && (
-                  <div style={{ marginTop:12, fontSize:11, color:'#4a5260', fontFamily:'monospace' }}>
-                    // Ask a follow-up — "draft the client email", "cheapest option that hits SLA", "what's our liability here"
-                  </div>
-                )}
-
-                {/* ── SUGGESTED ACTIONS ── */}
-                {agentActions.length > 0 && !loading && (
-                  <div style={{ marginTop:16, padding:'12px 14px', background:'#0d1420', borderRadius:8, border:'1px solid rgba(245,166,35,0.12)' }}>
-                    <div style={{ fontSize:11, fontFamily:'monospace', color:'#f5a623', letterSpacing:'0.08em', marginBottom:10 }}>SUGGESTED ACTIONS — click to execute</div>
-                    <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
-                      {agentActions.map(action => {
-                        const state = actionStates[action.id]
-                        const isDone = state === 'done'
-                        const isFiring = state === 'firing'
-                        return (
-                          <div key={action.id} style={{ display:'flex', alignItems:'center', gap:10, padding:'9px 12px', background: isDone ? 'rgba(245,166,35,0.06)' : '#0f1826', borderRadius:6, border: isDone ? '1px solid rgba(245,166,35,0.2)' : '1px solid rgba(255,255,255,0.06)', transition:'all 0.3s' }}>
-                            <span style={{ fontSize:14, flexShrink:0 }}>{action.icon}</span>
-                            <div style={{ flex:1, minWidth:0 }}>
-                              <div style={{ fontSize:11, color: isDone ? '#f5a623' : '#e8eaed', lineHeight:1.4, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
-                                {action.label}
-                              </div>
-                              <div style={{ fontSize:11, color:'#4a5260', fontFamily:'monospace', marginTop:1 }}>{action.type.toUpperCase()}</div>
-                            </div>
-                            {isDone ? (
-                              <div style={{ display:'flex', alignItems:'center', gap:5, flexShrink:0 }}>
-                                <div style={{ width:6, height:6, borderRadius:'50%', background:'#f5a623' }} />
-                                <span style={{ fontSize:11, color:'#f5a623', fontFamily:'monospace' }}>SENT</span>
-                              </div>
-                            ) : (
-                              <button
-                                onClick={() => fireAction(action.id, action.label, action.type, action.mailto)}
-                                disabled={isFiring}
-                                style={{ padding:'5px 12px', background: isFiring ? 'transparent' : '#f5a623', color: isFiring ? '#f5a623' : '#000', border: isFiring ? '1px solid rgba(245,166,35,0.3)' : 'none', borderRadius:5, fontSize:13, fontWeight:600, cursor: isFiring ? 'default' : 'pointer', fontFamily:'monospace', flexShrink:0, minWidth:60, transition:'all 0.2s' }}>
-                                {isFiring ? '...' : 'FIRE →'}
-                              </button>
-                            )}
-                          </div>
-                        )
-                      })}
-                    </div>
-                    {Object.values(actionStates).some(s => s === 'done') && (
-                      <div style={{ marginTop:8, fontSize:11, color:'#4a5260', fontFamily:'monospace' }}>
-                        Executed actions logged · <span style={{ color:'#f5a623', cursor:'pointer' }} onClick={() => setActiveTab('approvals')}>View in approvals →</span>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-              <div style={{ borderTop:'1px solid rgba(255,255,255,0.06)', padding:'12px 20px', background:'#0d1420' }}>
-                <div style={{ display:'flex', gap:8 }}>
-                  <input value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => { if(e.key==='Enter') runAnalysis(input) }} placeholder="Type a disruption or follow-up question..."
-                    style={{ flex:1, background:'#0f1826', border:'1px solid rgba(255,255,255,0.08)', borderRadius:6, padding:'10px 13px', color:'#e8eaed', fontFamily:'Barlow', fontSize:12, outline:'none' }} />
-                  <button onClick={() => runAnalysis(input)} disabled={!input.trim()||loading}
-                    style={{ background:loading?'#0f1826':'#f5a623', color:'#000', border:'none', padding:'10px 18px', borderRadius:6, fontWeight:600, fontSize:12, cursor:loading?'default':'pointer', whiteSpace:'nowrap' }}>
-                    {loading ? '...' : 'Analyse →'}
-                  </button>
+            <div className="dh-agent-layout">
+              {/* ── LEFT FLEET PANEL ── */}
+              <div className="dh-cmd-panel" style={{width:300,flexShrink:0}}>
+                <div className="dh-cmd-panel-hdr">
+                  <span className="dh-cmd-panel-title">Live Fleet</span>
+                  <span className="dh-cmd-panel-count">{(liveShipments.length>0?liveShipments:ACTIVE_SHIPMENTS).length} vehicles</span>
                 </div>
-                <div style={{ marginTop:8, display:'flex', gap:6, flexWrap:'wrap' }}>
-                  {['Draft client email','Cheapest reroute','What\'s our liability?','Reorder recommendations'].map(q => (
-                    <button key={q} onClick={() => { setInput(q); runAnalysis(q) }}
-                      style={{ fontSize:11, color:'#4a5260', background:'none', border:'1px solid rgba(255,255,255,0.06)', borderRadius:4, padding:'3px 8px', cursor:'pointer', fontFamily:'Barlow' }}>{q}</button>
+                <div className="dh-cmd-scroll" style={{height:0}}>
+                  <div className="dh-fleet-stats">
+                    <div className="dh-fstat"><div className="dh-fstat-n" style={{color:'#30d158'}}>{(liveShipments.length>0?liveShipments:ACTIVE_SHIPMENTS).filter(s=>s.status==='on-track').length}</div><div className="dh-fstat-l">On Track</div></div>
+                    <div className="dh-fstat"><div className="dh-fstat-n" style={{color:'#ffd60a'}}>{(liveShipments.length>0?liveShipments:ACTIVE_SHIPMENTS).filter(s=>s.status==='delayed').length}</div><div className="dh-fstat-l">Delayed</div></div>
+                    <div className="dh-fstat"><div className="dh-fstat-n" style={{color:'#ff453a'}}>{(liveShipments.length>0?liveShipments:ACTIVE_SHIPMENTS).filter(s=>s.status==='disrupted').length}</div><div className="dh-fstat-l">Disrupted</div></div>
+                  </div>
+                  {(liveShipments.length>0?liveShipments:ACTIVE_SHIPMENTS).map(s=>{
+                    const isDisrupted=s.status==='disrupted'
+                    const isDelayed=s.status==='delayed'
+                    return (
+                      <div key={s.ref} className={`dh-vc${isDisrupted?' disrupted':isDelayed?' delayed':''}`} onClick={()=>analyseShipment(s)}>
+                        <div className="dh-vc-row">
+                          <span className="dh-vc-reg">{s.ref}</span>
+                          <span className="dh-vc-badge" style={{color:STATUS_COLORS[s.status],background:`${STATUS_COLORS[s.status]}18`}}>{s.status.toUpperCase().replace('-',' ')}</span>
+                        </div>
+                        <div className="dh-vc-route">{s.route}</div>
+                        <div className="dh-vc-meta">
+                          <span className="dh-vc-eta">ETA {(()=>{const e=s.eta;if(!e||e==='???')return'???';if(e.includes('T')||e.includes(' ')){try{return new Date(e).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})}catch{return e}}return e})()}</span>
+                          {isDisrupted&&<span className="dh-sla-badge" style={{color:'#ff453a',background:'rgba(255,69,58,0.1)'}}>SLA AT RISK</span>}
+                          {isDelayed&&<span className="dh-sla-badge" style={{color:'#ffd60a',background:'rgba(255,214,10,0.1)'}}>SLA TIGHT</span>}
+                          {!isDisrupted&&!isDelayed&&<span className="dh-sla-badge" style={{color:'#30d158',background:'rgba(48,209,88,0.1)'}}>SLA SAFE</span>}
+                        </div>
+                        {s.alert&&<div style={{marginTop:6,fontSize:11,color:isDisrupted?'#ff453a':'#ffd60a',lineHeight:1.4}}>{s.alert}</div>}
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+
+              {/* ── AGENT MAIN ── */}
+              <div className="dh-agent-main">
+                <div className="dh-ctx-strip">
+                  <span className="dh-ctx-label">CONTEXT:</span>
+                  {(liveShipments.length>0?liveShipments:ACTIVE_SHIPMENTS).map(s=>(
+                    <div key={s.ref} className={`dh-ctx-pill ${s.status!=='on-track'?'on':'off'}`}>
+                      <div className="dh-ctx-dot"/>{s.ref} — {s.route.split('\u2192')[1]?.trim()||s.route}
+                    </div>
+                  ))}
+                  <div className="dh-ctx-pill off"><div className="dh-ctx-dot"/>All Shipments</div>
+                </div>
+
+                <div className="dh-chat-area" ref={responseRef}>
+                  {!response&&!loading&&messages.length===0&&(
+                    <div style={{padding:'48px 0 32px',textAlign:'center',fontFamily:"'DM Sans',sans-serif"}}>
+                      <div style={{width:44,height:44,background:'#f5a623',clipPath:'polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%)',margin:'0 auto 20px'}}/>
+                      <div style={{fontSize:20,fontWeight:700,color:'rgba(255,255,255,0.92)',letterSpacing:'-0.4px',marginBottom:8}}>What do you need?</div>
+                      <div style={{fontSize:14,color:'rgba(255,255,255,0.35)',maxWidth:400,margin:'0 auto'}}>Ask about any shipment, driver, or situation. I have full context on your fleet right now.</div>
+                    </div>
+                  )}
+
+                  {(messages||[]).map((msg,i)=>(
+                    msg.role==='user'?(
+                      <div key={i} className="dh-msg-user"><div className="dh-bubble-user">{msg.content}</div></div>
+                    ):(
+                      <div key={i} className="dh-msg-agent">
+                        <div className="dh-agent-avatar"/>
+                        <div className="dh-bubble-agent">
+                          <span dangerouslySetInnerHTML={{__html:(msg.content||'').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br/>')}}/>
+                          {i===(messages||[]).length-1&&agentActions&&agentActions.length>0&&agentActions.map(action=>{
+                            const state=actionStates[action.id]
+                            const isDone=state==='done'
+                            const isFiring=state==='firing'
+                            return (
+                              <div key={action.id} className={`dh-action-card${isDone?' done':''}`}>
+                                <span style={{fontSize:16,flexShrink:0}}>{action.icon}</span>
+                                <div style={{flex:1,minWidth:0}}>
+                                  <div className="dh-ac-label">{action.label}</div>
+                                  <div className="dh-ac-type">{action.type?.toUpperCase()}</div>
+                                </div>
+                                {isDone?(<div className="dh-ac-sent">{'✓ SENT'}</div>):(<button className="dh-ac-fire" onClick={()=>fireAction(action.id,action.label,action.type,action.mailto)} disabled={isFiring}>{isFiring?'\u2026':'FIRE \u2192'}</button>)}
+                              </div>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    )
+                  ))}
+
+                  {response&&messages.length===0&&(
+                    <div className="dh-msg-agent">
+                      <div className="dh-agent-avatar"/>
+                      <div className="dh-bubble-agent"><span dangerouslySetInnerHTML={{__html:(response||'').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br/>')}}/></div>
+                    </div>
+                  )}
+
+                  {loading&&(
+                    <div className="dh-msg-agent">
+                      <div className="dh-agent-avatar"/>
+                      <div className="dh-bubble-agent"><div className="dh-typing"><div className="dh-typing-dot"/><div className="dh-typing-dot"/><div className="dh-typing-dot"/></div></div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="dh-quick-row">
+                  {["What's our SLA exposure today?","Draft a delay email to Tesco DC","Check LK72 driver hours remaining","Any other vehicles at risk?","Invoice recovery opportunities this week","Fastest reroute if recovery fails?"].map(p=>(
+                    <div key={p} className="dh-qp" onClick={()=>{setInput(p);runAnalysis(p)}}>{p}</div>
                   ))}
                 </div>
+
+                <div className="dh-input-area">
+                  <div className="dh-input-row">
+                    <input className="dh-chat-input" value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'&&input.trim()&&!loading)runAnalysis(input)}} placeholder="Ask about any shipment, driver, or situation\u2026"/>
+                    <button className="dh-send-btn" onClick={()=>input.trim()&&!loading&&runAnalysis(input)} disabled={!input.trim()||loading}>{'\u2191'}</button>
+                  </div>
+                </div>
               </div>
-            </>
+            </div>
           )}
 
           {/* ── MODULES TAB ────────────────────────────────────────────────── */}
