@@ -1210,7 +1210,7 @@ export default function DriverApp() {
     const allChecked = checks.every(c=>preShiftChecks[c.id]!==undefined)
     const hasFails = checks.some(c=>preShiftChecks[c.id]===false)
     return (
-      <div style={{minHeight:'100vh',background:'#0a0a0f',color:'rgba(255,255,255,0.92)',fontFamily:"'DM Sans',-apple-system,sans-serif",paddingBottom:40,touchAction:'manipulation'}}>
+      <div style={{minHeight:'100vh',background:'#0a0a0f',color:'rgba(255,255,255,0.92)',fontFamily:"'DM Sans',-apple-system,sans-serif",paddingBottom:100,touchAction:'manipulation',position:'relative',zIndex:10}}>
         <div style={{padding:'56px 24px 20px'}}>
           <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:16}}>
             <div>
@@ -1223,13 +1223,13 @@ export default function DriverApp() {
           {checks.map(check=>{
             const passed=preShiftChecks[check.id]; const failed=preShiftChecks[check.id]===false
             return (
-              <div key={check.id} style={{display:'flex',alignItems:'center',gap:14,padding:'16px 18px',background:failed?'rgba(255,69,58,0.06)':passed?'rgba(255,255,255,0.03)':'rgba(255,255,255,0.05)',border:`1px solid ${failed?'rgba(255,69,58,0.2)':passed?'rgba(245,166,35,0.15)':'rgba(255,255,255,0.07)'}`,borderRadius:16,marginBottom:8,opacity:passed?0.6:1,transition:'opacity 0.2s'}}>
-                <span style={{fontSize:22,flexShrink:0}}>{check.icon}</span>
-                <div style={{flex:1,fontSize:15,color:failed?'#ef4444':passed?'#f5a623':'#e8eaed',fontWeight:passed||failed?500:400}}>{check.label}</div>
-                <div style={{display:'flex',gap:8}}>
-                  <button onClick={()=>setPreShiftChecks(p=>({...p,[check.id]:true}))} style={{width:52,height:52,borderRadius:8,border:`2px solid ${passed?'#f5a623':'rgba(245,166,35,0.3)'}`,background:passed?'rgba(245,166,35,0.15)':'transparent',color:passed?'#f5a623':'#4a5260',fontSize:22,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',touchAction:'manipulation',WebkitTapHighlightColor:'transparent',transition:'none',userSelect:'none'}}>✓</button>
-                  <button onClick={()=>setPreShiftChecks(p=>({...p,[check.id]:false}))} style={{width:52,height:52,borderRadius:8,border:`2px solid ${failed?'#ef4444':'rgba(239,68,68,0.2)'}`,background:failed?'rgba(239,68,68,0.12)':'transparent',color:failed?'#ef4444':'#4a5260',fontSize:22,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',touchAction:'manipulation',WebkitTapHighlightColor:'transparent',transition:'none',userSelect:'none'}}>✗</button>
+              <div key={check.id} style={{display:'flex',alignItems:'center',gap:14,padding:'15px 18px',background:'rgba(255,255,255,0.05)',border:`1px solid ${failed?'rgba(255,69,58,0.2)':'rgba(255,255,255,0.07)'}`,borderRadius:16,marginBottom:8,cursor:'pointer',opacity:passed?0.65:1,transition:'opacity 0.2s'}}>
+                <div style={{display:'flex',gap:6}}>
+                  <button onClick={()=>setPreShiftChecks(p=>({...p,[check.id]:true}))} style={{width:26,height:26,borderRadius:'50%',border:passed?'none':'2px solid rgba(255,255,255,0.15)',background:passed?'#f5a623':'transparent',color:passed?'#000':'rgba(255,255,255,0.3)',fontSize:13,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,touchAction:'manipulation',WebkitTapHighlightColor:'transparent'}}>{passed?'✓':''}</button>
+                  <button onClick={()=>setPreShiftChecks(p=>({...p,[check.id]:false}))} style={{width:26,height:26,borderRadius:'50%',border:failed?'none':'2px solid rgba(255,255,255,0.15)',background:failed?'#ff453a':'transparent',color:failed?'#fff':'rgba(255,255,255,0.3)',fontSize:13,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,touchAction:'manipulation',WebkitTapHighlightColor:'transparent'}}>{failed?'✗':''}</button>
                 </div>
+                <span style={{fontSize:22,flexShrink:0}}>{check.icon}</span>
+                <div style={{flex:1,fontSize:15,fontWeight:500,color:passed?'rgba(255,255,255,0.4)':failed?'#ff453a':'rgba(255,255,255,0.85)'}}>{check.label}</div>
               </div>
             )
           })}
@@ -1249,11 +1249,11 @@ export default function DriverApp() {
             </div>
           )}
           {allChecked&&!defectBlocked&&(
-            <button onClick={startShift} style={{width:'100%',padding:16,background:'#f5a623',border:'none',borderRadius:10,color:'#000',fontWeight:700,fontSize:16,cursor:'pointer',marginTop:14}}>
+            <button onClick={startShift} style={{width:'100%',padding:18,background:'#f5a623',border:'none',borderRadius:16,color:'#000',fontWeight:700,fontSize:17,cursor:'pointer',fontFamily:"'DM Sans',sans-serif",boxShadow:'0 6px 24px rgba(245,166,35,0.3)',marginTop:16}}>
               ✓ Start shift
             </button>
           )}
-          {!allChecked&&<div style={{textAlign:'center',padding:'18px 0',fontSize:13,color:'#4a5260'}}>Tick or cross each item above to continue</div>}
+          {!allChecked&&<div style={{fontFamily:"'DM Mono',monospace",fontSize:11,color:'rgba(255,255,255,0.3)',textAlign:'center',marginTop:16,letterSpacing:'0.06em'}}>{Object.keys(preShiftChecks).length} of {checks.length} items checked</div>}
         </div>
       </div>
     )
