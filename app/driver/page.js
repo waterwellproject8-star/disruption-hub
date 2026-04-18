@@ -1892,8 +1892,9 @@ export default function DriverApp() {
               const mins=parseInt(lateMinutes,10)||0
               if(!mins){showToast('Enter minutes','error');return}
               try{
-                const alertBody={client_id:driverInfo.clientId,driver_name:driverInfo.name,driver_phone:driverInfo.phone||null,vehicle_reg:driverInfo.vehicleReg,ref:activeJob?.ref||null,session_id:sessionId,issue_type:'running_late',delay_minutes:mins,reason:lateReason,issue_description:`DRIVER RUNNING LATE. ${driverInfo.name} (${driverInfo.vehicleReg}). ${mins} minutes. Reason: ${lateReason}. Job: ${activeJob?.route||'?'}.`,human_description:`Running ${mins}min late — ${lateReason}`,location_description:gpsDescription||null,latitude:gpsCoords?.latitude||null,longitude:gpsCoords?.longitude||null}
-                console.log('[running-late] submitting with:',{vehicleReg:driverInfo.vehicleReg,clientId:driverInfo.clientId,driverName:driverInfo.name,driverPhone:driverInfo.phone,sessionId,delayMinutes:mins,reason:lateReason,ref:activeJob?.ref})
+                const sid=typeof window!=='undefined'?localStorage.getItem('dh_session_id'):null
+                const alertBody={client_id:driverInfo.clientId,driver_name:driverInfo.name,driver_phone:driverInfo.phone||null,vehicle_reg:driverInfo.vehicleReg,ref:activeJob?.ref||null,session_id:sid,issue_type:'running_late',delay_minutes:mins,reason:lateReason,issue_description:`DRIVER RUNNING LATE. ${driverInfo.name} (${driverInfo.vehicleReg}). ${mins} minutes. Reason: ${lateReason}. Job: ${activeJob?.route||'?'}.`,human_description:`Running ${mins}min late — ${lateReason}`,location_description:gpsDescription||null,latitude:gpsCoords?.latitude||null,longitude:gpsCoords?.longitude||null}
+                console.log('[running-late] submitting with:',{vehicleReg:driverInfo.vehicleReg,clientId:driverInfo.clientId,driverName:driverInfo.name,driverPhone:driverInfo.phone,sessionId:sid,delayMinutes:mins,reason:lateReason,ref:activeJob?.ref})
                 let res
                 try{
                   res=await fetch('/api/driver/alert',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(alertBody)})
