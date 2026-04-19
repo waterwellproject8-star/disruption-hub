@@ -448,7 +448,7 @@ export async function POST(request) {
         const financial = next.financial_value > 0 ? `\n£${Number(next.financial_value).toLocaleString()} exposure` : ''
 
         let actionLine = ''
-        if (['call','make_call'].includes(nextType) && nextDetails.call_type === 'consignee_delay_alert') {
+        if (['call','make_call'].includes(nextType) && (nextDetails.call_type === 'consignee_delay_alert' || nextDetails.call_type === 'breakdown')) {
           actionLine = `YES = call ${consignee || 'consignee'} automatically`
         } else if (['call','make_call'].includes(nextType)) {
           actionLine = `YES = call carrier for recovery`
@@ -668,8 +668,8 @@ export async function POST(request) {
         const callType = details.call_type ||
           (details.consignee_name || details.consignee_phone ? 'consignee_delay_alert' : 'carrier_alert')
 
-        // ── CONSIGNEE DELAY ALERT ─────────────────────────────────────────────
-        if (callType === 'consignee_delay_alert') {
+        // ── CONSIGNEE DELAY / BREAKDOWN ALERT ──────────────────────────────────
+        if (callType === 'consignee_delay_alert' || callType === 'breakdown') {
           // FIX 3: delay > 60 mins → manual rebook, no automated call
           if (details.delay_minutes && details.delay_minutes > 60) {
             await sendSMS(client.contact_phone || from, `DisruptionHub — Action needed.\n${details.vehicle_reg || ''}: Delay over 60 mins — ${details.consignee_name || 'consignee'} slot rebook required.\nCall ${details.consignee_name || 'consignee'} directly to rearrange.\nDashboard: disruptionhub.ai/unlock`)
@@ -696,7 +696,7 @@ export async function POST(request) {
             const delayNum = parseInt(details.delay_minutes, 10) || 0
             const delaySpoken = delayNum > 0 ? formatDelayForSpeech(delayNum) : '30 minutes'
             const clientSpoken = twimlSafe(contactName || 'your supplier')
-            const isBreakdown = details.delay_reason?.toLowerCase().includes('breakdown') || details.issue_context?.toLowerCase().includes('breakdown') || details.source === 'driver_alert_cascade'
+            const isBreakdown = callType === 'breakdown' || details.alert_type === 'breakdown' || details.delay_reason?.toLowerCase().includes('breakdown') || details.issue_context?.toLowerCase().includes('breakdown')
 
             let parts
             if (isBreakdown) {

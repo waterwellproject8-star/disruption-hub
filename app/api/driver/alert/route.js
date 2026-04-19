@@ -470,16 +470,19 @@ Provide immediate disruption analysis and action plan.`
             const calc = Math.round((new Date(shipmentEta).getTime() - Date.now()) / 60000)
             delayMins = calc > 0 ? calc : 0
           }
+          const isBreakdownAlert = issue_type === 'breakdown' || (issueContext && /breakdown/i.test(issueContext))
+          const consigneeCallType = isBreakdownAlert ? 'breakdown' : 'consignee_delay_alert'
           const { error: consigneeErr } = await db.from('approvals').insert({
             client_id,
             action_type: 'call',
-            action_label: `Notify ${consigneeName} of delay — automated call`,
+            action_label: isBreakdownAlert ? `Notify ${consigneeName} of breakdown delay — automated call` : `Notify ${consigneeName} of delay — automated call`,
             action_details: {
               vehicle_reg,
               ref: ref || 'DRIVER-ALERT',
               driver_name: driver_name || null,
               driver_phone: driver_phone || null,
-              call_type: 'consignee_delay_alert',
+              call_type: consigneeCallType,
+              ...(isBreakdownAlert ? { alert_type: 'breakdown' } : {}),
               consignee_name: consigneeName,
               consignee_phone: consigneePhone,
               delay_reason: human_description || issueContext || null,
@@ -541,7 +544,8 @@ Provide immediate disruption analysis and action plan.`
                     ref: s.ref,
                     driver_name: driver_name || null,
                     driver_phone: driver_phone || null,
-                    call_type: 'consignee_delay_alert',
+                    call_type: isBreakdownAlert ? 'breakdown' : 'consignee_delay_alert',
+                    ...(isBreakdownAlert ? { alert_type: 'breakdown' } : {}),
                     consignee_name: cascadeConsignee,
                     consignee_phone: cascadePhone,
                     delay_reason: human_description || issueContext || null,
