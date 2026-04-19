@@ -68,7 +68,9 @@ const PRESHIFT_CHECKS_BASE = [
   { id:'docs',    label:'Licence & documents',        icon:'📄' },
   { id:'load',    label:'Load — secured properly',    icon:'🔒' },
 ]
-const PRESHIFT_FRIDGE = { id:'fridge', label:'Fridge unit — at temp', icon:'❄' }
+const PRESHIFT_FRIDGE   = { id:'fridge',   label:'Fridge unit — at temp',        icon:'❄' }
+const PRESHIFT_CURTAINS = { id:'curtains', label:'Curtains & straps — secure',   icon:'🪢' }
+const PRESHIFT_TAILLIFT = { id:'taillift', label:'Tail lift — operational',      icon:'⬇' }
 
 const POSTSHIFT_CHECKS = [
   { id:'body_damage',  label:'No new body damage',   icon:'🔍' },
@@ -1014,7 +1016,11 @@ export default function DriverApp() {
 
   function preShift() {
     const checks = [...PRESHIFT_CHECKS_BASE]
-    if (driverInfo.vehicleType==='fridge') checks.push(PRESHIFT_FRIDGE)
+    const vt = (driverInfo.vehicleType || '').toLowerCase()
+    if (!vt) return checks
+    if (/fridge|reefer|cold/.test(vt)) checks.push(PRESHIFT_FRIDGE)
+    if (/artic|flatbed|curtain/.test(vt)) checks.push(PRESHIFT_CURTAINS)
+    if (/tail/.test(vt)) checks.push(PRESHIFT_TAILLIFT)
     return checks
   }
 
