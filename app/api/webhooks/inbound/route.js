@@ -121,7 +121,7 @@ function buildActionSMS(eventType, payload, severity, financialImpact, action) {
 
   let yesAction = 'execute action'
   if (actionType === 'send_sms' || actionType === 'sms' || actionType === 'reroute' || actionType === 'notify') yesAction = 'notify driver of situation'
-  else if (actionType === 'dispatch') yesAction = 'dispatch recovery vehicle and notify driver'
+  else if (actionType === 'dispatch') yesAction = 'confirm recovery is being arranged and notify driver'
   else if (actionType === 'call' && callType === 'consignee_delay_alert') yesAction = `call ${action?.consignee_name || 'consignee'} with delay notification`
   else if (actionType === 'call' && callType === 'carrier_alert') yesAction = `call ${action?.carrier_name || 'carrier'} for recovery`
   else if (actionType === 'call') yesAction = 'place automated call'

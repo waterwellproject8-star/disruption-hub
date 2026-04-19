@@ -100,7 +100,7 @@ function buildOpsSMS({ severity, vehicle_reg, human_description, financialImpact
   const money = (!force_financial_zero && financialImpact > 0) ? `\nSLA risk: £${financialImpact.toLocaleString()} if slot missed.` : ''
 
   const yesAction = {
-    dispatch:  'dispatch recovery vehicle',
+    dispatch:  'confirm recovery is being arranged',
     sms:       'send driver instruction',
     reroute:   'reroute driver',
     call:      'call carrier for recovery',
