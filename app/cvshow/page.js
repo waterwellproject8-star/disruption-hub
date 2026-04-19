@@ -154,9 +154,6 @@ export default function CVShowPage() {
               <div style={{ fontSize: 14, color: '#9ca3af', marginBottom: 8, lineHeight: 1.5 }}>
                 No commitment. No contract. Just 30 minutes.
               </div>
-              <div style={{ fontSize: 13, color: '#f5a623', fontWeight: 600 }}>
-                Founding rate: £349/mo locked for life — 5 spots remaining
-              </div>
             </div>
           </>
         ) : (
@@ -169,9 +166,6 @@ export default function CVShowPage() {
             <p style={{ fontSize: 16, color: 'rgba(255,255,255,0.5)', lineHeight: 1.6, margin: '0 0 24px' }}>
               Thanks — we'll be in touch within 48 hours to set up your pilot call. {'🟡'}
             </p>
-            <div style={{ fontSize: 13, color: '#f5a623', fontWeight: 600 }}>
-              Founding rate: £349/mo locked for life
-            </div>
           </div>
         )}
       </div>
