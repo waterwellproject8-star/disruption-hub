@@ -74,14 +74,14 @@ export default function CVShowPage() {
               <h1 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 900, fontSize: 36, color: '#e8eaed', letterSpacing: '-0.5px', lineHeight: 1.1, margin: '0 0 12px', textTransform: 'uppercase' }}>
                 See it live<br />in 90 seconds
               </h1>
-              <p style={{ fontSize: 15, color: 'rgba(255,255,255,0.45)', lineHeight: 1.6, margin: 0, fontWeight: 400 }}>
+              <p style={{ fontSize: 17, color: '#d1d5db', lineHeight: 1.6, margin: 0, fontWeight: 400 }}>
                 We just showed you the demo. Book a pilot call and we'll set it up for your fleet this week.
               </p>
             </div>
 
             {/* Q1: Fleet size */}
             <div style={{ marginBottom: 24 }}>
-              <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, color: 'rgba(255,255,255,0.3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 10 }}>
+              <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 13, color: '#e5e7eb', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 10 }}>
                 How many vehicles in your fleet?
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
@@ -99,7 +99,7 @@ export default function CVShowPage() {
 
             {/* Q2: Pain point */}
             <div style={{ marginBottom: 24 }}>
-              <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, color: 'rgba(255,255,255,0.3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 10 }}>
+              <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 13, color: '#e5e7eb', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 10 }}>
                 What's your biggest daily ops headache?
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
@@ -117,7 +117,7 @@ export default function CVShowPage() {
 
             {/* Q3: Name + Phone */}
             <div style={{ marginBottom: 28 }}>
-              <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, color: 'rgba(255,255,255,0.3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 10 }}>
+              <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 13, color: '#e5e7eb', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 10 }}>
                 Your name and mobile
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
@@ -139,7 +139,7 @@ export default function CVShowPage() {
             <button className="cv-btn" onClick={handleSubmit} disabled={!canSubmit || submitting} style={{
               width: '100%', padding: '18px 20px', borderRadius: 14, border: 'none',
               background: canSubmit ? '#f5a623' : 'rgba(255,255,255,0.06)',
-              color: canSubmit ? '#000' : 'rgba(255,255,255,0.2)',
+              color: canSubmit ? '#06080d' : 'rgba(255,255,255,0.2)',
               fontSize: 18, fontWeight: 700, cursor: canSubmit ? 'pointer' : 'default',
               fontFamily: "'Barlow Condensed', sans-serif", textTransform: 'uppercase', letterSpacing: '0.03em',
               boxShadow: canSubmit ? '0 6px 28px rgba(245,166,35,0.3)' : 'none',
@@ -150,7 +150,7 @@ export default function CVShowPage() {
 
             {/* Footer */}
             <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.25)', marginBottom: 8, lineHeight: 1.5 }}>
+              <div style={{ fontSize: 14, color: '#9ca3af', marginBottom: 8, lineHeight: 1.5 }}>
                 No commitment. No contract. Just 30 minutes.
               </div>
               <div style={{ fontSize: 13, color: '#f5a623', fontWeight: 600 }}>
