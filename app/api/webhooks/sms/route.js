@@ -242,6 +242,7 @@ export async function POST(request) {
     const rawBody = formData.get('Body')?.trim() || ''
     const body = rawBody.toUpperCase()
     const from = formData.get('From') || ''
+    const smsSid = formData.get('SmsMessageSid') || formData.get('MessageSid') || ''
 
     // Extract approval ref from SMS body (e.g. "YES Ref: d38fe6d6" or quoted original containing "Ref: d38fe6d6")
     const refMatch = rawBody.match(/Ref:\s*([a-f0-9]{8})/i)
@@ -516,6 +517,7 @@ export async function POST(request) {
       }).eq('id', approval.id).eq('status', 'pending').is('approved_at', null).select('id')
 
       if (!updated?.length) {
+        console.log(`[sms] YES duplicate blocked — approval ${approval.id} already claimed. SmsMessageSid: ${smsSid}`)
         return twimlReply('DH: Action already executed or expired. Check dashboard.')
       }
 

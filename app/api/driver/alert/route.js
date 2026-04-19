@@ -439,6 +439,9 @@ Provide immediate disruption analysis and action plan.`
         if (approvalErr) console.error('approval insert:', approvalErr.message, approvalErr.code)
         primaryApprovalId = approvalRow?.id || null
 
+        // Detect breakdown for consignee call type — shared by primary + cascade approvals
+        const isBreakdownAlert = issue_type === 'breakdown' || (issueContext && /breakdown/i.test(issueContext))
+
         // Create second approval for consignee delay notification
         // Sits as a pending card in COMMAND tab — ops fires it after handling recovery
         if (severity === 'CRITICAL' || severity === 'HIGH') {
@@ -470,7 +473,6 @@ Provide immediate disruption analysis and action plan.`
             const calc = Math.round((new Date(shipmentEta).getTime() - Date.now()) / 60000)
             delayMins = calc > 0 ? calc : 0
           }
-          const isBreakdownAlert = issue_type === 'breakdown' || (issueContext && /breakdown/i.test(issueContext))
           const consigneeCallType = isBreakdownAlert ? 'breakdown' : 'consignee_delay_alert'
           const { error: consigneeErr } = await db.from('approvals').insert({
             client_id,
