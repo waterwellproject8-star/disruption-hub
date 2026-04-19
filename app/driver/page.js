@@ -1026,6 +1026,17 @@ export default function DriverApp() {
 
   const cargoIcon = t=>!t?'📦':t.includes('pharma')?'💊':t.includes('frozen')?'🧊':t.includes('chilled')?'❄':'📦'
 
+  function formatSlot(raw) {
+    if (!raw) return null
+    const d = new Date(raw.includes('T') || raw.includes('+') || raw.includes(' ') ? raw : raw)
+    if (isNaN(d)) return raw
+    const today = new Date()
+    const isToday = d.toDateString() === today.toDateString()
+    const time = d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
+    if (isToday) return `${time} today`
+    return `${time} ${d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}`
+  }
+
   // ── SESSION SUPERSEDED (hard lockout — takes precedence over everything) ──
   if (sessionSuperseded) {
     return (
@@ -1630,7 +1641,7 @@ export default function DriverApp() {
                     <div className="dh-job-dest">{routeTo||activeJob.route}</div>
                     <div className="dh-chips">
                       {activeJob.cargo_type&&<span className="dh-chip">{cargoIcon(activeJob.cargo_type)} {activeJob.cargo_type}</span>}
-                      {activeJob.sla_window&&<span className="dh-chip">Slot {activeJob.sla_window.includes('T')?new Date(activeJob.sla_window).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}):activeJob.sla_window}</span>}
+                      {activeJob.sla_window&&<span className="dh-chip">Slot {formatSlot(activeJob.sla_window)||activeJob.sla_window}</span>}
                       {activeJob.penalty_if_breached>0&&<span className={`dh-chip${activeJob.status==='at_risk'?' dh-chip-warn':''}`}>£{activeJob.penalty_if_breached.toLocaleString()} if late</span>}
                     </div>
                   </div>
