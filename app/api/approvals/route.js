@@ -344,10 +344,10 @@ export async function POST(request) {
       return Response.json({ success: true, action: 'failed', driver_notified: false, note: 'No driver phone on file' })
     }
 
-    // ── CONSIGNEE DELAY ALERT — one-way notification call ──────────────
-    if (['call', 'emergency', 'make_call'].includes(actionType) && details.call_type === 'consignee_delay_alert') {
-      // FIX 3: delay > 60 mins → manual rebook, no automated call
-      if (details.delay_minutes && details.delay_minutes > 60) {
+    // ── CONSIGNEE DELAY / BREAKDOWN ALERT — one-way notification call ──
+    if (['call', 'emergency', 'make_call'].includes(actionType) && (details.call_type === 'consignee_delay_alert' || details.call_type === 'breakdown')) {
+      // delay > 60 mins → manual rebook (bypass for breakdowns — always call)
+      if (details.call_type !== 'breakdown' && details.alert_type !== 'breakdown' && details.delay_minutes && details.delay_minutes > 60) {
         if (client?.contact_phone) {
           await sendSMS(client.contact_phone, `DisruptionHub — Action needed.\n${details.vehicle_reg || ''}: Delay over 60 mins — ${details.consignee_name || 'consignee'} slot rebook required.\nCall ${details.consignee_name || 'consignee'} directly to rearrange.\nDashboard: disruptionhub.ai/unlock`).catch(err => console.error('[approvals] manual rebook SMS failed:', err?.message))
         }

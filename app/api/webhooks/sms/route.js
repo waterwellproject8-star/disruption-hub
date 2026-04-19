@@ -670,8 +670,8 @@ export async function POST(request) {
 
         // ── CONSIGNEE DELAY / BREAKDOWN ALERT ──────────────────────────────────
         if (callType === 'consignee_delay_alert' || callType === 'breakdown') {
-          // FIX 3: delay > 60 mins → manual rebook, no automated call
-          if (details.delay_minutes && details.delay_minutes > 60) {
+          // delay > 60 mins → manual rebook, no automated call (bypass for breakdowns — always call)
+          if (callType !== 'breakdown' && details.alert_type !== 'breakdown' && details.delay_minutes && details.delay_minutes > 60) {
             await sendSMS(client.contact_phone || from, `DisruptionHub — Action needed.\n${details.vehicle_reg || ''}: Delay over 60 mins — ${details.consignee_name || 'consignee'} slot rebook required.\nCall ${details.consignee_name || 'consignee'} directly to rearrange.\nDashboard: disruptionhub.ai/unlock`)
             await finaliseApproval({ success: false, failure_reason: 'delay_exceeds_60_mins_manual_rebook_required' })
             return twimlReply('DH: Delay >60 mins — call consignee directly to rebook.')
