@@ -695,11 +695,23 @@ export async function POST(request) {
             const spokenVehicle = speakReg(details.vehicle_reg)
             const delayNum = parseInt(details.delay_minutes, 10) || 0
             const delaySpoken = delayNum > 0 ? formatDelayForSpeech(delayNum) : '30 minutes'
-            const parts = [
-              `${contactName || 'your supplier'} is calling to advise that your delivery from vehicle ${spokenVehicle} is running approximately ${delaySpoken} late.`,
-              details.revised_eta ? `Expected arrival is now ${details.revised_eta}.` : '',
-              `No action is required from you at this time. If you need to discuss, please contact our operations team. Thank you.`
-            ].filter(Boolean)
+            const clientSpoken = twimlSafe(contactName || 'your supplier')
+            const isBreakdown = details.delay_reason?.toLowerCase().includes('breakdown') || details.issue_context?.toLowerCase().includes('breakdown') || details.source === 'driver_alert_cascade'
+
+            let parts
+            if (isBreakdown) {
+              parts = [
+                `${clientSpoken} is calling to advise that vehicle ${spokenVehicle} has experienced a mechanical issue and will be delayed.`,
+                `We are arranging recovery and will provide an update as soon as possible.`,
+                `No action is required from you at this time. Please contact our operations team if you need to discuss. Thank you.`
+              ]
+            } else {
+              parts = [
+                `${clientSpoken} is calling to advise that your delivery from vehicle ${spokenVehicle} is running approximately ${delaySpoken} late.`,
+                details.revised_eta ? `Expected arrival is now ${details.revised_eta}.` : '',
+                `No action is required from you at this time. Thank you.`
+              ].filter(Boolean)
+            }
 
             const voiceMessage = parts.join(' ')
             const callResult = await makeCall(consigneePhone, voiceMessage)
@@ -735,7 +747,7 @@ export async function POST(request) {
         if (callType === 'failed_delivery_callback') {
           const fdPhone = toE164UK(details.consignee_phone || extractPhoneNumber(client.system_prompt))
           if (fdPhone) {
-            const fdMsg = `${contactName || 'your supplier'} is calling to advise that we attempted delivery of your order today but were unable to complete it. Please contact our operations team to rearrange. Thank you.`
+            const fdMsg = `${twimlSafe(contactName || 'your supplier')} is calling to advise that we were unable to complete your delivery today. Please contact our operations team to rearrange at your earliest convenience. Thank you.`
             const callResult = await makeCall(fdPhone, fdMsg)
             if (callResult.success) { await finaliseApproval({ success: true, twilio_sid: callResult.sid }); return twimlReply('DH: Calling consignee about failed delivery.') }
             if (callResult.simulated) { await finaliseApproval({ success: false, simulated: true, reason: 'twilio_not_configured' }); return twimlReply(`DH: Call consignee manually: ${details.consignee_phone || 'no number'}`) }
