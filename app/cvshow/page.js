@@ -136,13 +136,14 @@ export default function CVShowPage() {
             )}
 
             {/* CTA */}
-            <button className="cv-btn" onClick={handleSubmit} disabled={!canSubmit || submitting} style={{
+            <button className="cv-btn" onClick={handleSubmit} disabled={submitting} style={{
               width: '100%', padding: '18px 20px', borderRadius: 14, border: 'none',
-              background: canSubmit ? '#f5a623' : 'rgba(255,255,255,0.06)',
-              color: canSubmit ? '#06080d' : 'rgba(255,255,255,0.2)',
-              fontSize: 18, fontWeight: 700, cursor: canSubmit ? 'pointer' : 'default',
+              background: '#f5a623',
+              color: '#06080d',
+              fontSize: 18, fontWeight: 700, cursor: submitting ? 'default' : 'pointer',
               fontFamily: "'Barlow Condensed', sans-serif", textTransform: 'uppercase', letterSpacing: '0.03em',
-              boxShadow: canSubmit ? '0 6px 28px rgba(245,166,35,0.3)' : 'none',
+              boxShadow: '0 6px 28px rgba(245,166,35,0.3)',
+              opacity: submitting ? 0.6 : 1,
               marginBottom: 24
             }}>
               {submitting ? 'Submitting...' : 'Book my pilot call \u2192'}
@@ -166,7 +167,7 @@ export default function CVShowPage() {
               You're in
             </h2>
             <p style={{ fontSize: 16, color: 'rgba(255,255,255,0.5)', lineHeight: 1.6, margin: '0 0 24px' }}>
-              We'll call you before Friday.<br />See you on the floor. {'🟡'}
+              Thanks — we'll be in touch within 48 hours to set up your pilot call. {'🟡'}
             </p>
             <div style={{ fontSize: 13, color: '#f5a623', fontWeight: 600 }}>
               Founding rate: £349/mo locked for life
