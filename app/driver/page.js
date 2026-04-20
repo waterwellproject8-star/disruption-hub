@@ -610,9 +610,11 @@ export default function DriverApp() {
       const data = await res.json()
       setJobs(prev=>{const u=prev.map(j=>j.status==='at_risk'?{...j,status:'on-track',alert:null}:j);saveJobProgress(u);u.filter(j=>j.status==='on-track'&&j.ref!=='SHIFT_START').forEach(j=>pushProgressToSupabase(j.ref,'on-track',null));return u})
       if (activeJob) setActiveJob(p=>({...p,status:'on-track',alert:null}))
+      setLastAlert(null); localStorage.removeItem('dh_last_alert')
+      setPriorAlert(null); localStorage.removeItem('dh_prior_alert')
       setResolvedEta(data.revised_eta||'')
       setPanelState('resolved')
-    } catch { setPanelState('resolved') }
+    } catch { setLastAlert(null); localStorage.removeItem('dh_last_alert'); setPriorAlert(null); localStorage.removeItem('dh_prior_alert'); setPanelState('resolved') }
   }
 
   function parseResponse(text) {
