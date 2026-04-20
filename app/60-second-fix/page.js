@@ -135,7 +135,7 @@ export default function TwoAmTest() {
           </a>
           <ul style={{display:'flex',alignItems:'center',gap:28,listStyle:'none',margin:0,padding:0}}>
             <li><a href="/" style={{color:'#8a9099',textDecoration:'none',fontSize:14,fontWeight:500}}>Home</a></li>
-            <li><span style={{color:'#f5a623',fontSize:14,fontWeight:600}}>The 2am Test</span></li>
+            <li><span style={{color:'#f5a623',fontSize:14,fontWeight:600}}>The 60-Second Fix</span></li>
             <li><a href="/#how" style={{color:'#8a9099',textDecoration:'none',fontSize:14,fontWeight:500}}>Platform</a></li>
             <li><a href="/#pricing" style={{color:'#8a9099',textDecoration:'none',fontSize:14,fontWeight:500}}>Pricing</a></li>
           </ul>
@@ -147,7 +147,7 @@ export default function TwoAmTest() {
           <div className="hero-glow" />
           <div className="hero-timebg">02:14</div>
           <div style={{maxWidth:1100,margin:'0 auto',width:'100%',position:'relative',zIndex:2}}>
-            <div className="eyebrow">The 2am Test</div>
+            <div className="eyebrow">The 60-Second Fix</div>
             <h1 className="hero-h1">
               A breakdown hits.<br/>
               You get a text.<br/>

@@ -377,7 +377,7 @@ export default function HomePage() {
         </div>
 
         <ul className="nav-links-desktop" style={{ display: 'flex', alignItems: 'center', gap: 32, listStyle: 'none' }}>
-          <li><a href="/the-2am-test" className="nav-link" style={{color:'#f5a623',display:'flex',alignItems:'center',gap:6}}><span style={{width:5,height:5,borderRadius:'50%',background:'#f5a623',boxShadow:'0 0 6px rgba(245,166,35,0.8)',flexShrink:0}}/>The 2am Test</a></li>
+          <li><a href="/60-second-fix" className="nav-link" style={{color:'#f5a623',display:'flex',alignItems:'center',gap:6}}><span style={{width:5,height:5,borderRadius:'50%',background:'#f5a623',boxShadow:'0 0 6px rgba(245,166,35,0.8)',flexShrink:0}}/>The 60-Second Fix</a></li>
           <li><a href="#how" className="nav-link">Platform</a></li>
           <li><a href="#pricing" className="nav-link">Pricing</a></li>
           <li><Link href="/dashboard" className="nav-link">Dashboard</Link></li>
