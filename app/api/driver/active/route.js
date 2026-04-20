@@ -31,7 +31,7 @@ export async function GET(request) {
       .order('updated_at', { ascending: false })
 
     if (error) {
-      console.error('[active-drivers] query error:', error.message)
+      console.error('[active-drivers] full error:', error?.message, error?.code, error?.details, error?.hint)
       return Response.json({ drivers: [] })
     }
 
