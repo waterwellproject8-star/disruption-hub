@@ -298,7 +298,7 @@ export default function TwoAmTest() {
                 <div className="total-label">Time awake · calls made · nothing logged</div>
                 <div className="total-val-red">34 min<br/>of chaos</div>
               </div>
-              <div style={{fontSize:36,opacity:0.4}}>{'😤'}</div>
+              <svg width="56" height="56" viewBox="0 0 56 56" fill="none" style={{flexShrink:0,opacity:0.5}}><circle cx="28" cy="28" r="26" stroke="#ef4444" strokeWidth="1.5"/><circle cx="28" cy="28" r="2" fill="#ef4444"/><line x1="28" y1="28" x2="38" y2="16" stroke="#ef4444" strokeWidth="2" strokeLinecap="round"/><line x1="28" y1="28" x2="28" y2="8" stroke="#ef4444" strokeWidth="1.5" strokeLinecap="round"/><line x1="28" y1="4" x2="28" y2="8" stroke="#ef4444" strokeWidth="1.5" opacity="0.4"/><line x1="28" y1="48" x2="28" y2="52" stroke="#ef4444" strokeWidth="1.5" opacity="0.4"/><line x1="4" y1="28" x2="8" y2="28" stroke="#ef4444" strokeWidth="1.5" opacity="0.4"/><line x1="48" y1="28" x2="52" y2="28" stroke="#ef4444" strokeWidth="1.5" opacity="0.4"/><path d="M20 22c0-1.1.9-2 2-2h3l1.5 3.5-2 1.5c.8 1.6 2 2.8 3.5 3.5l1.5-2L33 28v3c0 1.1-.9 2-2 2-6.1-.3-10.7-5-11-11z" fill="#ef4444" opacity="0.6"/></svg>
             </div>
             <div />
             <div className="total-with">
@@ -306,7 +306,7 @@ export default function TwoAmTest() {
                 <div className="total-label">Total ops manager time · everything handled · full audit</div>
                 <div className="total-val-amber">60 sec<br/>back to bed</div>
               </div>
-              <div style={{fontSize:36}}>{'😴'}</div>
+              <svg width="56" height="56" viewBox="0 0 56 56" fill="none" style={{flexShrink:0}}><path d="M28 4 L48 12 L48 28 C48 38 38 46 28 52 C18 46 8 38 8 28 L8 12 Z" stroke="#f5a623" strokeWidth="1.5" fill="rgba(245,166,35,0.06)"/><path d="M18 28 L24 34 L38 20" stroke="#f5a623" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/><circle cx="28" cy="28" r="24" stroke="#f5a623" strokeWidth="0.5" opacity="0.2"/></svg>
             </div>
           </div>
         </div>
