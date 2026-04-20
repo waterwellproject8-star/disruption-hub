@@ -127,6 +127,20 @@ export default function TwoAmTest() {
 
       <div className="twoam-body">
 
+        {/* NAV */}
+        <nav style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'16px 40px',borderBottom:'1px solid rgba(255,255,255,0.06)',position:'fixed',top:0,left:0,right:0,zIndex:100,background:'rgba(10,12,14,0.95)',backdropFilter:'blur(12px)',WebkitBackdropFilter:'blur(12px)'}}>
+          <a href="/" style={{display:'flex',alignItems:'center',gap:8,textDecoration:'none'}}>
+            <div style={{width:22,height:22,background:'#f5a623',clipPath:'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',flexShrink:0}}/>
+            <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,fontSize:16,color:'#f5a623'}}>DisruptionHub</span>
+          </a>
+          <ul style={{display:'flex',alignItems:'center',gap:28,listStyle:'none',margin:0,padding:0}}>
+            <li><a href="/" style={{color:'#8a9099',textDecoration:'none',fontSize:14,fontWeight:500}}>Home</a></li>
+            <li><span style={{color:'#f5a623',fontSize:14,fontWeight:600}}>The 2am Test</span></li>
+            <li><a href="/#how" style={{color:'#8a9099',textDecoration:'none',fontSize:14,fontWeight:500}}>Platform</a></li>
+            <li><a href="/#pricing" style={{color:'#8a9099',textDecoration:'none',fontSize:14,fontWeight:500}}>Pricing</a></li>
+          </ul>
+        </nav>
+
         {/* HERO */}
         <section className="twoam-hero">
           <div className="hero-grid" />
@@ -144,7 +158,7 @@ export default function TwoAmTest() {
               Without DisruptionHub, that breakdown means <strong>34 minutes of calls</strong> to recovery, the driver, and the consignee — while your SLA bleeds out. With DisruptionHub, ops handles all three with a single text reply. Total time awake: <strong>60 seconds.</strong>
             </p>
             <div style={{display:'flex',gap:14,alignItems:'center',flexWrap:'wrap'}}>
-              <a href="#comparison" className="btn-hero">See the difference ↓</a>
+              <a href="#comparison" className="btn-hero">See the 60-second proof ↓</a>
               <a href="mailto:hello@disruptionhub.ai" className="btn-ghost">Start £149 pilot →</a>
             </div>
             <div style={{display:'flex',alignItems:'center',gap:8,marginTop:40}}>
