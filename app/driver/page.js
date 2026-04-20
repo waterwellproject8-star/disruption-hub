@@ -707,9 +707,10 @@ export default function DriverApp() {
       pushProgressToSupabase(job?.ref,'part_delivered',null)
     }
 
+    console.log('[breakdown] firing alert, client_id:', driverInfo.clientId, 'vehicle:', driverInfo.vehicleReg, 'issue:', panelIssue?.id, 'ref:', job?.ref)
     fetch('/api/driver/alert',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({client_id:driverInfo.clientId,driver_name:driverInfo.name,driver_phone:driverInfo.phone||null,vehicle_reg:driverInfo.vehicleReg,ref:job?.ref,issue_type:panelIssue?.id,issue_description:prompt,human_description:inputText||panelIssue?.label,location_description:gpsDescription,latitude:gpsCoords?.latitude,longitude:gpsCoords?.longitude,at_risk_refs:jobs.filter(j=>j.status!=='completed').map(j=>j.ref).filter(r=>r&&r!=='SHIFT_START')})
-    }).catch(()=>{})
+    }).then(r=>{console.log('[breakdown] alert response:',r.status);if(!r.ok)r.text().then(t=>console.error('[breakdown] server error:',r.status,t))}).catch(e=>console.error('[breakdown] fetch error:',e?.message))
 
     if (emergencyIds.includes(panelIssue?.id)) {
       setOpsAcknowledged(false)
