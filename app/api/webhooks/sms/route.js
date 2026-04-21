@@ -400,6 +400,23 @@ export async function POST(request) {
       return twimlReply(`DH: ${body === 'HOLD' ? 'Hold' : 'Alt'} logged. No driver phone — contact them directly.`)
     }
 
+    // ── NEXT — trigger the next queued action (consignee call after recovery) ──
+    if (body === 'NEXT') {
+      const { data: nextActions } = await db.from('approvals').select('id, action_type, action_label, action_details, financial_value')
+        .eq('client_id', clientId).eq('status', 'pending')
+        .gt('created_at', new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString())
+        .order('created_at', { ascending: true }).limit(1)
+      if (!nextActions?.length) return twimlReply('DH: No queued actions.')
+      const next = nextActions[0]
+      const nd = next.action_details || {}
+      const reg = nd.vehicle_reg || ''
+      const consignee = nd.consignee_name || ''
+      const financial = next.financial_value > 0 ? `\n£${Number(next.financial_value).toLocaleString()} exposure` : ''
+      const refTag = next.id ? `\nRef: ${next.id.slice(0, 8)}` : ''
+      await sendSMS(client.contact_phone || from, `NEXT ACTION${reg ? ` — ${reg}` : ''}${financial}\n${next.action_label || 'Execute action'}\nReply YES to approve${refTag}`)
+      return twimlReply('DH: Next action sent. Check your messages.')
+    }
+
     // ── OPEN ────────────────────────────────────────────────────────────────
     if (body === 'OPEN') return twimlReply(`DH: Dashboard -> ${appUrl}/ops-9x7k`)
 
@@ -629,14 +646,15 @@ export async function POST(request) {
           await finaliseApproval(result.success
             ? { success: true, sms_sent: true }
             : { success: false, failure_reason: result.error || 'driver_sms_failed' })
-          await sendNextPendingActionSMS()
           const carrierPhone = details.carrier_phone || extractPhoneNumber(client.system_prompt)
           const carrierLine = carrierPhone ? `\nCall your recovery provider: ${carrierPhone}.` : ''
           const locLine = details.location_description ? ` Driver at ${details.location_description}.` : ''
-          return twimlReply(result.success ? `DH: Confirmed. ${details.vehicle_reg || ''}: Recovery being arranged.${locLine}${carrierLine}\nDriver notified.` : 'DH: Approved. Call driver directly — SMS failed.')
+          // Do NOT fire sendNextPendingActionSMS here — consignee call should wait
+          // until recovery is confirmed. Ops can trigger it from the dashboard or
+          // reply NEXT when ready. The escalation cron will prompt if no action taken.
+          return twimlReply(result.success ? `DH: Confirmed. ${details.vehicle_reg || ''}: Recovery being arranged.${locLine}${carrierLine}\nDriver notified.\nReply NEXT when ready to notify consignee.` : 'DH: Approved. Call driver directly — SMS failed.')
         }
         await finaliseApproval({ success: false, failure_reason: 'no_driver_phone_on_file' })
-        await sendNextPendingActionSMS()
         return twimlReply('DH: Approved. No driver phone — call them directly.')
       }
 
