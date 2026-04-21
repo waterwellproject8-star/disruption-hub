@@ -411,10 +411,14 @@ export async function POST(request) {
 
     // ── NEXT — promote queued call approval to pending and prompt ops ──
     if (body === 'NEXT') {
-      const { data: queued } = await db.from('approvals').select('id, action_type, action_label, action_details, financial_value')
+      console.log('[sms-NEXT] triggered, clientId:', clientId, 'from:', from)
+      const fourHoursAgo = new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString()
+      console.log('[sms-NEXT] query: approvals.select(*).eq(client_id,', clientId, ').eq(status, queued).gt(created_at,', fourHoursAgo, ').order(created_at asc).limit(1)')
+      const { data: queued, error: queuedError } = await db.from('approvals').select('id, action_type, action_label, action_details, financial_value, status, created_at')
         .eq('client_id', clientId).eq('status', 'queued')
-        .gt('created_at', new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString())
+        .gt('created_at', fourHoursAgo)
         .order('created_at', { ascending: true }).limit(1)
+      console.log('[sms-NEXT] queued query result:', JSON.stringify(queued), 'error:', queuedError?.message || 'none', 'count:', queued?.length || 0)
       if (!queued?.length) return twimlReply('DH: No queued actions.')
       const next = queued[0]
       await db.from('approvals').update({ status: 'pending' }).eq('id', next.id)
