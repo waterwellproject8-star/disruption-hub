@@ -36,7 +36,7 @@ export default function Page() {
   
     <div style={{marginBottom:40,paddingBottom:40,borderBottom:'1px solid rgba(255,255,255,0.06)'}}>
       <h2 style={{fontSize:16,fontWeight:500,color:'#F5A623',marginBottom:16}}>3. How We Use Your Data</h2>
-      <p style={{fontSize:14,color:'#e5e7eb',lineHeight:1.8,marginBottom:12}}>To provide and improve the DisruptionHub service: your operational inputs are sent to Anthropic's API to generate AI responses. Anthropic's privacy policy applies to this processing.</p>
+      <p style={{fontSize:14,color:'#e5e7eb',lineHeight:1.8,marginBottom:12}}>To provide and improve the DisruptionHub service: your operational inputs are processed by our AI services provider to generate responses. The AI provider's privacy policy applies to this processing.</p>
       <p style={{fontSize:14,color:'#e5e7eb',lineHeight:1.8,marginBottom:12}}>To manage your account, send invoices, and provide support.</p>
       <p style={{fontSize:14,color:'#e5e7eb',lineHeight:1.8,marginBottom:12}}>To send service updates and material changes to terms (legitimate interest / contract performance).</p>
       <p style={{fontSize:14,color:'#e5e7eb',lineHeight:1.8,marginBottom:12}}>To analyse usage patterns and improve platform performance (legitimate interest).</p>
@@ -44,15 +44,15 @@ export default function Page() {
     </div>
   
     <div style={{marginBottom:40,paddingBottom:40,borderBottom:'1px solid rgba(255,255,255,0.06)'}}>
-      <h2 style={{fontSize:16,fontWeight:500,color:'#F5A623',marginBottom:16}}>4. Anthropic API Processing</h2>
-      <p style={{fontSize:14,color:'#e5e7eb',lineHeight:1.8,marginBottom:12}}>Text you input is transmitted to Anthropic's API (api.anthropic.com) for AI processing. By using DisruptionHub you acknowledge this transmission.</p>
-      <p style={{fontSize:14,color:'#e5e7eb',lineHeight:1.8,marginBottom:12}}>Anthropic's data processing and privacy practices: anthropic.com/privacy. Anthropic is based in the United States. Transmission to the US is covered by appropriate safeguards under UK GDPR (Standard Contractual Clauses or equivalent).</p>
+      <h2 style={{fontSize:16,fontWeight:500,color:'#F5A623',marginBottom:16}}>4. AI Processing</h2>
+      <p style={{fontSize:14,color:'#e5e7eb',lineHeight:1.8,marginBottom:12}}>Text you input is transmitted to our AI services provider for processing. By using DisruptionHub you acknowledge this transmission.</p>
+      <p style={{fontSize:14,color:'#e5e7eb',lineHeight:1.8,marginBottom:12}}>Our AI services provider is based in the United States. Transmission to the US is covered by appropriate safeguards under UK GDPR (Standard Contractual Clauses or equivalent). Details of the provider's data processing practices are available on request.</p>
       <p style={{fontSize:14,color:'#e5e7eb',lineHeight:1.8,marginBottom:12}}>We recommend you do not input personal data about individuals (such as driver personal phone numbers or home addresses) unless operationally necessary.</p>
     </div>
   
     <div style={{marginBottom:40,paddingBottom:40,borderBottom:'1px solid rgba(255,255,255,0.06)'}}>
       <h2 style={{fontSize:16,fontWeight:500,color:'#F5A623',marginBottom:16}}>5. Data Storage and Security</h2>
-      <p style={{fontSize:14,color:'#e5e7eb',lineHeight:1.8,marginBottom:12}}>Account and operational data is stored in Supabase (supabase.com), hosted in the EU (Ireland region). Data is encrypted in transit (TLS) and at rest.</p>
+      <p style={{fontSize:14,color:'#e5e7eb',lineHeight:1.8,marginBottom:12}}>Account and operational data is stored by our secure database provider, hosted in the European Economic Area. Data is encrypted in transit (TLS) and at rest.</p>
       <p style={{fontSize:14,color:'#e5e7eb',lineHeight:1.8,marginBottom:12}}>Access to operational data is restricted to authorised personnel only. We maintain access logs.</p>
       <p style={{fontSize:14,color:'#e5e7eb',lineHeight:1.8,marginBottom:12}}>In the event of a data breach affecting your personal data, we will notify you within 72 hours of becoming aware where required by UK GDPR.</p>
     </div>
@@ -88,7 +88,7 @@ export default function Page() {
     </div>
       <div style={{marginTop:48,padding:'20px 24px',background:'#0f1826',borderRadius:8,border:'1px solid rgba(255,255,255,0.08)'}}>
         <div style={{fontFamily:'monospace',fontSize:11,color:'#F5A623',marginBottom:8,letterSpacing:'0.08em'}}>PLAIN ENGLISH SUMMARY</div>
-        <p style={{fontSize:13,color:'#e5e7eb',lineHeight:1.7,margin:0}}>We collect your name, email, and the operational text you type into the platform. We send that text to Anthropic's AI to generate responses. We store it in an EU database for 12 months. We do not sell it. You can request deletion at any time. Complaints go to the ICO.</p>
+        <p style={{fontSize:13,color:'#e5e7eb',lineHeight:1.7,margin:0}}>We collect your name, email, and the operational text you type into the platform. We send that text to our AI services provider to generate responses. We store it in an EEA-hosted database for 12 months. We do not sell it. You can request deletion at any time. Complaints go to the ICO.</p>
       </div>
       <div style={{marginTop:48,fontSize:13,color:'#4a5260'}}>Questions: <a href="mailto:hello@disruptionhub.ai" style={{color:'#F5A623',textDecoration:'none'}}>hello@disruptionhub.ai</a></div>
     </div>

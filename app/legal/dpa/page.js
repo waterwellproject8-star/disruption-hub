@@ -58,15 +58,16 @@ export default function Page() {
     <div style={{marginBottom:40,paddingBottom:40,borderBottom:'1px solid rgba(255,255,255,0.06)'}}>
       <h2 style={{fontSize:16,fontWeight:500,color:'#F5A623',marginBottom:16}}>6. Sub-Processors</h2>
       <p style={{fontSize:14,color:'#e5e7eb',lineHeight:1.8,marginBottom:12}}>The Controller authorises DisruptionHub to engage the following sub-processors:</p>
-      <p style={{fontSize:14,color:'#e5e7eb',lineHeight:1.8,marginBottom:12}}>Anthropic PBC (United States) — AI language model processing. Personal data transmitted to Anthropic's API is subject to Anthropic's data processing terms. Transfer to the US is covered by appropriate UK GDPR safeguards.</p>
-      <p style={{fontSize:14,color:'#e5e7eb',lineHeight:1.8,marginBottom:12}}>Supabase Inc (data hosted in EU — Ireland region) — database storage and management.</p>
-      <p style={{fontSize:14,color:'#e5e7eb',lineHeight:1.8,marginBottom:12}}>Vercel Inc (United States) — application hosting and delivery. Transfer covered by Standard Contractual Clauses.</p>
+      <p style={{fontSize:14,color:'#e5e7eb',lineHeight:1.8,marginBottom:12}}>Our AI services provider (United States) — AI processing of operational inputs. Transfer to the US is covered by appropriate UK GDPR safeguards including Standard Contractual Clauses.</p>
+      <p style={{fontSize:14,color:'#e5e7eb',lineHeight:1.8,marginBottom:12}}>Our secure database provider (data hosted in the European Economic Area) — database storage and management.</p>
+      <p style={{fontSize:14,color:'#e5e7eb',lineHeight:1.8,marginBottom:12}}>Our hosting provider (United States) — application hosting and delivery. Transfer covered by Standard Contractual Clauses.</p>
+      <p style={{fontSize:14,color:'#e5e7eb',lineHeight:1.8,marginBottom:12}}>Our SMS and voice communications provider — message and call delivery for operational notifications.</p>
       <p style={{fontSize:14,color:'#e5e7eb',lineHeight:1.8,marginBottom:12}}>DisruptionHub will maintain an up-to-date list of sub-processors and notify the Controller of any changes.</p>
     </div>
   
     <div style={{marginBottom:40,paddingBottom:40,borderBottom:'1px solid rgba(255,255,255,0.06)'}}>
       <h2 style={{fontSize:16,fontWeight:500,color:'#F5A623',marginBottom:16}}>7. International Transfers</h2>
-      <p style={{fontSize:14,color:'#e5e7eb',lineHeight:1.8,marginBottom:12}}>Processing by Anthropic and Vercel involves transfer of data to the United States. DisruptionHub has satisfied itself that appropriate safeguards are in place under UK GDPR for these transfers, including Standard Contractual Clauses or equivalent mechanisms.</p>
+      <p style={{fontSize:14,color:'#e5e7eb',lineHeight:1.8,marginBottom:12}}>Processing by our AI services provider and our hosting provider involves transfer of data to the United States. DisruptionHub has satisfied itself that appropriate safeguards are in place under UK GDPR for these transfers, including Standard Contractual Clauses or equivalent mechanisms.</p>
       <p style={{fontSize:14,color:'#e5e7eb',lineHeight:1.8,marginBottom:12}}>If you require copies of the relevant transfer safeguards, contact hello@disruptionhub.ai.</p>
     </div>
   
@@ -93,7 +94,7 @@ export default function Page() {
     </div>
       <div style={{marginTop:48,padding:'20px 24px',background:'#0f1826',borderRadius:8,border:'1px solid rgba(255,255,255,0.08)'}}>
         <div style={{fontFamily:'monospace',fontSize:11,color:'#F5A623',marginBottom:8,letterSpacing:'0.08em'}}>PLAIN ENGLISH SUMMARY</div>
-        <p style={{fontSize:13,color:'#e5e7eb',lineHeight:1.7,margin:0}}>You are the Controller — you own your data and are responsible for having a lawful reason to share it with us. We are the Processor — we only use it to provide the service. We store it in the EU. We pass it to Anthropic's AI (US-based) to generate responses. We delete it within 90 days of you leaving. You can audit us. Contact us for any data requests.</p>
+        <p style={{fontSize:13,color:'#e5e7eb',lineHeight:1.7,margin:0}}>You are the Controller — you own your data and are responsible for having a lawful reason to share it with us. We are the Processor — we only use it to provide the service. We store it in the EEA. We pass it to our AI services provider (US-based) to generate responses. We delete it within 90 days of you leaving. You can audit us. Contact us for any data requests.</p>
       </div>
       <div style={{marginTop:48,fontSize:13,color:'#4a5260'}}>Questions: <a href="mailto:hello@disruptionhub.ai" style={{color:'#F5A623',textDecoration:'none'}}>hello@disruptionhub.ai</a></div>
     </div>

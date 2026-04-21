@@ -61,7 +61,7 @@ export default function Page() {
   
     <div style={{marginBottom:40,paddingBottom:40,borderBottom:'1px solid rgba(255,255,255,0.06)'}}>
       <h2 style={{fontSize:16,fontWeight:500,color:'#F5A623',marginBottom:16}}>7. Availability and Continuity</h2>
-      <p style={{fontSize:14,color:'#e5e7eb',lineHeight:1.8,marginBottom:12}}>The platform is provided on a commercially reasonable efforts basis. We do not guarantee uninterrupted availability. The service depends on third-party infrastructure including Vercel (vercel.com/status) and Anthropic AI API (status.anthropic.com), both subject to independent outages.</p>
+      <p style={{fontSize:14,color:'#e5e7eb',lineHeight:1.8,marginBottom:12}}>The platform is provided on a commercially reasonable efforts basis. We do not guarantee uninterrupted availability. The service depends on third-party infrastructure providers including our hosting provider and our AI services provider, both subject to independent outages.</p>
       <p style={{fontSize:14,color:'#e5e7eb',lineHeight:1.8,marginBottom:12}}>You must maintain your own operational procedures, emergency contact lists, and escalation processes that function independently of DisruptionHub being available.</p>
       <p style={{fontSize:14,color:'#e5e7eb',lineHeight:1.8,marginBottom:12}}>Planned maintenance will be communicated via hello@disruptionhub.ai where reasonably practicable.</p>
     </div>
