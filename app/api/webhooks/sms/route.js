@@ -642,12 +642,18 @@ export async function POST(request) {
         consigneeName = consigneeName || 'consignee'
 
         if (driverPhone) {
+          // STEP 1: Send driver instruction SMS
           const result = await sendSMS(driverPhone, driverMsg)
           await finaliseApproval(result.success
             ? { success: true, sms_sent: true }
             : { success: false, failure_reason: result.error || 'driver_sms_failed' })
 
-          // Auto-fire all pending consignee call approvals for this vehicle
+          // STEP 2: Send ops confirmation SMS (before consignee call)
+          const carrierPhone = details.carrier_phone || extractPhoneNumber(client.system_prompt)
+          const carrierLine = carrierPhone ? `\nRecovery provider: ${carrierPhone}` : ''
+          await sendSMS(client.contact_phone || from, `DisruptionHub — Confirmed ✓\n${details.vehicle_reg || ''}: Recovery being arranged.${carrierLine}\nDriver briefed.\n${consigneeName} being notified now.`)
+
+          // STEP 3: Fire consignee calls LAST — sequential, after ops confirmed
           const { data: callApprovals } = await db.from('approvals').select('*')
             .eq('client_id', clientId).eq('status', 'pending')
             .in('action_type', ['call', 'make_call'])
@@ -655,12 +661,26 @@ export async function POST(request) {
           for (const ca of (callApprovals || [])) {
             const cad = ca.action_details || {}
             if (cad.vehicle_reg !== details.vehicle_reg) continue
-            await db.from('approvals').update({ status: 'executed', approved_by: 'system_auto_dispatch', approved_at: new Date().toISOString(), executed_at: new Date().toISOString() }).eq('id', ca.id)
-            console.log(`[dispatch] auto-executing consignee call ${ca.id} for ${cad.consignee_name || 'consignee'}`)
+            const consigneePhone = toE164UK(cad.consignee_phone)
+            if (consigneePhone) {
+              const spokenVehicle = speakReg(details.vehicle_reg)
+              const cName = twimlSafe(cad.consignee_name || consigneeName)
+              const isBreakdown = cad.call_type === 'breakdown' || cad.alert_type === 'breakdown'
+              const voiceMsg = isBreakdown
+                ? `${twimlSafe(contactName || 'your supplier')} is calling to advise that vehicle ${spokenVehicle} has experienced a mechanical issue and will be delayed. We are arranging recovery and will provide an update as soon as possible. No action is required from you at this time. Thank you.`
+                : `${twimlSafe(contactName || 'your supplier')} is calling to advise that your delivery from vehicle ${spokenVehicle} is running late. No action is required from you at this time. Thank you.`
+              const callResult = await makeCall(consigneePhone, voiceMsg)
+              const nowIso = new Date().toISOString()
+              await db.from('approvals').update({ status: 'executed', approved_by: 'system_auto_dispatch', approved_at: nowIso, executed_at: nowIso, execution_result: { twilio_sid: callResult.sid, auto_fired: true } }).eq('id', ca.id)
+              console.log(`[dispatch] consignee call ${ca.id} → ${cad.consignee_name || 'consignee'}: ${callResult.success ? 'ok' : callResult.error || 'failed'}`)
+            } else {
+              await db.from('approvals').update({ status: 'failed', executed_at: new Date().toISOString(), execution_result: { failure_reason: 'no_consignee_phone' } }).eq('id', ca.id)
+              console.log(`[dispatch] consignee call ${ca.id} skipped — no phone for ${cad.consignee_name || 'consignee'}`)
+            }
           }
           await sendNextPendingActionSMS()
 
-          return twimlReply(result.success ? `DisruptionHub — Confirmed ✓\n${details.vehicle_reg || ''}: Recovery being arranged.\n${consigneeName} notified.\nDriver briefed.` : 'DH: Approved. Call driver directly — SMS failed.')
+          return twimlReply(result.success ? 'DH: Done. Check dashboard.' : 'DH: Approved. Call driver directly — SMS failed.')
         }
         await finaliseApproval({ success: false, failure_reason: 'no_driver_phone_on_file' })
         return twimlReply('DH: Approved. No driver phone — call them directly.')
