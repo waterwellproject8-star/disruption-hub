@@ -282,6 +282,8 @@ Environment: copy needed variables from Section 5 into `.env.local` at the proje
 3. **Never change `action_type` values** without checking every place that action_type is handled downstream: `approvals/route.js` executeAction branches, `webhooks/sms/route.js` YES handler, `buildActionSMS` in `webhooks/inbound/route.js`, and `buildOpsSMS` in `driver/alert/route.js`.
 4. **Never add multi-action loops** without confirming that every downstream handler (executeAction, SMS route, dashboard render) can process each action type correctly. The multi-action commit `71172cf` broke the breakdown flow by forcing `action_type: 'emergency'` which triggered Twilio calls to the wrong number.
 5. **If a fix touches more than 2 files**, list every downstream impact before applying. State which flows are affected and confirm no regressions.
+6. **SMS LOOP PROTECTION (SYSTEM RULE):** The YES → driver SMS → consignee call → ops confirmation flow is a PROTECTED FLOW. Before making ANY change to `webhooks/sms/route.js` or `driver/alert/route.js`, state explicitly: (1) what the current flow does, (2) what is broken and why, (3) the minimum change needed. Never add new status values, new SMS commands, or new approval types without explicit instruction. If a fix requires touching more than 10 lines, stop and report instead.
+7. **REVERT RULE:** If a fix breaks a previously working flow, revert to the last known good commit immediately rather than patching forward.
 
 ---
 
