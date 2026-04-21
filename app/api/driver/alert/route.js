@@ -493,7 +493,7 @@ Provide immediate disruption analysis and action plan.`
               severity
             },
             financial_value: 0,
-            status: 'queued',
+            status: 'pending',
             escalation_at: new Date(Date.now() + 20 * 60 * 1000).toISOString()
           })
           if (consigneeErr) console.error('consignee approval insert:', consigneeErr.message, consigneeErr.code)
@@ -559,7 +559,7 @@ Provide immediate disruption analysis and action plan.`
                     severity
                   },
                   financial_value: slaBreach ? penalty : 0,
-                  status: 'queued',
+                  status: 'pending',
                   escalation_at: new Date(Date.now() + 20 * 60 * 1000).toISOString()
                 })
                 if (cascadeErr) console.error(`cascade approval [${s.ref}]:`, cascadeErr.message, cascadeErr.code)

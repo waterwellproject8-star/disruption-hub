@@ -409,28 +409,6 @@ export async function POST(request) {
       return twimlReply(`DH: ${body === 'HOLD' ? 'Hold' : 'Alt'} logged. No driver phone — contact them directly.`)
     }
 
-    // ── NEXT — promote queued call approval to pending and prompt ops ──
-    if (body === 'NEXT') {
-      console.log('[sms-NEXT] triggered, clientId:', clientId, 'from:', from)
-      const fourHoursAgo = new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString()
-      console.log('[sms-NEXT] query: approvals.select(*).eq(client_id,', clientId, ').eq(status, queued).gt(created_at,', fourHoursAgo, ').order(created_at asc).limit(1)')
-      const { data: queued, error: queuedError } = await db.from('approvals').select('id, action_type, action_label, action_details, financial_value, status, created_at')
-        .eq('client_id', clientId).eq('status', 'queued')
-        .gt('created_at', fourHoursAgo)
-        .order('created_at', { ascending: true }).limit(1)
-      console.log('[sms-NEXT] queued query result:', JSON.stringify(queued), 'error:', queuedError?.message || 'none', 'count:', queued?.length || 0)
-      if (!queued?.length) return twimlReply('DH: No queued actions.')
-      const next = queued[0]
-      await db.from('approvals').update({ status: 'pending' }).eq('id', next.id)
-      const nd = next.action_details || {}
-      const reg = nd.vehicle_reg || ''
-      const consigneeName = nd.consignee_name || extractConsigneeName(nd.route) || 'consignee'
-      const financial = next.financial_value > 0 ? `\n£${Number(next.financial_value).toLocaleString()} exposure` : ''
-      const refTag = next.id ? `\nRef: ${next.id.slice(0, 8)}` : ''
-      await sendSMS(client.contact_phone || from, `NEXT ACTION${reg ? ` — ${reg}` : ''}${financial}\nNotify ${consigneeName} of delay\nReply YES to call ${consigneeName}${refTag}`)
-      return twimlReply(`DH: ${consigneeName} notification queued. Reply YES to confirm.`)
-    }
-
     // ── OPEN ────────────────────────────────────────────────────────────────
     if (body === 'OPEN') return twimlReply(`DH: Dashboard -> ${appUrl}/ops-9x7k`)
 
@@ -516,40 +494,20 @@ export async function POST(request) {
         approvals = data
       }
 
-      // Fallback: newest non-call pending approval for this client (within last 4 hours)
+      // Fallback: most recent pending approval for this client (within last 4 hours)
       if (!approvals?.length) {
         const { data } = await db
           .from('approvals')
           .select('*')
           .eq('client_id', clientId)
           .eq('status', 'pending')
-          .not('action_type', 'in', '("call","make_call")')
           .gt('created_at', new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString())
-          .order('created_at', { ascending: true })
+          .order('created_at', { ascending: false })
           .limit(1)
         approvals = data
       }
 
-      // If no pending dispatch/sms found, check for queued call approvals (treat YES as NEXT)
-      if (!approvals?.length) {
-        const fourHoursAgo = new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString()
-        const { data: queued } = await db.from('approvals').select('id, action_type, action_label, action_details, financial_value, status, created_at')
-          .eq('client_id', clientId).eq('status', 'queued')
-          .gt('created_at', fourHoursAgo)
-          .order('created_at', { ascending: true }).limit(1)
-        if (queued?.length) {
-          const next = queued[0]
-          await db.from('approvals').update({ status: 'pending' }).eq('id', next.id)
-          const nd = next.action_details || {}
-          const reg = nd.vehicle_reg || ''
-          const consigneeName = nd.consignee_name || extractConsigneeName(nd.route) || 'consignee'
-          const financial = next.financial_value > 0 ? `\n£${Number(next.financial_value).toLocaleString()} exposure` : ''
-          const refTag = next.id ? `\nRef: ${next.id.slice(0, 8)}` : ''
-          await sendSMS(client.contact_phone || from, `NEXT ACTION${reg ? ` — ${reg}` : ''}${financial}\nNotify ${consigneeName} of delay\nReply YES to call ${consigneeName}${refTag}`)
-          return twimlReply(`DH: ${consigneeName} notification queued. Reply YES to confirm.`)
-        }
-        return twimlReply('DH: No pending actions. Check disruptionhub.ai')
-      }
+      if (!approvals?.length) return twimlReply('DH: No pending actions. Check disruptionhub.ai')
 
       const approval = approvals[0]
       console.log(`[sms] YES found approval ${approval.id}, status: ${approval.status}, created_at: ${approval.created_at}, approved_at: ${approval.approved_at}`)
@@ -676,23 +634,33 @@ export async function POST(request) {
         const driverPhone = await resolveDriverPhone()
         const driverMsg = `DisruptionHub OPS${details.ref ? ` — ${details.ref}` : ''}\n\nOps have confirmed. Recovery is being arranged — you will receive a further update shortly. Stay with your vehicle, hazards on.`
         await writeInstructionToApp(driverMsg)
+
+        let consigneeName = details.consignee_name || null
+        if (!consigneeName && details.ref) {
+          try { const { data: sh } = await db.from('shipments').select('route, consignee').eq('ref', details.ref).maybeSingle(); consigneeName = sh?.consignee || extractConsigneeName(sh?.route) } catch {}
+        }
+        consigneeName = consigneeName || 'consignee'
+
         if (driverPhone) {
           const result = await sendSMS(driverPhone, driverMsg)
           await finaliseApproval(result.success
             ? { success: true, sms_sent: true }
             : { success: false, failure_reason: result.error || 'driver_sms_failed' })
-          const carrierPhone = details.carrier_phone || extractPhoneNumber(client.system_prompt)
-          const carrierLine = carrierPhone ? `\nCall your recovery provider: ${carrierPhone}.` : ''
-          const locLine = details.location_description ? ` Driver at ${details.location_description}.` : ''
-          // Do NOT fire sendNextPendingActionSMS here — consignee call should wait
-          // until recovery is confirmed. Ops can trigger it from the dashboard or
-          // reply NEXT when ready. The escalation cron will prompt if no action taken.
-          let nextConsignee = details.consignee_name || null
-          if (!nextConsignee && details.ref) {
-            try { const { data: sh } = await db.from('shipments').select('route, consignee').eq('ref', details.ref).maybeSingle(); nextConsignee = sh?.consignee || extractConsigneeName(sh?.route) } catch {}
+
+          // Auto-fire all pending consignee call approvals for this vehicle
+          const { data: callApprovals } = await db.from('approvals').select('*')
+            .eq('client_id', clientId).eq('status', 'pending')
+            .in('action_type', ['call', 'make_call'])
+            .gt('created_at', new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString())
+          for (const ca of (callApprovals || [])) {
+            const cad = ca.action_details || {}
+            if (cad.vehicle_reg !== details.vehicle_reg) continue
+            await db.from('approvals').update({ status: 'executed', approved_by: 'system_auto_dispatch', approved_at: new Date().toISOString(), executed_at: new Date().toISOString() }).eq('id', ca.id)
+            console.log(`[dispatch] auto-executing consignee call ${ca.id} for ${cad.consignee_name || 'consignee'}`)
           }
-          nextConsignee = nextConsignee || 'consignee'
-          return twimlReply(result.success ? `DH: Confirmed. ${details.vehicle_reg || ''}: Recovery being arranged.${locLine}${carrierLine}\nDriver notified.\nReply NEXT when ready to notify ${nextConsignee}.` : 'DH: Approved. Call driver directly — SMS failed.')
+          await sendNextPendingActionSMS()
+
+          return twimlReply(result.success ? `DisruptionHub — Confirmed ✓\n${details.vehicle_reg || ''}: Recovery being arranged.\n${consigneeName} notified.\nDriver briefed.` : 'DH: Approved. Call driver directly — SMS failed.')
         }
         await finaliseApproval({ success: false, failure_reason: 'no_driver_phone_on_file' })
         return twimlReply('DH: Approved. No driver phone — call them directly.')
