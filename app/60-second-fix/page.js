@@ -193,7 +193,7 @@ export default function TwoAmTest() {
             <div className="col-hdr-with">
               <div className="col-hdr-label">With DisruptionHub</div>
               <div className="col-hdr-title">60 Seconds.<br/>Back To Bed.</div>
-              <div className="col-hdr-sub">One SMS. One reply. Recovery dispatched, driver briefed, consignee notified.</div>
+              <div className="col-hdr-sub">One text. One reply. Recovery arranged, driver briefed, consignee updated.</div>
             </div>
           </div>
 
@@ -238,8 +238,8 @@ export default function TwoAmTest() {
                 </div>
                 <div>
                   <div className="tl-time-amber">02:14</div>
-                  <div className="tl-title">Driver taps Breakdown in the app</div>
-                  <div className="tl-sub">Location auto-confirmed. Cargo type, SLA window, and penalty value pulled instantly. Ops receives a single SMS.</div>
+                  <div className="tl-title">Driver reports a breakdown</div>
+                  <div className="tl-sub">Location confirmed. Vehicle, cargo, and SLA exposure identified instantly. Ops gets one text with everything they need.</div>
                   <div className="sms"><strong>DisruptionHub — CRITICAL</strong><br/>LK72 ABX: Breakdown M1 J18. Tesco DC slot 23:30. SLA risk: <strong>£2,400</strong>.<br/>Reply <strong>YES</strong> to confirm recovery is being arranged, NO to handle manually.</div>
                 </div>
               </div>
@@ -262,8 +262,8 @@ export default function TwoAmTest() {
                 </div>
                 <div>
                   <div className="tl-time-amber">02:15</div>
-                  <div className="tl-title">AI voice agent calls recovery</div>
-                  <div className="tl-sub">Outbound call to the recovery company. Extracts ETA. Logs it automatically. No hold music.</div>
+                  <div className="tl-title">Recovery contacted. ETA confirmed.</div>
+                  <div className="tl-sub">Your recovery provider is reached and a confirmed arrival time is secured — automatically.</div>
                 </div>
               </div>
               <div className="tl-item">
@@ -273,8 +273,8 @@ export default function TwoAmTest() {
                 </div>
                 <div>
                   <div className="tl-time-amber">02:15</div>
-                  <div className="tl-title">Driver receives instructions in-app</div>
-                  <div className="tl-sub">Recovery ETA, cargo instructions, temperature check reminder — direct to the driver app.</div>
+                  <div className="tl-title">Driver briefed. Nothing left to chance.</div>
+                  <div className="tl-sub">The driver receives everything they need — what to do, what to protect, when help arrives.</div>
                 </div>
               </div>
               <div className="tl-item" style={{borderBottom:'none'}}>
@@ -283,9 +283,9 @@ export default function TwoAmTest() {
                 </div>
                 <div>
                   <div className="tl-time-amber">02:15</div>
-                  <div className="tl-title">Consignee notified. Ops confirmed.</div>
-                  <div className="tl-sub">Automated call to consignee with revised ETA. Ops gets final confirmation SMS:</div>
-                  <div className="sms"><strong>DisruptionHub — Done ✓</strong><br/>Recovery ETA <strong>55 min</strong>. Driver briefed. Tesco DC notified. Audit log saved.</div>
+                  <div className="tl-title">Everyone who needs to know, knows.</div>
+                  <div className="tl-sub">Consignee updated. Ops confirmed. Full record saved. Nothing chased. Nothing missed.</div>
+                  <div className="sms"><strong>DisruptionHub — Done ✓</strong><br/>Recovery ETA <strong>55 min</strong>. Driver briefed. Tesco DC notified. Full record saved.</div>
                 </div>
               </div>
             </div>
@@ -322,15 +322,15 @@ export default function TwoAmTest() {
             <div className="scan-line" />
             <div className="approval-grid">
               <div>
-                <div className="approval-tag">How the approval works</div>
+                <div className="approval-tag">How it works for you</div>
                 <h2 className="approval-title">One text.<br/><em>Everything</em><br/>handled.</h2>
-                <p className="approval-body">The ops manager receives a single SMS with the situation, the financial exposure, and a YES / NO choice. Reply YES and DisruptionHub takes care of every call — recovery dispatched, driver briefed, consignee notified — all confirmed back in one message. No app to open. No hold music.</p>
+                <p className="approval-body">You get one SMS with the situation, the financial exposure, and a YES / NO choice. Reply YES and everything is handled — recovery arranged, driver briefed, consignee notified — all confirmed back in one message. No app to open. No hold music.</p>
                 <div className="steps-grid">
                   {[
-                    {n:'STEP 01',t:'AI calls recovery',s:'Voice agent contacts the recovery company, confirms location, extracts an ETA.'},
-                    {n:'STEP 02',t:'Driver briefed in-app',s:'Recovery ETA, cargo instructions, and temperature check sent directly to the driver app.'},
-                    {n:'STEP 03',t:'Consignee notified',s:'Automated call to the delivery contact with revised ETA and reason for delay.'},
-                    {n:'STEP 04',t:'Ops confirmed',s:'Single SMS confirms everything done. Full incident log saved automatically.'},
+                    {n:'STEP 01',t:'Recovery contacted',s:'Your recovery provider is reached, location confirmed, arrival time secured.'},
+                    {n:'STEP 02',t:'Driver briefed',s:'The driver gets clear instructions — what to do, what to protect, when help arrives.'},
+                    {n:'STEP 03',t:'Consignee updated',s:'Your customer is notified with a revised delivery time and reason for delay.'},
+                    {n:'STEP 04',t:'Ops confirmed',s:'You get a single confirmation: everything handled, full record saved.'},
                   ].map((s,i)=>(
                     <div className="step-card" key={i}>
                       <div className="step-num">{s.n}</div>
@@ -357,7 +357,7 @@ export default function TwoAmTest() {
                         M1 J18, northbound.<br/>
                         Tesco DC slot: 23:30<br/>
                         SLA risk: <strong>£2,400</strong><br/><br/>
-                        Reply <strong>YES</strong> to confirm recovery + brief driver + notify consignee.<br/>
+                        Reply <strong>YES</strong> to handle everything.<br/>
                         Reply <strong>NO</strong> to handle manually.
                       </div>
                       <div className="phone-btns">
@@ -390,8 +390,8 @@ export default function TwoAmTest() {
             <div className="stat-divider" />
             <div className="stat-item">
               <span className="stat-green">3</span>
-              <span className="stat-lbl-title">Calls handled automatically</span>
-              <span className="stat-lbl-sub">Recovery, driver, consignee — all done</span>
+              <span className="stat-lbl-title">People reached, not chased</span>
+              <span className="stat-lbl-sub">Recovery, driver, consignee — all handled</span>
             </div>
           </div>
         </div>
