@@ -567,7 +567,7 @@ export default function HomePage() {
                   <div className="ai-output" id="aiOutput">_</div>
                 </div>
               </h3>
-              <p style={{ fontSize: 13, color: '#c8cdd4', lineHeight: 1.7, marginBottom: 20, fontWeight: 400 }}>AI reads the incident instantly — how serious, what it costs, what breaks next if you do nothing.</p>
+              <p style={{ fontSize: 13, color: '#c8cdd4', lineHeight: 1.7, marginBottom: 20, fontWeight: 400 }}>Situation assessed instantly — severity, financial exposure, and the right action.</p>
               <div style={{ background: T.navyCard, border: '1px solid rgba(255,255,255,0.12)', borderRadius: 6, padding: '12px 14px' }}>
                 <div style={{ fontFamily: FF.mono, fontSize: 9, color: '#8a9099', letterSpacing: '0.1em', marginBottom: 8 }}>ASSESSMENT OUTPUT</div>
                 {[
@@ -627,8 +627,8 @@ export default function HomePage() {
           {/* ── ANIMATED TIMELINE ── */}
           {(() => {
             const steps = [
-              { dot: '!', pulse: 'tl-pulse-red', activeColor: '#ef4444', activeBg: 'rgba(239,68,68,0.15)', time: '02:31', label: 'Fault detected', sub: 'Webfleet webhook', big: true },
-              { dot: 'AI', pulse: 'tl-pulse', activeColor: '#f5a623', activeBg: 'rgba(245,166,35,0.15)', time: '+3s', label: 'AI analyses', sub: 'Action plan built' },
+              { dot: '!', pulse: 'tl-pulse-red', activeColor: '#ef4444', activeBg: 'rgba(239,68,68,0.15)', time: '02:31', label: 'Fault detected', sub: 'Live monitoring', big: true },
+              { dot: '!', pulse: 'tl-pulse', activeColor: '#f5a623', activeBg: 'rgba(245,166,35,0.15)', time: '+3s', label: 'Situation assessed', sub: 'Action plan built' },
               { dot: 'SMS', pulse: 'tl-pulse', activeColor: '#f5a623', activeBg: 'rgba(245,166,35,0.15)', time: '+8s', label: 'Ops notified', sub: 'Full brief sent' },
               { dot: 'YES', pulse: 'tl-pulse', activeColor: '#f5a623', activeBg: 'rgba(245,166,35,0.15)', time: '+28s', label: 'Approved', sub: 'One reply from bed' },
               { dot: 'tick', pulse: 'tl-pulse', activeColor: '#00e5b0', activeBg: 'rgba(0,229,176,0.12)', time: '+30s', label: 'Resolved', sub: 'SLA protected', big: true },
@@ -1106,7 +1106,7 @@ export default function HomePage() {
                 <div style={{ marginBottom: 32 }}>
                   <div className="feat-cat-label">Core Platform</div>
                   <div className="feat-core-grid">
-                    {['Live AI disruption agent — unlimited analyses, 30-second response','SMS command centre — ops manager approves by replying YES from anywhere','Driver app — job list, pre-shift defect check, GPS alerts, POD confirmation','Operations dashboard — live incident feed, severity scoring, one-click actions','Consignee voice calls — AI contacts consignee automatically on approval','Monthly performance report — auto-generated, financial exposure tracked'].map(item => (
+                    {['Live incident response — unlimited, 30-second reaction time','SMS command centre — ops manager approves by replying YES from anywhere','Driver app — job list, pre-shift defect check, GPS alerts, POD confirmation','Operations dashboard — live incident feed, severity scoring, one-click actions','Consignee notification — contacted automatically on approval','Monthly performance report — auto-generated, financial exposure tracked'].map(item => (
                       <div key={item} className="feat-core-item"><span style={{ color: '#00e5b0', fontSize: 12, flexShrink: 0, marginTop: 1 }}>✓</span><span style={{ fontFamily: FF.mono, fontSize: 10, color: '#c8cdd4', lineHeight: 1.5 }}>{item}</span></div>
                     ))}
                   </div>
