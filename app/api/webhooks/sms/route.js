@@ -531,7 +531,26 @@ export async function POST(request) {
         approvals = data
       }
 
-      if (!approvals?.length) return twimlReply('DH: No pending actions. Check disruptionhub.ai')
+      // If no pending dispatch/sms found, check for queued call approvals (treat YES as NEXT)
+      if (!approvals?.length) {
+        const fourHoursAgo = new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString()
+        const { data: queued } = await db.from('approvals').select('id, action_type, action_label, action_details, financial_value, status, created_at')
+          .eq('client_id', clientId).eq('status', 'queued')
+          .gt('created_at', fourHoursAgo)
+          .order('created_at', { ascending: true }).limit(1)
+        if (queued?.length) {
+          const next = queued[0]
+          await db.from('approvals').update({ status: 'pending' }).eq('id', next.id)
+          const nd = next.action_details || {}
+          const reg = nd.vehicle_reg || ''
+          const consigneeName = nd.consignee_name || extractConsigneeName(nd.route) || 'consignee'
+          const financial = next.financial_value > 0 ? `\n£${Number(next.financial_value).toLocaleString()} exposure` : ''
+          const refTag = next.id ? `\nRef: ${next.id.slice(0, 8)}` : ''
+          await sendSMS(client.contact_phone || from, `NEXT ACTION${reg ? ` — ${reg}` : ''}${financial}\nNotify ${consigneeName} of delay\nReply YES to call ${consigneeName}${refTag}`)
+          return twimlReply(`DH: ${consigneeName} notification queued. Reply YES to confirm.`)
+        }
+        return twimlReply('DH: No pending actions. Check disruptionhub.ai')
+      }
 
       const approval = approvals[0]
       console.log(`[sms] YES found approval ${approval.id}, status: ${approval.status}, created_at: ${approval.created_at}, approved_at: ${approval.approved_at}`)
@@ -669,7 +688,11 @@ export async function POST(request) {
           // Do NOT fire sendNextPendingActionSMS here — consignee call should wait
           // until recovery is confirmed. Ops can trigger it from the dashboard or
           // reply NEXT when ready. The escalation cron will prompt if no action taken.
-          const nextConsignee = details.consignee_name || extractConsigneeName(details.route) || 'consignee'
+          let nextConsignee = details.consignee_name || null
+          if (!nextConsignee && details.ref) {
+            try { const { data: sh } = await db.from('shipments').select('route, consignee').eq('ref', details.ref).maybeSingle(); nextConsignee = sh?.consignee || extractConsigneeName(sh?.route) } catch {}
+          }
+          nextConsignee = nextConsignee || 'consignee'
           return twimlReply(result.success ? `DH: Confirmed. ${details.vehicle_reg || ''}: Recovery being arranged.${locLine}${carrierLine}\nDriver notified.\nReply NEXT when ready to notify ${nextConsignee}.` : 'DH: Approved. Call driver directly — SMS failed.')
         }
         await finaliseApproval({ success: false, failure_reason: 'no_driver_phone_on_file' })
