@@ -496,6 +496,7 @@ export async function POST(request) {
           .select('*')
           .eq('client_id', clientId)
           .eq('status', 'pending')
+          .gt('created_at', new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString())
           .ilike('id', `${smsRef}%`)
           .limit(1)
         approvals = data
