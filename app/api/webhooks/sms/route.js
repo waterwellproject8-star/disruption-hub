@@ -118,6 +118,15 @@ function spellOut(str) {
   return str.replace(/[^a-zA-Z0-9]/g, '').split('').join(', ')
 }
 
+function extractConsigneeName(route) {
+  if (!route) return null
+  const brackets = route.match(/\(([^)]+)\)\s*$/)
+  if (brackets) return brackets[1].trim()
+  const arrow = route.split('→')
+  if (arrow.length >= 2) return arrow[arrow.length - 1].trim()
+  return null
+}
+
 // Build a driver-facing instruction from webhook event data
 // Webhook AI analysis is written for ops ("contact driver", "call carrier") — not for the driver
 // This function translates the event into plain driver instructions
@@ -400,21 +409,22 @@ export async function POST(request) {
       return twimlReply(`DH: ${body === 'HOLD' ? 'Hold' : 'Alt'} logged. No driver phone — contact them directly.`)
     }
 
-    // ── NEXT — trigger the next queued action (consignee call after recovery) ──
+    // ── NEXT — promote queued call approval to pending and prompt ops ──
     if (body === 'NEXT') {
-      const { data: nextActions } = await db.from('approvals').select('id, action_type, action_label, action_details, financial_value')
-        .eq('client_id', clientId).eq('status', 'pending')
+      const { data: queued } = await db.from('approvals').select('id, action_type, action_label, action_details, financial_value')
+        .eq('client_id', clientId).eq('status', 'queued')
         .gt('created_at', new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString())
         .order('created_at', { ascending: true }).limit(1)
-      if (!nextActions?.length) return twimlReply('DH: No queued actions.')
-      const next = nextActions[0]
+      if (!queued?.length) return twimlReply('DH: No queued actions.')
+      const next = queued[0]
+      await db.from('approvals').update({ status: 'pending' }).eq('id', next.id)
       const nd = next.action_details || {}
       const reg = nd.vehicle_reg || ''
-      const consignee = nd.consignee_name || ''
+      const consigneeName = nd.consignee_name || extractConsigneeName(nd.route) || 'consignee'
       const financial = next.financial_value > 0 ? `\n£${Number(next.financial_value).toLocaleString()} exposure` : ''
       const refTag = next.id ? `\nRef: ${next.id.slice(0, 8)}` : ''
-      await sendSMS(client.contact_phone || from, `NEXT ACTION${reg ? ` — ${reg}` : ''}${financial}\n${next.action_label || 'Execute action'}\nReply YES to approve${refTag}`)
-      return twimlReply('DH: Next action sent. Check your messages.')
+      await sendSMS(client.contact_phone || from, `NEXT ACTION${reg ? ` — ${reg}` : ''}${financial}\nNotify ${consigneeName} of delay\nReply YES to call ${consigneeName}${refTag}`)
+      return twimlReply(`DH: ${consigneeName} notification queued. Reply YES to confirm.`)
     }
 
     // ── OPEN ────────────────────────────────────────────────────────────────
@@ -655,7 +665,8 @@ export async function POST(request) {
           // Do NOT fire sendNextPendingActionSMS here — consignee call should wait
           // until recovery is confirmed. Ops can trigger it from the dashboard or
           // reply NEXT when ready. The escalation cron will prompt if no action taken.
-          return twimlReply(result.success ? `DH: Confirmed. ${details.vehicle_reg || ''}: Recovery being arranged.${locLine}${carrierLine}\nDriver notified.\nReply NEXT when ready to notify consignee.` : 'DH: Approved. Call driver directly — SMS failed.')
+          const nextConsignee = details.consignee_name || extractConsigneeName(details.route) || 'consignee'
+          return twimlReply(result.success ? `DH: Confirmed. ${details.vehicle_reg || ''}: Recovery being arranged.${locLine}${carrierLine}\nDriver notified.\nReply NEXT when ready to notify ${nextConsignee}.` : 'DH: Approved. Call driver directly — SMS failed.')
         }
         await finaliseApproval({ success: false, failure_reason: 'no_driver_phone_on_file' })
         return twimlReply('DH: Approved. No driver phone — call them directly.')
