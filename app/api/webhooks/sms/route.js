@@ -484,14 +484,15 @@ export async function POST(request) {
         approvals = data
       }
 
-      // Fallback: oldest pending approval for this client
+      // Fallback: newest pending approval for this client (within last 4 hours)
       if (!approvals?.length) {
         const { data } = await db
           .from('approvals')
           .select('*')
           .eq('client_id', clientId)
           .eq('status', 'pending')
-          .order('created_at', { ascending: true })
+          .gt('created_at', new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString())
+          .order('created_at', { ascending: false })
           .limit(1)
         approvals = data
       }
