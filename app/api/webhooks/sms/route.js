@@ -489,28 +489,30 @@ export async function POST(request) {
     if (body === 'YES' || body === 'Y' || body === 'APPROVE') {
       let approvals = null
 
-      // If SMS contains a ref, look up that specific approval
+      // If SMS contains a ref, look up that specific approval (non-call types only)
       if (smsRef) {
         const { data } = await db
           .from('approvals')
           .select('*')
           .eq('client_id', clientId)
           .eq('status', 'pending')
+          .not('action_type', 'in', '("call","make_call")')
           .gt('created_at', new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString())
           .ilike('id', `${smsRef}%`)
           .limit(1)
         approvals = data
       }
 
-      // Fallback: newest pending approval for this client (within last 4 hours)
+      // Fallback: newest non-call pending approval for this client (within last 4 hours)
       if (!approvals?.length) {
         const { data } = await db
           .from('approvals')
           .select('*')
           .eq('client_id', clientId)
           .eq('status', 'pending')
+          .not('action_type', 'in', '("call","make_call")')
           .gt('created_at', new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString())
-          .order('created_at', { ascending: false })
+          .order('created_at', { ascending: true })
           .limit(1)
         approvals = data
       }
