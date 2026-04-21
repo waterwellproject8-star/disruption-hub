@@ -499,9 +499,12 @@ export async function POST(request) {
       if (!approvals?.length) return twimlReply('DH: No pending actions. Check disruptionhub.ai')
 
       const approval = approvals[0]
+      console.log(`[sms] YES found approval ${approval.id}, status: ${approval.status}, created_at: ${approval.created_at}, approved_at: ${approval.approved_at}`)
       const ageHours = (Date.now() - new Date(approval.created_at).getTime()) / 3600000
+      console.log(`[sms] YES age check: ageHours=${ageHours.toFixed(2)}, created_at raw=${approval.created_at}`)
       if (ageHours > 4) {
-        await db.from('approvals').update({ status: 'expired' }).eq('id', approval.id)
+        const { error: expireErr } = await db.from('approvals').update({ status: 'expired' }).eq('id', approval.id)
+        console.log(`[sms] YES expired approval ${approval.id}, update error: ${expireErr?.message || 'none'}`)
         return twimlReply('DH: Action expired (>4hrs). Check dashboard.')
       }
 
@@ -511,13 +514,14 @@ export async function POST(request) {
 
       // Claim the approval without marking executed — finaliseApproval() below
       // writes the real status once we know whether Twilio actually delivered.
-      const { data: updated } = await db.from('approvals').update({
+      const { data: updated, error: claimErr } = await db.from('approvals').update({
         approved_by: contactName,
         approved_at: new Date().toISOString()
       }).eq('id', approval.id).eq('status', 'pending').is('approved_at', null).select('id')
 
+      console.log(`[sms] YES claim result: updated=${updated?.length || 0}, error=${claimErr?.message || 'none'}`)
       if (!updated?.length) {
-        console.log(`[sms] YES duplicate blocked — approval ${approval.id} already claimed. SmsMessageSid: ${smsSid}`)
+        console.log(`[sms] YES claim failed — approval ${approval.id} already claimed or RLS blocked. SmsMessageSid: ${smsSid}, claimErr: ${JSON.stringify(claimErr)}`)
         return twimlReply('DH: Action already executed or expired. Check dashboard.')
       }
 
