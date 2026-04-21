@@ -660,6 +660,6 @@ Provide immediate disruption analysis and action plan.`
 
   } catch (error) {
     console.error('[ALERT] Top-level catch:', error.message, error.stack)
-    return Response.json({ error: error.message }, { status: 500 })
+    return Response.json({ error: 'ERR_004', message: 'Request could not be processed' }, { status: 500 })
   }
 }

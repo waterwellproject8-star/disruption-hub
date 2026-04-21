@@ -125,7 +125,8 @@ export async function GET(request) {
     })
     return Response.json({ approvals: enriched })
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 })
+    console.error('[approvals] GET error:', error.message)
+    return Response.json({ error: 'ERR_004', message: 'Request could not be processed' }, { status: 500 })
   }
 }
 
@@ -488,7 +489,7 @@ export async function POST(request) {
     return Response.json({ success: true, action: 'executed' })
 
   } catch (error) {
-    console.error('Approvals error:', error)
-    return Response.json({ error: error.message }, { status: 500 })
+    console.error('[approvals] POST error:', error)
+    return Response.json({ error: 'ERR_004', message: 'Request could not be processed' }, { status: 500 })
   }
 }
