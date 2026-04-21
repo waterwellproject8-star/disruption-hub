@@ -503,14 +503,13 @@ export async function POST(request) {
     if (body === 'YES' || body === 'Y' || body === 'APPROVE') {
       let approvals = null
 
-      // If SMS contains a ref, look up that specific approval (non-call types only)
+      // If SMS contains a ref, look up that specific approval (any action_type)
       if (smsRef) {
         const { data } = await db
           .from('approvals')
           .select('*')
           .eq('client_id', clientId)
           .eq('status', 'pending')
-          .not('action_type', 'in', '("call","make_call")')
           .gt('created_at', new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString())
           .ilike('id', `${smsRef}%`)
           .limit(1)
