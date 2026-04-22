@@ -507,7 +507,44 @@ export async function POST(request) {
         approvals = data
       }
 
-      if (!approvals?.length) return twimlReply('DH: No pending actions. Check disruptionhub.ai')
+      // Step 2: no dispatch/sms pending — check for pending call approval (consignee notification)
+      if (!approvals?.length) {
+        const { data: callApprovals } = await db.from('approvals').select('*')
+          .eq('client_id', clientId).eq('status', 'pending')
+          .in('action_type', ['call', 'make_call'])
+          .gt('created_at', new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString())
+          .order('created_at', { ascending: false })
+          .limit(1)
+        if (callApprovals?.length) {
+          const ca = callApprovals[0]
+          const cad = ca.action_details || {}
+          const { data: claimed } = await db.from('approvals').update({ approved_by: contactName, approved_at: new Date().toISOString() }).eq('id', ca.id).eq('status', 'pending').is('approved_at', null).select('id')
+          if (!claimed?.length) return twimlReply('DH: Action already executed. Check dashboard.')
+
+          let cConsignee = cad.consignee_name || null
+          if (!cConsignee && cad.ref) {
+            try { const { data: sh } = await db.from('shipments').select('route, consignee').eq('ref', cad.ref).maybeSingle(); cConsignee = sh?.consignee || extractConsigneeName(sh?.route) } catch {}
+          }
+          cConsignee = cConsignee || 'consignee'
+
+          const consigneePhone = toE164UK(cad.consignee_phone)
+          if (consigneePhone) {
+            const spokenVehicle = speakReg(cad.vehicle_reg)
+            const isBreakdown = cad.call_type === 'breakdown' || cad.alert_type === 'breakdown'
+            const voiceMsg = isBreakdown
+              ? `${twimlSafe(contactName || 'your supplier')} is calling to advise that vehicle ${spokenVehicle} has experienced a mechanical issue and will be delayed. We are arranging recovery and will provide an update as soon as possible. No action is required from you at this time. Thank you.`
+              : `${twimlSafe(contactName || 'your supplier')} is calling to advise that your delivery from vehicle ${spokenVehicle} is running late. No action is required from you at this time. Thank you.`
+            const callResult = await makeCall(consigneePhone, voiceMsg)
+            const nowIso = new Date().toISOString()
+            await db.from('approvals').update({ status: callResult.success ? 'executed' : 'failed', executed_at: nowIso, execution_result: { twilio_sid: callResult.sid, auto_fired: true } }).eq('id', ca.id)
+            console.log(`[sms-YES] consignee call ${ca.id} → ${cConsignee}: ${callResult.success ? 'ok' : callResult.error || 'failed'}`)
+            return twimlReply(`DH: ${cConsignee} notified ✓`)
+          }
+          await db.from('approvals').update({ status: 'failed', executed_at: new Date().toISOString(), execution_result: { failure_reason: 'no_consignee_phone' } }).eq('id', ca.id)
+          return twimlReply(`DH: No phone on file for ${cConsignee}. Call manually.`)
+        }
+        return twimlReply('DH: No pending actions. Check disruptionhub.ai')
+      }
 
       const approval = approvals[0]
       console.log(`[sms] YES found approval ${approval.id}, status: ${approval.status}, created_at: ${approval.created_at}, approved_at: ${approval.approved_at}`)
@@ -642,26 +679,24 @@ export async function POST(request) {
         consigneeName = consigneeName || 'consignee'
 
         if (driverPhone) {
-          // STEP 1: Send driver instruction SMS
           const result = await sendSMS(driverPhone, driverMsg)
           await finaliseApproval(result.success
             ? { success: true, sms_sent: true }
             : { success: false, failure_reason: result.error || 'driver_sms_failed' })
 
-          // STEP 2: Send ops confirmation SMS
-          const carrierPhone = details.carrier_phone || extractPhoneNumber(client.system_prompt)
-          const carrierLine = carrierPhone ? `\nRecovery provider: ${carrierPhone}` : ''
-          await sendSMS(client.contact_phone || from, `DisruptionHub — Confirmed ✓\n${details.vehicle_reg || ''}: Recovery being arranged.${carrierLine}\nDriver briefed.\n${consigneeName} being notified now.`)
+          // Find the pending consignee call approval ref for the prompt
+          let callRef = ''
+          const { data: nextCall } = await db.from('approvals').select('id')
+            .eq('client_id', clientId).eq('status', 'pending')
+            .in('action_type', ['call', 'make_call'])
+            .contains('action_details', { vehicle_reg: details.vehicle_reg })
+            .gt('created_at', new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString())
+            .limit(1)
+          if (nextCall?.[0]?.id) callRef = `\nRef: ${nextCall[0].id.slice(0, 8)}`
 
-          // STEP 3: Trigger consignee call via internal fetch — fires 4s later in separate invocation
-          const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://www.disruptionhub.ai'
-          fetch(`${baseUrl}/api/actions/call-consignee`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'x-dh-key': process.env.DH_INTERNAL_KEY || '' },
-            body: JSON.stringify({ clientId, vehicleReg: details.vehicle_reg, contactName })
-          }).catch(err => console.error('[sms] consignee call trigger failed:', err?.message))
+          await sendSMS(client.contact_phone || from, `DisruptionHub — Recovery being arranged.\n${details.vehicle_reg || ''}: Driver briefed.\nReply YES to notify ${consigneeName}.${callRef}`)
 
-          return twimlReply(result.success ? `DisruptionHub — Confirmed ✓\n${details.vehicle_reg || ''}: Recovery being arranged.\nDriver briefed. ${consigneeName} being notified.` : 'DH: Approved. Call driver directly — SMS failed.')
+          return twimlReply(result.success ? `DH: Confirmed. Driver briefed. Reply YES to notify ${consigneeName}.` : 'DH: Approved. Call driver directly — SMS failed.')
         }
         await finaliseApproval({ success: false, failure_reason: 'no_driver_phone_on_file' })
         return twimlReply('DH: Approved. No driver phone — call them directly.')
