@@ -188,6 +188,7 @@ export async function POST(request) {
       at_risk_refs,
       delay_minutes,
       reason,
+      heading_direction,
     } = body
     if (client_id) client_id = client_id.toLowerCase().trim()
     if (vehicle_reg) vehicle_reg = vehicle_reg.toUpperCase().trim()
@@ -203,6 +204,22 @@ export async function POST(request) {
     const locationStr = (latitude && longitude)
       ? `GPS: ${latitude.toFixed(5)}, ${longitude.toFixed(5)}. Area: ${location_description || 'verify via maps'}`
       : location_description || 'Location not confirmed — verify with driver'
+
+    let w3wAddress = null
+    if (latitude && longitude && process.env.W3W_API_KEY) {
+      try {
+        const w3wRes = await fetch(`https://api.what3words.com/v3/convert-to-3wa?coordinates=${latitude},${longitude}&language=en&key=${process.env.W3W_API_KEY}`)
+        const w3wData = await w3wRes.json()
+        if (w3wData?.words) w3wAddress = `///${w3wData.words}`
+      } catch (e) { console.error('[alert] W3W lookup failed:', e?.message) }
+    }
+
+    const opsLocationStr = (() => {
+      const base = location_description || 'Location not confirmed'
+      const dir = heading_direction ? ` ${heading_direction}` : ''
+      if (w3wAddress) return `${base}${dir} · ${w3wAddress}`
+      return base + dir
+    })()
 
     const analysisPrompt = `DRIVER ALERT
 Driver: ${driver_name || 'Unknown'}
@@ -627,7 +644,7 @@ Provide immediate disruption analysis and action plan.`
     if ((force_alert || severity === 'CRITICAL' || severity === 'HIGH') && contactPhone) {
       let smsBody
       if (issue_type === 'medical' || issue_type === 'driver_unwell') {
-        smsBody = `DisruptionHub — CRITICAL\n${vehicle_reg || ''}: Medical emergency. Driver: ${driver_name || 'Unknown'}.${driver_phone ? `\nCall driver: ${driver_phone}.` : ''}${location_description ? `\nDriver at: ${location_description}.` : ''}\nReply YES to acknowledge, NO to dismiss, OPEN for dashboard.\nIf driver unresponsive — call 999 immediately.`
+        smsBody = `DisruptionHub — CRITICAL\n${vehicle_reg || ''}: Medical emergency. Driver: ${driver_name || 'Unknown'}.${driver_phone ? `\nCall driver: ${driver_phone}.` : ''}${opsLocationStr ? `\nDriver at: ${opsLocationStr}.` : ''}\nReply YES to acknowledge, NO to dismiss, OPEN for dashboard.\nIf driver unresponsive — call 999 immediately.`
       } else if (issue_type === 'goods_refused' || issue_type === 'access_problem' || issue_type === 'damage_found') {
         const reason = (human_description || 'No reason given').substring(0, 60).replace(/\n/g, ' ')
         const consignee = ref || 'consignee'
@@ -641,7 +658,7 @@ Provide immediate disruption analysis and action plan.`
           detectedType,
           force_alert,
           force_financial_zero,
-          location_description
+          location_description: opsLocationStr
         })
       }
       if (primaryApprovalId) smsBody += `\nRef: ${primaryApprovalId.slice(0, 8)}`
