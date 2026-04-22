@@ -664,10 +664,13 @@ export async function POST(request) {
               const { data: callApprovals } = await _db.from('approvals').select('*')
                 .eq('client_id', _clientId).eq('status', 'pending')
                 .in('action_type', ['call', 'make_call'])
+                .contains('action_details', { vehicle_reg: _vehicleReg })
                 .gt('created_at', new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString())
-              for (const ca of (callApprovals || [])) {
+                .order('created_at', { ascending: true })
+                .limit(1)
+              const ca = (callApprovals || [])[0]
+              if (ca) {
                 const cad = ca.action_details || {}
-                if (cad.vehicle_reg !== _vehicleReg) continue
                 const consigneePhone = toE164UK(cad.consignee_phone)
                 if (consigneePhone) {
                   const spokenVehicle = speakReg(_vehicleReg)
