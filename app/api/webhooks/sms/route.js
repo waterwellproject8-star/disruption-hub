@@ -494,14 +494,15 @@ export async function POST(request) {
         approvals = data
       }
 
-      // Fallback: most recent pending approval for this client (within last 4 hours)
+      // Fallback: most recent pending DISPATCH approval only (within last 30 mins)
       if (!approvals?.length) {
         const { data } = await db
           .from('approvals')
           .select('*')
           .eq('client_id', clientId)
           .eq('status', 'pending')
-          .gt('created_at', new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString())
+          .eq('action_type', 'dispatch')
+          .gt('created_at', new Date(Date.now() - 30 * 60 * 1000).toISOString())
           .order('created_at', { ascending: false })
           .limit(1)
         approvals = data
