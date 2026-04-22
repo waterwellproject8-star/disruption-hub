@@ -654,6 +654,7 @@ export async function POST(request) {
           await sendSMS(client.contact_phone || from, `DisruptionHub — Confirmed ✓\n${details.vehicle_reg || ''}: Recovery being arranged.${carrierLine}\nDriver briefed.\n${consigneeName} being notified now.`)
 
           // STEP 3: Fire consignee calls LAST — sequential, after ops confirmed
+          await new Promise(resolve => setTimeout(resolve, 3000))
           const { data: callApprovals } = await db.from('approvals').select('*')
             .eq('client_id', clientId).eq('status', 'pending')
             .in('action_type', ['call', 'make_call'])
