@@ -1,6 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
 import twilio from 'twilio'
-import { waitUntil } from '@vercel/functions'
 import { formatDelayForSpeech } from '../../../../lib/twilio.js'
 
 async function sendSMS(to, body) {
@@ -654,41 +653,13 @@ export async function POST(request) {
           const carrierLine = carrierPhone ? `\nRecovery provider: ${carrierPhone}` : ''
           await sendSMS(client.contact_phone || from, `DisruptionHub — Confirmed ✓\n${details.vehicle_reg || ''}: Recovery being arranged.${carrierLine}\nDriver briefed.\n${consigneeName} being notified now.`)
 
-          // STEP 3: Fire consignee calls via waitUntil — 5s after response sent
-          const _clientId = clientId, _vehicleReg = details.vehicle_reg, _contactName = contactName
-          waitUntil((async () => {
-            await new Promise(resolve => setTimeout(resolve, 5000))
-            try {
-              const _db = getDB()
-              if (!_db) return
-              const { data: callApprovals } = await _db.from('approvals').select('*')
-                .eq('client_id', _clientId).eq('status', 'pending')
-                .in('action_type', ['call', 'make_call'])
-                .contains('action_details', { vehicle_reg: _vehicleReg })
-                .gt('created_at', new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString())
-                .order('created_at', { ascending: true })
-                .limit(1)
-              const ca = (callApprovals || [])[0]
-              if (ca) {
-                const cad = ca.action_details || {}
-                const consigneePhone = toE164UK(cad.consignee_phone)
-                if (consigneePhone) {
-                  const spokenVehicle = speakReg(_vehicleReg)
-                  const isBreakdown = cad.call_type === 'breakdown' || cad.alert_type === 'breakdown'
-                  const voiceMsg = isBreakdown
-                    ? `${twimlSafe(_contactName || 'your supplier')} is calling to advise that vehicle ${spokenVehicle} has experienced a mechanical issue and will be delayed. We are arranging recovery and will provide an update as soon as possible. No action is required from you at this time. Thank you.`
-                    : `${twimlSafe(_contactName || 'your supplier')} is calling to advise that your delivery from vehicle ${spokenVehicle} is running late. No action is required from you at this time. Thank you.`
-                  const callResult = await makeCall(consigneePhone, voiceMsg)
-                  const nowIso = new Date().toISOString()
-                  await _db.from('approvals').update({ status: 'executed', approved_by: 'system_auto_dispatch', approved_at: nowIso, executed_at: nowIso, execution_result: { twilio_sid: callResult.sid, auto_fired: true } }).eq('id', ca.id)
-                  console.log(`[dispatch] consignee call ${ca.id} → ${cad.consignee_name || 'consignee'}: ${callResult.success ? 'ok' : callResult.error || 'failed'}`)
-                } else {
-                  await _db.from('approvals').update({ status: 'failed', executed_at: new Date().toISOString(), execution_result: { failure_reason: 'no_consignee_phone' } }).eq('id', ca.id)
-                  console.log(`[dispatch] consignee call ${ca.id} skipped — no phone for ${cad.consignee_name || 'consignee'}`)
-                }
-              }
-            } catch (e) { console.error('[dispatch] waitUntil consignee call error:', e?.message) }
-          })())
+          // STEP 3: Trigger consignee call via internal fetch — fires 4s later in separate invocation
+          const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://www.disruptionhub.ai'
+          fetch(`${baseUrl}/api/actions/call-consignee`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-dh-key': process.env.DH_INTERNAL_KEY || '' },
+            body: JSON.stringify({ clientId, vehicleReg: details.vehicle_reg, contactName })
+          }).catch(err => console.error('[sms] consignee call trigger failed:', err?.message))
 
           return twimlReply(result.success ? `DisruptionHub — Confirmed ✓\n${details.vehicle_reg || ''}: Recovery being arranged.\nDriver briefed. ${consigneeName} being notified.` : 'DH: Approved. Call driver directly — SMS failed.')
         }
