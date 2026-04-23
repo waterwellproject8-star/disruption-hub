@@ -42,6 +42,9 @@ export async function POST(request) {
       return Response.json({ error: 'ERR_002', message: 'client_id and event_type are required' }, { status: 400 })
     }
 
+    const VALID_SECTORS = ['psv', 'coach', 'haulage', 'lgv']
+    const sector = VALID_SECTORS.includes(body.sector?.toLowerCase?.()) ? body.sector.toLowerCase() : 'haulage'
+
     const vehicle_reg = asset_id ? asset_id.toUpperCase().trim() : null
     const normalised_client = client_id.toLowerCase().trim()
     const eventRef = ref || `EVT-${Date.now().toString(36).toUpperCase()}`
@@ -54,6 +57,7 @@ export async function POST(request) {
         ref: sandboxRef,
         message: 'Event received',
         status: severity || 'MEDIUM',
+        sector,
         sandbox: true
       })
     }
@@ -68,7 +72,7 @@ export async function POST(request) {
       event_type,
       severity: severity || 'MEDIUM',
       financial_impact: 0,
-      payload: { vehicle_reg, description, ref: eventRef, ...payload },
+      payload: { vehicle_reg, description, ref: eventRef, sector, ...payload },
       sms_fired: false,
       created_at: new Date().toISOString()
     })
@@ -82,7 +86,8 @@ export async function POST(request) {
       success: true,
       ref: eventRef,
       message: 'Event received',
-      status: severity || 'MEDIUM'
+      status: severity || 'MEDIUM',
+      sector
     })
 
   } catch (err) {
