@@ -12,7 +12,7 @@ async function checkApiKey(key) {
   if (!key) return null
   const db = getDB()
   if (!db) return null
-  const { data } = await db.from('api_keys').select('client_id, active').eq('key', key).maybeSingle()
+  const { data } = await db.from('api_keys').select('client_id, active, callback_url').eq('key', key).maybeSingle()
   return data?.active ? data : null
 }
 
@@ -72,7 +72,7 @@ export async function POST(request) {
       event_type,
       severity: severity || 'MEDIUM',
       financial_impact: 0,
-      payload: { vehicle_reg, description, ref: eventRef, sector, ...payload },
+      payload: { vehicle_reg, description, ref: eventRef, sector, callback_url: keyRecord.callback_url || null, ...payload },
       sms_fired: false,
       created_at: new Date().toISOString()
     })
