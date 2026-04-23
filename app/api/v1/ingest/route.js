@@ -46,6 +46,18 @@ export async function POST(request) {
     const normalised_client = client_id.toLowerCase().trim()
     const eventRef = ref || `EVT-${Date.now().toString(36).toUpperCase()}`
 
+    if (body.sandbox === true) {
+      const sandboxRef = `sandbox_${eventRef}`
+      console.log('[sandbox]', JSON.stringify({ client_id: normalised_client, event_type, ref: sandboxRef }))
+      return Response.json({
+        success: true,
+        ref: sandboxRef,
+        message: 'Event received',
+        status: severity || 'MEDIUM',
+        sandbox: true
+      })
+    }
+
     const db = getDB()
     if (!db) return Response.json({ error: 'ERR_004', message: 'Request could not be processed' }, { status: 500 })
 
