@@ -77,8 +77,8 @@ export async function GET(request) {
       route: s.route,
       status: s.status,
       eta: s.eta,
-      sla_window: s.sla_window,
-      cargo_type: s.cargo_type
+      delivery_window: s.sla_window,
+      load_type: s.cargo_type
     }))
 
     return Response.json({ fleet })
