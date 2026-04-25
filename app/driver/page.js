@@ -116,7 +116,8 @@ export default function DriverApp() {
   const undoTimer      = useRef(null)
   const countdownTimer = useRef(null)
   const shiftStartTime = useRef(null)
-  const notifiedCancellations = useRef(new Set()) // track which cancelled refs we've already shown banners for
+  const notifiedCancellations = useRef(new Set())
+  const gpsIntervalRef = useRef(null)
 
   const [preShiftChecks, setPreShiftChecks]     = useState({})
   const [shiftStarted, setShiftStarted]         = useState(false)
@@ -232,7 +233,8 @@ export default function DriverApp() {
       }
 
       if (shiftStartedAt) shiftStartTime.current = new Date(parseInt(shiftStartedAt))
-      if (shiftDone) setShiftStarted(true)
+      try { const sg = localStorage.getItem('dh_last_gps'); if (sg) { const p = JSON.parse(sg); if (p?.latitude) setGpsCoords(p) } } catch {}
+      if (shiftDone) { setShiftStarted(true); startGpsRefresh() }
       if (hasActiveShift && savedAlert) { try { setLastAlert(JSON.parse(savedAlert)) } catch {} }
       if (hasActiveShift) {
         const savedPrior = localStorage.getItem('dh_prior_alert')
@@ -246,7 +248,7 @@ export default function DriverApp() {
         if (hasLocalProgress && realJobs.length > 0 && realJobs.every(j => j.status === 'completed')) clearSession()
       })
     } else { setLoading(false) }
-    return () => { clearTimeout(undoTimer.current); clearInterval(countdownTimer.current) }
+    return () => { clearTimeout(undoTimer.current); clearInterval(countdownTimer.current); stopGpsRefresh() }
   }, [])
 
   // ── OPS-INITIATED JOB POLL — checks every 60s for cancelled or newly assigned jobs ──
@@ -469,14 +471,16 @@ export default function DriverApp() {
     finally { setLoading(false) }
   }
 
-  function getGPS() {
-    if (!navigator.geolocation) { setGpsStatus('failed'); return }
-    setGpsStatus('getting')
+  function getGPS(silent) {
+    if (!navigator.geolocation) { if (!silent) setGpsStatus('failed'); return }
+    if (!silent) setGpsStatus('getting')
     navigator.geolocation.getCurrentPosition(
       async pos => {
-        const {latitude,longitude} = pos.coords
-        setGpsCoords({latitude,longitude})
-        setGpsStatus('got')
+        const {latitude,longitude,accuracy} = pos.coords
+        const coords = {latitude,longitude,accuracy,timestamp:Date.now()}
+        setGpsCoords(coords)
+        if (!silent) setGpsStatus('got')
+        try { localStorage.setItem('dh_last_gps',JSON.stringify(coords)) } catch {}
         try {
           const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`)
           const data = await res.json()
@@ -485,9 +489,24 @@ export default function DriverApp() {
           setGpsDescription([road,area].filter(Boolean).join(', ')||`${latitude.toFixed(4)},${longitude.toFixed(4)}`)
         } catch { setGpsDescription(`${latitude.toFixed(4)},${longitude.toFixed(4)}`) }
       },
-      ()=>setGpsStatus('failed'),
+      (err)=>{ if (!silent) setGpsStatus('failed'); console.warn('[gps] position error:',err?.message) },
       {enableHighAccuracy:true,timeout:10000,maximumAge:0}
     )
+  }
+
+  function startGpsRefresh() {
+    if (gpsIntervalRef.current) clearInterval(gpsIntervalRef.current)
+    getGPS()
+    gpsIntervalRef.current = setInterval(()=>getGPS(true), 120000)
+  }
+
+  function stopGpsRefresh() {
+    if (gpsIntervalRef.current) { clearInterval(gpsIntervalRef.current); gpsIntervalRef.current = null }
+  }
+
+  function refreshGpsIfStale() {
+    const age = gpsCoords?.timestamp ? Date.now() - gpsCoords.timestamp : Infinity
+    if (age > 300000) getGPS(true)
   }
 
   function logProgress(step) {
@@ -709,6 +728,7 @@ export default function DriverApp() {
       pushProgressToSupabase(job?.ref,'part_delivered',null)
     }
 
+    refreshGpsIfStale()
     console.log('[breakdown] firing alert, client_id:', driverInfo.clientId, 'vehicle:', driverInfo.vehicleReg, 'issue:', panelIssue?.id, 'ref:', job?.ref)
     fetch('/api/driver/alert',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({client_id:driverInfo.clientId,driver_name:driverInfo.name,driver_phone:driverInfo.phone||null,vehicle_reg:driverInfo.vehicleReg,ref:job?.ref,issue_type:panelIssue?.id,issue_description:prompt,human_description:inputText||panelIssue?.label,location_description:gpsDescription,latitude:gpsCoords?.latitude,longitude:gpsCoords?.longitude,at_risk_refs:jobs.filter(j=>j.status!=='completed').map(j=>j.ref).filter(r=>r&&r!=='SHIFT_START')})
@@ -902,6 +922,7 @@ export default function DriverApp() {
 
       loadJobs(driverInfo)
     }
+    startGpsRefresh()
   }
 
   function clearSession(reason = 'session_cleared') {
@@ -937,7 +958,8 @@ export default function DriverApp() {
     }
 
     // 2. Wipe shift/session keys — keep dh_driver_info so name + phone pre-fill on next login
-    ;['dh_shift_started','dh_shift_started_at','dh_last_alert','dh_prior_alert','dh_job_progress','dh_ops_messages','dh_ops_messages_read','dh_dismissed_notifications','dh_session_id','dh_postshift_draft'].forEach(k=>localStorage.removeItem(k))
+    stopGpsRefresh()
+    ;['dh_shift_started','dh_shift_started_at','dh_last_alert','dh_prior_alert','dh_job_progress','dh_ops_messages','dh_ops_messages_read','dh_dismissed_notifications','dh_session_id','dh_postshift_draft','dh_last_gps'].forEach(k=>localStorage.removeItem(k))
 
     // 3-5. Reset state so the SHIFT EXPIRED guard (setupDone && staleSession) falsifies and setup screen re-renders.
     // Pre-populate name + phone from dh_driver_info (same driver, same phone every shift).
@@ -1966,8 +1988,9 @@ export default function DriverApp() {
 
             {/* GPS status */}
             {gpsStatus==='getting'&&<div style={{fontSize:11,color:'#3b82f6',fontFamily:'monospace',marginBottom:10}}>📍 Getting location...</div>}
-            {gpsStatus==='got'&&gpsDescription&&<div style={{fontSize:11,color:'#f5a623',fontFamily:'monospace',marginBottom:10}}>📍 {gpsDescription}</div>}
-            {gpsStatus==='failed'&&<div style={{fontSize:11,color:'#f59e0b',fontFamily:'monospace',marginBottom:10}}>📍 Location not available</div>}
+            {gpsStatus==='got'&&gpsDescription&&<div style={{fontSize:11,color:gpsCoords?.timestamp&&(Date.now()-gpsCoords.timestamp)<300000?'#22c55e':'#f5a623',fontFamily:'monospace',marginBottom:10}}>📍 {gpsDescription}{gpsCoords?.timestamp&&(Date.now()-gpsCoords.timestamp)<300000?' · location captured':''}</div>}
+            {gpsStatus==='failed'&&!gpsCoords&&<div style={{fontSize:11,color:'#f59e0b',fontFamily:'monospace',marginBottom:10}}>⚠ Location not confirmed</div>}
+            {gpsStatus==='failed'&&gpsCoords&&<div style={{fontSize:11,color:'#f5a623',fontFamily:'monospace',marginBottom:10}}>📍 Using last known location</div>}
 
             {/* Prior alert (e.g. breakdown) preserved when medical triggers */}
             {panelIssue?.id==='medical' && priorAlert && (
