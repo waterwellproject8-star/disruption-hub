@@ -205,6 +205,16 @@ export async function POST(request) {
       ? `GPS: ${latitude.toFixed(5)}, ${longitude.toFixed(5)}. Area: ${location_description || 'verify via maps'}`
       : location_description || 'Location not confirmed — verify with driver'
 
+    console.log('[alert.w3w-check]', JSON.stringify({
+      lat_type: typeof latitude,
+      lat_value: latitude,
+      lng_type: typeof longitude,
+      lng_value: longitude,
+      w3w_key_present: !!process.env.W3W_API_KEY,
+      w3w_key_length: process.env.W3W_API_KEY?.length || 0,
+      w3w_key_prefix: process.env.W3W_API_KEY ? process.env.W3W_API_KEY.substring(0,3) : null
+    }))
+
     let w3wAddress = null
     if (latitude && longitude && process.env.W3W_API_KEY) {
       try {
