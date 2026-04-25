@@ -859,6 +859,8 @@ export default function DriverApp() {
     setPanelIssue(null)
     setParsedResult(null)
     setOpsAcknowledged(false)
+    setShowDetail(false); setResolvedEta(''); setEscalationTimer(null); setResumeConfirm(false); setOpsJobUpdate(null); setFailedDeliveryHold(null); setOpsMessages([]); setGpsStatus(null)
+    notifiedCancellations.current = new Set()
     localStorage.setItem('dh_shift_started','true')
     localStorage.setItem('dh_shift_started_at',String(now))
     shiftStartTime.current = new Date(now)
@@ -970,6 +972,8 @@ export default function DriverApp() {
       ? { name: savedInfo.name || '', phone: savedInfo.phone || '', clientId: savedInfo.clientId || '', vehicleReg: '', vehicleType: '' }
       : { name:'', clientId:'', vehicleReg:'', phone:'', vehicleType:'' })
     setShiftStarted(false); setShiftEnded(false); setShiftSummary(null); setJobs([]); setActiveJob(null); setLastAlert(null); setPriorAlert(null); setPreShiftChecks({}); setOpsMessages([]); setView('run')
+    setOpsAcknowledged(false); setPriorAlertExpanded(false); setPanelOpen(false); setPanelState('idle'); setPanelIssue(null); setParsedResult(null); setShowDetail(false); setResolvedEta(''); setEscalationTimer(null); setResumeConfirm(false); setOpsJobUpdate(null); setFailedDeliveryHold(null); setGpsCoords(null); setGpsDescription(''); setGpsStatus(null)
+    notifiedCancellations.current = new Set()
   }
 
   function resumeSession() {
