@@ -16,7 +16,13 @@ async function checkApiKey(key) {
   return data?.active ? data : null
 }
 
+function errResponse(code, status, requestId) {
+  return Response.json({ error: code, request_id: requestId }, { status })
+}
+
 export async function GET(request) {
+  const requestId = crypto.randomUUID().slice(0, 8)
+
   try {
     const apiKey = request.headers.get('x-api-key') || request.headers.get('authorization')?.replace('Bearer ', '')
 
@@ -24,7 +30,7 @@ export async function GET(request) {
     const keyRecord = await checkApiKey(apiKey)
     const elapsed = Date.now() - start
     if (elapsed < 200) await new Promise(r => setTimeout(r, 200 - elapsed))
-    if (!keyRecord) return Response.json({ error: 'ERR_001', message: 'Unauthorised' }, { status: 401 })
+    if (!keyRecord) return errResponse('ERR_001', 401, requestId)
 
     const keyHash = crypto.createHash('sha256').update(apiKey).digest('hex').slice(0, 12)
     console.log('[api-audit]', JSON.stringify({
@@ -32,7 +38,8 @@ export async function GET(request) {
       ip: request.headers.get('x-forwarded-for') || 'unknown',
       path: '/api/v1/status',
       method: 'GET',
-      ts: new Date().toISOString()
+      ts: new Date().toISOString(),
+      request_id: requestId
     }))
 
     const { searchParams } = new URL(request.url)
@@ -40,15 +47,18 @@ export async function GET(request) {
     const assetId = searchParams.get('asset_id')?.toUpperCase().trim()
 
     if (!clientId) {
-      return Response.json({ error: 'ERR_002', message: 'client_id is required' }, { status: 400 })
+      return errResponse('ERR_002', 400, requestId)
     }
 
     if (clientId !== keyRecord.client_id) {
-      return Response.json({ error: 'ERR_001', message: 'Unauthorised' }, { status: 401 })
+      return errResponse('ERR_001', 401, requestId)
     }
 
     const db = getDB()
-    if (!db) return Response.json({ error: 'ERR_004', message: 'Request could not be processed' }, { status: 500 })
+    if (!db) {
+      console.error('[v1/status]', requestId, 'database unavailable')
+      return errResponse('ERR_004', 500, requestId)
+    }
 
     let query = db.from('shipments')
       .select('ref, route, status, eta, sla_window, cargo_type')
@@ -68,8 +78,8 @@ export async function GET(request) {
     const { data, error } = await query
 
     if (error) {
-      console.error('[v1/status] query error:', error.message, error.code)
-      return Response.json({ error: 'ERR_004', message: 'Request could not be processed' }, { status: 500 })
+      console.error('[v1/status]', requestId, 'query error:', error.message, error.code)
+      return errResponse('ERR_004', 500, requestId)
     }
 
     const fleet = (data || []).map(s => ({
@@ -84,7 +94,7 @@ export async function GET(request) {
     return Response.json({ fleet })
 
   } catch (err) {
-    console.error('[v1/status] internal error:', err)
-    return Response.json({ error: 'ERR_004', message: 'Request could not be processed' }, { status: 500 })
+    console.error('[v1/status]', requestId, 'internal error:', err)
+    return errResponse('ERR_004', 500, requestId)
   }
 }

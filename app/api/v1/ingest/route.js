@@ -16,7 +16,13 @@ async function checkApiKey(key) {
   return data?.active ? data : null
 }
 
+function errResponse(code, status, requestId) {
+  return Response.json({ error: code, request_id: requestId }, { status })
+}
+
 export async function POST(request) {
+  const requestId = crypto.randomUUID().slice(0, 8)
+
   try {
     const apiKey = request.headers.get('x-api-key') || request.headers.get('authorization')?.replace('Bearer ', '')
 
@@ -24,7 +30,7 @@ export async function POST(request) {
     const keyRecord = await checkApiKey(apiKey)
     const elapsed = Date.now() - start
     if (elapsed < 200) await new Promise(r => setTimeout(r, 200 - elapsed))
-    if (!keyRecord) return Response.json({ error: 'ERR_001', message: 'Unauthorised' }, { status: 401 })
+    if (!keyRecord) return errResponse('ERR_001', 401, requestId)
 
     const keyHash = crypto.createHash('sha256').update(apiKey).digest('hex').slice(0, 12)
     console.log('[api-audit]', JSON.stringify({
@@ -32,38 +38,44 @@ export async function POST(request) {
       ip: request.headers.get('x-forwarded-for') || 'unknown',
       path: '/api/v1/ingest',
       method: 'POST',
-      ts: new Date().toISOString()
+      ts: new Date().toISOString(),
+      request_id: requestId
     }))
 
     const body = await request.json()
-    const { client_id, asset_id, event_type, severity, description, ref, payload } = body
+    const { client_id, event_type, severity, description, ref, payload } = body
 
     if (!client_id || !event_type) {
-      return Response.json({ error: 'ERR_002', message: 'client_id and event_type are required' }, { status: 400 })
+      return errResponse('ERR_002', 400, requestId)
     }
 
     const VALID_SECTORS = ['psv', 'coach', 'haulage', 'lgv']
     const sector = VALID_SECTORS.includes(body.sector?.toLowerCase?.()) ? body.sector.toLowerCase() : 'haulage'
 
-    const vehicle_reg = asset_id ? asset_id.toUpperCase().trim() : null
+    const partnerAssetId = body.asset_id || body.vehicle_reg || null
+    const vehicle_reg = partnerAssetId ? partnerAssetId.toUpperCase().trim() : null
     const normalised_client = client_id.toLowerCase().trim()
     const eventRef = ref || `EVT-${Date.now().toString(36).toUpperCase()}`
 
     if (body.sandbox === true) {
       const sandboxRef = `sandbox_${eventRef}`
-      console.log('[sandbox]', JSON.stringify({ client_id: normalised_client, event_type, ref: sandboxRef }))
+      console.log('[sandbox]', JSON.stringify({ client_id: normalised_client, event_type, ref: sandboxRef, request_id: requestId }))
       return Response.json({
         success: true,
         ref: sandboxRef,
         message: 'Event received',
         status: severity || 'MEDIUM',
         sector,
+        asset_id: partnerAssetId,
         sandbox: true
       })
     }
 
     const db = getDB()
-    if (!db) return Response.json({ error: 'ERR_004', message: 'Request could not be processed' }, { status: 500 })
+    if (!db) {
+      console.error('[v1/ingest]', requestId, 'database unavailable')
+      return errResponse('ERR_004', 500, requestId)
+    }
 
     const { error: insertErr } = await db.from('webhook_log').insert({
       client_id: normalised_client,
@@ -72,14 +84,14 @@ export async function POST(request) {
       event_type,
       severity: severity || 'MEDIUM',
       financial_impact: 0,
-      payload: { vehicle_reg, description, ref: eventRef, sector, callback_url: keyRecord.callback_url || null, ...payload },
+      payload: { asset_id: partnerAssetId, vehicle_reg, description, ref: eventRef, sector, callback_url: keyRecord.callback_url || null, ...payload },
       sms_fired: false,
       created_at: new Date().toISOString()
     })
 
     if (insertErr) {
-      console.error('[v1/ingest] insert error:', insertErr.message, insertErr.code)
-      return Response.json({ error: 'ERR_004', message: 'Request could not be processed' }, { status: 500 })
+      console.error('[v1/ingest]', requestId, 'insert error:', insertErr.message, insertErr.code)
+      return errResponse('ERR_004', 500, requestId)
     }
 
     return Response.json({
@@ -87,11 +99,12 @@ export async function POST(request) {
       ref: eventRef,
       message: 'Event received',
       status: severity || 'MEDIUM',
-      sector
+      sector,
+      asset_id: partnerAssetId
     })
 
   } catch (err) {
-    console.error('[v1/ingest] internal error:', err)
-    return Response.json({ error: 'ERR_004', message: 'Request could not be processed' }, { status: 500 })
+    console.error('[v1/ingest]', requestId, 'internal error:', err)
+    return errResponse('ERR_004', 500, requestId)
   }
 }

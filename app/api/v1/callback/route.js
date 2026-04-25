@@ -12,6 +12,10 @@ const BACKOFF_MS = [5000, 30000]
 const MAX_ATTEMPTS = 3
 const FETCH_TIMEOUT_MS = 10000
 
+function errResponse(code, status, requestId) {
+  return Response.json({ error: code, request_id: requestId }, { status })
+}
+
 async function logAttempt(db, entry) {
   try {
     const { error } = await db.from('callback_log').insert(entry)
@@ -22,28 +26,33 @@ async function logAttempt(db, entry) {
 }
 
 export async function POST(request) {
+  const requestId = crypto.randomUUID().slice(0, 8)
+
   try {
     const expected = process.env.DH_INTERNAL_KEY
     if (!expected) {
-      console.error('[v1/callback] DH_INTERNAL_KEY not configured')
-      return Response.json({ error: 'misconfigured' }, { status: 500 })
+      console.error('[v1/callback]', requestId, 'DH_INTERNAL_KEY not configured')
+      return errResponse('ERR_005', 500, requestId)
     }
     const provided = request.headers.get('x-dh-internal-key') || ''
     const a = Buffer.from(provided)
     const b = Buffer.from(expected)
     if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) {
-      return Response.json({ error: 'unauthorized' }, { status: 401 })
+      return errResponse('ERR_001', 401, requestId)
     }
 
     const reqBody = await request.json()
     const { ref } = reqBody
 
     if (!ref) {
-      return Response.json({ error: 'ref is required' }, { status: 400 })
+      return errResponse('ERR_002', 400, requestId)
     }
 
     const db = getDB()
-    if (!db) return Response.json({ error: 'service unavailable' }, { status: 500 })
+    if (!db) {
+      console.error('[v1/callback]', requestId, 'database unavailable')
+      return errResponse('ERR_005', 500, requestId)
+    }
 
     const { data: event, error: queryErr } = await db.from('webhook_log')
       .select('payload')
@@ -54,17 +63,17 @@ export async function POST(request) {
       .maybeSingle()
 
     if (queryErr) {
-      console.error('[v1/callback] event lookup failed:', queryErr.message)
-      return Response.json({ error: 'lookup failed' }, { status: 500 })
+      console.error('[v1/callback]', requestId, 'event lookup failed:', queryErr.message)
+      return errResponse('ERR_004', 500, requestId)
     }
 
     if (!event) {
-      return Response.json({ error: 'event not found' }, { status: 404 })
+      return errResponse('ERR_003', 404, requestId)
     }
 
     const callbackUrl = event.payload?.callback_url
     if (!callbackUrl) {
-      return Response.json({ ok: true, ref, callback_sent: false, reason: 'no callback URL registered' })
+      return Response.json({ ok: true, ref, callback_sent: false, request_id: requestId })
     }
 
     const { data: keyRow, error: keyErr } = await db.from('api_keys')
@@ -75,14 +84,14 @@ export async function POST(request) {
       .maybeSingle()
 
     if (keyErr) {
-      console.error('[v1/callback] key lookup failed:', keyErr.message)
-      return Response.json({ error: 'lookup failed' }, { status: 500 })
+      console.error('[v1/callback]', requestId, 'key lookup failed:', keyErr.message)
+      return errResponse('ERR_004', 500, requestId)
     }
 
     const callbackSecret = keyRow?.callback_secret
     if (!callbackSecret) {
-      console.error('[v1/callback] no callback_secret for client:', event.client_id, 'ref:', ref)
-      return Response.json({ ok: false, ref, callback_sent: false, reason: 'no signing secret configured' })
+      console.error('[v1/callback]', requestId, 'no signing secret for ref:', ref)
+      return Response.json({ ok: false, ref, callback_sent: false, request_id: requestId })
     }
 
     const resolved_at = new Date().toISOString()
@@ -91,12 +100,12 @@ export async function POST(request) {
       status: 'resolved',
       resolved_at,
       sector: event.payload?.sector || 'haulage',
-      asset_id: event.payload?.vehicle_reg || null
+      asset_id: event.payload?.asset_id || null
     }
     const body = JSON.stringify(payload)
     const sig = crypto.createHmac('sha256', callbackSecret).update(body).digest('hex')
 
-    console.log('[v1/callback] firing', JSON.stringify({ ref, target: callbackUrl, attempts: MAX_ATTEMPTS }))
+    console.log('[v1/callback]', requestId, 'firing', JSON.stringify({ ref, target: callbackUrl, attempts: MAX_ATTEMPTS }))
 
     let lastStatusCode = null
     let lastResponseBody = null
@@ -144,7 +153,7 @@ export async function POST(request) {
           break
         }
 
-        console.error('[v1/callback] partner returned', res.status, 'attempt', attempts, 'ref:', ref)
+        console.error('[v1/callback]', requestId, 'partner returned', res.status, 'attempt', attempts, 'ref:', ref)
       } catch (fetchErr) {
         lastStatusCode = null
         lastResponseBody = fetchErr.message
@@ -160,7 +169,7 @@ export async function POST(request) {
           succeeded_at: null
         })
 
-        console.error('[v1/callback] network error attempt', attempts, 'ref:', ref, fetchErr.message)
+        console.error('[v1/callback]', requestId, 'network error attempt', attempts, 'ref:', ref, fetchErr.message)
       }
 
       if (i < MAX_ATTEMPTS - 1) {
@@ -176,13 +185,14 @@ export async function POST(request) {
       ref,
       attempts,
       final_status_code: lastStatusCode,
-      last_attempted_at: lastAttemptedAt
+      last_attempted_at: lastAttemptedAt,
+      request_id: requestId
     }, {
       status: allNetworkErrors ? 502 : 200
     })
 
   } catch (err) {
-    console.error('[v1/callback] internal error:', err)
-    return Response.json({ error: 'internal error' }, { status: 500 })
+    console.error('[v1/callback]', requestId, 'internal error:', err)
+    return errResponse('ERR_004', 500, requestId)
   }
 }
