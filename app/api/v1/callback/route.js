@@ -46,7 +46,7 @@ export async function POST(request) {
     if (!db) return Response.json({ error: 'service unavailable' }, { status: 500 })
 
     const { data: event, error: queryErr } = await db.from('webhook_log')
-      .select('payload, client_id')
+      .select('payload')
       .eq('system_name', 'api_v1')
       .filter('payload->>ref', 'eq', ref)
       .order('created_at', { ascending: false })
@@ -69,8 +69,8 @@ export async function POST(request) {
 
     const { data: keyRow, error: keyErr } = await db.from('api_keys')
       .select('callback_secret')
-      .eq('client_id', event.client_id)
       .eq('callback_url', callbackUrl)
+      .eq('active', true)
       .limit(1)
       .maybeSingle()
 
