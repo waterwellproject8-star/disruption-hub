@@ -217,11 +217,33 @@ export async function POST(request) {
 
     let w3wAddress = null
     if (latitude && longitude && process.env.W3W_API_KEY) {
+      const w3wUrl = `https://api.what3words.com/v3/convert-to-3wa?coordinates=${latitude},${longitude}&language=en&key=${process.env.W3W_API_KEY}`
+      console.log('[alert.w3w-fetch-start]', JSON.stringify({
+        url_safe: w3wUrl.replace(process.env.W3W_API_KEY, 'REDACTED'),
+        coords: `${latitude},${longitude}`
+      }))
       try {
-        const w3wRes = await fetch(`https://api.what3words.com/v3/convert-to-3wa?coordinates=${latitude},${longitude}&language=en&key=${process.env.W3W_API_KEY}`)
-        const w3wData = await w3wRes.json()
-        if (w3wData?.words) w3wAddress = `///${w3wData.words}`
-      } catch (e) { console.error('[alert] W3W lookup failed:', e?.message) }
+        const w3wRes = await fetch(w3wUrl)
+        const w3wText = await w3wRes.text()
+        console.log('[alert.w3w-fetch-result]', JSON.stringify({
+          status: w3wRes.status,
+          ok: w3wRes.ok,
+          body_first_200_chars: w3wText.substring(0, 200)
+        }))
+        try {
+          const w3wData = JSON.parse(w3wText)
+          if (w3wData?.words) {
+            w3wAddress = `///${w3wData.words}`
+            console.log('[alert.w3w-fetch-success]', JSON.stringify({ words: w3wData.words }))
+          } else {
+            console.log('[alert.w3w-no-words]', JSON.stringify({ data: w3wData }))
+          }
+        } catch (parseErr) {
+          console.error('[alert.w3w-parse-error]', parseErr?.message, 'body:', w3wText.substring(0, 200))
+        }
+      } catch (e) {
+        console.error('[alert.w3w-fetch-throw]', e?.message, e?.code, e?.cause?.message)
+      }
     }
 
     const opsLocationStr = (() => {
