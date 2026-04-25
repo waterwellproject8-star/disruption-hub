@@ -31,33 +31,23 @@ async function checkMessagingInbound() {
     4000
   )
 
-  if (error) return { ok: false, last_inbound_at: null, minutes_since_last_inbound: null, stale: true, business_hours: false, reason: 'check_failed' }
+  if (error) return { ok: false, last_inbound_at: null, minutes_since_last_inbound: null, stale: true, threshold_minutes: 720, reason: 'check_failed' }
 
   if (!data) {
-    return { ok: false, last_inbound_at: null, minutes_since_last_inbound: null, stale: true, business_hours: false }
+    return { ok: false, last_inbound_at: null, minutes_since_last_inbound: null, stale: true, threshold_minutes: 720 }
   }
 
   const lastAt = new Date(data.created_at)
   const now = new Date()
   const minutes_since_last_inbound = Math.round((now - lastAt) / 60000)
-
-  const ukFormatter = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/London', hour: 'numeric', hour12: false, weekday: 'short' })
-  const parts = ukFormatter.formatToParts(now)
-  const ukHour = Number(parts.find(p => p.type === 'hour').value)
-  const ukDay = parts.find(p => p.type === 'weekday').value
-  const weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']
-  const business_hours = weekdays.includes(ukDay) && ukHour >= 8 && ukHour < 20
-
-  let stale = false
-  if (business_hours && minutes_since_last_inbound > 360) stale = true
-  if (minutes_since_last_inbound > 4320) stale = true
+  const stale = minutes_since_last_inbound > 720
 
   return {
     ok: !stale,
     last_inbound_at: lastAt.toISOString(),
     minutes_since_last_inbound,
     stale,
-    business_hours
+    threshold_minutes: 720
   }
 }
 
@@ -89,7 +79,7 @@ export async function GET() {
     ])
 
     const db = dbResult.status === 'fulfilled' ? dbResult.value : { ok: false, latency_ms: null, reason: dbResult.reason?.message === 'timeout' ? 'timeout' : 'check_failed' }
-    const msg = msgResult.status === 'fulfilled' ? msgResult.value : { ok: false, last_inbound_at: null, minutes_since_last_inbound: null, stale: true, business_hours: false, reason: msgResult.reason?.message === 'timeout' ? 'timeout' : 'check_failed' }
+    const msg = msgResult.status === 'fulfilled' ? msgResult.value : { ok: false, last_inbound_at: null, minutes_since_last_inbound: null, stale: true, threshold_minutes: 720, reason: msgResult.reason?.message === 'timeout' ? 'timeout' : 'check_failed' }
     const app = appResult.status === 'fulfilled' ? appResult.value : { ok: false, count: null, window_minutes: 30, reason: appResult.reason?.message === 'timeout' ? 'timeout' : 'check_failed' }
 
     const ok = db.ok && msg.ok && app.ok
