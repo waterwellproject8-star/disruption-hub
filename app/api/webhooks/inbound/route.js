@@ -467,7 +467,7 @@ export async function GET(request) {
     if (!supabase) return Response.json({ logs: [] })
     const { data, error } = await supabase
       .from('webhook_log')
-      .select('id, system_name, event_type, severity, financial_impact, financial_source, sms_fired, simulated, payload, created_at')
+      .select('id, client_id, system_name, event_type, severity, financial_impact, financial_source, sms_fired, simulated, payload, resolved_at, created_at')
       .eq('client_id', clientId)
       .order('created_at', { ascending: false })
       .limit(limit)

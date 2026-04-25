@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import { fireCallbackIfPartnerEvent } from '../../../../lib/fireCallback.js'
 
 // POST /api/sms/inbound
 // Twilio webhook — fires every time an SMS arrives at the Twilio number
@@ -92,6 +93,26 @@ export async function POST(request) {
         .from('driver_progress')
         .update({ status: 'resolved', last_alert: smsBody, updated_at: new Date().toISOString() })
         .eq('driver_phone', normFrom)
+
+      // Fire partner callback — derive ref from most recent pending approval for this vehicle
+      if (vehicleReg && vehicleReg !== 'UNKNOWN') {
+        try {
+          const { data: recentApproval } = await db.from('approvals')
+            .select('action_details')
+            .eq('client_id', clientId)
+            .filter('action_details->>vehicle_reg', 'eq', vehicleReg)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle()
+          const eventRef = recentApproval?.action_details?.ref
+          if (eventRef) {
+            fireCallbackIfPartnerEvent({ ref: eventRef, client_id: clientId, resolution_method: 'sms_keyword', db })
+              .catch(err => console.error('[sms/inbound] callback helper error:', err))
+          }
+        } catch (cbErr) {
+          console.error('[sms/inbound] callback ref lookup error:', cbErr.message)
+        }
+      }
     }
 
     // Return empty TwiML — no auto-reply (ops replies manually via dashboard)

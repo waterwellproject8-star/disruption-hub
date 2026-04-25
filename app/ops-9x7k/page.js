@@ -1112,6 +1112,7 @@ export default function DashboardPage() {
   const [whLog, setWhLog] = useState([])
   const [whResult, setWhResult] = useState(null)
   const [whLogLoading, setWhLogLoading] = useState(false)
+  const [markingResolvedId, setMarkingResolvedId] = useState(null)
   const [fleet, setFleet] = useState([])
   const [unassigned, setUnassigned] = useState([])
   const [cancellingJob, setCancellingJob] = useState(null)
@@ -1619,6 +1620,21 @@ export default function DashboardPage() {
       setWhLog(data.logs || [])
     } catch {}
     finally { setWhLogLoading(false) }
+  }
+
+  async function markIncidentResolved(eventRef, clientId) {
+    setMarkingResolvedId(eventRef)
+    try {
+      const res = await fetch('/api/incidents/resolve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ref: eventRef, client_id: clientId, resolution_method: 'ops' })
+      })
+      if (!res.ok) showDashToast('Resolve failed — check logs', 'error')
+      else showDashToast('✓ Resolved · partner notified')
+      await loadWebhookLog()
+    } catch { showDashToast('Network error', 'error') }
+    finally { setMarkingResolvedId(null) }
   }
 
   function getWhPayload() {
@@ -2844,6 +2860,15 @@ export default function DashboardPage() {
                                 <div className="dh-inc-saved-n">{saved}</div>
                                 <div className="dh-inc-saved-l">saved</div>
                               </div>
+                            )}
+                            {log.system_name==='api_v1'&&!log.resolved_at&&(
+                              <button onClick={()=>markIncidentResolved(log.payload?.ref,log.client_id)} disabled={markingResolvedId===log.payload?.ref}
+                                style={{padding:'4px 10px',background:'transparent',border:'1px solid rgba(245,166,35,0.3)',borderRadius:6,color:'#f5a623',fontSize:10,fontWeight:600,cursor:'pointer',fontFamily:"'DM Sans',sans-serif",whiteSpace:'nowrap',flexShrink:0}}>
+                                {markingResolvedId===log.payload?.ref?'…':'Mark resolved'}
+                              </button>
+                            )}
+                            {log.system_name==='api_v1'&&log.resolved_at&&(
+                              <span style={{padding:'3px 8px',background:'rgba(34,197,94,0.1)',borderRadius:10,color:'#22c55e',fontSize:9,fontWeight:600,fontFamily:"'DM Mono',monospace",flexShrink:0}}>RESOLVED</span>
                             )}
                           </div>
                         )

@@ -1,6 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { createClient } from '@supabase/supabase-js'
 import { sendSMS } from '../../../../lib/twilio.js'
+import { fireCallbackIfPartnerEvent } from '../../../../lib/fireCallback.js'
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
@@ -101,6 +102,12 @@ In one sentence: give a revised ETA with 1.5x buffer applied, and state in plain
           .gte('created_at', twoHoursAgo)
           .filter('action_details->>vehicle_reg', 'eq', vehicle_reg)
         if (cascadeErr) console.error('resolve cascade cancel:', cascadeErr.message, cascadeErr.code)
+      }
+
+      // Fire partner callback if this incident originated from /v1/ingest
+      if (ref) {
+        fireCallbackIfPartnerEvent({ ref, client_id, resolution_method: 'driver', db })
+          .catch(err => console.error('[driver/resolve] callback helper error:', err))
       }
 
       // Insert a visible resolve record into approvals so ops dashboard shows it
