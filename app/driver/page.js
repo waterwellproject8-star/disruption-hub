@@ -2137,7 +2137,7 @@ export default function DriverApp() {
                     </div>
                   )}
                   <button onClick={closePanel} style={{width:'100%',padding:14,background:'#f5a623',border:'none',borderRadius:12,color:'#000',fontWeight:800,fontSize:16,cursor:'pointer',marginBottom:9,fontFamily:"'Barlow Condensed',sans-serif",textTransform:'uppercase'}}>Got it — close</button>
-                  {!['cant_complete','hours_running_out','medical','vehicle_theft'].includes(panelIssue?.id)&&(
+                  {!['cant_complete','hours_running_out','vehicle_theft'].includes(panelIssue?.id)&&(
                     <button onClick={()=>setPanelState('resolving')} style={{width:'100%',padding:13,background:'transparent',border:'1px solid rgba(245,166,35,0.25)',borderRadius:12,color:'#f5a623',fontWeight:600,fontSize:14,cursor:'pointer'}}>
                       ✅ Issue resolved — back on track
                     </button>
@@ -2156,6 +2156,11 @@ export default function DriverApp() {
                   {id:'recovery_fixed',label:'🚛 Recovery arrived and fixed',sub:'Back on the road'},
                   {id:'towed',label:'🏗 Towed to depot',sub:'Vehicle off road'},
                   {id:'other_resolved',label:'✅ Other — resolved',sub:'Issue no longer active'},
+                ]:panelIssue?.id==='medical'||panelIssue?.id==='driver_unwell'?[
+                  {id:'driver_ok',label:'👍 Driver OK — back on shift',sub:'Fit to continue'},
+                  {id:'driver_unwell_cover',label:'🚑 Driver unwell — needs cover',sub:'Replacement driver needed'},
+                  {id:'false_alarm',label:'🟢 False alarm',sub:'No medical issue'},
+                  {id:'other_medical',label:'✅ Other — resolved',sub:'Issue no longer active'},
                 ]:[
                   {id:'breakdown_recovered',label:'🔧 Breakdown recovered',sub:'Vehicle moving again'},
                   {id:'delay_cleared',label:'🟢 Delay cleared',sub:'Back on schedule'},
