@@ -31,23 +31,26 @@ async function checkMessagingInbound() {
     4000
   )
 
-  if (error) return { ok: false, last_inbound_at: null, minutes_since_last_inbound: null, stale: true, threshold_minutes: 720, reason: 'check_failed' }
+  if (error) return { ok: false, last_inbound_at: null, minutes_since_last_inbound: null, stale: true, threshold_minutes: 4320, reason: 'check_failed' }
 
   if (!data) {
-    return { ok: false, last_inbound_at: null, minutes_since_last_inbound: null, stale: true, threshold_minutes: 720 }
+    return { ok: false, last_inbound_at: null, minutes_since_last_inbound: null, stale: true, threshold_minutes: 4320 }
   }
 
   const lastAt = new Date(data.created_at)
   const now = new Date()
   const minutes_since_last_inbound = Math.round((now - lastAt) / 60000)
-  const stale = minutes_since_last_inbound > 720
+  // Pre-client phase: 72hr threshold catches "lost number" scenarios without
+  // false-positive on quiet test days. Tighten to 720 (12hr) when first
+  // production client onboards.
+  const stale = minutes_since_last_inbound > 4320
 
   return {
     ok: !stale,
     last_inbound_at: lastAt.toISOString(),
     minutes_since_last_inbound,
     stale,
-    threshold_minutes: 720
+    threshold_minutes: 4320
   }
 }
 
@@ -79,7 +82,7 @@ export async function GET() {
     ])
 
     const db = dbResult.status === 'fulfilled' ? dbResult.value : { ok: false, latency_ms: null, reason: dbResult.reason?.message === 'timeout' ? 'timeout' : 'check_failed' }
-    const msg = msgResult.status === 'fulfilled' ? msgResult.value : { ok: false, last_inbound_at: null, minutes_since_last_inbound: null, stale: true, threshold_minutes: 720, reason: msgResult.reason?.message === 'timeout' ? 'timeout' : 'check_failed' }
+    const msg = msgResult.status === 'fulfilled' ? msgResult.value : { ok: false, last_inbound_at: null, minutes_since_last_inbound: null, stale: true, threshold_minutes: 4320, reason: msgResult.reason?.message === 'timeout' ? 'timeout' : 'check_failed' }
     const app = appResult.status === 'fulfilled' ? appResult.value : { ok: false, count: null, window_minutes: 30, reason: appResult.reason?.message === 'timeout' ? 'timeout' : 'check_failed' }
 
     const ok = db.ok && msg.ok && app.ok
