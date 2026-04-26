@@ -7,13 +7,22 @@ const PROGRESS_STEPS = [
   { id:'arrived_delivery',   label:'Arrived at Customer',  icon:'🏭', color:'#3b82f6', status:'at_customer' },
 ]
 
-const VEHICLE_TYPES = [
+const VEHICLE_TYPES_HAULAGE = [
   { id:'artic',    label:'Artic (44t)',      icon:'🚛' },
   { id:'rigid',    label:'Rigid',            icon:'🚚' },
   { id:'fridge',   label:'Fridge / Reefer',  icon:'❄' },
   { id:'flatbed',  label:'Flatbed',          icon:'🔲' },
   { id:'taillift', label:'Tail-lift',        icon:'⬇' },
   { id:'van',      label:'Van / Sprinter',   icon:'🚐' },
+]
+
+const VEHICLE_TYPES_PSV = [
+  { id:'minibus',     label:'Minibus',            icon:'🚐' },
+  { id:'single_deck', label:'Single-decker bus',  icon:'🚌' },
+  { id:'double_deck', label:'Double-decker bus',  icon:'🚌' },
+  { id:'coach',       label:'Coach',              icon:'🚍' },
+  { id:'exec_coach',  label:'Executive coach',    icon:'🚍' },
+  { id:'school_bus',  label:'School bus',         icon:'🚌' },
 ]
 
 const ISSUE_GROUPS = [
@@ -166,6 +175,8 @@ export default function DriverApp() {
   const [rptOpen, setRptOpen] = useState({})
   const [lateMinutes, setLateMinutes]     = useState('')
   const [lateReason, setLateReason]       = useState('Traffic')
+
+  const VEHICLE_TYPES = (driverInfo?.sector === 'psv' || driverInfo?.sector === 'coach') ? VEHICLE_TYPES_PSV : VEHICLE_TYPES_HAULAGE
 
   useEffect(() => {
     // Load driver history for pre-filling setup screen
