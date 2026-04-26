@@ -700,6 +700,7 @@ export async function POST(request) {
 
           await sendSMS(client.contact_phone || from, `DisruptionHub — Recovery being arranged.\n${details.vehicle_reg || ''}: Driver briefed.\nReply YES to notify ${consigneeName}.${callRef}`)
 
+          if (!result.success) console.error('[sms-yes] driver SMS failed:', result.error || 'unknown reason', 'to:', driverPhone)
           return twimlReply(result.success ? `DH: Confirmed. Driver briefed. Reply YES to notify ${consigneeName}.` : 'DH: Approved. Call driver directly — SMS failed.')
         }
         await finaliseApproval({ success: false, failure_reason: 'no_driver_phone_on_file' })
