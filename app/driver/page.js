@@ -162,6 +162,7 @@ export default function DriverApp() {
   const [secReport, setSecReport] = useState(false)
   const [secCompleted, setSecCompleted] = useState(false)
   const [showMoreMenu, setShowMoreMenu] = useState(false)
+  const [passengerCount, setPassengerCount] = useState('')
   const [rptOpen, setRptOpen] = useState({})
   const [lateMinutes, setLateMinutes]     = useState('')
   const [lateReason, setLateReason]       = useState('Traffic')
@@ -731,7 +732,7 @@ export default function DriverApp() {
     refreshGpsIfStale()
     console.log('[breakdown] firing alert, client_id:', driverInfo.clientId, 'vehicle:', driverInfo.vehicleReg, 'issue:', panelIssue?.id, 'ref:', job?.ref)
     fetch('/api/driver/alert',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({client_id:driverInfo.clientId,driver_name:driverInfo.name,driver_phone:driverInfo.phone||null,vehicle_reg:driverInfo.vehicleReg,ref:job?.ref,issue_type:panelIssue?.id,issue_description:prompt,human_description:inputText||panelIssue?.label,location_description:gpsDescription,latitude:gpsCoords?.latitude,longitude:gpsCoords?.longitude,at_risk_refs:jobs.filter(j=>j.status!=='completed').map(j=>j.ref).filter(r=>r&&r!=='SHIFT_START')})
+      body:JSON.stringify({client_id:driverInfo.clientId,driver_name:driverInfo.name,driver_phone:driverInfo.phone||null,vehicle_reg:driverInfo.vehicleReg,ref:job?.ref,issue_type:panelIssue?.id,issue_description:prompt,human_description:inputText||panelIssue?.label,location_description:gpsDescription,latitude:gpsCoords?.latitude,longitude:gpsCoords?.longitude,passenger_count:passengerCount?parseInt(passengerCount,10):null,at_risk_refs:jobs.filter(j=>j.status!=='completed').map(j=>j.ref).filter(r=>r&&r!=='SHIFT_START')})
     }).then(r=>{console.log('[breakdown] alert response:',r.status);if(!r.ok)r.text().then(t=>console.error('[breakdown] server error:',r.status,t))}).catch(e=>console.error('[breakdown] fetch error:',e?.message))
 
     if (emergencyIds.includes(panelIssue?.id)) {
@@ -925,6 +926,11 @@ export default function DriverApp() {
       loadJobs(driverInfo)
     }
     startGpsRefresh()
+    if (driverInfo.clientId) {
+      fetch(`/api/client-config?client_id=${driverInfo.clientId}`).then(r=>r.json()).then(cfg=>{
+        if (cfg?.sector) setDriverInfo(prev=>({...prev, sector: cfg.sector}))
+      }).catch(()=>{})
+    }
   }
 
   function clearSession(reason = 'session_cleared') {
@@ -972,7 +978,7 @@ export default function DriverApp() {
       ? { name: savedInfo.name || '', phone: savedInfo.phone || '', clientId: savedInfo.clientId || '', vehicleReg: '', vehicleType: '' }
       : { name:'', clientId:'', vehicleReg:'', phone:'', vehicleType:'' })
     setShiftStarted(false); setShiftEnded(false); setShiftSummary(null); setJobs([]); setActiveJob(null); setLastAlert(null); setPriorAlert(null); setPreShiftChecks({}); setOpsMessages([]); setView('run')
-    setOpsAcknowledged(false); setPriorAlertExpanded(false); setPanelOpen(false); setPanelState('idle'); setPanelIssue(null); setParsedResult(null); setShowDetail(false); setResolvedEta(''); setEscalationTimer(null); setResumeConfirm(false); setOpsJobUpdate(null); setFailedDeliveryHold(null); setGpsCoords(null); setGpsDescription(''); setGpsStatus(null)
+    setOpsAcknowledged(false); setPriorAlertExpanded(false); setPanelOpen(false); setPanelState('idle'); setPanelIssue(null); setParsedResult(null); setShowDetail(false); setResolvedEta(''); setEscalationTimer(null); setResumeConfirm(false); setOpsJobUpdate(null); setFailedDeliveryHold(null); setGpsCoords(null); setGpsDescription(''); setGpsStatus(null); setPassengerCount('')
     notifiedCancellations.current = new Set()
   }
 
@@ -1995,6 +2001,15 @@ export default function DriverApp() {
             {gpsStatus==='got'&&gpsDescription&&<div style={{fontSize:11,color:gpsCoords?.timestamp&&(Date.now()-gpsCoords.timestamp)<300000?'#22c55e':'#f5a623',fontFamily:'monospace',marginBottom:10}}>📍 {gpsDescription}{gpsCoords?.timestamp&&(Date.now()-gpsCoords.timestamp)<300000?' · location captured':''}</div>}
             {gpsStatus==='failed'&&!gpsCoords&&<div style={{fontSize:11,color:'#f59e0b',fontFamily:'monospace',marginBottom:10}}>⚠ Location not confirmed</div>}
             {gpsStatus==='failed'&&gpsCoords&&<div style={{fontSize:11,color:'#f5a623',fontFamily:'monospace',marginBottom:10}}>📍 Using last known location</div>}
+
+            {/* Passenger count — PSV/coach only */}
+            {(driverInfo?.sector==='psv'||driverInfo?.sector==='coach')&&panelState==='idle'&&(
+              <div style={{marginBottom:12}}>
+                <label style={{display:'block',fontSize:12,color:'#9ca3af',marginBottom:6,fontFamily:"'DM Mono',monospace",textTransform:'uppercase',letterSpacing:0.5}}>Passengers on board</label>
+                <input type="number" inputMode="numeric" pattern="[0-9]*" min="0" max="120" placeholder="e.g. 38" value={passengerCount} onChange={e=>setPassengerCount(e.target.value)}
+                  style={{width:'100%',padding:'10px 12px',background:'rgba(245,166,35,0.05)',border:'1px solid rgba(245,166,35,0.3)',borderRadius:8,color:'#fff',fontSize:16,fontFamily:"'DM Sans',sans-serif",boxSizing:'border-box'}}/>
+              </div>
+            )}
 
             {/* Prior alert (e.g. breakdown) preserved when medical triggers */}
             {panelIssue?.id==='medical' && priorAlert && (

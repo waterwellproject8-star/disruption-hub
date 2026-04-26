@@ -18,14 +18,14 @@ export async function GET(request) {
     // Try id first, fall back to slug column
     let { data, error } = await supabase
       .from('clients')
-      .select('id, name, slug, contact_name, contact_phone, pilot_started_at, fleet_size, tier')
+      .select('id, name, slug, contact_name, contact_phone, pilot_started_at, fleet_size, tier, sector')
       .eq('id', clientId)
       .single()
 
     if (error || !data) {
       const res = await supabase
         .from('clients')
-        .select('id, name, slug, contact_name, contact_phone, pilot_started_at, fleet_size, tier')
+        .select('id, name, slug, contact_name, contact_phone, pilot_started_at, fleet_size, tier, sector')
         .eq('slug', clientId)
         .single()
       data = res.data

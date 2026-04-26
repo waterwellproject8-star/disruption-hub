@@ -94,12 +94,20 @@ function extractFirstAction(text) {
 
 // Build a clean ops SMS — what happened, exposure, what YES does
 // Never dump raw AI action text — ops needs to scan in 2 seconds
-function buildOpsSMS({ severity, vehicle_reg, human_description, financialImpact, detectedType, force_alert, force_financial_zero, location_description, vocab }) {
+function buildOpsSMS({ severity, vehicle_reg, human_description, financialImpact, detectedType, force_alert, force_financial_zero, location_description, vocab, sector, passenger_count }) {
   const v = vocab || vocabFor('haulage')
   const sev = force_alert && severity === 'MEDIUM' ? 'HIGH' : severity
   const situation = (human_description || 'Driver alert').substring(0, 50).replace(/\n/g, ' ')
   const loc = location_description ? ` Driver at ${location_description}.` : ''
-  const money = (!force_financial_zero && financialImpact > 0) ? `\n${v.breach_consequence_label}: £${financialImpact.toLocaleString()} if slot missed.` : ''
+  const isPsv = sector === 'psv' || sector === 'coach'
+  let riskLine = ''
+  if (isPsv) {
+    riskLine = (passenger_count && passenger_count > 0)
+      ? `\n${passenger_count} passenger${passenger_count === 1 ? '' : 's'} on board.`
+      : ''
+  } else {
+    riskLine = (!force_financial_zero && financialImpact > 0) ? `\n${v.breach_consequence_label}: £${financialImpact.toLocaleString()} if slot missed.` : ''
+  }
 
   const yesAction = {
     dispatch:  'confirm recovery is being arranged',
@@ -110,7 +118,7 @@ function buildOpsSMS({ severity, vehicle_reg, human_description, financialImpact
     preshift:  'clear driver to depart',
   }[detectedType] || 'execute action'
 
-  return `DisruptionHub — ${sev}\n${vehicle_reg || ''}: ${situation}.${loc}${money}\nReply YES to ${yesAction}, NO to reject, OPEN for dashboard.`
+  return `DisruptionHub — ${sev}\n${vehicle_reg || ''}: ${situation}.${loc}${riskLine}\nReply YES to ${yesAction}, NO to reject, OPEN for dashboard.`
 }
 
 function extractCarrierPhone(systemPrompt) {
@@ -191,6 +199,7 @@ export async function POST(request) {
       delay_minutes,
       reason,
       heading_direction,
+      passenger_count,
     } = body
     if (client_id) client_id = client_id.toLowerCase().trim()
     if (vehicle_reg) vehicle_reg = vehicle_reg.toUpperCase().trim()
@@ -593,7 +602,9 @@ Provide immediate disruption analysis and action plan.`
           force_alert,
           force_financial_zero,
           location_description: opsLocationStr,
-          vocab
+          vocab,
+          sector: clientSector,
+          passenger_count
         })
       }
       if (primaryApprovalId) smsBody += `\nRef: ${primaryApprovalId.slice(0, 8)}`
