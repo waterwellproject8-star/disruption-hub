@@ -285,7 +285,17 @@ export default function DriverApp() {
     const t = setTimeout(() => {
       fetch(`/api/client-config?client_id=${encodeURIComponent(code)}`)
         .then(r => r.ok ? r.json() : null)
-        .then(cfg => { if (cfg?.sector) setDriverInfo(prev => ({...prev, sector: cfg.sector})) })
+        .then(cfg => {
+          if (!cfg?.sector) return
+          setDriverInfo(prev => {
+            if (!prev) return prev
+            const next = { ...prev, sector: cfg.sector }
+            const isPsv = cfg.sector === 'psv' || cfg.sector === 'coach'
+            const validIds = isPsv ? VEHICLE_TYPES_PSV.map(v => v.id) : VEHICLE_TYPES_HAULAGE.map(v => v.id)
+            if (prev.vehicleType && !validIds.includes(prev.vehicleType)) next.vehicleType = ''
+            return next
+          })
+        })
         .catch(() => {})
     }, 600)
     return () => clearTimeout(t)
