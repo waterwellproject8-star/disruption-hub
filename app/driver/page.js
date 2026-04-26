@@ -288,6 +288,22 @@ export default function DriverApp() {
   }, [])
 
   useEffect(() => {
+    if (!('serviceWorker' in navigator)) return
+    const swVersion = process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA || 'dev'
+    navigator.serviceWorker.register(`/sw.js?v=${swVersion}`)
+      .then(registration => {
+        setInterval(() => { registration.update().catch(() => {}) }, 60_000)
+      })
+      .catch(err => console.error('[SW] registration failed:', err))
+    let refreshingPage = false
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (refreshingPage) return
+      refreshingPage = true
+      window.location.reload()
+    })
+  }, [])
+
+  useEffect(() => {
     const code = (driverInfo.clientId || '').toLowerCase().trim()
     if (!code || code.length < 3) {
       setDriverInfo(prev => prev?.sector ? ({...prev, sector: null}) : prev)

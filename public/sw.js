@@ -1,7 +1,7 @@
 // DisruptionHub Driver PWA — Service Worker
 // Handles push notifications and basic offline caching
 
-const CACHE_NAME = 'dh-driver-v3'
+const CACHE_NAME = 'dh-driver-v4'
 const OFFLINE_URLS = ['/driver', '/icon-192.png']
 
 // ── INSTALL ───────────────────────────────────────────────────────────────────
