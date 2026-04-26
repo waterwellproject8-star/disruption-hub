@@ -4,6 +4,21 @@ import { vocabFor } from '../../../../lib/sectorVocabulary.js'
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
+async function reverseGeocodeUK(lat, lng) {
+  if (!lat || !lng) return null
+  try {
+    const r = await fetch(`https://api.postcodes.io/postcodes?lon=${lng}&lat=${lat}&limit=1`)
+    if (!r.ok) return null
+    const j = await r.json()
+    const result = j?.result?.[0]
+    if (!result) return null
+    return result.admin_ward || result.admin_district || result.parliamentary_constituency || null
+  } catch (e) {
+    console.error('[reverse-geocode] postcodes.io failed:', e?.message)
+    return null
+  }
+}
+
 function getDB() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -225,11 +240,13 @@ export async function POST(request) {
       } catch (e) { console.error('[alert] W3W lookup failed:', e?.message) }
     }
 
+    const geocodedArea = await reverseGeocodeUK(latitude, longitude)
+    const areaName = geocodedArea || location_description || 'Location not confirmed'
+
     const opsLocationStr = (() => {
       const dir = heading_direction ? ` ${heading_direction}` : ''
-      const area = location_description || 'Location not confirmed'
       const parts = []
-      parts.push(`Area: ${area}${dir}`)
+      parts.push(`Area: ${areaName}${dir}`)
       if (w3wAddress) parts.push(`What3Words: ${w3wAddress}`)
       if (latitude && longitude) {
         parts.push(`Map: https://maps.google.com/?q=${latitude.toFixed(5)},${longitude.toFixed(5)}`)
@@ -439,7 +456,7 @@ Provide immediate disruption analysis and action plan.`
           event_type: issue_type || 'driver_breakdown',
           severity,
           financial_impact: Math.round(financialImpact || 0),
-          payload: { vehicle_reg, ref, driver_name, description: human_description },
+          payload: { vehicle_reg, ref, driver_name, description: human_description, lat: latitude || null, lng: longitude || null, what3words: w3wAddress || null, area: areaName || null, map_url: latitude && longitude ? `https://maps.google.com/?q=${latitude.toFixed(5)},${longitude.toFixed(5)}` : null },
           sms_fired: !!contactPhone,
           created_at: new Date().toISOString()
         })

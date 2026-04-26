@@ -12,6 +12,19 @@ function getDB() {
   return createClient(url, key)
 }
 
+const METHOD_PHRASES = {
+  driver_fixed:        'fixed roadside by driver',
+  recovery_fixed:      'fixed by recovery engineer',
+  towed:               'vehicle towed to depot',
+  other_resolved:      'resolved',
+  driver_ok:           'driver OK, back on shift',
+  driver_unwell_cover: 'driver unwell — replacement needed',
+  false_alarm:         'false alarm',
+  other_medical:       'medical issue resolved'
+}
+
+const MEDICAL_METHODS = ['driver_ok', 'driver_unwell_cover', 'false_alarm', 'other_medical']
+
 export async function POST(request) {
   try {
     const body = await request.json()
@@ -34,8 +47,6 @@ export async function POST(request) {
     let contactPhone = null
     let contactName = 'Ops Manager'
 
-    // Get client contact for SMS
-    // For demo client — fall back to pearson-haulage contact so SMS always fires
     if (db && client_id) {
       const lookupId = client_id === 'demo' ? 'pearson-haulage' : client_id
       const { data } = await db
@@ -49,7 +60,6 @@ export async function POST(request) {
       }
     }
 
-    // Quick Haiku analysis — revised ETA and SLA status
     const prompt = `Driver ${driver_name} (${vehicle_reg}) has resolved an issue and is back on track.
 Resolution: ${resolution}
 Current location: ${location_description || 'not confirmed'}
@@ -69,9 +79,7 @@ In one sentence: give a revised ETA with 1.5x buffer applied, and state in plain
       revisedEta = response.content[0]?.text?.trim() || ''
     } catch { /* non-fatal */ }
 
-    // Update incident in Supabase as resolved
     if (db) {
-      // Log resolution event to incidents
       const { error: incidentErr } = await db.from('incidents').insert({
         client_id,
         user_input: `RESOLVED: ${resolution} — ${driver_name} (${vehicle_reg}) — ${location_description || ''}`,
@@ -82,7 +90,6 @@ In one sentence: give a revised ETA with 1.5x buffer applied, and state in plain
       })
       if (incidentErr) console.error('resolve incident insert:', incidentErr.message, incidentErr.code)
 
-      // Update any pending approvals for this vehicle to resolved
       if (ref) {
         const { error: pendingErr } = await db.from('approvals')
           .update({ status: 'resolved' })
@@ -92,7 +99,6 @@ In one sentence: give a revised ETA with 1.5x buffer applied, and state in plain
         if (pendingErr) console.error('resolve pending update:', pendingErr.message, pendingErr.code)
       }
 
-      // Cancel pending cascade call approvals for this vehicle (last 2 hours)
       if (vehicle_reg) {
         const twoHoursAgo = new Date(Date.now() - 7200000).toISOString()
         const { error: cascadeErr } = await db.from('approvals')
@@ -105,13 +111,29 @@ In one sentence: give a revised ETA with 1.5x buffer applied, and state in plain
         if (cascadeErr) console.error('resolve cascade cancel:', cascadeErr.message, cascadeErr.code)
       }
 
-      // Fire partner callback if this incident originated from /v1/ingest
+      // Update webhook_log directly — covers both driver_pwa and api_v1 rows
+      if (ref && vehicle_reg) {
+        try {
+          const { error: wlErr } = await db.from('webhook_log')
+            .update({
+              resolved_at: new Date().toISOString(),
+              resolution_method: resolution_method || 'other_resolved'
+            })
+            .eq('client_id', client_id)
+            .filter('payload->>vehicle_reg', 'eq', vehicle_reg)
+            .filter('payload->>ref', 'eq', ref)
+            .is('resolved_at', null)
+          if (wlErr) console.error('[resolve] webhook_log update error:', wlErr.message)
+        } catch (e) {
+          console.error('[resolve] webhook_log update threw:', e?.message)
+        }
+      }
+
       if (ref) {
         fireCallbackIfPartnerEvent({ ref, client_id, resolution_method: resolution_method || 'driver', db })
           .catch(err => console.error('[driver/resolve] callback helper error:', err))
       }
 
-      // Insert a visible resolve record into approvals so ops dashboard shows it
       const { error: resolveErr } = await db.from('approvals').insert({
         client_id,
         action_type: 'notify',
@@ -125,9 +147,11 @@ In one sentence: give a revised ETA with 1.5x buffer applied, and state in plain
       if (resolveErr) console.error('resolve approval insert:', resolveErr.message, resolveErr.code)
     }
 
-    // SMS ops manager
     if (contactPhone) {
-      const smsBody = `DisruptionHub — Resolved.\n${vehicle_reg}: ${(original_issue || 'alert').replace(/_/g, ' ')} resolved by driver.\n${driver_name || 'Driver'} is back on track.${ref ? `\nRef: ${ref}` : ''}`
+      const methodPhrase = METHOD_PHRASES[resolution_method] || 'resolved'
+      const isMedical = MEDICAL_METHODS.includes(resolution_method)
+      const alertType = isMedical ? 'medical alert' : 'breakdown'
+      const smsBody = `DisruptionHub — Resolved.\n${vehicle_reg}: ${alertType} ${methodPhrase}.\n${driver_name || 'Driver'} is back on track.${ref ? `\nRef: ${ref}` : ''}`
       await sendSMS(contactPhone, smsBody).catch(err => console.error('[resolve] sendSMS failed:', err?.message))
     }
 
