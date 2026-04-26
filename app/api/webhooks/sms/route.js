@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 import twilio from 'twilio'
 import { formatDelayForSpeech } from '../../../../lib/twilio.js'
+import { vocabFor } from '../../../../lib/sectorVocabulary.js'
 
 async function sendSMS(to, body) {
   const sid   = process.env.TWILIO_ACCOUNT_SID
@@ -130,7 +131,8 @@ function extractConsigneeName(route) {
 // Build a driver-facing instruction from webhook event data
 // Webhook AI analysis is written for ops ("contact driver", "call carrier") — not for the driver
 // This function translates the event into plain driver instructions
-function buildDriverInstruction(details, actionLabel) {
+function buildDriverInstruction(details, actionLabel, vocab) {
+  const v = vocab || vocabFor('haulage')
   const p = details.payload || {}
   const eventType = details.event_type || ''
   const system = details.system || ''
@@ -139,23 +141,23 @@ function buildDriverInstruction(details, actionLabel) {
   // Webfleet events
   if (system === 'webfleet') {
     if (eventType === 'temp_alarm')
-      return `TEMP ALARM${ref ? ` — ${ref}` : ''}\nYour reefer is reading ${p.temp_reading || '?'}°C (threshold ${p.threshold || 5}°C). Pull over safely when safe to do so. Check reefer unit${p.reefer_unit ? ` (${p.reefer_unit})` : ''}. Do NOT continue with cargo above threshold. Reply DONE when checked.`
+      return `TEMP ALARM${ref ? ` — ${ref}` : ''}\nYour reefer is reading ${p.temp_reading || '?'}°C (threshold ${p.threshold || 5}°C). Pull over safely when safe to do so. Check reefer unit${p.reefer_unit ? ` (${p.reefer_unit})` : ''}. Do NOT continue with ${v.payload} above threshold. Reply DONE when checked.`
     if (eventType === 'temp_probe_failure')
-      return `TEMP PROBE FAILURE${ref ? ` — ${ref}` : ''}\nYour temperature probe has failed at ${p.location || 'your location'}. Pull over at next safe point. Treat cargo as potentially compromised. Call ops. Reply DONE when stopped.`
+      return `TEMP PROBE FAILURE${ref ? ` — ${ref}` : ''}\nYour temperature probe has failed at ${p.location || 'your location'}. Pull over at next safe point. ${v.cargo_compromise_phrase}. Call ops. Reply DONE when stopped.`
     if (eventType === 'reefer_fault')
-      return `REEFER FAULT${ref ? ` — ${ref}` : ''}\nFault code ${p.fault_code || 'unknown'} on your reefer unit. Pull over immediately — do NOT continue with frozen cargo at risk. Call ops for recovery instructions. Reply DONE when stopped.`
+      return `REEFER FAULT${ref ? ` — ${ref}` : ''}\nFault code ${p.fault_code || 'unknown'} on your reefer unit. Pull over immediately — do NOT continue with ${v.payload} at risk. Call ops for recovery instructions. Reply DONE when stopped.`
     if (eventType === 'engine_fault')
       return `ENGINE FAULT${ref ? ` — ${ref}` : ''}\nFault code ${p.fault_code || 'unknown'} detected. Pull over at next safe location. Do not continue if warning lights are showing. Call ops. Reply DONE when stopped.`
     if (eventType === 'fuel_critical')
       return `FUEL CRITICAL${ref ? ` — ${ref}` : ''}\nYou have approximately ${p.estimated_range_miles || '?'} miles of fuel remaining. ${p.nearest_forecourt ? `Nearest forecourt: ${p.nearest_forecourt}.` : 'Find a fuel stop immediately.'} Fill up now. Reply DONE when fuelled.`
     if (eventType === 'tyre_pressure')
-      return `TYRE PRESSURE ALERT${ref ? ` — ${ref}` : ''}\n${p.tyre_position || 'A tyre'} is at ${p.pressure_bar || '?'} bar (minimum ${p.threshold_bar || '?'} bar). Pull over safely and check. Do NOT continue on a deflating tyre at this load weight. Reply DONE when checked.`
+      return `TYRE PRESSURE ALERT${ref ? ` — ${ref}` : ''}\n${p.tyre_position || 'A tyre'} is at ${p.pressure_bar || '?'} bar (minimum ${p.threshold_bar || '?'} bar). Pull over safely and check. ${v.load_weight_phrase}. Reply DONE when checked.`
     if (eventType === 'panic_button')
       return `OPS RECEIVED YOUR PANIC ALERT. Help is being arranged. Stay with vehicle, doors locked. Call 999 if in immediate danger. Reply DONE when situation is stable.`
     if (eventType === 'impact_detected')
-      return `IMPACT DETECTED${ref ? ` — ${ref}` : ''}\nOps received a collision alert. Are you OK? Pull over safely. Check yourself and cargo. Call 999 if anyone is injured. Reply DONE when you have assessed the situation.`
+      return `IMPACT DETECTED${ref ? ` — ${ref}` : ''}\nOps received a collision alert. Are you OK? Pull over safely. ${v.cargo_check_phrase}. Call 999 if anyone is injured. Reply DONE when you have assessed the situation.`
     if (eventType === 'door_open_transit')
-      return `DOOR ALERT${ref ? ` — ${ref}` : ''}\nOps can see your cargo door is open. Please check your load is secure before continuing. Reply DONE when doors are secured.`
+      return `DOOR ALERT${ref ? ` — ${ref}` : ''}\nOps can see your ${v.cargo_door_phrase} is secure before continuing. Reply DONE when doors are secured.`
     if (eventType === 'off_route')
       return `ROUTE CHECK${ref ? ` — ${ref}` : ''}\nOps can see you are off your planned route. Is everything OK? Check your navigation. Reply DONE to confirm all is fine.`
   }
@@ -169,7 +171,7 @@ function buildDriverInstruction(details, actionLabel) {
     if (eventType === 'no_driver_card')
       return `TACHO CARD ALERT${ref ? ` — ${ref}` : ''}\nNo driver card detected. You must stop at next safe location and insert your tacho card. Driving without a card is a DVSA offence. Reply DONE when card is inserted.`
     if (eventType === 'long_stop')
-      return `CHECK-IN${ref ? ` — ${ref}` : ''}\nOps has noticed you have been stopped for ${p.stop_duration_mins || '?'} minutes. Please reply to confirm everything is OK and your ETA for next delivery.`
+      return `CHECK-IN${ref ? ` — ${ref}` : ''}\nOps has noticed you have been stopped for ${p.stop_duration_mins || '?'} minutes. Please reply to confirm everything is OK and your ETA for next ${v.delay_subject}.`
     if (eventType === 'fatigue_alert')
       return `BREAK REQUIRED${ref ? ` — ${ref}` : ''}\nYour break is now ${p.break_overdue_mins || '?'} minutes overdue under EU Reg 561/2006. You MUST take a 45-minute break at next safe location. Reply DONE when you have stopped for your break.`
   }
@@ -179,7 +181,7 @@ function buildDriverInstruction(details, actionLabel) {
     if (eventType === 'job_delayed')
       return `JOB UPDATE${ref ? ` — ${ref}` : ''}\nOps is aware of the delay. Continue to ${p.consignee || 'your destination'}. Ops is notifying the customer. Reply DONE to confirm you have noted this.`
     if (eventType === 'night_out_required')
-      return `NIGHT OUT APPROVED${ref ? ` — ${ref}` : ''}\nOps has confirmed you need to stay overnight. Find a secure truck park. ${p.cargo && p.cargo.includes('chilled') ? 'Keep reefer running — cargo is temperature sensitive.' : ''} Call ops with your location. Reply DONE when parked safely.`
+      return `NIGHT OUT APPROVED${ref ? ` — ${ref}` : ''}\nOps has confirmed you need to stay overnight. Find a secure truck park. ${p.cargo && p.cargo.includes('chilled') ? `Keep reefer running — ${v.cargo_temp_phrase}.` : ''} Call ops with your location. Reply DONE when parked safely.`
     if (eventType === 'driver_change')
       return `JOB REASSIGNED${ref ? ` — ${ref}` : ''}\nOps has noted a driver change is needed for ${p.job_id || 'your current job'}. Please confirm your current status and location. Reply DONE when you have spoken to ops.`
   }
@@ -187,9 +189,9 @@ function buildDriverInstruction(details, actionLabel) {
   // Samsara events
   if (system === 'samsara') {
     if (eventType === 'cargo_tamper')
-      return `CARGO ALERT${ref ? ` — ${ref}` : ''}\nA cargo tamper alert has been triggered. Do NOT leave the vehicle. Call 999 if you feel unsafe. Reply DONE when you have checked your load and confirmed it is secure.`
+      return `SECURITY ALERT${ref ? ` — ${ref}` : ''}\nA tamper alert has been triggered. Do NOT leave the vehicle. Call 999 if you feel unsafe. Reply DONE when you have checked and confirmed everything is secure.`
     if (eventType === 'load_movement')
-      return `LOAD MOVEMENT${ref ? ` — ${ref}` : ''}\nOps detected load movement in your trailer. Pull over at next safe location and check your load is secure before continuing. Reply DONE when load is checked.`
+      return `MOVEMENT ALERT${ref ? ` — ${ref}` : ''}\nOps detected ${v.load_movement_phrase}. Pull over at next safe location before continuing. Reply DONE when checked.`
     if (eventType === 'fatigue_alert')
       return `FATIGUE ALERT${ref ? ` — ${ref}` : ''}\nYour driving pattern indicates fatigue. Pull over at next safe location for a break. Do NOT continue driving when tired. Reply DONE when you have stopped.`
     if (eventType === 'tail_lift_fault')
@@ -263,7 +265,7 @@ export async function POST(request) {
     // Find client by ops manager phone number
     const { data: clients } = await db
       .from('clients')
-      .select('id, contact_name, contact_phone, system_prompt')
+      .select('id, contact_name, contact_phone, system_prompt, sector')
       .eq('contact_phone', from)
       .limit(1)
 
@@ -317,6 +319,7 @@ export async function POST(request) {
     const client = clients[0]
     const clientId = client.id
     const contactName = client.contact_name || 'Ops'
+    const vocab = vocabFor(client.sector)
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://disruptionhub.ai'
 
     // ── NO ─────────────────────────────────────────────────────────────────
@@ -459,7 +462,7 @@ export async function POST(request) {
 
         let actionLine = ''
         if (['call','make_call'].includes(nextType) && (nextDetails.call_type === 'consignee_delay_alert' || nextDetails.call_type === 'breakdown')) {
-          actionLine = `YES = call ${consignee || 'consignee'} automatically`
+          actionLine = `YES = call ${consignee || vocab.delivery_recipient_short} automatically`
         } else if (['call','make_call'].includes(nextType)) {
           actionLine = `YES = call carrier for recovery`
         } else if (['sms','send_sms','notify','reroute'].includes(nextType)) {
@@ -652,7 +655,7 @@ export async function POST(request) {
       // ── FAILED DELIVERY — YES means return to depot ────────────────────
       if (details.type === 'failed_delivery') {
         const driverPhone = await resolveDriverPhone()
-        const driverMsg = `DisruptionHub OPS${details.ref ? ` — ${details.ref}` : ''}\nReturn goods to depot. Secure the load and head back now.\nDo not leave goods unattended.`
+        const driverMsg = `DisruptionHub OPS${details.ref ? ` — ${details.ref}` : ''}\n${vocab.return_to_base_phrase} and head back now.\nDo not leave anything unattended.`
         await writeInstructionToApp(driverMsg)
         if (driverPhone) {
           const result = await sendSMS(driverPhone, driverMsg)
@@ -677,7 +680,7 @@ export async function POST(request) {
         if (!consigneeName && details.ref) {
           try { const { data: sh } = await db.from('shipments').select('route, consignee').eq('ref', details.ref).maybeSingle(); consigneeName = sh?.consignee || extractConsigneeName(sh?.route) } catch {}
         }
-        consigneeName = consigneeName || 'consignee'
+        consigneeName = consigneeName || vocab.delivery_recipient_short
 
         if (driverPhone) {
           const result = await sendSMS(driverPhone, driverMsg)
@@ -712,7 +715,7 @@ export async function POST(request) {
         // For agent/module actions, use action_label directly
         const isWebhook = details.source === 'webhook_inbound'
         const instruction = isWebhook
-          ? buildDriverInstruction(details, actionLabel)
+          ? buildDriverInstruction(details, actionLabel, vocab)
           : `${actionLabel}\n\nReply DONE when complete.`
 
         await writeInstructionToApp(instruction)
@@ -742,7 +745,7 @@ export async function POST(request) {
         if (callType === 'consignee_delay_alert' || callType === 'breakdown') {
           // delay > 60 mins → manual rebook, no automated call (bypass for breakdowns — always call)
           if (callType !== 'breakdown' && details.alert_type !== 'breakdown' && details.delay_minutes && details.delay_minutes > 60) {
-            await sendSMS(client.contact_phone || from, `DisruptionHub — Action needed.\n${details.vehicle_reg || ''}: Delay over 60 mins — ${details.consignee_name || 'consignee'} slot rebook required.\nCall ${details.consignee_name || 'consignee'} directly to rearrange.\nDashboard: disruptionhub.ai/unlock`)
+            await sendSMS(client.contact_phone || from, `DisruptionHub — Action needed.\n${details.vehicle_reg || ''}: Delay over 60 mins — ${details.consignee_name || vocab.delivery_recipient_short} rebook required.\nCall ${details.consignee_name || vocab.delivery_recipient_short} directly to rearrange.\nDashboard: disruptionhub.ai/unlock`)
             await finaliseApproval({ success: false, failure_reason: 'delay_exceeds_60_mins_manual_rebook_required' })
             return twimlReply('DH: Delay >60 mins — call consignee directly to rebook.')
           }
@@ -771,13 +774,13 @@ export async function POST(request) {
             let parts
             if (isBreakdown) {
               parts = [
-                `${clientSpoken} is calling to advise that vehicle ${spokenVehicle} has experienced a mechanical issue and will be delayed.`,
+                `${clientSpoken} is calling to advise that ${vocab.voice_intro_breakdown}.`,
                 `We are arranging recovery and will provide an update as soon as possible.`,
                 `No action is required from you at this time. Please contact our operations team if you need to discuss. Thank you.`
               ]
             } else {
               parts = [
-                `${clientSpoken} is calling to advise that your delivery from vehicle ${spokenVehicle} is running approximately ${delaySpoken} late.`,
+                `${clientSpoken} is calling to advise that ${vocab.voice_intro_delay} ${spokenVehicle} is running approximately ${delaySpoken} late.`,
                 details.revised_eta ? `Expected arrival is now ${details.revised_eta}.` : '',
                 `No action is required from you at this time. Thank you.`
               ].filter(Boolean)
@@ -787,7 +790,7 @@ export async function POST(request) {
             const callResult = await makeCall(consigneePhone, voiceMessage)
 
             const driverPhone = await resolveDriverPhone()
-            const driverMsg = `DisruptionHub — Confirmed.\n${details.vehicle_reg || ''}: ${details.consignee_name || 'Consignee'} being called. Continue to destination.`
+            const driverMsg = `DisruptionHub — Confirmed.\n${details.vehicle_reg || ''}: ${details.consignee_name || vocab.delivery_recipient_short} being called. Continue to destination.`
             await writeInstructionToApp(driverMsg)
             if (driverPhone) await sendSMS(driverPhone, driverMsg).catch(err => console.error('[sms-yes] sendSMS to driver failed:', err?.message))
 
@@ -806,7 +809,7 @@ export async function POST(request) {
 
           // No consignee phone found
           const driverPhone = await resolveDriverPhone()
-          const driverMsg = `DisruptionHub OPS${details.ref ? ` — ${details.ref}` : ''}\n\nOps approved delay. No consignee contact on file — ops will call directly.\nContinue to destination. Reply DONE.`
+          const driverMsg = `DisruptionHub OPS${details.ref ? ` — ${details.ref}` : ''}\n\nOps approved delay. No ${vocab.delivery_recipient_short} contact on file — ops will call directly.\nContinue to destination. Reply DONE.`
           await writeInstructionToApp(driverMsg)
           if (driverPhone) await sendSMS(driverPhone, driverMsg).catch(err => console.error('[sms-yes] sendSMS to driver failed:', err?.message))
           await finaliseApproval({ success: false, failure_reason: 'no_consignee_phone' })
@@ -817,7 +820,7 @@ export async function POST(request) {
         if (callType === 'failed_delivery_callback') {
           const fdPhone = toE164UK(details.consignee_phone || extractPhoneNumber(client.system_prompt))
           if (fdPhone) {
-            const fdMsg = `${twimlSafe(contactName || 'your supplier')} is calling to advise that we were unable to complete your delivery today. Please contact our operations team to rearrange at your earliest convenience. Thank you.`
+            const fdMsg = `${twimlSafe(contactName || 'your supplier')} is calling to advise that ${vocab.failed_delivery_voice}. Please contact our operations team to rearrange at your earliest convenience. Thank you.`
             const callResult = await makeCall(fdPhone, fdMsg)
             if (callResult.success) { await finaliseApproval({ success: true, twilio_sid: callResult.sid }); return twimlReply('DH: Calling consignee about failed delivery.') }
             if (callResult.simulated) { await finaliseApproval({ success: false, simulated: true, reason: 'twilio_not_configured' }); return twimlReply(`DH: Call consignee manually: ${details.consignee_phone || 'no number'}`) }

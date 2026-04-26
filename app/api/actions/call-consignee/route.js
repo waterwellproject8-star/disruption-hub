@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import { vocabFor } from '../../../../lib/sectorVocabulary.js'
 
 function getDB() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -17,7 +18,7 @@ function toE164UK(phone) {
 }
 
 function twimlSafe(name) {
-  if (!name) return 'your delivery contact'
+  if (!name) return 'your contact'
   return name.replace(/\b([A-Z]{2,})\b/g, (match) => match.split('').join('. ') + '.')
 }
 
@@ -66,6 +67,12 @@ export async function POST(request) {
     const db = getDB()
     if (!db) return Response.json({ error: 'No DB' }, { status: 500 })
 
+    let vocab = vocabFor('haulage')
+    try {
+      const { data: cl } = await db.from('clients').select('sector').eq('id', clientId).maybeSingle()
+      if (cl?.sector) vocab = vocabFor(cl.sector)
+    } catch {}
+
     const { data: callApprovals } = await db.from('approvals').select('*')
       .eq('client_id', clientId).eq('status', 'pending')
       .in('action_type', ['call', 'make_call'])
@@ -92,8 +99,8 @@ export async function POST(request) {
     const spokenVehicle = speakReg(vehicleReg)
     const isBreakdown = cad.call_type === 'breakdown' || cad.alert_type === 'breakdown'
     const voiceMsg = isBreakdown
-      ? `${twimlSafe(contactName || 'your supplier')} is calling to advise that vehicle ${spokenVehicle} has experienced a mechanical issue and will be delayed. We are arranging recovery and will provide an update as soon as possible. No action is required from you at this time. Thank you.`
-      : `${twimlSafe(contactName || 'your supplier')} is calling to advise that your delivery from vehicle ${spokenVehicle} is running late. No action is required from you at this time. Thank you.`
+      ? `${twimlSafe(contactName || 'your supplier')} is calling to advise that ${vocab.voice_intro_breakdown}. We are arranging recovery and will provide an update as soon as possible. No action is required from you at this time. Thank you.`
+      : `${twimlSafe(contactName || 'your supplier')} is calling to advise that ${vocab.voice_intro_delay} ${spokenVehicle} is running late. No action is required from you at this time. Thank you.`
 
     const callResult = await makeCall(consigneePhone, voiceMsg)
     const nowIso = new Date().toISOString()

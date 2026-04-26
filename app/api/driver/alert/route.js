@@ -1,5 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { createClient } from '@supabase/supabase-js'
+import { vocabFor } from '../../../../lib/sectorVocabulary.js'
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
@@ -93,11 +94,12 @@ function extractFirstAction(text) {
 
 // Build a clean ops SMS — what happened, exposure, what YES does
 // Never dump raw AI action text — ops needs to scan in 2 seconds
-function buildOpsSMS({ severity, vehicle_reg, human_description, financialImpact, detectedType, force_alert, force_financial_zero, location_description }) {
+function buildOpsSMS({ severity, vehicle_reg, human_description, financialImpact, detectedType, force_alert, force_financial_zero, location_description, vocab }) {
+  const v = vocab || vocabFor('haulage')
   const sev = force_alert && severity === 'MEDIUM' ? 'HIGH' : severity
   const situation = (human_description || 'Driver alert').substring(0, 50).replace(/\n/g, ' ')
   const loc = location_description ? ` Driver at ${location_description}.` : ''
-  const money = (!force_financial_zero && financialImpact > 0) ? `\nSLA risk: £${financialImpact.toLocaleString()} if slot missed.` : ''
+  const money = (!force_financial_zero && financialImpact > 0) ? `\n${v.breach_consequence_label}: £${financialImpact.toLocaleString()} if slot missed.` : ''
 
   const yesAction = {
     dispatch:  'confirm recovery is being arranged',
@@ -237,6 +239,7 @@ Provide immediate disruption analysis and action plan.`
 
     let systemPrompt = null
     let contactPhone = null
+    let clientSector = null
     const db = getDB()
 
     // Dedup — skip if a pending approval already exists for this vehicle in the last 5 minutes
@@ -259,14 +262,16 @@ Provide immediate disruption analysis and action plan.`
     if (db && client_id) {
       const { data } = await db
         .from('clients')
-        .select('system_prompt, contact_phone, contact_name')
+        .select('system_prompt, contact_phone, contact_name, sector')
         .eq('id', client_id)
         .single()
       if (data) {
         systemPrompt = data.system_prompt
         contactPhone = data.contact_phone
+        clientSector = data.sector
       }
     }
+    const vocab = vocabFor(clientSector)
 
     // ── RUNNING LATE — fast path, no AI call needed ──────────────────────
     if (issue_type === 'running_late' && delay_minutes) {
@@ -320,7 +325,7 @@ Provide immediate disruption analysis and action plan.`
 
       let smsSent = false
       if (severity === 'HIGH' && contactPhone) {
-        const smsBody = `DisruptionHub — HIGH\n${vehicle_reg || ''}: Running late — ${mins} mins delay reported.\nSLA breach now inevitable — £${penalty.toLocaleString()} at risk.\n${consigneeName || 'Consignee'} being notified automatically.\nReply OPEN for dashboard.`
+        const smsBody = `DisruptionHub — HIGH\n${vehicle_reg || ''}: Running late — ${mins} mins delay reported.\n${vocab.breach_consequence_label}: £${penalty.toLocaleString()} at risk.\n${consigneeName || vocab.delivery_recipient_short} being notified automatically.\nReply OPEN for dashboard.`
         const result = await sendSMS(contactPhone, smsBody)
         smsSent = result.success || false
 
@@ -342,7 +347,7 @@ Provide immediate disruption analysis and action plan.`
             if (sid && token && from && !sid.includes('placeholder') && !sid.startsWith('AC_')) {
               const spokenVehicle = (vehicle_reg || '').replace(/\s/g, '').replace(/./g, c => c + '. ').trim()
               const delaySpoken = mins >= 60 ? `${Math.floor(mins / 60)} hour${Math.floor(mins / 60) > 1 ? 's' : ''}${mins % 60 > 0 ? ` and ${mins % 60} minutes` : ''}` : `${mins} minutes`
-              const voiceMsg = `This is an automated call from DisruptionHub. Your delivery from vehicle ${spokenVehicle} is running approximately ${delaySpoken} late. ${reason ? `The reason given is ${reason}.` : ''} No action is required from you at this time. If you need to discuss, please contact the operations team. Thank you.`
+              const voiceMsg = `This is an automated call from DisruptionHub. ${vocab.voice_intro_delay} ${spokenVehicle} is running approximately ${delaySpoken} late. ${reason ? `The reason given is ${reason}.` : ''} No action is required from you at this time. If you need to discuss, please contact the operations team. Thank you.`
               const safe = voiceMsg.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&apos;')
               const twiml = `<?xml version="1.0" encoding="UTF-8"?><Response><Say voice="Polly.Amy" language="en-GB">${safe}</Say><Pause length="1"/><Say voice="Polly.Amy" language="en-GB">I will repeat that message.</Say><Pause length="1"/><Say voice="Polly.Amy" language="en-GB">${safe}</Say></Response>`
               const e164 = consigneePhone.startsWith('+') ? consigneePhone : consigneePhone.startsWith('0') ? '+44' + consigneePhone.slice(1) : consigneePhone
@@ -362,7 +367,7 @@ Provide immediate disruption analysis and action plan.`
           } catch (callErr) { console.error('[running_late] consignee call error:', callErr?.message) }
         }
       } else if (severity === 'MEDIUM' && contactPhone) {
-        const smsBody = `DisruptionHub — MEDIUM\n${vehicle_reg || ''}: Running late — ${mins} mins delay reported.\nReason: ${reason || 'not specified'}. SLA window: ${timeToSla} mins remaining.\nDashboard: disruptionhub.ai/unlock`
+        const smsBody = `DisruptionHub — MEDIUM\n${vehicle_reg || ''}: Running late — ${mins} mins delay reported.\nReason: ${reason || 'not specified'}. ${vocab.breach_consequence_label}: ${timeToSla} mins remaining.\nDashboard: disruptionhub.ai/unlock`
         const result = await sendSMS(contactPhone, smsBody)
         smsSent = result.success || false
       }
@@ -577,7 +582,7 @@ Provide immediate disruption analysis and action plan.`
       } else if (issue_type === 'goods_refused' || issue_type === 'access_problem' || issue_type === 'damage_found') {
         const reason = (human_description || 'No reason given').substring(0, 60).replace(/\n/g, ' ')
         const consignee = ref || 'consignee'
-        smsBody = `DisruptionHub — HIGH\n${vehicle_reg || ''}: Delivery refused at ${consignee}.\nReason: ${reason}.\nReply YES to return to depot, HOLD to keep driver on site, ALT for alternative delivery.\nDashboard: disruptionhub.ai/unlock`
+        smsBody = `DisruptionHub — HIGH\n${vehicle_reg || ''}: ${vocab.delivery_refused_phrase} ${consignee}.\nReason: ${reason}.\nReply YES to return to base, HOLD to keep driver on site, ALT for alternative.\nDashboard: disruptionhub.ai/unlock`
       } else {
         smsBody = buildOpsSMS({
           severity,
@@ -587,7 +592,8 @@ Provide immediate disruption analysis and action plan.`
           detectedType,
           force_alert,
           force_financial_zero,
-          location_description: opsLocationStr
+          location_description: opsLocationStr,
+          vocab
         })
       }
       if (primaryApprovalId) smsBody += `\nRef: ${primaryApprovalId.slice(0, 8)}`
