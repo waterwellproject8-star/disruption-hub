@@ -188,6 +188,7 @@ export default function DriverApp() {
   const [showMoreMenu, setShowMoreMenu] = useState(false)
   const [passengerCount, setPassengerCount] = useState('')
   const [engineerStatusSent, setEngineerStatusSent] = useState(null)
+  const [lastResolveMethod, setLastResolveMethod] = useState(null)
   const [rptOpen, setRptOpen] = useState({})
   const [lateMinutes, setLateMinutes]     = useState('')
   const [lateReason, setLateReason]       = useState('Traffic')
@@ -715,8 +716,9 @@ export default function DriverApp() {
       setPriorAlert(null); localStorage.removeItem('dh_prior_alert')
       setResolvedEta(data.revised_eta||'')
       setEngineerStatusSent(null)
+      setLastResolveMethod(methodId || null)
       setPanelState('resolved')
-    } catch { setLastAlert(null); localStorage.removeItem('dh_last_alert'); setPriorAlert(null); localStorage.removeItem('dh_prior_alert'); setEngineerStatusSent(null); setPanelState('resolved') }
+    } catch { setLastAlert(null); localStorage.removeItem('dh_last_alert'); setPriorAlert(null); localStorage.removeItem('dh_prior_alert'); setEngineerStatusSent(null); setLastResolveMethod(null); setPanelState('resolved') }
   }
 
   async function sendEngineerStatus(statusId, label) {
@@ -1076,7 +1078,7 @@ export default function DriverApp() {
       ? { name: savedInfo.name || '', phone: savedInfo.phone || '', clientId: savedInfo.clientId || '', vehicleReg: '', vehicleType: '' }
       : { name:'', clientId:'', vehicleReg:'', phone:'', vehicleType:'' })
     setShiftStarted(false); setShiftEnded(false); setShiftSummary(null); setJobs([]); setActiveJob(null); setLastAlert(null); setPriorAlert(null); setPreShiftChecks({}); setOpsMessages([]); setView('run')
-    setOpsAcknowledged(false); setPriorAlertExpanded(false); setPanelOpen(false); setPanelState('idle'); setPanelIssue(null); setParsedResult(null); setShowDetail(false); setResolvedEta(''); setEscalationTimer(null); setResumeConfirm(false); setOpsJobUpdate(null); setFailedDeliveryHold(null); setGpsCoords(null); setGpsDescription(''); setGpsStatus(null); setPassengerCount(''); setEngineerStatusSent(null)
+    setOpsAcknowledged(false); setPriorAlertExpanded(false); setPanelOpen(false); setPanelState('idle'); setPanelIssue(null); setParsedResult(null); setShowDetail(false); setResolvedEta(''); setEscalationTimer(null); setResumeConfirm(false); setOpsJobUpdate(null); setFailedDeliveryHold(null); setGpsCoords(null); setGpsDescription(''); setGpsStatus(null); setPassengerCount(''); setEngineerStatusSent(null); setLastResolveMethod(null)
     notifiedCancellations.current = new Set()
   }
 
@@ -2259,6 +2261,29 @@ export default function DriverApp() {
                 <div style={{fontSize:19,color:'#f5a623',fontWeight:700,marginBottom:5}}>Back on track</div>
                 <div style={{fontSize:13,color:'#8a9099',marginBottom:resolvedEta?12:22}}>Ops notified. Job updated.</div>
                 {resolvedEta&&<div style={{padding:'10px 14px',background:'rgba(245,166,35,0.05)',border:'1px solid rgba(245,166,35,0.2)',borderRadius:9,marginBottom:22,fontSize:13,color:'#e8eaed',lineHeight:1.6,textAlign:'left'}}>{resolvedEta}</div>}
+                {(engineerStatusSent==='tow_only'||lastResolveMethod==='towed')&&(
+                  <div style={{marginBottom:16,padding:14,background:'rgba(239,68,68,0.08)',border:'1px solid rgba(239,68,68,0.25)',borderRadius:12,textAlign:'left'}}>
+                    <div style={{fontSize:14,fontWeight:700,color:'#ff453a',marginBottom:6,fontFamily:"'Barlow Condensed',sans-serif",textTransform:'uppercase'}}>Vehicle out of service</div>
+                    <div style={{fontSize:12,color:'#8a9099',marginBottom:12}}>Vehicle towed — end shift now?</div>
+                    <div style={{display:'flex',gap:8}}>
+                      <button onClick={()=>{
+                        closePanel()
+                        const start = shiftStartTime.current
+                        const end = new Date()
+                        const duration = start ? Math.round((end-start)/60000) : null
+                        const completed = jobs.filter(j=>j.status==='completed').length
+                        const total = jobs.length
+                        const unresolved = jobs.filter(j=>j.status!=='completed').length
+                        setShiftSummary({completed,total,incidents:1,duration,endTime:end.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}),notes:'Vehicle towed — shift ended early',mileage:shiftMileage||'0',unresolved})
+                        setShiftEnded(true)
+                        fetch('/api/driver/end-shift',{method:'POST',headers:{'Content-Type':'application/json'},
+                          body:JSON.stringify({client_id:driverInfo.clientId,vehicle_reg:driverInfo.vehicleReg||null,driver_phone:driverInfo.phone||null,driver_name:driverInfo.name||null,reason:'vehicle_breakdown',started_at:start?start.toISOString():null,ended_at:end.toISOString(),duration_minutes:duration,mileage:shiftMileage||'0',notes:'Vehicle towed — shift ended early',jobs_completed:completed,jobs_total:total,incidents_count:1,unresolved_count:unresolved,defects_flagged:true,defect_details:'Vehicle towed after breakdown'})
+                        }).then(res=>{if(res.ok)['dh_shift_started','dh_shift_started_at','dh_last_alert','dh_prior_alert','dh_job_progress','dh_postshift_draft','dh_dismissed_notifications','dh_session_id'].forEach(k=>localStorage.removeItem(k))}).catch(err=>console.error('[end-shift-breakdown]',err))
+                      }} style={{flex:1,padding:'12px',background:'#ff453a',border:'none',borderRadius:8,color:'#fff',fontWeight:700,fontSize:13,cursor:'pointer'}}>End shift now</button>
+                      <button onClick={closePanel} style={{flex:1,padding:'12px',background:'transparent',border:'1px solid rgba(255,255,255,0.1)',borderRadius:8,color:'#8a9099',fontWeight:600,fontSize:13,cursor:'pointer'}}>Continue manually</button>
+                    </div>
+                  </div>
+                )}
                 <button onClick={closePanel} style={{padding:'13px 44px',background:'#f5a623',border:'none',borderRadius:10,color:'#000',fontWeight:700,fontSize:15,cursor:'pointer'}}>Close</button>
               </div>
             )}

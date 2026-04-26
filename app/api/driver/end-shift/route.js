@@ -190,6 +190,43 @@ export async function POST(request) {
       }
     }
 
+    // Vehicle breakdown path — mark dangling shipments + enhanced ops SMS
+    if (endReason === 'vehicle_breakdown' && client_id && vehicle_reg) {
+      try {
+        const { data: danglingShipments, error: shipErr } = await db.from('shipments')
+          .select('id, ref, route, status')
+          .eq('client_id', client_id)
+          .not('status', 'in', '("completed","not_completed")')
+        if (shipErr) {
+          console.error('[end-shift] shipments query error:', shipErr.message)
+        } else if (danglingShipments?.length > 0) {
+          for (const s of danglingShipments) {
+            const { error: sErr } = await db.from('shipments')
+              .update({ status: 'not_completed', alert: 'breakdown_shift_ended' })
+              .eq('id', s.id)
+            if (sErr) console.error('[end-shift] shipment update error:', sErr.message, s.ref)
+          }
+        }
+      } catch (e) {
+        console.error('[end-shift] shipments update threw:', e?.message)
+      }
+
+      try {
+        const { data: clientRow } = await db.from('clients')
+          .select('contact_phone')
+          .eq('id', client_id)
+          .single()
+        if (clientRow?.contact_phone) {
+          const jobCount = unresolvedJobs.length || 0
+          const smsBody = `DisruptionHub — Shift ended early.\n${vehicle_reg}: Vehicle out of service after breakdown.\n${jobCount} job${jobCount !== 1 ? 's' : ''} not completed.`
+          const smsResult = await sendSMS(clientRow.contact_phone, smsBody)
+          if (!smsResult.success) console.error('[end-shift] breakdown SMS failed:', smsResult.error)
+        }
+      } catch (e) {
+        console.error('[end-shift] breakdown SMS error:', e?.message)
+      }
+    }
+
     // Notify ops if there were unresolved jobs at shift end
     if (client_id && unresolvedJobs.length > 0) {
       const refs = unresolvedJobs.map(j => j.ref).join(', ')
