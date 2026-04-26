@@ -543,11 +543,15 @@ export default function DriverApp() {
         if (!silent) setGpsStatus('got')
         try { localStorage.setItem('dh_last_gps',JSON.stringify(coords)) } catch {}
         try {
-          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`)
-          const data = await res.json()
-          const road = data.address?.road||data.address?.motorway||''
-          const area = data.address?.suburb||data.address?.town||data.address?.county||''
-          setGpsDescription([road,area].filter(Boolean).join(', ')||`${latitude.toFixed(4)},${longitude.toFixed(4)}`)
+          const r = await fetch(`https://api.postcodes.io/postcodes?lon=${longitude}&lat=${latitude}&limit=1`)
+          if (r.ok) {
+            const j = await r.json()
+            const result = j?.result?.[0]
+            const ward = result?.admin_ward || result?.admin_district || result?.parliamentary_constituency || null
+            setGpsDescription(ward || `${latitude.toFixed(4)},${longitude.toFixed(4)}`)
+          } else {
+            setGpsDescription(`${latitude.toFixed(4)},${longitude.toFixed(4)}`)
+          }
         } catch { setGpsDescription(`${latitude.toFixed(4)},${longitude.toFixed(4)}`) }
       },
       (err)=>{ if (!silent) setGpsStatus('failed'); console.warn('[gps] position error:',err?.message) },
