@@ -276,6 +276,21 @@ export default function DriverApp() {
     return () => { clearTimeout(undoTimer.current); clearInterval(countdownTimer.current); stopGpsRefresh() }
   }, [])
 
+  useEffect(() => {
+    const code = (driverInfo.clientId || '').toLowerCase().trim()
+    if (!code || code.length < 3) {
+      setDriverInfo(prev => prev?.sector ? ({...prev, sector: null}) : prev)
+      return
+    }
+    const t = setTimeout(() => {
+      fetch(`/api/client-config?client_id=${encodeURIComponent(code)}`)
+        .then(r => r.ok ? r.json() : null)
+        .then(cfg => { if (cfg?.sector) setDriverInfo(prev => ({...prev, sector: cfg.sector})) })
+        .catch(() => {})
+    }, 600)
+    return () => clearTimeout(t)
+  }, [driverInfo.clientId])
+
   // ── OPS-INITIATED JOB POLL — checks every 60s for cancelled or newly assigned jobs ──
   // Also refreshes ETAs every 5 minutes so shipment times stay accurate
   const etaRefreshCount = useRef(0)
