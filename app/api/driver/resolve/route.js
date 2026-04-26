@@ -21,6 +21,7 @@ export async function POST(request) {
       vehicle_reg,
       ref,
       resolution,
+      resolution_method,
       location_description,
       route,
       sla_window,
@@ -106,7 +107,7 @@ In one sentence: give a revised ETA with 1.5x buffer applied, and state in plain
 
       // Fire partner callback if this incident originated from /v1/ingest
       if (ref) {
-        fireCallbackIfPartnerEvent({ ref, client_id, resolution_method: 'driver', db })
+        fireCallbackIfPartnerEvent({ ref, client_id, resolution_method: resolution_method || 'driver', db })
           .catch(err => console.error('[driver/resolve] callback helper error:', err))
       }
 
@@ -115,7 +116,7 @@ In one sentence: give a revised ETA with 1.5x buffer applied, and state in plain
         client_id,
         action_type: 'notify',
         action_label: `✅ ${vehicle_reg} — ${driver_name} back on track · ${resolution}${revisedEta ? ' · ' + revisedEta.substring(0, 100) : ''}`,
-        action_details: { source: 'driver_resolved', vehicle_reg, driver_name, ref, resolution, revised_eta: revisedEta },
+        action_details: { source: 'driver_resolved', vehicle_reg, driver_name, ref, resolution, resolution_method: resolution_method || null, revised_eta: revisedEta },
         financial_value: 0,
         status: 'executed',
         approved_by: 'driver',

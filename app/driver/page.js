@@ -669,13 +669,13 @@ export default function DriverApp() {
     showToast('Breakdown marked resolved — ops notified')
   }
 
-  async function resolveIssue(reason) {
+  async function resolveIssue(reason, methodId) {
     setPanelState('resolving_loading')
     await new Promise(r => setTimeout(r, 3000))
     const job = activeJob
     try {
       const res = await fetch('/api/driver/resolve',{method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({client_id:driverInfo.clientId,driver_name:driverInfo.name,vehicle_reg:driverInfo.vehicleReg,ref:job?.ref,resolution:reason,location_description:gpsDescription,route:job?.route,sla_window:job?.sla_window,original_issue:panelIssue?.id})})
+        body:JSON.stringify({client_id:driverInfo.clientId,driver_name:driverInfo.name,vehicle_reg:driverInfo.vehicleReg,ref:job?.ref,resolution:reason,resolution_method:methodId||null,location_description:gpsDescription,route:job?.route,sla_window:job?.sla_window,original_issue:panelIssue?.id})})
       const data = await res.json()
       setJobs(prev=>{const u=prev.map(j=>j.status==='at_risk'?{...j,status:'on-track',alert:null}:j);saveJobProgress(u);u.filter(j=>j.status==='on-track'&&j.ref!=='SHIFT_START').forEach(j=>pushProgressToSupabase(j.ref,'on-track',null));return u})
       if (activeJob) setActiveJob(p=>({...p,status:'on-track',alert:null}))
@@ -2151,7 +2151,12 @@ export default function DriverApp() {
               <div>
                 <div style={{fontSize:17,fontWeight:700,color:'#e8eaed',marginBottom:5}}>What happened?</div>
                 <div style={{fontSize:13,color:'#4a5260',marginBottom:14}}>Ops will be notified. Job updates to on-track.</div>
-                {[
+                {(panelIssue?.id==='breakdown'?[
+                  {id:'driver_fixed',label:'🔧 Driver fixed it roadside',sub:'Vehicle moving again'},
+                  {id:'recovery_fixed',label:'🚛 Recovery arrived and fixed',sub:'Back on the road'},
+                  {id:'towed',label:'🏗 Towed to depot',sub:'Vehicle off road'},
+                  {id:'other_resolved',label:'✅ Other — resolved',sub:'Issue no longer active'},
+                ]:[
                   {id:'breakdown_recovered',label:'🔧 Breakdown recovered',sub:'Vehicle moving again'},
                   {id:'delay_cleared',label:'🟢 Delay cleared',sub:'Back on schedule'},
                   {id:'temp_back_in_range',label:'❄ Temp back in range',sub:'Cold chain restored'},
@@ -2160,8 +2165,8 @@ export default function DriverApp() {
                   {id:'delivery_accepted',label:'📦 Delivery accepted',sub:'POD signed'},
                   {id:'tacho_cleared',label:'📟 Tacho cleared',sub:'Issue resolved by depot'},
                   {id:'other_resolved',label:'✅ Other — resolved',sub:'Issue no longer active'},
-                ].map(opt=>(
-                  <button key={opt.id} onClick={()=>resolveIssue(opt.label)}
+                ]).map(opt=>(
+                  <button key={opt.id} onClick={()=>resolveIssue(opt.label, opt.id)}
                     style={{width:'100%',marginBottom:7,padding:'12px 13px',background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.07)',borderRadius:10,cursor:'pointer',textAlign:'left',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
                     <div><div style={{fontSize:14,color:'#e8eaed',fontWeight:500}}>{opt.label}</div><div style={{fontSize:11,color:'#4a5260',marginTop:2}}>{opt.sub}</div></div>
                     <span style={{color:'#f5a623',fontSize:15}}>→</span>
