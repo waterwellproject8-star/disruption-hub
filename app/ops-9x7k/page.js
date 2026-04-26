@@ -2811,10 +2811,10 @@ export default function DashboardPage() {
                   })}
 
                   {/* Done section */}
-                  {pendingApprovals.filter(a=>a.status!=='pending').length>0&&(
+                  {(pendingApprovals.filter(a=>a.status!=='pending').length + localApprovals.length)>0&&(
                     <>
                       <div className="dh-done-hdr" onClick={()=>setDoneGroupExpanded(v=>!v)}>
-                        <span className="dh-done-label">Done today — {pendingApprovals.filter(a=>a.status!=='pending').length} resolved</span>
+                        <span className="dh-done-label">Done today — {pendingApprovals.filter(a=>a.status!=='pending').length + localApprovals.length} resolved</span>
                         <span style={{fontSize:9,color:'rgba(255,255,255,0.2)',transform:doneGroupExpanded?'rotate(180deg)':'none',transition:'transform 0.2s'}}>{'▾'}</span>
                       </div>
                       {doneGroupExpanded&&pendingApprovals.filter(a=>a.status!=='pending').map(a=>(
