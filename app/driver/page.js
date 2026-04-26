@@ -2024,7 +2024,7 @@ export default function DriverApp() {
         return (
           <div className="dh-bottom-bar">
             {alertActive?(<>
-              <div style={{padding:'14px 16px',background:'rgba(255,69,58,0.08)',border:'1px solid rgba(255,69,58,0.2)',borderRadius:16,color:'#ff453a',fontWeight:600,fontSize:12,display:'flex',alignItems:'center',justifyContent:'center',gap:6,fontFamily:"'DM Sans',sans-serif"}}>⚠ Alert active — resolve first</div>
+              <button onClick={reopenLastAlert} style={{width:'100%',padding:'14px 16px',background:'rgba(255,69,58,0.08)',border:'1px solid rgba(255,69,58,0.2)',borderRadius:16,color:'#ff453a',fontWeight:600,fontSize:12,display:'flex',alignItems:'center',justifyContent:'center',gap:6,fontFamily:"'DM Sans',sans-serif",cursor:'pointer'}}>⚠ Alert active — tap to resolve</button>
               <button onClick={()=>openIssue({id:'medical',label:'Medical Emergency',icon:'🚑',needsText:false})} className="dh-bar-btn md" style={{border:'none',cursor:'pointer'}}><div className="dh-bar-inner"><span style={{fontSize:20}}>🚑</span><div><span className="dh-bar-lbl">Medical</span><span className="dh-bar-sub">Emergency alert</span></div></div></button>
             </>):(<>
               <button onClick={()=>openIssue({id:'breakdown',label:'Breakdown',icon:'🚨',needsText:true,placeholder:'What happened?'})} className="dh-bar-btn bd" style={{border:'none',cursor:'pointer'}}><div className="dh-bar-inner"><span style={{fontSize:20}}>🚨</span><div><span className="dh-bar-lbl">Breakdown</span><span className="dh-bar-sub">Alert ops now</span></div></div></button>
