@@ -68,7 +68,7 @@ const ISSUE_GROUPS = [
   },
 ]
 
-const PRESHIFT_CHECKS_BASE = [
+const PRESHIFT_CHECKS_HAULAGE_BASE = [
   { id:'lights',  label:'Lights & indicators',        icon:'💡' },
   { id:'tyres',   label:'Tyres — no damage or flats', icon:'⚫' },
   { id:'mirrors', label:'Mirrors — clean & adjusted', icon:'🔲' },
@@ -80,6 +80,19 @@ const PRESHIFT_CHECKS_BASE = [
 const PRESHIFT_FRIDGE   = { id:'fridge',   label:'Fridge unit — at temp',        icon:'❄' }
 const PRESHIFT_CURTAINS = { id:'curtains', label:'Curtains & straps — secure',   icon:'🪢' }
 const PRESHIFT_TAILLIFT = { id:'taillift', label:'Tail lift — operational',      icon:'⬇' }
+
+const PRESHIFT_CHECKS_PSV = [
+  { id:'tyres_wheels',       label:'Tyres + wheel fixings — 1mm tread, no cuts, nuts secure', icon:'⚫' },
+  { id:'lights_psv',         label:'Lights, indicators, brake lights all working',             icon:'💡' },
+  { id:'doors_exits',        label:'Passenger doors + emergency exits open/close fully',       icon:'🚪' },
+  { id:'brakes_psv',         label:'Service + parking brake, air build-up, no leaks',          icon:'🛑' },
+  { id:'mirrors_visibility', label:'Mirrors — clean, secure, no glass damage',                 icon:'🔲' },
+  { id:'seat_belts',         label:'Driver + passenger seat belts functional',                  icon:'🔒' },
+  { id:'accessibility',      label:'Wheelchair lift / ramp + priority seating working',         icon:'♿' },
+  { id:'fire_extinguisher',  label:'Fire extinguisher — present, sealed, in date',              icon:'🧯' },
+  { id:'first_aid_kit',      label:'First aid kit — present + in date (16+ seats)',             icon:'🩹' },
+  { id:'emergency_hammer',   label:'Emergency exit hammer — present + accessible',              icon:'🔨' },
+]
 
 const POSTSHIFT_CHECKS = [
   { id:'body_damage',  label:'No new body damage',   icon:'🔍' },
@@ -1061,7 +1074,9 @@ export default function DriverApp() {
   }
 
   function preShift() {
-    const checks = [...PRESHIFT_CHECKS_BASE]
+    const isPsv = driverInfo?.sector === 'psv' || driverInfo?.sector === 'coach'
+    if (isPsv) return [...PRESHIFT_CHECKS_PSV]
+    const checks = [...PRESHIFT_CHECKS_HAULAGE_BASE]
     const vt = (driverInfo.vehicleType || '').toLowerCase()
     if (!vt) return checks
     if (/fridge|reefer|cold/.test(vt)) checks.push(PRESHIFT_FRIDGE)
