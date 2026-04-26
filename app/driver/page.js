@@ -187,6 +187,7 @@ export default function DriverApp() {
   const [secCompleted, setSecCompleted] = useState(false)
   const [showMoreMenu, setShowMoreMenu] = useState(false)
   const [passengerCount, setPassengerCount] = useState('')
+  const [engineerStatusSent, setEngineerStatusSent] = useState(null)
   const [rptOpen, setRptOpen] = useState({})
   const [lateMinutes, setLateMinutes]     = useState('')
   const [lateReason, setLateReason]       = useState('Traffic')
@@ -657,7 +658,7 @@ export default function DriverApp() {
 
   function openIssue(issue) {
     setPanelIssue(issue); setPanelOpen(true); setPanelState('idle')
-    setInputText(''); setParsedResult(null); setShowDetail(false); setResolvedEta('')
+    setInputText(''); setParsedResult(null); setShowDetail(false); setResolvedEta(''); setEngineerStatusSent(null)
     getGPS()
   }
 
@@ -713,8 +714,25 @@ export default function DriverApp() {
       setLastAlert(null); localStorage.removeItem('dh_last_alert')
       setPriorAlert(null); localStorage.removeItem('dh_prior_alert')
       setResolvedEta(data.revised_eta||'')
+      setEngineerStatusSent(null)
       setPanelState('resolved')
-    } catch { setLastAlert(null); localStorage.removeItem('dh_last_alert'); setPriorAlert(null); localStorage.removeItem('dh_prior_alert'); setPanelState('resolved') }
+    } catch { setLastAlert(null); localStorage.removeItem('dh_last_alert'); setPriorAlert(null); localStorage.removeItem('dh_prior_alert'); setEngineerStatusSent(null); setPanelState('resolved') }
+  }
+
+  async function sendEngineerStatus(statusId, label) {
+    const job = activeJob
+    try {
+      await fetch('/api/driver/engineer-status', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ client_id: driverInfo.clientId, driver_name: driverInfo.name, vehicle_reg: driverInfo.vehicleReg, ref: job?.ref, status: statusId })
+      })
+      setEngineerStatusSent(statusId)
+      showToast(`Engineer status sent: ${label}`)
+    } catch (e) {
+      console.error('[engineer-status] send failed:', e)
+      showToast('Failed to send — try again', 'error')
+    }
   }
 
   function parseResponse(text) {
@@ -1058,7 +1076,7 @@ export default function DriverApp() {
       ? { name: savedInfo.name || '', phone: savedInfo.phone || '', clientId: savedInfo.clientId || '', vehicleReg: '', vehicleType: '' }
       : { name:'', clientId:'', vehicleReg:'', phone:'', vehicleType:'' })
     setShiftStarted(false); setShiftEnded(false); setShiftSummary(null); setJobs([]); setActiveJob(null); setLastAlert(null); setPriorAlert(null); setPreShiftChecks({}); setOpsMessages([]); setView('run')
-    setOpsAcknowledged(false); setPriorAlertExpanded(false); setPanelOpen(false); setPanelState('idle'); setPanelIssue(null); setParsedResult(null); setShowDetail(false); setResolvedEta(''); setEscalationTimer(null); setResumeConfirm(false); setOpsJobUpdate(null); setFailedDeliveryHold(null); setGpsCoords(null); setGpsDescription(''); setGpsStatus(null); setPassengerCount('')
+    setOpsAcknowledged(false); setPriorAlertExpanded(false); setPanelOpen(false); setPanelState('idle'); setPanelIssue(null); setParsedResult(null); setShowDetail(false); setResolvedEta(''); setEscalationTimer(null); setResumeConfirm(false); setOpsJobUpdate(null); setFailedDeliveryHold(null); setGpsCoords(null); setGpsDescription(''); setGpsStatus(null); setPassengerCount(''); setEngineerStatusSent(null)
     notifiedCancellations.current = new Set()
   }
 
@@ -2171,6 +2189,23 @@ export default function DriverApp() {
                     </div>
                   )}
                   <button onClick={closePanel} style={{width:'100%',padding:14,background:'#f5a623',border:'none',borderRadius:12,color:'#000',fontWeight:800,fontSize:16,cursor:'pointer',marginBottom:9,fontFamily:"'Barlow Condensed',sans-serif",textTransform:'uppercase'}}>Got it — close</button>
+                  {panelIssue?.id==='breakdown'&&(
+                    <div style={{marginTop:12,marginBottom:12,padding:14,background:'rgba(245,166,35,0.06)',border:'1px solid rgba(245,166,35,0.2)',borderRadius:14}}>
+                      <div style={{fontSize:13,fontWeight:700,color:'#f5a623',marginBottom:10,fontFamily:"'Barlow Condensed',sans-serif",textTransform:'uppercase',letterSpacing:0.5}}>🔧 Recovery engineer status</div>
+                      <div style={{fontSize:11,color:'#4a5260',marginBottom:12}}>Tap when engineer arrives and gives assessment.</div>
+                      {[
+                        {id:'fixable_roadside',label:'✅ Fixable roadside',sub:'Engineer fixing on scene'},
+                        {id:'replacement_needed',label:'🚛 Replacement vehicle needed',sub:'Load needs another truck — ops notified'},
+                        {id:'tow_only',label:'🏗 Tow only — vehicle dead',sub:'Driver needs onward transport — ops notified'},
+                      ].map(opt=>(
+                        <button key={opt.id} onClick={()=>sendEngineerStatus(opt.id,opt.label)} disabled={engineerStatusSent===opt.id}
+                          style={{width:'100%',marginBottom:7,padding:'12px 13px',background:engineerStatusSent===opt.id?'rgba(245,166,35,0.15)':'rgba(255,255,255,0.03)',border:'1px solid '+(engineerStatusSent===opt.id?'#f5a623':'rgba(255,255,255,0.07)'),borderRadius:10,cursor:engineerStatusSent===opt.id?'default':'pointer',textAlign:'left',display:'flex',justifyContent:'space-between',alignItems:'center',opacity:engineerStatusSent&&engineerStatusSent!==opt.id?0.4:1}}>
+                          <div><div style={{fontSize:14,color:'#e8eaed',fontWeight:500}}>{opt.label}</div><div style={{fontSize:11,color:'#4a5260',marginTop:2}}>{opt.sub}</div></div>
+                          {engineerStatusSent===opt.id&&<span style={{color:'#f5a623',fontSize:13}}>✓ Sent</span>}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                   {!['cant_complete','hours_running_out','vehicle_theft'].includes(panelIssue?.id)&&(
                     <button onClick={()=>setPanelState('resolving')} style={{width:'100%',padding:13,background:'transparent',border:'1px solid rgba(245,166,35,0.25)',borderRadius:12,color:'#f5a623',fontWeight:600,fontSize:14,cursor:'pointer'}}>
                       ✅ Issue resolved — back on track
