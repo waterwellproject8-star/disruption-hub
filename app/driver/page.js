@@ -123,6 +123,8 @@ const SEV = {
   OK:       { bg:'rgba(245,166,35,0.08)',  border:'rgba(245,166,35,0.3)',  color:'#f5a623', icon:'✅' },
 }
 
+const normaliseReg = (reg) => (reg || '').toString().toUpperCase().replace(/\s+/g, '').trim()
+
 export default function DriverApp() {
   const [jobs, setJobs]             = useState([])
   const [loading, setLoading]       = useState(true)
@@ -197,8 +199,17 @@ export default function DriverApp() {
       const hist = localStorage.getItem('dh_driver_history')
       if (hist) {
         const h = JSON.parse(hist)
+        if (!localStorage.getItem('dh_savedVehicles_normalised_v1') && h.regs?.length) {
+          const seen = new Map()
+          for (const r of h.regs) {
+            const key = normaliseReg(r.reg)
+            if (!seen.has(key)) seen.set(key, { reg: key, type: r.type })
+          }
+          h.regs = [...seen.values()]
+          try { localStorage.setItem('dh_driver_history', JSON.stringify(h)) } catch {}
+          localStorage.setItem('dh_savedVehicles_normalised_v1', '1')
+        }
         setDriverHistory(h)
-        // Pre-fill form fields from history if no active session
         const activeSession = localStorage.getItem('dh_driver_info')
         if (!activeSession) {
           const lastReg = h.regs?.[0]
@@ -206,7 +217,7 @@ export default function DriverApp() {
             name: h.name || '',
             phone: h.phone ? normalisePhone(h.phone) : '',
             clientId: (h.clientId || '').toLowerCase().trim(),
-            vehicleReg: (lastReg?.reg || '').toUpperCase().trim(),
+            vehicleReg: normaliseReg(lastReg?.reg),
             vehicleType: lastReg?.type || ''
           })
         }
@@ -816,7 +827,7 @@ export default function DriverApp() {
       const existing = (() => { try { return JSON.parse(localStorage.getItem('dh_driver_history')||'{}') } catch { return {} } })()
       const regs = existing.regs || []
       // Add current reg+type to front of list, remove duplicates, cap at 5
-      const newReg = { reg: info.vehicleReg.toUpperCase(), type: info.vehicleType }
+      const newReg = { reg: normaliseReg(info.vehicleReg), type: info.vehicleType }
       const filtered = regs.filter(r => r.reg !== newReg.reg)
       const updated = { name: info.name, phone: info.phone, clientId: info.clientId, regs: [newReg, ...filtered].slice(0, 5) }
       localStorage.setItem('dh_driver_history', JSON.stringify(updated))
@@ -1224,11 +1235,14 @@ export default function DriverApp() {
                 }}
                 style={{width:'100%',padding:'13px',background:'rgba(255,255,255,0.06)',border:'1px solid rgba(255,255,255,0.09)',borderRadius:14,color:driverInfo.vehicleReg?'rgba(255,255,255,0.92)':'rgba(255,255,255,0.3)',fontSize:16,fontFamily:"'DM Sans',sans-serif",outline:'none',boxSizing:'border-box',cursor:'pointer'}}>
                 <option value=''>Select vehicle...</option>
-                {driverHistory.regs.map(r=>(
-                  <option key={r.reg} value={r.reg}>
-                    {r.reg} — {VEHICLE_TYPES.find(v=>v.id===r.type)?.label||r.type}
-                  </option>
-                ))}
+                {driverHistory.regs.map(r=>{
+                  const typeLabel = VEHICLE_TYPES.find(v=>v.id===r.type)?.label
+                  return (
+                    <option key={r.reg} value={r.reg}>
+                      {r.reg}{typeLabel ? ` — ${typeLabel}` : ''}
+                    </option>
+                  )
+                })}
                 <option value='__new__'>＋ Different registration...</option>
               </select>
               {driverInfo.vehicleReg && (
@@ -1241,8 +1255,8 @@ export default function DriverApp() {
             <div>
               <input
                 value={driverInfo.vehicleReg}
-                onChange={e=>setDriverInfo(p=>({...p,vehicleReg:e.target.value.toUpperCase()}))}
-                placeholder='e.g. BK21 XYZ'
+                onChange={e=>setDriverInfo(p=>({...p,vehicleReg:normaliseReg(e.target.value)}))}
+                placeholder='e.g. BK21XYZ'
                 autoCapitalize='characters'
                 style={{width:'100%',padding:'13px',background:'rgba(255,255,255,0.06)',border:'1px solid rgba(245,166,35,0.3)',borderRadius:14,color:'rgba(255,255,255,0.92)',fontSize:16,fontFamily:"'DM Sans',sans-serif",outline:'none',boxSizing:'border-box'}}/>
               {hasHistory && (
