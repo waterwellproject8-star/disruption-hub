@@ -1137,6 +1137,7 @@ export default function DriverApp() {
           jobs_total: total,
           incidents_count: lastAlert ? 1 : 0,
           unresolved_count: unresolved,
+          unresolved_jobs: jobs.filter(j=>j.status!=='completed').map(j=>({ref:j.ref,route:j.route||null,status:j.status||'pending',alert:j.alert||null})),
           fuel_level: null,
           defects_flagged: false,
           defect_details: null
@@ -2277,7 +2278,7 @@ export default function DriverApp() {
                         setShiftSummary({completed,total,incidents:1,duration,endTime:end.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}),notes:'Vehicle towed — shift ended early',mileage:shiftMileage||'0',unresolved})
                         setShiftEnded(true)
                         fetch('/api/driver/end-shift',{method:'POST',headers:{'Content-Type':'application/json'},
-                          body:JSON.stringify({client_id:driverInfo.clientId,vehicle_reg:driverInfo.vehicleReg||null,driver_phone:driverInfo.phone||null,driver_name:driverInfo.name||null,reason:'vehicle_breakdown',started_at:start?start.toISOString():null,ended_at:end.toISOString(),duration_minutes:duration,mileage:shiftMileage||'0',notes:'Vehicle towed — shift ended early',jobs_completed:completed,jobs_total:total,incidents_count:1,unresolved_count:unresolved,defects_flagged:true,defect_details:'Vehicle towed after breakdown'})
+                          body:JSON.stringify({client_id:driverInfo.clientId,vehicle_reg:driverInfo.vehicleReg||null,driver_phone:driverInfo.phone||null,driver_name:driverInfo.name||null,reason:'vehicle_breakdown',started_at:start?start.toISOString():null,ended_at:end.toISOString(),duration_minutes:duration,mileage:shiftMileage||'0',notes:'Vehicle towed — shift ended early',jobs_completed:completed,jobs_total:total,incidents_count:1,unresolved_count:unresolved,unresolved_jobs:jobs.filter(j=>j.status!=='completed').map(j=>({ref:j.ref,route:j.route||null,status:'not_completed',alert:'breakdown_shift_ended'})),defects_flagged:true,defect_details:'Vehicle towed after breakdown'})
                         }).then(res=>{if(res.ok)['dh_shift_started','dh_shift_started_at','dh_last_alert','dh_prior_alert','dh_job_progress','dh_postshift_draft','dh_dismissed_notifications','dh_session_id'].forEach(k=>localStorage.removeItem(k))}).catch(err=>console.error('[end-shift-breakdown]',err))
                       }} style={{flex:1,padding:'12px',background:'#ff453a',border:'none',borderRadius:8,color:'#fff',fontWeight:700,fontSize:13,cursor:'pointer'}}>End shift now</button>
                       <button onClick={closePanel} style={{flex:1,padding:'12px',background:'transparent',border:'1px solid rgba(255,255,255,0.1)',borderRadius:8,color:'#8a9099',fontWeight:600,fontSize:13,cursor:'pointer'}}>Continue manually</button>

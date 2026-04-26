@@ -59,7 +59,8 @@ export async function POST(request) {
       unresolved_count,
       fuel_level,
       defects_flagged,
-      defect_details
+      defect_details,
+      unresolved_jobs
     } = await request.json()
     if (client_id) client_id = client_id.toLowerCase().trim()
     if (vehicle_reg) vehicle_reg = vehicle_reg.toUpperCase().trim()
@@ -75,10 +76,13 @@ export async function POST(request) {
     const endReason = reason || 'shift_ended'
 
     let rowsUpdated = 0
-    let unresolvedJobs = []
 
-    // Snapshot at_risk / part_delivered jobs before the bulk update wipes their status
-    if (vehicle_reg) {
+    // Prefer body's unresolved_jobs (driver app has state truth).
+    // Fall back to driver_progress snapshot for backward compat.
+    let unresolvedJobs = []
+    if (Array.isArray(unresolved_jobs) && unresolved_jobs.length > 0) {
+      unresolvedJobs = unresolved_jobs
+    } else if (vehicle_reg) {
       const { data: atRiskRows } = await db.from('driver_progress')
         .select('ref, status, alert, updated_at')
         .eq('vehicle_reg', vehicle_reg)
@@ -190,25 +194,21 @@ export async function POST(request) {
       }
     }
 
-    // Vehicle breakdown path — mark dangling shipments + enhanced ops SMS
-    if (endReason === 'vehicle_breakdown' && client_id && vehicle_reg) {
-      try {
-        const { data: danglingShipments, error: shipErr } = await db.from('shipments')
-          .select('id, ref, route, status')
-          .eq('client_id', client_id)
-          .not('status', 'in', '("completed","not_completed")')
-        if (shipErr) {
-          console.error('[end-shift] shipments query error:', shipErr.message)
-        } else if (danglingShipments?.length > 0) {
-          for (const s of danglingShipments) {
+    // Vehicle breakdown path — mark dangling shipments by ref + enhanced ops SMS
+    if (endReason === 'vehicle_breakdown' && client_id && unresolvedJobs.length > 0) {
+      const refs = unresolvedJobs.map(j => j.ref).filter(Boolean)
+      if (refs.length > 0) {
+        try {
+          for (const ref of refs) {
             const { error: sErr } = await db.from('shipments')
               .update({ status: 'not_completed', alert: 'breakdown_shift_ended' })
-              .eq('id', s.id)
-            if (sErr) console.error('[end-shift] shipment update error:', sErr.message, s.ref)
+              .eq('client_id', client_id)
+              .eq('ref', ref)
+            if (sErr) console.error('[end-shift] shipment update error:', sErr.message, ref)
           }
+        } catch (e) {
+          console.error('[end-shift] shipments update threw:', e?.message)
         }
-      } catch (e) {
-        console.error('[end-shift] shipments update threw:', e?.message)
       }
 
       try {
@@ -217,8 +217,8 @@ export async function POST(request) {
           .eq('id', client_id)
           .single()
         if (clientRow?.contact_phone) {
-          const jobCount = unresolvedJobs.length || 0
-          const smsBody = `DisruptionHub — Shift ended early.\n${vehicle_reg}: Vehicle out of service after breakdown.\n${jobCount} job${jobCount !== 1 ? 's' : ''} not completed.`
+          const jobCount = unresolvedJobs.length
+          const smsBody = `DisruptionHub — Shift ended early.\n${vehicle_reg || 'UNKNOWN'}: Vehicle out of service after breakdown.\n${jobCount} job${jobCount !== 1 ? 's' : ''} not completed.`
           const smsResult = await sendSMS(clientRow.contact_phone, smsBody)
           if (!smsResult.success) console.error('[end-shift] breakdown SMS failed:', smsResult.error)
         }
