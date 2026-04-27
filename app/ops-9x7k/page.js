@@ -24,7 +24,7 @@ function buildDemoShipments() {
 const ACTIVE_SHIPMENTS = buildDemoShipments()
 
 
-const STATUS_COLORS = { 'on-track': '#f5a623', 'disrupted': '#ef4444', 'delayed': '#f59e0b' }
+const STATUS_COLORS = { 'on-track': '#f5a623', 'disrupted': '#ef4444', 'delayed': '#f59e0b', 'not_completed': '#8a9099' }
 const SEV_COLORS = { 'CRITICAL': '#ef4444', 'HIGH': '#f59e0b', 'MEDIUM': '#3b82f6', 'LOW': '#8a9099' }
 const SEV_BG = { 'CRITICAL': 'rgba(239,68,68,0.1)', 'HIGH': 'rgba(245,158,11,0.1)', 'MEDIUM': 'rgba(59,130,246,0.1)', 'LOW': 'rgba(138,144,153,0.1)' }
 
@@ -1921,7 +1921,7 @@ export default function DashboardPage() {
         .dh-cmd-scroll::-webkit-scrollbar { width:3px; }
         .dh-cmd-scroll::-webkit-scrollbar-track { background:transparent; }
         .dh-cmd-scroll::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.08); border-radius:2px; }
-        .dh-fleet-stats { display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; margin-bottom:10px; }
+        .dh-fleet-stats { display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:6px; margin-bottom:10px; }
         .dh-fstat { background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.07); border-radius:10px; padding:10px 8px; text-align:center; }
         .dh-fstat-n { font-size:24px; font-weight:700; letter-spacing:-0.5px; margin-bottom:2px; font-family:'DM Sans',sans-serif; }
         .dh-fstat-l { font-family:'DM Mono',monospace; font-size:8px; color:rgba(255,255,255,0.24); letter-spacing:0.08em; text-transform:uppercase; }
@@ -2152,6 +2152,7 @@ export default function DashboardPage() {
                     <div className="dh-fstat"><div className="dh-fstat-n" style={{color:'#30d158'}}>{(liveShipments.length>0?liveShipments:ACTIVE_SHIPMENTS).filter(s=>s.status==='on-track').length}</div><div className="dh-fstat-l">On Track</div></div>
                     <div className="dh-fstat"><div className="dh-fstat-n" style={{color:'#ffd60a'}}>{(liveShipments.length>0?liveShipments:ACTIVE_SHIPMENTS).filter(s=>s.status==='delayed').length}</div><div className="dh-fstat-l">Delayed</div></div>
                     <div className="dh-fstat"><div className="dh-fstat-n" style={{color:'#ff453a'}}>{(liveShipments.length>0?liveShipments:ACTIVE_SHIPMENTS).filter(s=>s.status==='disrupted').length}</div><div className="dh-fstat-l">Disrupted</div></div>
+                    <div className="dh-fstat"><div className="dh-fstat-n" style={{color:'#8a9099'}}>{(liveShipments.length>0?liveShipments:ACTIVE_SHIPMENTS).filter(s=>s.status==='not_completed').length}</div><div className="dh-fstat-l">Not Completed</div></div>
                   </div>
                   {(liveShipments.length>0?liveShipments:ACTIVE_SHIPMENTS).map(s=>{
                     const isDisrupted=s.status==='disrupted'
@@ -2717,6 +2718,10 @@ export default function DashboardPage() {
                     <div className="dh-fstat">
                       <div className="dh-fstat-n" style={{color:'#ff453a'}}>{(liveShipments.length>0?liveShipments:ACTIVE_SHIPMENTS).filter(s=>s.status==='disrupted').length}</div>
                       <div className="dh-fstat-l">Disrupted</div>
+                    </div>
+                    <div className="dh-fstat">
+                      <div className="dh-fstat-n" style={{color:'#8a9099'}}>{(liveShipments.length>0?liveShipments:ACTIVE_SHIPMENTS).filter(s=>s.status==='not_completed').length}</div>
+                      <div className="dh-fstat-l">Not Completed</div>
                     </div>
                   </div>
 

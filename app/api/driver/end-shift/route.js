@@ -227,8 +227,8 @@ export async function POST(request) {
       }
     }
 
-    // Notify ops if there were unresolved jobs at shift end
-    if (client_id && unresolvedJobs.length > 0) {
+    // Notify ops if there were unresolved jobs at shift end (skip for vehicle_breakdown — already handled above)
+    if (client_id && unresolvedJobs.length > 0 && endReason !== 'vehicle_breakdown') {
       const refs = unresolvedJobs.map(j => j.ref).join(', ')
       const { error: notifyErr } = await db.from('approvals').insert({
         client_id,
