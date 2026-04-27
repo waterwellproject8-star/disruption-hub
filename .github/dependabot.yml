@@ -1,2 +1,13 @@
+# Dependabot configuration
+# Disabled until post-first-client phase (per session Apr 27 2026 decision).
+# Rationale: pre-client phase prioritises platform stability over dep currency.
+# Re-enable by setting open-pull-requests-limit to 5 once we have a client + test
+# infrastructure robust enough to validate dep bumps without manual smoke testing.
+
 version: 2
-updates: []
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    open-pull-requests-limit: 0
