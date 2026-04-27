@@ -15,7 +15,7 @@ async function checkApiKey(key) {
   if (!key) return null
   const db = getDB()
   if (!db) return null
-  const { data } = await db.from('api_keys').select('client_id, active, permissions').eq('key', key).maybeSingle()
+  const { data } = await db.from('api_keys').select('active, permissions').eq('key', key).maybeSingle()
   return data?.active ? data : null
 }
 
