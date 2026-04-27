@@ -4,6 +4,13 @@ import { vocabFor } from '../../../../lib/sectorVocabulary.js'
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
+function headingToCompass(degrees) {
+  if (degrees === null || degrees === undefined || isNaN(degrees)) return null
+  const normalized = ((degrees % 360) + 360) % 360
+  const sectors = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW']
+  return sectors[Math.round(normalized / 45) % 8]
+}
+
 async function reverseGeocodeUK(lat, lng) {
   if (!lat || !lng) return null
   try {
@@ -214,6 +221,7 @@ export async function POST(request) {
       delay_minutes,
       reason,
       heading_direction,
+      heading_degrees,
       passenger_count,
     } = body
     if (client_id) client_id = client_id.toLowerCase().trim()
@@ -244,7 +252,8 @@ export async function POST(request) {
     const areaName = geocodedArea || location_description || 'Location not confirmed'
 
     const opsLocationStr = (() => {
-      const dir = heading_direction ? ` ${heading_direction}` : ''
+      const compass = headingToCompass(heading_degrees)
+      const dir = compass ? ` (heading ${compass})` : heading_direction ? ` ${heading_direction}` : ''
       const parts = []
       parts.push(`Area: ${areaName}${dir}`)
       if (w3wAddress) parts.push(`What3Words: ${w3wAddress}`)

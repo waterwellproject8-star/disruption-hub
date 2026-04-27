@@ -189,6 +189,8 @@ export default function DriverApp() {
   const [passengerCount, setPassengerCount] = useState('')
   const [engineerStatusSent, setEngineerStatusSent] = useState(null)
   const [lastResolveMethod, setLastResolveMethod] = useState(null)
+  const [lastKnownHeading, setLastKnownHeading] = useState(null)
+  const [lastHeadingAt, setLastHeadingAt] = useState(null)
   const [rptOpen, setRptOpen] = useState({})
   const [lateMinutes, setLateMinutes]     = useState('')
   const [lateReason, setLateReason]       = useState('Traffic')
@@ -272,6 +274,7 @@ export default function DriverApp() {
 
       if (shiftStartedAt) shiftStartTime.current = new Date(parseInt(shiftStartedAt))
       try { const sg = localStorage.getItem('dh_last_gps'); if (sg) { const p = JSON.parse(sg); if (p?.latitude) setGpsCoords(p) } } catch {}
+      try { const sh = localStorage.getItem('dh_last_heading'); const sha = localStorage.getItem('dh_last_heading_at'); if (sh && sha) { setLastKnownHeading(parseFloat(sh)); setLastHeadingAt(new Date(sha)) } } catch {}
       if (shiftDone) { setShiftStarted(true); startGpsRefresh() }
       if (hasActiveShift && savedAlert) { try { setLastAlert(JSON.parse(savedAlert)) } catch {} }
       if (hasActiveShift) {
@@ -555,11 +558,17 @@ export default function DriverApp() {
     if (!silent) setGpsStatus('getting')
     navigator.geolocation.getCurrentPosition(
       async pos => {
-        const {latitude,longitude,accuracy} = pos.coords
+        const {latitude,longitude,accuracy,heading} = pos.coords
         const coords = {latitude,longitude,accuracy,timestamp:Date.now()}
         setGpsCoords(coords)
         if (!silent) setGpsStatus('got')
         try { localStorage.setItem('dh_last_gps',JSON.stringify(coords)) } catch {}
+        if (heading !== null && heading !== undefined && !isNaN(heading)) {
+          const now = new Date()
+          setLastKnownHeading(heading)
+          setLastHeadingAt(now)
+          try { localStorage.setItem('dh_last_heading',String(heading)); localStorage.setItem('dh_last_heading_at',now.toISOString()) } catch {}
+        }
         try {
           const r = await fetch(`https://api.postcodes.io/postcodes?lon=${longitude}&lat=${latitude}&limit=1`)
           if (r.ok) {
@@ -830,9 +839,11 @@ export default function DriverApp() {
     }
 
     refreshGpsIfStale()
+    const headingAgeMs = lastHeadingAt ? Date.now() - lastHeadingAt.getTime() : Infinity
+    const headingFresh = lastKnownHeading !== null && headingAgeMs < 30 * 60 * 1000
     console.log('[breakdown] firing alert, client_id:', driverInfo.clientId, 'vehicle:', driverInfo.vehicleReg, 'issue:', panelIssue?.id, 'ref:', job?.ref)
     fetch('/api/driver/alert',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({client_id:driverInfo.clientId,driver_name:driverInfo.name,driver_phone:driverInfo.phone||null,vehicle_reg:driverInfo.vehicleReg,ref:job?.ref,issue_type:panelIssue?.id,issue_description:prompt,human_description:inputText||panelIssue?.label,location_description:gpsDescription,latitude:gpsCoords?.latitude,longitude:gpsCoords?.longitude,passenger_count:passengerCount?parseInt(passengerCount,10):null,at_risk_refs:jobs.filter(j=>j.status!=='completed').map(j=>j.ref).filter(r=>r&&r!=='SHIFT_START')})
+      body:JSON.stringify({client_id:driverInfo.clientId,driver_name:driverInfo.name,driver_phone:driverInfo.phone||null,vehicle_reg:driverInfo.vehicleReg,ref:job?.ref,issue_type:panelIssue?.id,issue_description:prompt,human_description:inputText||panelIssue?.label,location_description:gpsDescription,latitude:gpsCoords?.latitude,longitude:gpsCoords?.longitude,heading_degrees:headingFresh?lastKnownHeading:null,passenger_count:passengerCount?parseInt(passengerCount,10):null,at_risk_refs:jobs.filter(j=>j.status!=='completed').map(j=>j.ref).filter(r=>r&&r!=='SHIFT_START')})
     }).then(r=>{console.log('[breakdown] alert response:',r.status);if(!r.ok)r.text().then(t=>console.error('[breakdown] server error:',r.status,t))}).catch(e=>console.error('[breakdown] fetch error:',e?.message))
 
     if (emergencyIds.includes(panelIssue?.id)) {
@@ -1067,7 +1078,7 @@ export default function DriverApp() {
 
     // 2. Wipe shift/session keys — keep dh_driver_info so name + phone pre-fill on next login
     stopGpsRefresh()
-    ;['dh_shift_started','dh_shift_started_at','dh_last_alert','dh_prior_alert','dh_job_progress','dh_ops_messages','dh_ops_messages_read','dh_dismissed_notifications','dh_session_id','dh_postshift_draft','dh_last_gps'].forEach(k=>localStorage.removeItem(k))
+    ;['dh_shift_started','dh_shift_started_at','dh_last_alert','dh_prior_alert','dh_job_progress','dh_ops_messages','dh_ops_messages_read','dh_dismissed_notifications','dh_session_id','dh_postshift_draft','dh_last_gps','dh_last_heading','dh_last_heading_at'].forEach(k=>localStorage.removeItem(k))
 
     // 3-5. Reset state so the SHIFT EXPIRED guard (setupDone && staleSession) falsifies and setup screen re-renders.
     // Pre-populate name + phone from dh_driver_info (same driver, same phone every shift).
@@ -1078,7 +1089,7 @@ export default function DriverApp() {
       ? { name: savedInfo.name || '', phone: savedInfo.phone || '', clientId: savedInfo.clientId || '', vehicleReg: '', vehicleType: '' }
       : { name:'', clientId:'', vehicleReg:'', phone:'', vehicleType:'' })
     setShiftStarted(false); setShiftEnded(false); setShiftSummary(null); setJobs([]); setActiveJob(null); setLastAlert(null); setPriorAlert(null); setPreShiftChecks({}); setOpsMessages([]); setView('run')
-    setOpsAcknowledged(false); setPriorAlertExpanded(false); setPanelOpen(false); setPanelState('idle'); setPanelIssue(null); setParsedResult(null); setShowDetail(false); setResolvedEta(''); setEscalationTimer(null); setResumeConfirm(false); setOpsJobUpdate(null); setFailedDeliveryHold(null); setGpsCoords(null); setGpsDescription(''); setGpsStatus(null); setPassengerCount(''); setEngineerStatusSent(null); setLastResolveMethod(null)
+    setOpsAcknowledged(false); setPriorAlertExpanded(false); setPanelOpen(false); setPanelState('idle'); setPanelIssue(null); setParsedResult(null); setShowDetail(false); setResolvedEta(''); setEscalationTimer(null); setResumeConfirm(false); setOpsJobUpdate(null); setFailedDeliveryHold(null); setGpsCoords(null); setGpsDescription(''); setGpsStatus(null); setPassengerCount(''); setEngineerStatusSent(null); setLastResolveMethod(null); setLastKnownHeading(null); setLastHeadingAt(null)
     notifiedCancellations.current = new Set()
   }
 
