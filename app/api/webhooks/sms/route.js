@@ -796,12 +796,31 @@ export async function POST(request) {
             if (driverPhone) await sendSMS(driverPhone, driverMsg).catch(err => console.error('[sms-yes] sendSMS to driver failed:', err?.message))
 
             await sendNextPendingActionSMS()
-            if (callResult.success) {
-              await finaliseApproval({ success: true, twilio_sid: callResult.sid, twilio_status: callResult.status })
-            } else if (callResult.simulated) {
-              await finaliseApproval({ success: false, simulated: true, reason: callResult.reason || 'twilio_not_configured' })
-            } else {
-              await finaliseApproval({ success: false, failure_reason: callResult.error || 'call_error' })
+
+            // Update the actual pending call approval (different row from the dispatch approval)
+            try {
+              const callStatus = callResult.success ? 'executed' : callResult.simulated ? 'failed' : 'failed'
+              const callPatch = { status: callStatus, executed_at: new Date().toISOString(), approved_by: contactName || 'ops_sms_cascade' }
+              if (callResult.success) {
+                callPatch.execution_result = { twilio_sid: callResult.sid, twilio_status: callResult.status, source: 'cascade_yes' }
+              } else if (callResult.simulated) {
+                callPatch.execution_result = { simulated: true, reason: callResult.reason || 'twilio_not_configured' }
+              } else {
+                callPatch.execution_result = { failure_reason: callResult.error || 'call_error' }
+              }
+              const { data: updatedCall, error: callUpdErr } = await db.from('approvals')
+                .update(callPatch)
+                .eq('client_id', clientId)
+                .in('action_type', ['call', 'make_call'])
+                .eq('status', 'pending')
+                .gt('created_at', new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString())
+                .order('created_at', { ascending: false })
+                .limit(1)
+                .select('id')
+              if (callUpdErr) console.error('[cascade-yes] call approval update failed:', callUpdErr.message)
+              else console.log('[cascade-yes] call approval marked', callStatus, updatedCall?.[0]?.id || 'no match')
+            } catch (e) {
+              console.error('[cascade-yes] call approval update threw:', e?.message)
             }
             if (callResult.success) return twimlReply(`DH: Calling ${details.consignee_name || consigneePhone}. Driver notified.`)
             if (callResult.simulated) return twimlReply(`DH: Call ${details.consignee_name || 'consignee'} manually: ${rawConsigneePhone}`)
