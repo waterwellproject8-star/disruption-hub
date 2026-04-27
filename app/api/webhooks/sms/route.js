@@ -263,14 +263,28 @@ export async function POST(request) {
     if (!db) return twimlReply('DH: System error. Open disruptionhub.ai')
 
     // Find client by ops manager phone number
-    const { data: clients } = await db
+    let { data: clients } = await db
       .from('clients')
       .select('id, contact_name, contact_phone, system_prompt, sector')
       .eq('contact_phone', from)
       .limit(1)
 
+    // ── SECONDARY CONTACT LOOKUP ──────────────────────────────────────────
+    let isSecondaryContact = false
+    if (!clients?.length) {
+      const { data: secClients } = await db
+        .from('clients')
+        .select('id, contact_name, contact_phone, system_prompt, sector, secondary_contact_name')
+        .eq('secondary_contact_phone', from)
+        .limit(1)
+      if (secClients?.length) {
+        clients = secClients
+        isSecondaryContact = true
+      }
+    }
+
     // ── DRIVER REPLY HANDLER ─────────────────────────────────────────────
-    // If number not recognised as ops, check if it's a driver
+    // If number not recognised as ops (primary or secondary), check if it's a driver
     if (!clients?.length) {
       try {
         const { data: driverRow } = await db
@@ -318,7 +332,8 @@ export async function POST(request) {
 
     const client = clients[0]
     const clientId = client.id
-    const contactName = client.contact_name || 'Ops'
+    const contactName = isSecondaryContact ? (client.secondary_contact_name || 'Secondary Ops') : (client.contact_name || 'Ops')
+    const approvedByLabel = isSecondaryContact ? `secondary_ops:${from}` : contactName
     const vocab = vocabFor(client.sector)
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://disruptionhub.ai'
 
@@ -354,7 +369,7 @@ export async function POST(request) {
 
       await db.from('approvals').update({
         status: 'rejected',
-        approved_by: contactName,
+        approved_by: approvedByLabel,
         approved_at: new Date().toISOString()
       }).eq('id', pending[0].id)
 
@@ -387,7 +402,7 @@ export async function POST(request) {
 
       await db.from('approvals').update({
         status: 'executed',
-        approved_by: contactName,
+        approved_by: approvedByLabel,
         approved_at: new Date().toISOString(),
         executed_at: new Date().toISOString(),
         execution_result: { action: body.toLowerCase() }
@@ -522,7 +537,7 @@ export async function POST(request) {
         if (callApprovals?.length) {
           const ca = callApprovals[0]
           const cad = ca.action_details || {}
-          const { data: claimed } = await db.from('approvals').update({ approved_by: contactName, approved_at: new Date().toISOString() }).eq('id', ca.id).eq('status', 'pending').is('approved_at', null).select('id')
+          const { data: claimed } = await db.from('approvals').update({ approved_by: approvedByLabel, approved_at: new Date().toISOString() }).eq('id', ca.id).eq('status', 'pending').is('approved_at', null).select('id')
           if (!claimed?.length) return twimlReply('DH: Action already executed. Check dashboard.')
 
           let cConsignee = cad.consignee_name || null
@@ -567,7 +582,7 @@ export async function POST(request) {
       // Claim the approval without marking executed — finaliseApproval() below
       // writes the real status once we know whether Twilio actually delivered.
       const { data: updated, error: claimErr } = await db.from('approvals').update({
-        approved_by: contactName,
+        approved_by: approvedByLabel,
         approved_at: new Date().toISOString()
       }).eq('id', approval.id).eq('status', 'pending').is('approved_at', null).select('id')
 
@@ -800,7 +815,7 @@ export async function POST(request) {
             // Update the actual pending call approval (different row from the dispatch approval)
             try {
               const callStatus = callResult.success ? 'executed' : callResult.simulated ? 'failed' : 'failed'
-              const callPatch = { status: callStatus, executed_at: new Date().toISOString(), approved_by: contactName || 'ops_sms_cascade' }
+              const callPatch = { status: callStatus, executed_at: new Date().toISOString(), approved_by: approvedByLabel || 'ops_sms_cascade' }
               if (callResult.success) {
                 callPatch.execution_result = { twilio_sid: callResult.sid, twilio_status: callResult.status, source: 'cascade_yes' }
               } else if (callResult.simulated) {
