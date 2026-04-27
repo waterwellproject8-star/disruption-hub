@@ -12,7 +12,7 @@ async function checkApiKey(key) {
   if (!key) return null
   const db = getDB()
   if (!db) return null
-  const { data } = await db.from('api_keys').select('client_id, active, callback_url').eq('key', key).maybeSingle()
+  const { data } = await db.from('api_keys').select('active, callback_url, allowed_client_ids').eq('key', key).maybeSingle()
   return data?.active ? data : null
 }
 
@@ -47,6 +47,11 @@ export async function POST(request) {
 
     if (!client_id || !event_type) {
       return errResponse('ERR_002', 400, requestId)
+    }
+
+    const allowedClients = keyRecord.allowed_client_ids || []
+    if (!allowedClients.includes(client_id.toLowerCase().trim())) {
+      return errResponse('ERR_001', 401, requestId)
     }
 
     const VALID_SECTORS = ['psv', 'coach', 'haulage', 'lgv']

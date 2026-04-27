@@ -15,7 +15,7 @@ async function checkApiKey(key) {
   if (!key) return null
   const db = getDB()
   if (!db) return null
-  const { data } = await db.from('api_keys').select('active, permissions').eq('key', key).maybeSingle()
+  const { data } = await db.from('api_keys').select('active, permissions, allowed_client_ids').eq('key', key).maybeSingle()
   return data?.active ? data : null
 }
 
@@ -45,6 +45,9 @@ export async function GET(request) {
     const offset = parseInt(searchParams.get('offset') || '0', 10) || 0
 
     if (!clientId) return errResponse('ERR_002', 400, requestId)
+
+    const allowedClients = keyRecord.allowed_client_ids || []
+    if (!allowedClients.includes(clientId)) return errResponse('ERR_001', 401, requestId)
 
     const db = getDB()
     if (!db) {
