@@ -179,32 +179,25 @@ Sandbox responses include an additional field and a modified ref:
 
 ---
 
-## GET /status
+## GET /fleet
 
-Query the current status of active fleet operations for your organisation.
+Retrieve current fleet status and client metadata. Requires `fleet_read` permission.
 
 ### Request fields (query parameters)
 
 | Field | Type | Required | Description |
 |---|---|---|---|
 | `client_id` | string | Yes | Your assigned client identifier |
-| `asset_id` | string | No | Filter to a specific vehicle registration |
+| `status` | string | No | Filter by shipment status (e.g. `on-track`, `delayed`, `disrupted`) |
+| `limit` | integer | No | Max results per page (default 50, max 200) |
+| `offset` | integer | No | Pagination offset (default 0) |
 
 ### Example request
 
 ```bash
-curl -G "https://disruptionhub.ai/api/v1/status" \
+curl -G "https://disruptionhub.ai/api/v1/fleet" \
   -H "x-api-key: dh_tms_live_abc123..." \
   --data-urlencode "client_id=acme-logistics"
-```
-
-### Example request — filtered by vehicle
-
-```bash
-curl -G "https://disruptionhub.ai/api/v1/status" \
-  -H "x-api-key: dh_tms_live_abc123..." \
-  --data-urlencode "client_id=acme-logistics" \
-  --data-urlencode "asset_id=AB12 CDE"
 ```
 
 ### Success response
@@ -213,38 +206,29 @@ curl -G "https://disruptionhub.ai/api/v1/status" \
 
 ```json
 {
-  "fleet": [
+  "shipments": [
     {
       "ref": "SHP-00142",
       "route": "Birmingham → Manchester",
-      "status": "en_route",
+      "status": "on-track",
       "eta": "2026-04-23T14:30:00Z",
-      "delivery_window": "14:00-16:00",
-      "load_type": "palletised"
-    },
-    {
-      "ref": "SHP-00143",
-      "route": "London → Leeds",
-      "status": "pending",
-      "eta": "2026-04-23T18:00:00Z",
-      "delivery_window": "17:00-19:00",
-      "load_type": "refrigerated"
+      "sla_window": "2026-04-23T16:00:00Z",
+      "cargo_type": "palletised",
+      "cargo_value": 18500,
+      "consignee": "Tesco DC Manchester",
+      "alert": null
     }
-  ]
+  ],
+  "client": {
+    "id": "acme-logistics",
+    "name": "Acme Logistics Ltd",
+    "sector": "haulage",
+    "fleet_size": 35
+  },
+  "count": 1,
+  "has_more": false
 }
 ```
-
-### Response fields
-
-| Field | Type | Description |
-|---|---|---|
-| `fleet` | array | List of active operations. Empty array if no active operations match |
-| `fleet[].ref` | string | Shipment reference |
-| `fleet[].route` | string | Origin and destination |
-| `fleet[].status` | string | Current status (e.g. `pending`, `en_route`) |
-| `fleet[].eta` | string | Estimated time of arrival (ISO 8601) |
-| `fleet[].delivery_window` | string | Agreed delivery time window |
-| `fleet[].load_type` | string | Type of cargo |
 
 ### Error responses
 

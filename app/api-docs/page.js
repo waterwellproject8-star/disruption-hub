@@ -36,12 +36,12 @@ export default function ApiDocs() {
       </div>
 
       <div style={{marginBottom:40,paddingBottom:40,borderBottom:'1px solid rgba(255,255,255,0.06)'}}>
-        <h2 style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:18,fontWeight:700,color:'#f5a623',marginBottom:12}}>GET /api/v1/status</h2>
-        <p style={{fontSize:14,color:'#e5e7eb',lineHeight:1.8,marginBottom:12}}>Retrieve current fleet status for your account.</p>
+        <h2 style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:18,fontWeight:700,color:'#f5a623',marginBottom:12}}>GET /api/v1/fleet</h2>
+        <p style={{fontSize:14,color:'#e5e7eb',lineHeight:1.8,marginBottom:12}}>Retrieve current fleet status and client metadata. Requires fleet_read permission.</p>
         <div style={{background:'#0f1826',border:'1px solid rgba(255,255,255,0.08)',borderRadius:6,padding:'14px 16px',fontFamily:'monospace',fontSize:12,color:'#8a9099',lineHeight:1.8,marginBottom:12}}>
-          GET /api/v1/status?client_id=your-client-id&asset_id=LK72+ABX
+          GET /api/v1/fleet?client_id=your-client-id&limit=50&offset=0
         </div>
-        <p style={{fontSize:13,color:'#4a5260',lineHeight:1.6}}>Returns: {'{ fleet: [{ ref, route, status, eta, sla_window, cargo_type }] }'}</p>
+        <p style={{fontSize:13,color:'#4a5260',lineHeight:1.6}}>Returns: {'{ shipments: [...], client: {...}, count, has_more }'}</p>
       </div>
 
       <div style={{marginBottom:40,paddingBottom:40,borderBottom:'1px solid rgba(255,255,255,0.06)'}}>
