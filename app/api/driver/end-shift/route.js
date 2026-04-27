@@ -105,7 +105,7 @@ export async function POST(request) {
       jobs_completed: jobs_completed ?? null,
       jobs_total: jobs_total ?? null,
       incidents_count: incidents_count ?? 0,
-      unresolved_count: unresolved_count ?? 0,
+      unresolved_count: unresolvedJobs.length,
       unresolved_jobs: unresolvedJobs.length > 0 ? unresolvedJobs : null,
       fuel_level: fuel_level || null,
       defects_flagged: defects_flagged ?? false,
