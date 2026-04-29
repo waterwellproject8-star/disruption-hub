@@ -81,20 +81,36 @@ untrusted.
 
 ## Delivery behaviour
 
-DisruptionHub makes a **single delivery attempt** per callback event:
+DisruptionHub makes up to **4 delivery attempts** per callback event:
 
-- **Timeout:** 10 seconds. If the partner endpoint does not respond within
-  10 seconds, the delivery is marked as failed.
-- **Retries:** None. A single attempt is made. If it fails (network error,
-  timeout, or non-2xx response), the callback is logged as failed. No
-  automatic retries follow.
+| Attempt | Timing | Trigger |
+|---|---|---|
+| 1 | Immediate (synchronous, in-process) | Event resolution |
+| 2 | +1 minute after attempt 1 fails | Cron |
+| 3 | +5 minutes after attempt 2 fails | Cron |
+| 4 | +30 minutes after attempt 3 fails | Cron |
+
+Total window: ~36 minutes from initial event to final attempt.
+
+- **Timeout:** 10 seconds per attempt. Non-response within 10s = failure.
+- **Failure conditions:** network error, timeout, or non-2xx HTTP response.
+- **Terminal state:** after attempt 4 fails, the callback is marked failed and
+  never retried. Partners experiencing prolonged outages must reconcile via
+  the partner API (`GET /v1/invoice/discrepancies`) rather than wait.
 - **User-Agent:** `DisruptionHub-Webhook/1.0`
+- **Secret rotation:** retries use the `callback_secret` that was current at
+  the time the event was first queued. If a partner rotates their secret
+  between attempts, in-flight retries continue with the original secret.
+  New events use the new secret.
 
 Partners SHOULD respond with HTTP 200 within 10 seconds. Long processing
 should be queued asynchronously after returning 200.
 
-Future enhancement: retry with exponential backoff (planned, not yet
-implemented).
+Idempotency: partners may receive the same callback up to 4 times if their
+endpoint returns success after a previous attempt experienced a network
+failure between sending the response and the connection closing. Use the
+combination of `event_type` + `invoice_id` (or `ref` for `event.resolved`)
+to de-dupe.
 
 ---
 
