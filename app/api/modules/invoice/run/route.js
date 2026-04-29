@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import { runModule, anthropic } from '../../../../../lib/anthropic.js'
+import { enrichEvidenceBatch } from '../../../../../lib/evidenceEnricher.js'
 import crypto from 'crypto'
 
 function getDB() {
@@ -294,6 +295,26 @@ export async function POST(request) {
   const safeOvercharge = Math.max(0, totalOvercharge)
   const totalAgreed = totalCharged - safeOvercharge
 
+  // 8.5 Enrich each genuine + unvalidated discrepancy with operational evidence.
+  // Pulls shipment, driver progress, webhook events, incidents, end-of-shift in parallel.
+  // Attaches to each discrepancy as `operational_evidence` field for Day 3 dispute drafting.
+  let evidenceByRef = {}
+  try {
+    const refsToEnrich = discrepancies
+      .map(d => d.job_ref)
+      .filter(Boolean)
+    if (refsToEnrich.length > 0) {
+      evidenceByRef = await enrichEvidenceBatch(db, client_id, refsToEnrich)
+    }
+  } catch (err) {
+    console.error('[invoice-run] Evidence enrichment failed (continuing without):', err.message)
+  }
+
+  const enrichedDiscrepancies = discrepancies.map(d => ({
+    ...d,
+    operational_evidence: d.job_ref ? (evidenceByRef[d.job_ref] || null) : null
+  }))
+
   // 9. Store invoice with AI run tracking
   const invoiceRow = {
     client_id,
@@ -307,7 +328,7 @@ export async function POST(request) {
     status: 'pending_review',
     source: `hash:${contentHash}`,
     ai_processed_at: new Date().toISOString(),
-    evidence_pack: discrepancies
+    evidence_pack: enrichedDiscrepancies
   }
 
   let inserted
@@ -336,7 +357,7 @@ export async function POST(request) {
       discrepancy_count: genuineDiscrepancies.length,
       unvalidated_count: unvalidatedDiscrepancies.length
     },
-    discrepancies,
+    discrepancies: enrichedDiscrepancies,
     rate_cards_matched: rateCards.length,
     shipments_matched: Object.keys(shipmentRates).length,
     line_items_count: (parsed.line_items || []).length
