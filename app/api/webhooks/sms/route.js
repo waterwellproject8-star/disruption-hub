@@ -262,6 +262,27 @@ export async function POST(request) {
     const db = getDB()
     if (!db) return twimlReply('DH: System error. Open disruptionhub.ai')
 
+    // Log inbound SMS to webhook_log — this is the row /api/health/ops reads
+    // to determine messaging_inbound freshness. Must succeed for health to go green.
+    try {
+      const { error: wlErr } = await db.from('webhook_log').insert({
+        client_id: null,  // resolved below after client lookup — updated if matched
+        system_name: 'twilio_sms_inbound',
+        direction: 'inbound',
+        event_type: 'sms_inbound',
+        severity: 'INFO',
+        financial_impact: 0,
+        payload: { From: from, Body: rawBody, MessageSid: smsSid },
+        sms_fired: false,
+        created_at: new Date().toISOString()
+      })
+      if (wlErr) {
+        console.error('[sms-inbound] webhook_log insert failed:', wlErr.message, { from, body_length: rawBody.length })
+      }
+    } catch (err) {
+      console.error('[sms-inbound] webhook_log insert threw:', err.message)
+    }
+
     // Find client by ops manager phone number
     let { data: clients } = await db
       .from('clients')
@@ -316,7 +337,7 @@ export async function POST(request) {
                 financial_value: 0,
                 status: 'executed'
               })
-            } catch {}
+            } catch (err) { console.error('[sms-inbound] driver_resolved insert failed:', err.message) }
 
             return twimlReply('DH: Got it - logged as complete. Drive safe.')
           }
@@ -542,7 +563,7 @@ export async function POST(request) {
 
           let cConsignee = cad.consignee_name || null
           if (!cConsignee && cad.ref) {
-            try { const { data: sh } = await db.from('shipments').select('route, consignee').eq('ref', cad.ref).maybeSingle(); cConsignee = sh?.consignee || extractConsigneeName(sh?.route) } catch {}
+            try { const { data: sh } = await db.from('shipments').select('route, consignee').eq('ref', cad.ref).maybeSingle(); cConsignee = sh?.consignee || extractConsigneeName(sh?.route) } catch (err) { console.error('[sms-inbound] consignee lookup failed:', err.message) }
           }
           cConsignee = cConsignee || 'consignee'
 
@@ -636,7 +657,7 @@ export async function POST(request) {
             .limit(1)
             .maybeSingle()
           return fallback?.driver_phone || null
-        } catch { return null }
+        } catch (err) { console.error('[sms-inbound] resolveDriverPhone failed:', err.message); return null }
       }
 
       // Write instruction to driver_progress.alert so driver app can poll it
@@ -693,7 +714,7 @@ export async function POST(request) {
 
         let consigneeName = details.consignee_name || null
         if (!consigneeName && details.ref) {
-          try { const { data: sh } = await db.from('shipments').select('route, consignee').eq('ref', details.ref).maybeSingle(); consigneeName = sh?.consignee || extractConsigneeName(sh?.route) } catch {}
+          try { const { data: sh } = await db.from('shipments').select('route, consignee').eq('ref', details.ref).maybeSingle(); consigneeName = sh?.consignee || extractConsigneeName(sh?.route) } catch (err) { console.error('[sms-inbound] consignee lookup failed:', err.message) }
         }
         consigneeName = consigneeName || vocab.delivery_recipient_short
 
