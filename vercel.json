@@ -9,7 +9,9 @@
     "app/api/modules/invoice/run/route.js":          { "maxDuration": 60 },
     "app/api/modules/invoice/dispute/send/route.js": { "maxDuration": 30 },
     "app/api/cron/invoice-audit/route.js":           { "maxDuration": 60 },
-    "app/api/v1/invoice/audit/route.js":             { "maxDuration": 60 }
+    "app/api/v1/invoice/audit/route.js":             { "maxDuration": 60 },
+    "app/api/v1/invoice/discrepancies/route.js":     { "maxDuration": 30 },
+    "app/api/v1/invoice/dispute/send/route.js":      { "maxDuration": 30 }
   },
   "crons": [
     {

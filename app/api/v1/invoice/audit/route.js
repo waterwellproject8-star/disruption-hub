@@ -83,7 +83,7 @@ export async function POST(request) {
     // 5. Run pipeline
     let auditResult
     try {
-      auditResult = await auditInvoice({ db, clientId: client_id, fileContent: file_content, fileType: file_type, filename })
+      auditResult = await auditInvoice({ db, clientId: client_id, fileContent: file_content, fileType: file_type, filename, apiKeyId: auth.keyRow.id })
     } catch (pipelineErr) {
       console.error('[v1/invoice/audit]', requestId, 'pipeline failed:', pipelineErr.message)
       const msg = pipelineErr.message || 'pipeline_failed'
