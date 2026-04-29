@@ -315,6 +315,64 @@ export async function POST(request) {
     operational_evidence: d.job_ref ? (evidenceByRef[d.job_ref] || null) : null
   }))
 
+  // 8.6 Compose dispute email draft (Sonnet) when there are genuine overcharges.
+  let disputeDraft = null
+  let disputeContactEmail = null
+  let disputeContactName = null
+
+  if (safeOvercharge > 0 && genuineDiscrepancies.length > 0) {
+    try {
+      const { data: rateContacts } = await db
+        .from('rate_cards')
+        .select('dispute_contact_email, dispute_contact_name')
+        .eq('client_id', client_id)
+        .eq('carrier', carrier)
+        .not('dispute_contact_email', 'is', null)
+        .limit(1)
+      if (rateContacts && rateContacts[0]) {
+        disputeContactEmail = rateContacts[0].dispute_contact_email
+        disputeContactName = rateContacts[0].dispute_contact_name
+      }
+    } catch (err) {
+      console.error('[invoice-run] Dispute contact lookup failed (continuing without):', err.message)
+    }
+
+    const trimmedForComposer = genuineDiscrepancies.map(d => ({
+      job_ref: d.job_ref,
+      charged: d.charged,
+      expected: d.expected,
+      delta: d.delta,
+      issue_type: d.issue_type,
+      evidence: d.evidence,
+      operational_evidence: d.operational_evidence ? {
+        summary: d.operational_evidence.summary,
+        shipment: d.operational_evidence.shipment ? {
+          route: d.operational_evidence.shipment.route,
+          sla_window: d.operational_evidence.shipment.sla_window,
+          cargo_type: d.operational_evidence.shipment.cargo_type,
+          agreed_rate: d.operational_evidence.shipment.agreed_rate
+        } : null
+      } : null
+    }))
+
+    const composerInput = {
+      carrier,
+      invoice_ref: parsed.invoice_ref,
+      invoice_date: parsed.invoice_date,
+      total_overcharge: safeOvercharge,
+      discrepancies: trimmedForComposer,
+      client_name: clientContext ? (clientContext.split('\n')[0].replace(/^Client:\s*/, '').replace(/\s*\(.*$/, '')) : 'Operations',
+      carrier_contact_name: disputeContactName,
+      response_deadline_days: 14
+    }
+
+    try {
+      disputeDraft = await runModule('dispute_email', composerInput, '', { model: 'claude-sonnet-4-6', maxTokens: 2000 })
+    } catch (err) {
+      console.error('[invoice-run] Dispute draft composition failed (non-fatal):', err.message)
+    }
+  }
+
   // 9. Store invoice with AI run tracking
   const invoiceRow = {
     client_id,
@@ -328,7 +386,14 @@ export async function POST(request) {
     status: 'pending_review',
     source: `hash:${contentHash}`,
     ai_processed_at: new Date().toISOString(),
-    evidence_pack: enrichedDiscrepancies
+    evidence_pack: enrichedDiscrepancies,
+    dispute_email_body: disputeDraft ? JSON.stringify({
+      subject: disputeDraft.subject,
+      body_text: disputeDraft.body_text,
+      body_html: disputeDraft.body_html,
+      internal_summary: disputeDraft.internal_summary
+    }) : null,
+    dispute_email_to: disputeContactEmail
   }
 
   let inserted
@@ -360,6 +425,10 @@ export async function POST(request) {
     discrepancies: enrichedDiscrepancies,
     rate_cards_matched: rateCards.length,
     shipments_matched: Object.keys(shipmentRates).length,
-    line_items_count: (parsed.line_items || []).length
+    line_items_count: (parsed.line_items || []).length,
+    dispute_draft_available: disputeDraft !== null,
+    dispute_email_to: disputeContactEmail,
+    dispute_subject: disputeDraft ? disputeDraft.subject : null,
+    dispute_internal_summary: disputeDraft ? disputeDraft.internal_summary : null
   })
 }
