@@ -26,7 +26,7 @@
     },
     {
       "path": "/api/cron/callback-retry",
-      "schedule": "*/1 * * * *"
+      "schedule": "5 6 * * *"
     }
   ]
 }
