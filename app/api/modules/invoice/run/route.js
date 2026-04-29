@@ -279,10 +279,20 @@ export async function POST(request) {
   }
 
   // 8. Compute totals defensively
-  const discrepancies = Array.isArray(aiResult.discrepancies) ? aiResult.discrepancies : []
+  // Filter out any AI-returned items with non-positive delta — these aren't overcharges.
+  // Belt-and-braces: prompt instructs the AI to never return these, but if the AI slips
+  // we don't want negative totals propagating to the dashboard.
+  const allDiscrepancies = Array.isArray(aiResult.discrepancies) ? aiResult.discrepancies : []
+  const genuineDiscrepancies = allDiscrepancies.filter(d => Number(d.delta) > 0)
+  const unvalidatedDiscrepancies = allDiscrepancies.filter(d =>
+    d.issue_type === 'unvalidated' && Number(d.delta) === 0
+  )
+  const discrepancies = [...genuineDiscrepancies, ...unvalidatedDiscrepancies]
+
   const totalCharged = (parsed.line_items || []).reduce((s, li) => s + (Number(li.charged) || 0), 0)
-  const totalOvercharge = discrepancies.reduce((s, d) => s + (Number(d.delta) || 0), 0)
-  const totalAgreed = totalCharged - totalOvercharge
+  const totalOvercharge = genuineDiscrepancies.reduce((s, d) => s + Number(d.delta), 0)
+  const safeOvercharge = Math.max(0, totalOvercharge)
+  const totalAgreed = totalCharged - safeOvercharge
 
   // 9. Store invoice with AI run tracking
   const invoiceRow = {
@@ -293,7 +303,7 @@ export async function POST(request) {
     line_items: parsed.line_items,
     total_charged: totalCharged,
     total_agreed: totalAgreed,
-    total_overcharge: totalOvercharge,
+    total_overcharge: safeOvercharge,
     status: 'pending_review',
     source: `hash:${contentHash}`,
     ai_processed_at: new Date().toISOString(),
@@ -321,9 +331,10 @@ export async function POST(request) {
     carrier,
     summary: {
       total_charged: totalCharged,
-      total_overcharge: totalOvercharge,
+      total_overcharge: safeOvercharge,
       annual_projection: aiResult.annual_projection || null,
-      discrepancy_count: discrepancies.length
+      discrepancy_count: genuineDiscrepancies.length,
+      unvalidated_count: unvalidatedDiscrepancies.length
     },
     discrepancies,
     rate_cards_matched: rateCards.length,
