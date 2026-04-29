@@ -5,7 +5,9 @@
     "app/api/scenarios/route.js":         { "maxDuration": 30 },
     "app/api/driver/alert/route.js":      { "maxDuration": 30 },
     "app/api/scheduled/run/route.js":     { "maxDuration": 60 },
-    "app/api/actions/escalate/route.js":  { "maxDuration": 30 }
+    "app/api/actions/escalate/route.js":  { "maxDuration": 30 },
+    "app/api/modules/invoice/run/route.js":          { "maxDuration": 60 },
+    "app/api/modules/invoice/dispute/send/route.js": { "maxDuration": 30 }
   },
   "crons": [
     {

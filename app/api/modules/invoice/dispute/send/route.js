@@ -58,6 +58,7 @@ async function sendViaResend({ to, subject, bodyText, bodyHtml }) {
 
 // ── POST handler ────────────────────────────────────────────────────────────
 export async function POST(request) {
+  try {
   if (!checkInternalKey(request)) {
     return Response.json({ error: 'unauthorised' }, { status: 401 })
   }
@@ -191,4 +192,8 @@ export async function POST(request) {
     message_id: sendResult.message_id,
     from: sendResult.from
   })
+  } catch (err) {
+    console.error('[dispute-send] Unhandled error:', err)
+    return Response.json({ error: 'internal_error', message: err.message }, { status: 500 })
+  }
 }
