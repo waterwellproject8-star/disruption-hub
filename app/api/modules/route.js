@@ -465,8 +465,9 @@ export async function POST(request) {
             const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
             const { data: realInvoices, error: invErr } = await db
               .from('invoices')
-              .select('id, invoice_ref, carrier, total_charged, total_agreed, total_overcharge, status, line_items, created_at')
+              .select('id, invoice_ref, carrier, total_charged, total_agreed, total_overcharge, status, evidence_pack, created_at')
               .eq('client_id', client_id)
+              .eq('status', 'pending_review')
               .gte('created_at', thirtyDaysAgo)
               .gt('total_overcharge', 0)
               .order('created_at', { ascending: false })
@@ -476,20 +477,35 @@ export async function POST(request) {
               const totalOvercharge = realInvoices.reduce((s, inv) => s + (Number(inv.total_overcharge) || 0), 0)
               const annualProjection = Math.round(totalOvercharge * 12.17)
 
-              // Flatten line_items into discrepancies matching the DEMO_RESULTS.invoice shape
-              const discrepancies = realInvoices.flatMap(inv =>
-                (Array.isArray(inv.line_items) ? inv.line_items : [])
-                  .filter(li => (Number(li.delta) || 0) > 0)
-                  .map(li => ({
+              // Flatten evidence_pack into discrepancies matching the DEMO_RESULTS.invoice shape
+              const discrepancies = realInvoices.flatMap(inv => {
+                const pack = Array.isArray(inv.evidence_pack) ? inv.evidence_pack : []
+                if (!pack.length) {
+                  // Fallback for legacy invoices without evidence_pack — show headline numbers
+                  return [{
+                    invoice_id: inv.id,
                     invoice_ref: inv.invoice_ref,
                     carrier: inv.carrier,
-                    issue_type: li.issue_type || 'overcharge',
-                    charged: Number(li.charged) || 0,
-                    expected: Number(li.agreed_rate || li.expected) || 0,
-                    delta: Number(li.delta) || 0,
-                    evidence: li.evidence || `Charged £${li.charged}, expected £${li.agreed_rate || li.expected}`
-                  }))
-              )
+                    charged: Number(inv.total_charged) || 0,
+                    expected: Number(inv.total_agreed) || 0,
+                    delta: Number(inv.total_overcharge) || 0,
+                    issue_type: 'overcharge',
+                    evidence: `Overcharge of £${inv.total_overcharge} identified during audit.`,
+                    status: inv.status
+                  }]
+                }
+                return pack.map(d => ({
+                  invoice_id: inv.id,
+                  invoice_ref: inv.invoice_ref,
+                  carrier: inv.carrier,
+                  charged: Number(d.charged) || 0,
+                  expected: Number(d.expected) || 0,
+                  delta: Number(d.delta) || 0,
+                  issue_type: d.issue_type || 'overcharge',
+                  evidence: d.evidence || '',
+                  status: inv.status
+                }))
+              })
 
               result = {
                 total_overcharge: Number(totalOvercharge.toFixed(2)),
