@@ -1362,7 +1362,7 @@ export default function DashboardPage() {
       const res = await fetch('/api/modules', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-dh-key': process.env.NEXT_PUBLIC_DH_KEY },
-        body: JSON.stringify({ module: moduleId, data: { trigger: 'manual', timestamp: new Date().toISOString() } })
+        body: JSON.stringify({ module: moduleId, client_id: ACTIVE_CLIENT_ID, data: { trigger: 'manual', timestamp: new Date().toISOString() } })
       })
       const data = await res.json()
       setModuleResult(data)
