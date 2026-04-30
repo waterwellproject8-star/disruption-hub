@@ -1075,6 +1075,7 @@ export default function DashboardPage() {
   const [invoices, setInvoices] = useState([])
   const [csvRows, setCsvRows] = useState(null)
   const [csvDragActive, setCsvDragActive] = useState(false)
+  const [csvSubmitting, setCsvSubmitting] = useState(false)
   const dragCounter = useRef(0)
   const [manualInv, setManualInv] = useState({ carrier:'', invoice_ref:'', invoice_date:'', line_items:[{job_ref:'',description:'',charged:'',agreed_rate:''}] })
   const [dvsaRecords, setDvsaRecords] = useState([])
@@ -1544,6 +1545,48 @@ export default function DashboardPage() {
   }
 
   async function fireAction(actionId, actionLabel, actionType, mailto) {
+    // Invoice dispute — call real dispute/send endpoint instead of mailto
+    if (actionId.startsWith('inv-dispute-')) {
+      setActionStates(prev => ({ ...prev, [actionId]: 'firing' }))
+      try {
+        const carrierFromLabel = actionLabel.match(/Dispute (.+?) — recover/)?.[1]
+        const pending = invoices.filter(inv =>
+          inv.carrier === carrierFromLabel && inv.status === 'pending_review'
+        )
+        if (pending.length === 0) {
+          showDashToast('No pending invoices found for this carrier', 'error')
+          setActionStates(prev => ({ ...prev, [actionId]: 'done' }))
+          return
+        }
+        let sent = 0, failed = 0
+        for (const inv of pending) {
+          try {
+            const res = await fetch('/api/modules/invoice/dispute/send', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'x-dh-key': process.env.NEXT_PUBLIC_DH_KEY },
+              body: JSON.stringify({ invoice_id: inv.id })
+            })
+            if (res.ok) sent++; else failed++
+          } catch (err) {
+            console.error('[fireAction] invoice dispute send failed:', inv.id, err.message)
+            failed++
+          }
+        }
+        showDashToast(
+          `${sent} dispute${sent === 1 ? '' : 's'} sent${failed > 0 ? ` — ${failed} failed` : ''}`,
+          failed === 0 ? 'success' : 'warning'
+        )
+        loadInvoices()
+        setActionStates(prev => ({ ...prev, [actionId]: 'done' }))
+        return
+      } catch (err) {
+        console.error('[fireAction] inv-dispute batch failed:', err.message)
+        setActionStates(prev => ({ ...prev, [actionId]: 'done' }))
+        showDashToast('Dispute send failed — check logs', 'error')
+        return
+      }
+    }
+
     setActionStates(prev => ({ ...prev, [actionId]: 'firing' }))
     if (mailto) setEmailPickerMailto(mailto)
     await new Promise(r => setTimeout(r, 1200))
@@ -2125,10 +2168,13 @@ export default function DashboardPage() {
             <button style={TAB_STYLE(activeTab==='approvals')} onClick={() => { setActiveTab('approvals'); loadApprovals(); loadFleet(); loadActiveDrivers(); loadWebhookLog() }}>
               COMMAND {pendingApprovals.filter(a=>a.status==='pending').length > 0 ? `(${pendingApprovals.filter(a=>a.status==='pending').length})` : ''}
             </button>
-            <button style={TAB_STYLE(activeTab==='agent')} onClick={() => setActiveTab('agent')}>AGENT</button>
             <button style={TAB_STYLE(activeTab==='modules')} onClick={() => setActiveTab('modules')}>INTELLIGENCE</button>
+            <button style={TAB_STYLE(activeTab==='invoices')} onClick={() => { setActiveTab('invoices'); loadInvoices() }}>INVOICES</button>
+            {/* HIDDEN FOR SWIFTFLEET CALL — restore after May 7 partner demo:
+            <button style={TAB_STYLE(activeTab==='agent')} onClick={() => setActiveTab('agent')}>AGENT</button>
             <button style={TAB_STYLE(activeTab==='scenarios')} onClick={() => setActiveTab('scenarios')}>SCENARIOS</button>
             <button style={TAB_STYLE(activeTab==='integrations')} onClick={() => { setActiveTab('integrations'); loadWebhookLog(); loadActiveDrivers() }}>SETUP</button>
+            */}
             <div style={{ marginLeft:'auto', display:'flex', alignItems:'center', gap:8 }}>
               <div style={{ width:7, height:7, borderRadius:'50%', background: loading ? '#f59e0b' : '#f5a623', animation: loading ? 'pulse 1s infinite' : 'none' }} />
               <span style={{ fontFamily:'monospace', fontSize:11, color:'#4a5260' }}>{loading ? 'ANALYSING...' : 'AGENT READY'}</span>
@@ -2490,15 +2536,40 @@ export default function DashboardPage() {
                       {csvRows.length > 20 && <div style={{ padding:6, fontSize:11, color:'#4a5260', textAlign:'center' }}>+ {csvRows.length - 20} more rows</div>}
                     </div>
                     <div style={{ display:'flex', gap:8, marginTop:10 }}>
-                      <button onClick={async () => {
+                      <button disabled={csvSubmitting} onClick={async () => {
                         const grouped = groupCsvToInvoices(csvRows)
-                        try {
-                          const res = await fetch('/api/invoices', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ client_id:ACTIVE_CLIENT_ID, invoices:grouped }) })
-                          const data = await res.json()
-                          if (data.success) { showDashToast(`${data.inserted} invoices uploaded`); setCsvRows(null); loadInvoices() }
-                          else showDashToast(data.error || 'Upload failed', 'error')
-                        } catch { showDashToast('Upload failed', 'error') }
-                      }} style={{ padding:'8px 16px', background:'#f5a623', border:'none', borderRadius:7, color:'#000', fontWeight:600, fontSize:13, cursor:'pointer' }}>Submit {groupCsvToInvoices(csvRows).length} invoices</button>
+                        setCsvSubmitting(true)
+                        let auditedCount = 0
+                        let totalOvercharge = 0
+                        for (const invoiceObj of grouped) {
+                          const csvHeader = 'invoice_ref,carrier,job_ref,line_description,charged,agreed_rate'
+                          const csvLines = invoiceObj.line_items.map(li =>
+                            [invoiceObj.invoice_ref, invoiceObj.carrier, li.job_ref || '', li.description || '', li.charged || 0, li.agreed_rate || 0].join(',')
+                          )
+                          const fileContent = [csvHeader, ...csvLines].join('\n')
+                          try {
+                            const res = await fetch('/api/modules/invoice/run', {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json', 'x-dh-key': process.env.NEXT_PUBLIC_DH_KEY },
+                              body: JSON.stringify({ client_id: ACTIVE_CLIENT_ID, filename: `csv-upload-${invoiceObj.invoice_ref}.csv`, file_type: 'csv', file_content: fileContent })
+                            })
+                            if (res.ok) {
+                              const data = await res.json()
+                              auditedCount++
+                              totalOvercharge += Number(data?.summary?.total_overcharge) || 0
+                            }
+                          } catch (err) {
+                            console.error('[invoices-tab] audit failed for', invoiceObj.invoice_ref, err.message)
+                          }
+                        }
+                        setCsvSubmitting(false)
+                        showDashToast(
+                          `${auditedCount}/${grouped.length} invoices audited` + (totalOvercharge > 0 ? ` — £${totalOvercharge.toFixed(2)} flagged` : ''),
+                          totalOvercharge > 0 ? 'success' : 'ok'
+                        )
+                        setCsvRows(null)
+                        loadInvoices()
+                      }} style={{ padding:'8px 16px', background: csvSubmitting ? 'rgba(245,166,35,0.4)' : '#f5a623', border:'none', borderRadius:7, color:'#000', fontWeight:600, fontSize:13, cursor: csvSubmitting ? 'default' : 'pointer' }}>{csvSubmitting ? 'AUDITING...' : `Submit ${groupCsvToInvoices(csvRows).length} invoices`}</button>
                       <button onClick={() => setCsvRows(null)} style={{ padding:'8px 16px', background:'transparent', border:'1px solid rgba(255,255,255,0.1)', borderRadius:7, color:'#4a5260', fontSize:13, cursor:'pointer' }}>Clear</button>
                     </div>
                   </div>
@@ -2525,16 +2596,35 @@ export default function DashboardPage() {
                 ))}
                 <div style={{ display:'flex', gap:8, marginTop:8 }}>
                   <button onClick={()=>setManualInv(p=>({...p,line_items:[...p.line_items,{job_ref:'',description:'',charged:'',agreed_rate:''}]}))} style={{ padding:'6px 12px', background:'transparent', border:'1px solid rgba(245,166,35,0.2)', borderRadius:6, color:'#f5a623', fontSize:13, cursor:'pointer' }}>+ Add line</button>
-                  <button onClick={async () => {
+                  <button disabled={csvSubmitting} onClick={async () => {
                     if (!manualInv.carrier || !manualInv.invoice_ref) { showDashToast('Carrier and invoice ref required', 'error'); return }
                     const items = manualInv.line_items.map(li => ({ ...li, charged: Number(li.charged) || 0, agreed_rate: Number(li.agreed_rate) || 0, delta: Math.max(0, (Number(li.charged)||0) - (Number(li.agreed_rate)||0)) }))
+                    const csvHeader = 'invoice_ref,carrier,job_ref,line_description,charged,agreed_rate'
+                    const csvLines = items.map(li => [manualInv.invoice_ref, manualInv.carrier, li.job_ref || '', li.description || '', li.charged || 0, li.agreed_rate || 0].join(','))
+                    const fileContent = [csvHeader, ...csvLines].join('\n')
+                    setCsvSubmitting(true)
                     try {
-                      const res = await fetch('/api/invoices', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ client_id:ACTIVE_CLIENT_ID, carrier:manualInv.carrier, invoice_ref:manualInv.invoice_ref, invoice_date:manualInv.invoice_date||null, line_items:items, source:'manual' }) })
+                      const res = await fetch('/api/modules/invoice/run', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'x-dh-key': process.env.NEXT_PUBLIC_DH_KEY },
+                        body: JSON.stringify({ client_id: ACTIVE_CLIENT_ID, filename: `manual-${manualInv.invoice_ref}.csv`, file_type: 'csv', file_content: fileContent })
+                      })
                       const data = await res.json()
-                      if (data.success) { showDashToast('Invoice added'); setManualInv({ carrier:'', invoice_ref:'', invoice_date:'', line_items:[{job_ref:'',description:'',charged:'',agreed_rate:''}] }); loadInvoices() }
-                      else showDashToast(data.error || 'Failed', 'error')
-                    } catch { showDashToast('Failed', 'error') }
-                  }} style={{ padding:'6px 16px', background:'#f5a623', border:'none', borderRadius:6, color:'#000', fontWeight:600, fontSize:13, cursor:'pointer' }}>Submit invoice</button>
+                      if (res.ok && data.success) {
+                        const oc = Number(data?.summary?.total_overcharge) || 0
+                        showDashToast(`Invoice audited` + (oc > 0 ? ` — £${oc.toFixed(2)} flagged` : ''), oc > 0 ? 'success' : 'ok')
+                        setManualInv({ carrier:'', invoice_ref:'', invoice_date:'', line_items:[{job_ref:'',description:'',charged:'',agreed_rate:''}] })
+                        loadInvoices()
+                      } else {
+                        showDashToast(data.error || data.message || 'Audit failed', 'error')
+                      }
+                    } catch (err) {
+                      console.error('[invoices-tab] manual audit failed:', err.message)
+                      showDashToast('Audit failed', 'error')
+                    } finally {
+                      setCsvSubmitting(false)
+                    }
+                  }} style={{ padding:'6px 16px', background: csvSubmitting ? 'rgba(245,166,35,0.4)' : '#f5a623', border:'none', borderRadius:6, color:'#000', fontWeight:600, fontSize:13, cursor: csvSubmitting ? 'default' : 'pointer' }}>{csvSubmitting ? 'AUDITING...' : 'Submit invoice'}</button>
                 </div>
                 {manualInv.line_items.some(li => Number(li.charged) > Number(li.agreed_rate)) && (
                   <div style={{ marginTop:8, fontSize:13, color:'#ef4444' }}>

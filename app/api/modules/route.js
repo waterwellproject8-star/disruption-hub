@@ -457,6 +457,54 @@ export async function POST(request) {
       }
       result.data_source = 'demo'
 
+      // Invoice — hybrid mode: prefer real audited invoices when present
+      if (module === 'invoice' && client_id) {
+        try {
+          const db = getDB()
+          if (db) {
+            const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
+            const { data: realInvoices, error: invErr } = await db
+              .from('invoices')
+              .select('id, invoice_ref, carrier, total_charged, total_agreed, total_overcharge, status, line_items, created_at')
+              .eq('client_id', client_id)
+              .gte('created_at', thirtyDaysAgo)
+              .gt('total_overcharge', 0)
+              .order('created_at', { ascending: false })
+              .limit(20)
+
+            if (!invErr && realInvoices && realInvoices.length > 0) {
+              const totalOvercharge = realInvoices.reduce((s, inv) => s + (Number(inv.total_overcharge) || 0), 0)
+              const annualProjection = Math.round(totalOvercharge * 12.17)
+
+              // Flatten line_items into discrepancies matching the DEMO_RESULTS.invoice shape
+              const discrepancies = realInvoices.flatMap(inv =>
+                (Array.isArray(inv.line_items) ? inv.line_items : [])
+                  .filter(li => (Number(li.delta) || 0) > 0)
+                  .map(li => ({
+                    invoice_ref: inv.invoice_ref,
+                    carrier: inv.carrier,
+                    issue_type: li.issue_type || 'overcharge',
+                    charged: Number(li.charged) || 0,
+                    expected: Number(li.agreed_rate || li.expected) || 0,
+                    delta: Number(li.delta) || 0,
+                    evidence: li.evidence || `Charged £${li.charged}, expected £${li.agreed_rate || li.expected}`
+                  }))
+              )
+
+              result = {
+                total_overcharge: Number(totalOvercharge.toFixed(2)),
+                annual_projection: annualProjection,
+                discrepancies,
+                actions: []
+              }
+              result.data_source = 'live'
+            }
+          }
+        } catch (err) {
+          console.error('[modules/invoice] hybrid load failed, falling back to demo:', err.message)
+        }
+      }
+
       // DVSA enrichment — if real dvsa_records exist, overlay them onto vehicle_health results
       if (module === 'vehicle_health' && client_id) {
         try {
@@ -507,7 +555,7 @@ export async function POST(request) {
       module_run_id: moduleRun?.id,
       actions_queued: queuedActions.length,
       actions: queuedActions,
-      demo_mode: !hasRealClientData
+      demo_mode: result.data_source === 'live' ? false : !hasRealClientData
     })
 
   } catch (error) {
