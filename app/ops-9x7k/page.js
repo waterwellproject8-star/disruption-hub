@@ -1076,6 +1076,7 @@ export default function DashboardPage() {
   const [csvRows, setCsvRows] = useState(null)
   const [csvDragActive, setCsvDragActive] = useState(false)
   const [csvSubmitting, setCsvSubmitting] = useState(false)
+  const [firingInvoiceId, setFiringInvoiceId] = useState(null)
   const dragCounter = useRef(0)
   const [manualInv, setManualInv] = useState({ carrier:'', invoice_ref:'', invoice_date:'', line_items:[{job_ref:'',description:'',charged:'',agreed_rate:''}] })
   const [dvsaRecords, setDvsaRecords] = useState([])
@@ -2671,16 +2672,34 @@ export default function DashboardPage() {
                         </div>
                         <div style={{ display:'flex', gap:6 }}>
                           {inv.status === 'pending_review' && hasOvercharge && (
-                            <button onClick={() => {
-                              const items = inv.line_items || []
-                              const subject = `Invoice Dispute — ${inv.carrier} — £${(inv.total_overcharge||0).toLocaleString()} overcharge identified`
-                              const body = [`Dear ${inv.carrier} Accounts Team,`,'',`We are writing to formally dispute invoice ${inv.invoice_ref}${inv.invoice_date ? ` dated ${inv.invoice_date}` : ''} where charges exceed our contracted rates:`,'',
-                                ...items.filter(li=>(Number(li.charged)||0)>(Number(li.agreed_rate)||0)).flatMap(li=>[`Job: ${li.job_ref||'N/A'}`,`Description: ${li.description||'N/A'}`,`Charged: £${li.charged}`,`Agreed: £${li.agreed_rate}`,`Overcharge: £${li.delta || ((Number(li.charged)||0)-(Number(li.agreed_rate)||0)).toFixed(2)}`,''])
-                                ,`Total disputed: £${(inv.total_overcharge||0).toLocaleString()}`,'','We request a credit note for the full disputed amount within 14 days.','','Kind regards,',`${ACTIVE_CLIENT_NAME} Operations`,'via DisruptionHub'].join('\n')
-                              setEmailPickerMailto(`mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`)
-                              setEmailPickerInvoiceId(inv.id)
-                              setEmailPickerSent(false)
-                            }} style={{ padding:'4px 10px', background:'rgba(239,68,68,0.08)', border:'1px solid rgba(239,68,68,0.25)', borderRadius:5, color:'#ef4444', fontSize:13, fontWeight:600, cursor:'pointer' }}>✉ Dispute</button>
+                            <button
+                              disabled={firingInvoiceId === inv.id}
+                              onClick={async () => {
+                                if (firingInvoiceId === inv.id) return
+                                setFiringInvoiceId(inv.id)
+                                try {
+                                  const res = await fetch('/api/modules/invoice/dispute/send', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json', 'x-dh-key': process.env.NEXT_PUBLIC_DH_KEY },
+                                    body: JSON.stringify({ invoice_id: inv.id })
+                                  })
+                                  const data = await res.json().catch(() => ({}))
+                                  if (res.ok) {
+                                    showDashToast(`Dispute sent — ${inv.carrier} £${inv.total_overcharge}`, 'success')
+                                    loadInvoices()
+                                  } else {
+                                    console.error('[per-invoice dispute] send failed', data)
+                                    showDashToast(data?.error || 'Dispute send failed', 'error')
+                                  }
+                                } catch (err) {
+                                  console.error('[per-invoice dispute] exception', err)
+                                  showDashToast('Dispute send failed — network error', 'error')
+                                } finally {
+                                  setFiringInvoiceId(null)
+                                }
+                              }}
+                              style={{ padding:'4px 10px', background:'rgba(239,68,68,0.08)', border:'1px solid rgba(239,68,68,0.25)', borderRadius:5, color:'#ef4444', fontSize:13, fontWeight:600, cursor:'pointer', opacity: firingInvoiceId === inv.id ? 0.5 : 1 }}
+                            >{firingInvoiceId === inv.id ? '...' : '✉ Dispute'}</button>
                           )}
                           {inv.status === 'pending_review' && !hasOvercharge && (
                             <button onClick={() => { fetch('/api/invoices', { method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ id:inv.id, status:'approved' }) }).then(()=>{showDashToast('Invoice approved');loadInvoices()}).catch(()=>{}) }}
