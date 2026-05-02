@@ -224,6 +224,7 @@ export async function POST(request) {
       heading_direction,
       heading_degrees,
       passenger_count,
+      area_label_override,
     } = body
     if (client_id) client_id = client_id.toLowerCase().trim()
     if (vehicle_reg) vehicle_reg = vehicle_reg.toUpperCase().trim()
@@ -250,7 +251,10 @@ export async function POST(request) {
     }
 
     const geocodedArea = await reverseGeocodeUK(latitude, longitude)
-    const areaName = geocodedArea || location_description || 'Location not confirmed'
+    // Allow simulated/internal callers to override the geocoded area label.
+    // Real driver app never sends this — falls through to postcodes ward.
+    const areaLabelOverride = (area_label_override || '').toString().trim()
+    const areaName = areaLabelOverride || geocodedArea || location_description || 'Location not confirmed'
 
     const opsLocationStr = (() => {
       const compass = headingToCompass(heading_degrees)
