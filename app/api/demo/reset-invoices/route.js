@@ -42,14 +42,15 @@ export async function POST(request) {
   }
 
   try {
+    // NOTE: do NOT null dispute_email_to or dispute_email_body — those
+    // are audit-time fields composed by the pipeline. Reset only clears
+    // send-time markers (dispute_email_id, dispute_email_sent_at).
     const { data, error } = await db
       .from('invoices')
       .update({
         status: 'pending_review',
         dispute_email_id: null,
         dispute_email_sent_at: null,
-        dispute_email_body: null,
-        dispute_email_to: null,
         recovered_amount: 0,
         recovered_at: null
       })
