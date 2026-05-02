@@ -1088,6 +1088,7 @@ export default function DashboardPage() {
   const [approvingId, setApprovingId] = useState(null)
   const [expandedApprovals, setExpandedApprovals] = useState(new Set())
   const [doneGroupExpanded, setDoneGroupExpanded] = useState(false)
+  const [recoveredThisMonth, setRecoveredThisMonth] = useState(null)
   const [resolvedInvoicesExpanded, setResolvedInvoicesExpanded] = useState(false)
   const [expandedInvoices, setExpandedInvoices] = useState(new Set())
   const [incidentSeverityFilter, setIncidentSeverityFilter] = useState('ALL')
@@ -1162,6 +1163,7 @@ export default function DashboardPage() {
     finally { setCancellingId(null) }
   }
   const responseRef = useRef(null)
+  const formatGBP = (n) => n == null ? '—' : `£${n.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 
   useEffect(() => {
     if (responseRef.current) responseRef.current.scrollTop = responseRef.current.scrollHeight
@@ -1175,6 +1177,28 @@ export default function DashboardPage() {
     const i = setInterval(() => { loadApprovals(); loadActiveDrivers(); loadFleet() }, 30000)
     return () => clearInterval(i)
   }, [unlocked])
+
+  useEffect(() => {
+    let active = true
+    async function fetchRecovered() {
+      try {
+        const res = await fetch(`/api/dashboard/stats?client_id=${ACTIVE_CLIENT_ID}`, {
+          headers: { 'x-dh-key': process.env.NEXT_PUBLIC_DH_KEY }
+        })
+        if (!res.ok) {
+          console.error('[recovered card] fetch failed', res.status)
+          return
+        }
+        const json = await res.json()
+        if (active && json.ok) setRecoveredThisMonth(json.recovered_this_month)
+      } catch (err) {
+        console.error('[recovered card] fetch error', err)
+      }
+    }
+    fetchRecovered()
+    const rid = setInterval(fetchRecovered, 60_000)
+    return () => { active = false; clearInterval(rid) }
+  }, [])
 
   useEffect(() => {
     fetch(`/api/shipments?client_id=${ACTIVE_CLIENT_ID}`)
@@ -3013,6 +3037,11 @@ export default function DashboardPage() {
                     <div className="dh-value-label">This month</div>
                     <div className="dh-value-n">{'£'}{whLog.reduce((sum,l)=>sum+(l.financial_impact||0),0).toLocaleString()}</div>
                     <div className="dh-value-sub">{whLog.length} incidents handled</div>
+                  </div>
+                  <div className="dh-value-card" style={{marginBottom:8}}>
+                    <div className="dh-value-label">Recovered this month</div>
+                    <div className="dh-value-n" style={{color:'#f5a623'}}>{formatGBP(recoveredThisMonth?.amount)}</div>
+                    <div className="dh-value-sub">From {recoveredThisMonth?.count ?? 0} resolved disputes</div>
                   </div>
                   <div className="dh-value-card">
                     <div className="dh-value-label">Breakdown</div>
