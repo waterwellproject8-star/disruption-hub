@@ -52,11 +52,11 @@ export async function POST(request) {
     vehicle_reg: vehicleReg,
     ref,
     issue_type: 'breakdown',
-    issue_description: `BREAKDOWN EMERGENCY. ${vehicleReg}, ${driverName}. Location: M62 J26 Eastbound. Vehicle broken down — engine warning light, loss of power. Job: Leeds to Bradford. Cargo: mixed retail. IMPORTANT: Tell the driver to stay with their vehicle — ops have been notified and are arranging recovery. Driver will receive confirmation shortly. Then assess SLA risk.`,
+    issue_description: `BREAKDOWN EMERGENCY. ${vehicleReg}, ${driverName}. Location: M62 Westbound at J26 Chain Bar interchange. Vehicle broken down — engine warning light, loss of power. Job: Leeds to Bradford. Cargo: mixed retail. IMPORTANT: Tell the driver to stay with their vehicle — ops have been notified and are arranging recovery. Driver will receive confirmation shortly. Then assess SLA risk.`,
     human_description: 'Breakdown',
-    location_description: 'M62 J26 Eastbound, near Chain Bar interchange',
-    latitude: 53.7350,
-    longitude: -1.7100,
+    location_description: 'M62 Westbound at J26 Chain Bar interchange',
+    latitude: 53.7195,
+    longitude: -1.6705,
     at_risk_refs: [ref]
   }
 

@@ -118,9 +118,18 @@ function extractFirstAction(text) {
 // Never dump raw AI action text — ops needs to scan in 2 seconds
 function buildOpsSMS({ severity, vehicle_reg, human_description, financialImpact, detectedType, force_alert, force_financial_zero, location_description, vocab, sector, passenger_count }) {
   const sev = force_alert && severity === 'MEDIUM' ? 'HIGH' : severity
-  const loc = location_description || 'location not confirmed'
+
+  // Extract Area + What3Words from the multi-line location_description.
+  // Drop Map URL line (visually noisy in SMS, stays in webhook_log payload).
+  const locLines = (location_description || '').split('\n')
+  const areaLine = (locLines.find(l => /^Area:/i.test(l)) || locLines[0] || '')
+    .replace(/^Area:\s*/i, '').trim() || 'location not confirmed'
+  const w3wLine = (locLines.find(l => /^What3Words:/i.test(l)) || '')
+    .replace(/^What3Words:\s*/i, '').trim()
+  const w3wSegment = w3wLine ? `\nW3W: ${w3wLine}.` : ''
+
   const penaltyFormatted = (!force_financial_zero && financialImpact > 0)
-    ? `SLA risk: £${Number(financialImpact).toLocaleString('en-GB')}.`
+    ? ` SLA risk: £${Number(financialImpact).toLocaleString('en-GB')}.`
     : ''
 
   const yesAction = {
@@ -132,7 +141,7 @@ function buildOpsSMS({ severity, vehicle_reg, human_description, financialImpact
     preshift:  'clear driver to depart',
   }[detectedType] || 'execute action'
 
-  return `DisruptionHub — ${sev}\n${vehicle_reg || ''}: Breakdown reported at ${loc}.${penaltyFormatted ? ' ' + penaltyFormatted : ''}\nReply YES to ${yesAction}, NO to reject, OPEN for dashboard.`
+  return `DisruptionHub — ${sev}\n${vehicle_reg || ''}: Breakdown reported at ${areaLine}.${w3wSegment}${penaltyFormatted}\nReply YES to ${yesAction}, NO to reject, OPEN for dashboard.`
 }
 
 function extractCarrierPhone(systemPrompt) {
@@ -625,7 +634,6 @@ Provide immediate disruption analysis and action plan.`
           passenger_count
         })
       }
-      if (primaryApprovalId) smsBody += `\nRef: ${primaryApprovalId.slice(0, 8)}`
       const result = await sendSMS(contactPhone, smsBody)
       smsSent = result.success || false
     }

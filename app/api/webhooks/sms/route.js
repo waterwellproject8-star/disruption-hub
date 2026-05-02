@@ -734,7 +734,7 @@ export async function POST(request) {
             .limit(1)
           if (nextCall?.[0]?.id) callRef = `\nRef: ${nextCall[0].id.slice(0, 8)}`
 
-          await sendSMS(client.contact_phone || from, `DisruptionHub — Recovery dispatched for ${details.vehicle_reg || ''}.\nConsignee at ${consigneeName} needs notifying.\nReply YES to send SMS to consignee, NO to skip.${callRef}`)
+          await sendSMS(client.contact_phone || from, `DisruptionHub — Recovery dispatched for ${details.vehicle_reg || ''}.\nConsignee at ${consigneeName} needs notifying.\nReply YES to send SMS to consignee, NO to skip.`)
 
           if (!result.success) console.error('[sms-yes] driver SMS failed:', result.error || 'unknown reason', 'to:', driverPhone)
           return twimlReply(result.success ? `DH: Confirmed. Driver briefed. Calling ${consigneeName} now.` : 'DH: Approved. Call driver directly — SMS failed.')
