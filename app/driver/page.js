@@ -181,7 +181,13 @@ export default function DriverApp() {
   const [gpsCoords, setGpsCoords]           = useState(null)
   const [gpsDescription, setGpsDescription] = useState('')
   const [gpsStatus, setGpsStatus]           = useState(null)
-  const isDemoMode = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('demo') === '1'
+  // Demo mode — persists across the session via sessionStorage.
+  // ?demo=1 in URL forces it ON on first load (legacy from Day 11.5).
+  // Toggle is reachable via the 3-dot menu so iPhone home-screen PWA
+  // installs (which strip URL params) can still flip it on.
+  // TODO(post-white-label): strip the menu item + this state before
+  // any customer-facing release.
+  const [isDemoMode, setIsDemoMode] = useState(false)
   const [failedDeliveryHold, setFailedDeliveryHold] = useState(null)
   const [runningLateModal, setRunningLateModal] = useState(false)
   const [secUpNext, setSecUpNext] = useState(false)
@@ -198,6 +204,27 @@ export default function DriverApp() {
   const [lateReason, setLateReason]       = useState('Traffic')
 
   const VEHICLE_TYPES = (driverInfo?.sector === 'psv' || driverInfo?.sector === 'coach') ? VEHICLE_TYPES_PSV : VEHICLE_TYPES_HAULAGE
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const urlDemo = new URLSearchParams(window.location.search).get('demo') === '1'
+    const stored = window.sessionStorage.getItem('dh_demo_mode') === '1'
+    if (urlDemo || stored) {
+      window.sessionStorage.setItem('dh_demo_mode', '1')
+      setIsDemoMode(true)
+    }
+  }, [])
+
+  const toggleDemoMode = () => {
+    setIsDemoMode(prev => {
+      const next = !prev
+      try {
+        if (next) window.sessionStorage.setItem('dh_demo_mode', '1')
+        else window.sessionStorage.removeItem('dh_demo_mode')
+      } catch (e) { console.error('demo toggle storage failed:', e) }
+      return next
+    })
+  }
 
   useEffect(() => {
     // Load driver history for pre-filling setup screen
@@ -1718,6 +1745,11 @@ export default function DriverApp() {
                   <div className="dh-pop-item" onClick={()=>{setShowMoreMenu(false);if(driverInfo.vehicleReg||driverInfo.phone){fetch('/api/driver/end-shift',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({client_id:driverInfo.clientId,vehicle_reg:driverInfo.vehicleReg||null,driver_phone:driverInfo.phone||null,reason:'driver_change'})}).catch(()=>{})};['dh_driver_info','dh_shift_started','dh_shift_started_at','dh_last_alert','dh_prior_alert','dh_job_progress','dh_ops_messages','dh_ops_messages_read','dh_session_id'].forEach(k=>localStorage.removeItem(k));setSetupDone(false);setShiftStarted(false);setJobs([]);setActiveJob(null)}}>
                     <span style={{fontSize:17}}>↩</span>
                     <div><div style={{fontSize:14,fontWeight:600,color:'rgba(255,255,255,0.9)'}}>Change Driver</div><div style={{fontSize:11,color:'rgba(255,255,255,0.3)',marginTop:1}}>Switch to different profile</div></div>
+                  </div>
+                  {/* TODO(post-white-label): remove demo toggle before customer release */}
+                  <div className="dh-pop-item" onClick={()=>{setShowMoreMenu(false);toggleDemoMode()}}>
+                    <span style={{fontSize:17}}>{isDemoMode ? '🟠' : '⚪'}</span>
+                    <div><div style={{fontSize:14,fontWeight:600,color:'rgba(255,255,255,0.9)'}}>Demo Mode: {isDemoMode ? 'ON' : 'OFF'}</div><div style={{fontSize:11,color:'rgba(255,255,255,0.3)',marginTop:1}}>Override GPS with M62 J26</div></div>
                   </div>
                 </div>
               )}
