@@ -2942,6 +2942,27 @@ export default function DashboardPage() {
                         showDashToast('Simulation error', 'error')
                       }
                     }} style={{ background:'none', border:'1px solid rgba(239,68,68,0.3)', borderRadius:4, color:'#ef4444', fontSize:10, cursor:'pointer', padding:'2px 8px', fontFamily:"'DM Mono',monospace" }}>SIMULATE BREAKDOWN</button>
+                    <button onClick={async () => {
+                      if (!window.confirm('Cancel all pending breakdown approvals for Pearson Haulage?')) return
+                      try {
+                        const res = await fetch('/api/demo/reset-breakdowns', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json', 'x-dh-key': process.env.NEXT_PUBLIC_DH_KEY }
+                        })
+                        const json = await res.json()
+                        if (res.ok && json.ok) {
+                          showDashToast(`Cancelled ${json.cancelled_count} approval${json.cancelled_count === 1 ? '' : 's'}`, 'success')
+                          loadApprovals()
+                          loadWebhookLog()
+                        } else {
+                          console.error('[reset breakdowns] failed', json)
+                          showDashToast('Reset failed — check Vercel logs', 'error')
+                        }
+                      } catch (err) {
+                        console.error('[reset breakdowns] error', err)
+                        showDashToast('Reset error', 'error')
+                      }
+                    }} style={{ background:'none', border:'1px solid rgba(245,166,35,0.2)', borderRadius:4, color:'#f5a623', fontSize:10, cursor:'pointer', padding:'2px 8px', fontFamily:"'DM Mono',monospace" }}>RESET BREAKDOWNS</button>
                     <span className="dh-cmd-panel-count">{pendingApprovals.filter(a=>a.status==='pending').length} pending</span>
                   </div>
                 </div>
