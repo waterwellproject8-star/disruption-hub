@@ -709,7 +709,7 @@ export async function POST(request) {
       // ── DISPATCH ─────────────────────────────────────────────────────────
       if (actionType === 'dispatch') {
         const driverPhone = await resolveDriverPhone()
-        const driverMsg = `DisruptionHub OPS${details.ref ? ` — ${details.ref}` : ''}\n\nOps have confirmed. Recovery is being arranged — you will receive a further update shortly. Stay with your vehicle, hazards on.`
+        const driverMsg = `DisruptionHub — Recovery on the way for ${details.vehicle_reg || ''}. ETA logged.\nStand by for engineer ETA confirmation.`
         await writeInstructionToApp(driverMsg)
 
         let consigneeName = details.consignee_name || null
@@ -734,7 +734,7 @@ export async function POST(request) {
             .limit(1)
           if (nextCall?.[0]?.id) callRef = `\nRef: ${nextCall[0].id.slice(0, 8)}`
 
-          await sendSMS(client.contact_phone || from, `DisruptionHub — Recovery being arranged.\n${details.vehicle_reg || ''}: Driver briefed.\nReply YES to notify ${consigneeName}.${callRef}`)
+          await sendSMS(client.contact_phone || from, `DisruptionHub — Recovery dispatched for ${details.vehicle_reg || ''}.\nConsignee at ${consigneeName} needs notifying.\nReply YES to send SMS to consignee, NO to skip.${callRef}`)
 
           if (!result.success) console.error('[sms-yes] driver SMS failed:', result.error || 'unknown reason', 'to:', driverPhone)
           return twimlReply(result.success ? `DH: Confirmed. Driver briefed. Calling ${consigneeName} now.` : 'DH: Approved. Call driver directly — SMS failed.')
@@ -802,47 +802,79 @@ export async function POST(request) {
           console.log('[DH Voice] consignee_delay_alert raw:', rawConsigneePhone, '→ E.164:', consigneePhone)
 
           if (consigneePhone) {
-            const spokenVehicle = speakReg(details.vehicle_reg)
-            const delayNum = parseInt(details.delay_minutes, 10) || 0
-            const delaySpoken = delayNum > 0 ? formatDelayForSpeech(delayNum) : '30 minutes'
-            const clientSpoken = twimlSafe(contactName || 'your supplier')
-            const isBreakdown = callType === 'breakdown' || details.alert_type === 'breakdown' || details.delay_reason?.toLowerCase().includes('breakdown') || details.issue_context?.toLowerCase().includes('breakdown')
-
-            let parts
-            if (isBreakdown) {
-              parts = [
-                `${clientSpoken} is calling to advise that ${vocab.voice_intro_breakdown}.`,
-                `We are arranging recovery and will provide an update as soon as possible.`,
-                `No action is required from you at this time. Please contact our operations team if you need to discuss. Thank you.`
-              ]
-            } else {
-              parts = [
-                `${clientSpoken} is calling to advise that ${vocab.voice_intro_delay} ${spokenVehicle} is running approximately ${delaySpoken} late.`,
-                details.revised_eta ? `Expected arrival is now ${details.revised_eta}.` : '',
-                `No action is required from you at this time. Thank you.`
-              ].filter(Boolean)
+            // Compute new ETA: original + 2h, or fallback string
+            function formatNewETA(originalETA) {
+              if (!originalETA || !/^\d{1,2}:\d{2}$/.test(originalETA)) return null
+              const [h, m] = originalETA.split(':').map(Number)
+              const newHours = (h + 2) % 24
+              return `${String(newHours).padStart(2, '0')}:${String(m).padStart(2, '0')}`
             }
 
-            const voiceMessage = parts.join(' ')
-            const callResult = await makeCall(consigneePhone, voiceMessage)
+            // Look up shipment ETA and carrier name for consignee SMS
+            let shipmentEta = null
+            let carrierDisplayName = contactName || 'Pearson Haulage' // TODO: pull from clients.name if field exists
+            if (details.ref) {
+              try {
+                const { data: sh } = await db.from('shipments').select('eta').eq('ref', details.ref).maybeSingle()
+                if (sh?.eta) shipmentEta = sh.eta
+              } catch (err) { console.error('[YES2] shipment ETA lookup:', err?.message) }
+            }
+
+            const newEta = formatNewETA(shipmentEta)
+            const etaLine = newEta
+              ? `Updated ETA: ${newEta}.`
+              : 'ETA pending engineer assessment — you\'ll receive an update within 30 minutes.'
+            const consigneeSmsBody = `${details.consignee_name || 'Consignee'} — delivery ${details.ref || 'your order'} from ${carrierDisplayName} is delayed.\nVehicle has broken down on route. ${etaLine}\nApologies for the inconvenience. Ref: ${details.ref || 'N/A'}.`
+            const consigneeSmsResult = await sendSMS(consigneePhone, consigneeSmsBody)
+            console.log(`[YES2] consignee SMS to ${consigneePhone}: ${consigneeSmsResult.success ? 'ok' : consigneeSmsResult.error || 'failed'}`)
+
+            // Voice call — gated behind CONSIGNEE_VOICE_ENABLED env flag
+            let callResult = { success: false, simulated: true, reason: 'voice_disabled' }
+            if (process.env.CONSIGNEE_VOICE_ENABLED === 'true') {
+              const spokenVehicle = speakReg(details.vehicle_reg)
+              const delayNum = parseInt(details.delay_minutes, 10) || 0
+              const delaySpoken = delayNum > 0 ? formatDelayForSpeech(delayNum) : '30 minutes'
+              const clientSpoken = twimlSafe(contactName || 'your supplier')
+              const isBreakdown = callType === 'breakdown' || details.alert_type === 'breakdown' || details.delay_reason?.toLowerCase().includes('breakdown') || details.issue_context?.toLowerCase().includes('breakdown')
+
+              let parts
+              if (isBreakdown) {
+                parts = [
+                  `${clientSpoken} is calling to advise that ${vocab.voice_intro_breakdown}.`,
+                  `We are arranging recovery and will provide an update as soon as possible.`,
+                  `No action is required from you at this time. Please contact our operations team if you need to discuss. Thank you.`
+                ]
+              } else {
+                parts = [
+                  `${clientSpoken} is calling to advise that ${vocab.voice_intro_delay} ${spokenVehicle} is running approximately ${delaySpoken} late.`,
+                  details.revised_eta ? `Expected arrival is now ${details.revised_eta}.` : '',
+                  `No action is required from you at this time. Thank you.`
+                ].filter(Boolean)
+              }
+
+              const voiceMessage = parts.join(' ')
+              callResult = await makeCall(consigneePhone, voiceMessage)
+            } else {
+              console.log('[YES2] CONSIGNEE_VOICE_ENABLED=false — skipping voice call')
+            }
 
             const driverPhone = await resolveDriverPhone()
-            const driverMsg = `DisruptionHub — Confirmed.\n${details.vehicle_reg || ''}: ${details.consignee_name || vocab.delivery_recipient_short} being called. Continue to destination.`
+            const driverMsg = `DisruptionHub — Confirmed.\n${details.vehicle_reg || ''}: ${details.consignee_name || vocab.delivery_recipient_short} notified by SMS. Continue to destination.`
             await writeInstructionToApp(driverMsg)
             if (driverPhone) await sendSMS(driverPhone, driverMsg).catch(err => console.error('[sms-yes] sendSMS to driver failed:', err?.message))
 
             await sendNextPendingActionSMS()
 
             // Update the actual pending call approval (different row from the dispatch approval)
+            // Mark as executed if consignee SMS succeeded, even if voice was skipped
             try {
-              const callStatus = callResult.success ? 'executed' : callResult.simulated ? 'failed' : 'failed'
-              const callPatch = { status: callStatus, executed_at: new Date().toISOString(), approved_by: approvedByLabel || 'ops_sms_cascade' }
-              if (callResult.success) {
-                callPatch.execution_result = { twilio_sid: callResult.sid, twilio_status: callResult.status, source: 'cascade_yes' }
-              } else if (callResult.simulated) {
-                callPatch.execution_result = { simulated: true, reason: callResult.reason || 'twilio_not_configured' }
+              const overallSuccess = consigneeSmsResult.success || callResult.success
+              const approvalStatus = overallSuccess ? 'executed' : 'failed'
+              const callPatch = { status: approvalStatus, executed_at: new Date().toISOString(), approved_by: approvedByLabel || 'ops_sms_cascade' }
+              if (overallSuccess) {
+                callPatch.execution_result = { consignee_sms_sent: consigneeSmsResult.success, voice_call_fired: callResult.success && !callResult.simulated, twilio_sid: callResult.sid || consigneeSmsResult.sid, source: 'cascade_yes' }
               } else {
-                callPatch.execution_result = { failure_reason: callResult.error || 'call_error' }
+                callPatch.execution_result = { failure_reason: 'both_sms_and_voice_failed', sms_error: consigneeSmsResult.error, voice_error: callResult.error }
               }
               const { data: updatedCall, error: callUpdErr } = await db.from('approvals')
                 .update(callPatch)
@@ -854,13 +886,12 @@ export async function POST(request) {
                 .limit(1)
                 .select('id')
               if (callUpdErr) console.error('[cascade-yes] call approval update failed:', callUpdErr.message)
-              else console.log('[cascade-yes] call approval marked', callStatus, updatedCall?.[0]?.id || 'no match')
+              else console.log('[cascade-yes] call approval marked', approvalStatus, updatedCall?.[0]?.id || 'no match')
             } catch (e) {
               console.error('[cascade-yes] call approval update threw:', e?.message)
             }
-            if (callResult.success) return twimlReply(`DH: Calling ${details.consignee_name || consigneePhone}. Driver notified.`)
-            if (callResult.simulated) return twimlReply(`DH: Call ${details.consignee_name || 'consignee'} manually: ${rawConsigneePhone}`)
-            return twimlReply(`DH: Call failed (${callResult.error || 'unknown'}) — dial ${rawConsigneePhone} manually.`)
+            if (consigneeSmsResult.success) return twimlReply(`DH: ${details.consignee_name || 'Consignee'} notified by SMS. Driver updated.`)
+            return twimlReply(`DH: Consignee SMS failed — notify ${details.consignee_name || 'consignee'} manually: ${rawConsigneePhone}`)
           }
 
           // No consignee phone found

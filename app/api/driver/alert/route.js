@@ -117,22 +117,14 @@ function extractFirstAction(text) {
 // Build a clean ops SMS — what happened, exposure, what YES does
 // Never dump raw AI action text — ops needs to scan in 2 seconds
 function buildOpsSMS({ severity, vehicle_reg, human_description, financialImpact, detectedType, force_alert, force_financial_zero, location_description, vocab, sector, passenger_count }) {
-  const v = vocab || vocabFor('haulage')
   const sev = force_alert && severity === 'MEDIUM' ? 'HIGH' : severity
-  const situation = (human_description || 'Driver alert').substring(0, 50).replace(/\n/g, ' ')
-  const loc = location_description ? ` Driver at ${location_description}.` : ''
-  const isPsv = sector === 'psv' || sector === 'coach'
-  let riskLine = ''
-  if (isPsv) {
-    riskLine = (passenger_count && passenger_count > 0)
-      ? `\n${passenger_count} passenger${passenger_count === 1 ? '' : 's'} on board.`
-      : ''
-  } else {
-    riskLine = (!force_financial_zero && financialImpact > 0) ? `\n${v.breach_consequence_label}: £${financialImpact.toLocaleString()} if slot missed.` : ''
-  }
+  const loc = location_description || 'location not confirmed'
+  const penaltyFormatted = (!force_financial_zero && financialImpact > 0)
+    ? `SLA risk: £${Number(financialImpact).toLocaleString('en-GB')}.`
+    : ''
 
   const yesAction = {
-    dispatch:  'confirm recovery is being arranged',
+    dispatch:  'dispatch recovery',
     sms:       'send driver instruction',
     reroute:   'reroute driver',
     call:      'call carrier for recovery',
@@ -140,7 +132,7 @@ function buildOpsSMS({ severity, vehicle_reg, human_description, financialImpact
     preshift:  'clear driver to depart',
   }[detectedType] || 'execute action'
 
-  return `DisruptionHub — ${sev}\n${vehicle_reg || ''}: ${situation}.${loc}${riskLine}\nReply YES to ${yesAction}, NO to reject, OPEN for dashboard.`
+  return `DisruptionHub — ${sev}\n${vehicle_reg || ''}: Breakdown reported at ${loc}.${penaltyFormatted ? ' ' + penaltyFormatted : ''}\nReply YES to ${yesAction}, NO to reject, OPEN for dashboard.`
 }
 
 function extractCarrierPhone(systemPrompt) {

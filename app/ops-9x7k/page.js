@@ -2918,7 +2918,32 @@ export default function DashboardPage() {
               <div className="dh-cmd-panel">
                 <div className="dh-cmd-panel-hdr">
                   <span className="dh-cmd-panel-title">Action Queue</span>
-                  <span className="dh-cmd-panel-count">{pendingApprovals.filter(a=>a.status==='pending').length} pending</span>
+                  <div style={{ display:'flex', gap:8, alignItems:'center' }}>
+                    <button onClick={async () => {
+                      const ok = window.confirm('Fire simulated breakdown for SB15 DYJ on PH-4421?\n\nThis will trigger the full ops SMS chain. Use only for demo.')
+                      if (!ok) return
+                      try {
+                        const res = await fetch('/api/demo/simulate-breakdown', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json', 'x-dh-key': process.env.NEXT_PUBLIC_DH_KEY },
+                          body: JSON.stringify({})
+                        })
+                        const json = await res.json()
+                        if (res.ok && json.ok) {
+                          showDashToast('Breakdown fired — check action queue + SMS', 'success')
+                          loadApprovals()
+                          loadWebhookLog()
+                        } else {
+                          console.error('[simulate breakdown] failed', json)
+                          showDashToast(json.error || 'Simulation failed', 'error')
+                        }
+                      } catch (err) {
+                        console.error('[simulate breakdown] error', err)
+                        showDashToast('Simulation error', 'error')
+                      }
+                    }} style={{ background:'none', border:'1px solid rgba(239,68,68,0.3)', borderRadius:4, color:'#ef4444', fontSize:10, cursor:'pointer', padding:'2px 8px', fontFamily:"'DM Mono',monospace" }}>SIMULATE BREAKDOWN</button>
+                    <span className="dh-cmd-panel-count">{pendingApprovals.filter(a=>a.status==='pending').length} pending</span>
+                  </div>
                 </div>
                 <div className="dh-cmd-scroll">
                   {/* Pending approvals */}
