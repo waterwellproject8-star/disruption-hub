@@ -569,6 +569,28 @@ export async function POST(request) {
 
           const consigneePhone = toE164UK(cad.consignee_phone)
           if (consigneePhone) {
+            // SMS to consignee — written record alongside voice call
+            let shipmentEtaForSms = null
+            const carrierDisplayName = contactName || 'Pearson Haulage'
+            if (cad.ref) {
+              try {
+                const { data: sh } = await db.from('shipments').select('eta').eq('ref', cad.ref).maybeSingle()
+                if (sh?.eta) shipmentEtaForSms = sh.eta
+              } catch (err) { console.error('[sms-YES2] shipment ETA lookup:', err?.message) }
+            }
+            const computeNewEta = (eta) => {
+              if (!eta || !/^\d{1,2}:\d{2}$/.test(eta)) return null
+              const [h, m] = eta.split(':').map(Number)
+              return `${String((h + 2) % 24).padStart(2, '0')}:${String(m).padStart(2, '0')}`
+            }
+            const newEta = computeNewEta(shipmentEtaForSms)
+            const etaLine = newEta ? `Updated ETA: ${newEta}.` : "ETA pending engineer assessment — you'll receive an update within 30 minutes."
+            const consigneeSmsBody = `${cConsignee} — delivery ${cad.ref || 'your order'} from ${carrierDisplayName} is delayed.\nVehicle has broken down on route. ${etaLine}\nApologies for the inconvenience. Ref: ${cad.ref || 'N/A'}.`
+            const smsResult = await sendSMS(consigneePhone, consigneeSmsBody)
+            if (!smsResult.success) console.error('[sms-YES2] consignee SMS failed:', smsResult.error || 'unknown')
+            else console.log(`[sms-YES2] consignee SMS sent to ${consigneePhone}`)
+
+            // Voice call to consignee
             const spokenVehicle = speakReg(cad.vehicle_reg)
             const isBreakdown = cad.call_type === 'breakdown' || cad.alert_type === 'breakdown'
             const voiceMsg = isBreakdown
@@ -576,7 +598,8 @@ export async function POST(request) {
               : `${twimlSafe(contactName || 'your supplier')} is calling to advise that your delivery from vehicle ${spokenVehicle} is running late. No action is required from you at this time. Thank you.`
             const callResult = await makeCall(consigneePhone, voiceMsg)
             const nowIso = new Date().toISOString()
-            await db.from('approvals').update({ status: callResult.success ? 'executed' : 'failed', executed_at: nowIso, execution_result: { twilio_sid: callResult.sid, auto_fired: true } }).eq('id', ca.id)
+            const overallSuccess = smsResult.success || callResult.success
+            await db.from('approvals').update({ status: overallSuccess ? 'executed' : 'failed', executed_at: nowIso, execution_result: { twilio_sid: callResult.sid, consignee_sms_sent: smsResult.success, auto_fired: true } }).eq('id', ca.id)
             console.log(`[sms-YES] consignee call ${ca.id} → ${cConsignee}: ${callResult.success ? 'ok' : callResult.error || 'failed'}`)
             return twimlReply(`DH: ${cConsignee} notified ✓`)
           }
@@ -734,7 +757,7 @@ export async function POST(request) {
             .limit(1)
           if (nextCall?.[0]?.id) callRef = `\nRef: ${nextCall[0].id.slice(0, 8)}`
 
-          await sendSMS(client.contact_phone || from, `DisruptionHub — Recovery dispatched for ${details.vehicle_reg || ''}.\nConsignee at ${consigneeName} needs notifying.\nReply YES to send SMS to consignee, NO to skip.`)
+          await sendSMS(client.contact_phone || from, `DisruptionHub — Recovery dispatched for ${details.vehicle_reg || ''}.\nConsignee at ${consigneeName} needs notifying.\nReply YES to notify consignee, NO to skip.`)
 
           if (!result.success) console.error('[sms-yes] driver SMS failed:', result.error || 'unknown reason', 'to:', driverPhone)
           return twimlReply(result.success ? `DH: Confirmed. Driver briefed. Calling ${consigneeName} now.` : 'DH: Approved. Call driver directly — SMS failed.')
