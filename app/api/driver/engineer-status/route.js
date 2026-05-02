@@ -12,7 +12,7 @@ const STATUS_CONFIG = {
   fixable_roadside: {
     action_type: 'notify',
     label: '🔧 Engineer fixing on scene',
-    sms: null
+    sms: (vreg) => `DisruptionHub — UPDATE\n${vreg}: Engineer fixing on scene.\nDriver standing by. Updated ETA to follow.`
   },
   replacement_needed: {
     action_type: 'replacement',

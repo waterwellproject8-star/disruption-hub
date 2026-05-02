@@ -222,6 +222,13 @@ export default function DriverApp() {
         if (next) window.sessionStorage.setItem('dh_demo_mode', '1')
         else window.sessionStorage.removeItem('dh_demo_mode')
       } catch (e) { console.error('demo toggle storage failed:', e) }
+      // When flipping OFF, clear cached GPS state so next breakdown
+      // uses a fresh navigator.geolocation read instead of stale demo values
+      if (!next) {
+        setGpsCoords(null)
+        setGpsDescription('')
+        setGpsStatus(null)
+      }
       return next
     })
   }
@@ -2151,11 +2158,12 @@ export default function DriverApp() {
               <button onClick={closePanel} style={{width:34,height:34,borderRadius:8,background:'rgba(255,255,255,0.05)',border:'1px solid rgba(255,255,255,0.08)',color:'#8a9099',fontSize:18,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>✕</button>
             </div>
 
-            {/* GPS status */}
-            {gpsStatus==='getting'&&<div style={{fontSize:11,color:'#3b82f6',fontFamily:'monospace',marginBottom:10}}>📍 Getting location...</div>}
-            {gpsStatus==='got'&&gpsDescription&&<div style={{fontSize:11,color:gpsCoords?.timestamp&&(Date.now()-gpsCoords.timestamp)<300000?'#22c55e':'#f5a623',fontFamily:'monospace',marginBottom:10}}>📍 {gpsDescription}{gpsCoords?.timestamp&&(Date.now()-gpsCoords.timestamp)<300000?' · location captured':''}</div>}
-            {gpsStatus==='failed'&&!gpsCoords&&<div style={{fontSize:11,color:'#f59e0b',fontFamily:'monospace',marginBottom:10}}>⚠ Location not confirmed</div>}
-            {gpsStatus==='failed'&&gpsCoords&&<div style={{fontSize:11,color:'#f5a623',fontFamily:'monospace',marginBottom:10}}>📍 Using last known location</div>}
+            {/* GPS status — demo mode shows canonical location, real mode shows navigator.geolocation */}
+            {isDemoMode && <div style={{fontSize:11,color:'#22c55e',fontFamily:'monospace',marginBottom:10}}>📍 {DEMO_BREAKDOWN_AREA_LABEL} · demo location</div>}
+            {!isDemoMode && gpsStatus==='getting'&&<div style={{fontSize:11,color:'#3b82f6',fontFamily:'monospace',marginBottom:10}}>📍 Getting location...</div>}
+            {!isDemoMode && gpsStatus==='got'&&gpsDescription&&<div style={{fontSize:11,color:gpsCoords?.timestamp&&(Date.now()-gpsCoords.timestamp)<300000?'#22c55e':'#f5a623',fontFamily:'monospace',marginBottom:10}}>📍 {gpsDescription}{gpsCoords?.timestamp&&(Date.now()-gpsCoords.timestamp)<300000?' · location captured':''}</div>}
+            {!isDemoMode && gpsStatus==='failed'&&!gpsCoords&&<div style={{fontSize:11,color:'#f59e0b',fontFamily:'monospace',marginBottom:10}}>⚠ Location not confirmed</div>}
+            {!isDemoMode && gpsStatus==='failed'&&gpsCoords&&<div style={{fontSize:11,color:'#f5a623',fontFamily:'monospace',marginBottom:10}}>📍 Using last known location</div>}
 
             {/* Passenger count — PSV/coach only */}
             {(driverInfo?.sector==='psv'||driverInfo?.sector==='coach')&&panelState==='idle'&&(
