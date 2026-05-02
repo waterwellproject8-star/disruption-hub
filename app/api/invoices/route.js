@@ -11,17 +11,27 @@ export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url)
     const client_id = searchParams.get('client_id')
+    const view = searchParams.get('view')
     if (!client_id) return Response.json({ error: 'client_id required' }, { status: 400 })
 
     const db = getDB()
     if (!db) return Response.json({ invoices: [] })
 
-    const { data, error } = await db
+    let query = db
       .from('invoices')
       .select('*')
       .eq('client_id', client_id)
-      .order('created_at', { ascending: false })
-      .limit(100)
+
+    if (view === 'demo') {
+      const fourHoursAgo = new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString()
+      query = query.or(
+        `status.eq.pending_review,and(status.eq.disputed,dispute_email_sent_at.gte.${fourHoursAgo})`
+      )
+    }
+
+    query = query.order('created_at', { ascending: false }).limit(100)
+
+    const { data, error } = await query
 
     if (error) return Response.json({ error: error.message }, { status: 500 })
     return Response.json({ invoices: data || [] })

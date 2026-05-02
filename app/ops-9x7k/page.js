@@ -1316,11 +1316,34 @@ export default function DashboardPage() {
 
   async function loadInvoices() {
     try {
-      const res = await fetch(`/api/invoices?client_id=${ACTIVE_CLIENT_ID}`)
+      const res = await fetch(`/api/invoices?client_id=${ACTIVE_CLIENT_ID}&view=demo`)
       if (!res.ok) return
       const data = await res.json()
       setInvoices(data.invoices || [])
     } catch {}
+  }
+
+  async function resetDemo() {
+    const ok = window.confirm('Reset the 5 demo invoices to pending_review? This clears any disputes sent during rehearsal.')
+    if (!ok) return
+    try {
+      const res = await fetch('/api/demo/reset-invoices', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-dh-key': process.env.NEXT_PUBLIC_DH_KEY },
+        body: JSON.stringify({ client_id: ACTIVE_CLIENT_ID })
+      })
+      const json = await res.json()
+      if (!res.ok || !json.ok) {
+        console.error('[reset demo] failed', json)
+        showDashToast('Reset failed', 'error')
+        return
+      }
+      showDashToast(`Demo reset — ${json.reset_count} invoices, £${json.total_overcharge.toFixed(2)} restored`, 'success')
+      loadInvoices()
+    } catch (err) {
+      console.error('[reset demo] error', err)
+      showDashToast('Reset error', 'error')
+    }
   }
 
   async function loadDvsa() {
@@ -2662,7 +2685,10 @@ export default function DashboardPage() {
               <div>
                 <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10 }}>
                   <div style={{ fontSize:11, color:'#4a5260', fontFamily:'monospace', letterSpacing:'0.08em' }}>ALL INVOICES ({invoices.length})</div>
-                  <button onClick={loadInvoices} style={{ background:'none', border:'none', color:'#4a5260', fontSize:11, cursor:'pointer' }}>↻ Refresh</button>
+                  <div style={{ display:'flex', gap:8 }}>
+                    <button onClick={resetDemo} style={{ background:'none', border:'1px solid rgba(245,166,35,0.2)', borderRadius:4, color:'#f5a623', fontSize:11, cursor:'pointer', padding:'2px 8px' }}>RESET DEMO</button>
+                    <button onClick={loadInvoices} style={{ background:'none', border:'none', color:'#4a5260', fontSize:11, cursor:'pointer' }}>↻ Refresh</button>
+                  </div>
                 </div>
                 {invoices.length === 0 ? (
                   <div style={{ padding:20, textAlign:'center', color:'#4a5260', fontSize:13 }}>No invoices yet. Upload a CSV or add one manually.</div>
