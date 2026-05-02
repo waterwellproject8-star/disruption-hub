@@ -1,4 +1,12 @@
 import { createClient } from '@supabase/supabase-js'
+import {
+  DEMO_BREAKDOWN_LAT,
+  DEMO_BREAKDOWN_LNG,
+  DEMO_BREAKDOWN_AREA_LABEL,
+  DEMO_VEHICLE_REG,
+  DEMO_DRIVER_NAME,
+  DEMO_SHIPMENT_REF,
+} from '../../../../lib/demoBreakdown.js'
 
 function getDB() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -23,9 +31,9 @@ export async function POST(request) {
   }
 
   const clientId = (body.client_id || 'pearson-haulage').toLowerCase().trim()
-  const ref = body.ref || 'PH-4421'
-  const vehicleReg = (body.vehicle_reg || 'SB15 DYJ').toUpperCase().trim()
-  const driverName = body.driver_name || 'Mark Jones'
+  const ref = body.ref || DEMO_SHIPMENT_REF
+  const vehicleReg = (body.vehicle_reg || DEMO_VEHICLE_REG).toUpperCase().trim()
+  const driverName = body.driver_name || DEMO_DRIVER_NAME
 
   // Look up driver phone from driver_progress for this vehicle
   let driverPhone = null
@@ -52,11 +60,11 @@ export async function POST(request) {
     vehicle_reg: vehicleReg,
     ref,
     issue_type: 'breakdown',
-    issue_description: `BREAKDOWN EMERGENCY. ${vehicleReg}, ${driverName}. Location: M62 Westbound at J26 Chain Bar interchange. Vehicle broken down — engine warning light, loss of power. Job: Leeds to Bradford. Cargo: mixed retail. IMPORTANT: Tell the driver to stay with their vehicle — ops have been notified and are arranging recovery. Driver will receive confirmation shortly. Then assess SLA risk.`,
+    issue_description: `BREAKDOWN EMERGENCY. ${vehicleReg}, ${driverName}. Location: ${DEMO_BREAKDOWN_AREA_LABEL}. Vehicle broken down — engine warning light, loss of power. Job: Leeds to Bradford. Cargo: mixed retail. IMPORTANT: Tell the driver to stay with their vehicle — ops have been notified and are arranging recovery. Driver will receive confirmation shortly. Then assess SLA risk.`,
     human_description: 'Breakdown',
-    area_label_override: 'M62 Westbound at J26 Chain Bar interchange',
-    latitude: 53.7195,
-    longitude: -1.7185,
+    area_label_override: DEMO_BREAKDOWN_AREA_LABEL,
+    latitude: DEMO_BREAKDOWN_LAT,
+    longitude: DEMO_BREAKDOWN_LNG,
     at_risk_refs: [ref]
   }
 

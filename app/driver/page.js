@@ -1,5 +1,6 @@
 'use client'
 import React, { useState, useEffect, useRef } from 'react'
+import { DEMO_BREAKDOWN_LAT, DEMO_BREAKDOWN_LNG, DEMO_BREAKDOWN_AREA_LABEL } from '../../lib/demoBreakdown.js'
 
 const PROGRESS_STEPS = [
   { id:'arrived_collection', label:'Arrived at Collection', icon:'📍', color:'#3b82f6', status:'at_collection' },
@@ -180,6 +181,7 @@ export default function DriverApp() {
   const [gpsCoords, setGpsCoords]           = useState(null)
   const [gpsDescription, setGpsDescription] = useState('')
   const [gpsStatus, setGpsStatus]           = useState(null)
+  const isDemoMode = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('demo') === '1'
   const [failedDeliveryHold, setFailedDeliveryHold] = useState(null)
   const [runningLateModal, setRunningLateModal] = useState(false)
   const [secUpNext, setSecUpNext] = useState(false)
@@ -838,12 +840,15 @@ export default function DriverApp() {
       pushProgressToSupabase(job?.ref,'part_delivered',null)
     }
 
-    refreshGpsIfStale()
+    if (!isDemoMode) refreshGpsIfStale()
     const headingAgeMs = lastHeadingAt ? Date.now() - lastHeadingAt.getTime() : Infinity
     const headingFresh = lastKnownHeading !== null && headingAgeMs < 30 * 60 * 1000
-    console.log('[breakdown] firing alert, client_id:', driverInfo.clientId, 'vehicle:', driverInfo.vehicleReg, 'issue:', panelIssue?.id, 'ref:', job?.ref)
+    const alertLat = isDemoMode ? DEMO_BREAKDOWN_LAT : gpsCoords?.latitude
+    const alertLng = isDemoMode ? DEMO_BREAKDOWN_LNG : gpsCoords?.longitude
+    const alertLocDesc = isDemoMode ? DEMO_BREAKDOWN_AREA_LABEL : gpsDescription
+    console.log('[breakdown] firing alert, client_id:', driverInfo.clientId, 'vehicle:', driverInfo.vehicleReg, 'issue:', panelIssue?.id, 'ref:', job?.ref, isDemoMode ? '(DEMO MODE)' : '')
     fetch('/api/driver/alert',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({client_id:driverInfo.clientId,driver_name:driverInfo.name,driver_phone:driverInfo.phone||null,vehicle_reg:driverInfo.vehicleReg,ref:job?.ref,issue_type:panelIssue?.id,issue_description:prompt,human_description:inputText||panelIssue?.label,location_description:gpsDescription,latitude:gpsCoords?.latitude,longitude:gpsCoords?.longitude,heading_degrees:headingFresh?lastKnownHeading:null,passenger_count:passengerCount?parseInt(passengerCount,10):null,at_risk_refs:jobs.filter(j=>j.status!=='completed').map(j=>j.ref).filter(r=>r&&r!=='SHIFT_START')})
+      body:JSON.stringify({client_id:driverInfo.clientId,driver_name:driverInfo.name,driver_phone:driverInfo.phone||null,vehicle_reg:driverInfo.vehicleReg,ref:job?.ref,issue_type:panelIssue?.id,issue_description:prompt,human_description:inputText||panelIssue?.label,location_description:alertLocDesc,latitude:alertLat,longitude:alertLng,heading_degrees:headingFresh?lastKnownHeading:null,passenger_count:passengerCount?parseInt(passengerCount,10):null,at_risk_refs:jobs.filter(j=>j.status!=='completed').map(j=>j.ref).filter(r=>r&&r!=='SHIFT_START'),...(isDemoMode ? {area_label_override:DEMO_BREAKDOWN_AREA_LABEL} : {})})
     }).then(r=>{console.log('[breakdown] alert response:',r.status);if(!r.ok)r.text().then(t=>console.error('[breakdown] server error:',r.status,t))}).catch(e=>console.error('[breakdown] fetch error:',e?.message))
 
     if (emergencyIds.includes(panelIssue?.id)) {
@@ -1701,6 +1706,7 @@ export default function DriverApp() {
           <div className="dh-sb-wrap">
             <div/>
             <div style={{display:'flex',alignItems:'center',gap:10,position:'relative'}}>
+              {isDemoMode && <span style={{background:'#f5a623',color:'#1a1a1a',fontSize:11,fontWeight:700,padding:'2px 8px',borderRadius:4,letterSpacing:0.5,textTransform:'uppercase'}}>DEMO</span>}
               <div className="dh-synced">SYNCED</div>
               <div className="dh-more-btn" onClick={()=>setShowMoreMenu(v=>!v)}>···</div>
               {showMoreMenu&&(
