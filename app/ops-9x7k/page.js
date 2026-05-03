@@ -1931,7 +1931,7 @@ export default function DashboardPage() {
 
         /* ── COMMAND tab layout ── */
         @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
-        .dh-cmd-layout { display:grid; grid-template-columns:300px 1fr 320px; height:calc(100vh - 105px); overflow:hidden; background:#08080c; width:100%; }
+        .dh-cmd-layout { display:grid; grid-template-columns:1fr 320px; height:calc(100vh - 105px); overflow:hidden; background:#08080c; width:100%; }
         .dh-cmd-panel { border-right:1px solid rgba(255,255,255,0.05); display:flex; flex-direction:column; overflow:hidden; }
         .dh-cmd-panel:last-child { border-right:none; }
         .dh-cmd-panel-hdr { padding:13px 18px 11px; border-bottom:1px solid rgba(255,255,255,0.05); display:flex; align-items:center; justify-content:space-between; flex-shrink:0; background:#08080c; }
@@ -2093,10 +2093,10 @@ export default function DashboardPage() {
         </div>
       </nav>
 
-      <div className="dh-layout" style={activeTab==='approvals'?{gridTemplateColumns:'1fr'}:undefined}>
+      <div className="dh-layout">
 
         {/* ── LEFT SIDEBAR ──────────────────────────────────────────────────── */}
-        {activeTab!=='approvals'&&<div className="dh-sidebar">
+        <div className="dh-sidebar">
 
           <div className="dh-cmd-panel-hdr">
             <span className="dh-cmd-panel-title">Live Fleet</span>
@@ -2150,10 +2150,10 @@ export default function DashboardPage() {
             })}
           </div>
 
-        </div>}
+        </div>
 
         {/* ── RIGHT PANEL ───────────────────────────────────────────────────── */}
-        <div style={{ display:'flex', flexDirection:'column', background:'#080c14', overflow:'hidden', ...(activeTab==='approvals'?{padding:0,maxWidth:'none',width:'100%'}:{}) }}>
+        <div style={{ display:'flex', flexDirection:'column', background:'#080c14', overflow:'hidden' }}>
 
           {/* Tab bar */}
           <div style={{ padding:'10px 20px', borderBottom:'1px solid rgba(255,255,255,0.05)', background:'#08080c', display:'flex', alignItems:'center', gap:8 }}>
@@ -2796,64 +2796,7 @@ export default function DashboardPage() {
           {activeTab === 'approvals' && (
             <div className="dh-cmd-layout">
 
-              {/* ══ LEFT: LIVE FLEET ══ */}
-              <div className="dh-cmd-panel">
-                <div className="dh-cmd-panel-hdr">
-                  <span className="dh-cmd-panel-title">Live Fleet</span>
-                  <span className="dh-cmd-panel-count">{(liveShipments.length > 0 ? liveShipments : ACTIVE_SHIPMENTS).length} vehicles</span>
-                </div>
-
-                <div className="dh-cmd-scroll">
-                  {/* Fleet stats */}
-                  <div className="dh-fleet-stats">
-                    <div className="dh-fstat">
-                      <div className="dh-fstat-n" style={{color:'#30d158'}}>{(liveShipments.length>0?liveShipments:ACTIVE_SHIPMENTS).filter(s=>s.status==='on-track').length}</div>
-                      <div className="dh-fstat-l">On Track</div>
-                    </div>
-                    <div className="dh-fstat">
-                      <div className="dh-fstat-n" style={{color:'#ffd60a'}}>{(liveShipments.length>0?liveShipments:ACTIVE_SHIPMENTS).filter(s=>s.status==='delayed').length}</div>
-                      <div className="dh-fstat-l">Delayed</div>
-                    </div>
-                    <div className="dh-fstat">
-                      <div className="dh-fstat-n" style={{color:'#f5a623'}}>{(liveShipments.length>0?liveShipments:ACTIVE_SHIPMENTS).filter(s=>s.status==='at_risk').length}</div>
-                      <div className="dh-fstat-l">At Risk</div>
-                    </div>
-                    <div className="dh-fstat">
-                      <div className="dh-fstat-n" style={{color:'#ff453a'}}>{(liveShipments.length>0?liveShipments:ACTIVE_SHIPMENTS).filter(s=>s.status==='disrupted').length}</div>
-                      <div className="dh-fstat-l">Disrupted</div>
-                    </div>
-                    <div className="dh-fstat">
-                      <div className="dh-fstat-n" style={{color:'#8a9099'}}>{(liveShipments.length>0?liveShipments:ACTIVE_SHIPMENTS).filter(s=>s.status==='not_completed').length}</div>
-                      <div className="dh-fstat-l">Not Completed</div>
-                    </div>
-                  </div>
-
-                  {/* Vehicle cards */}
-                  {(liveShipments.length>0?liveShipments:ACTIVE_SHIPMENTS).map(s=>{
-                    const isDisrupted = s.status==='disrupted'
-                    const isDelayed = s.status==='delayed'
-                    const isOnTrack = s.status==='on-track'
-                    return (
-                      <div key={s.ref} className={`dh-vc${isDisrupted?' disrupted':isDelayed?' delayed':''}`} onClick={()=>analyseShipment(s)}>
-                        <div className="dh-vc-row">
-                          <span className="dh-vc-reg">{s.ref}</span>
-                          <span className="dh-vc-badge" style={{color:STATUS_COLORS[s.status],background:`${STATUS_COLORS[s.status]}18`}}>{s.status.toUpperCase().replace('-',' ')}</span>
-                        </div>
-                        <div className="dh-vc-route">{s.route}</div>
-                        <div className="dh-vc-meta">
-                          <span className="dh-vc-eta">ETA {(()=>{const e=s.eta;if(!e||e==='???')return'???';if(e.includes('T')||e.includes(' ')){try{return new Date(e).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})}catch{return e}}return e})()}</span>
-                          {isDisrupted&&<span className="dh-sla-badge" style={{color:'#ff453a',background:'rgba(255,69,58,0.1)'}}>SLA AT RISK</span>}
-                          {isDelayed&&<span className="dh-sla-badge" style={{color:'#ffd60a',background:'rgba(255,214,10,0.1)'}}>SLA TIGHT</span>}
-                          {isOnTrack&&<span className="dh-sla-badge" style={{color:'#30d158',background:'rgba(48,209,88,0.1)'}}>SLA SAFE</span>}
-                        </div>
-                        {s.alert&&<div style={{marginTop:6,fontSize:11,color:isDisrupted?'#ff453a':'#ffd60a',lineHeight:1.4}}>{s.alert}</div>}
-                      </div>
-                    )
-                  })}
-                </div>
-              </div>
-
-              {/* ══ CENTRE: ACTION QUEUE ══ */}
+              {/* ══ ACTION QUEUE ══ */}
               <div className="dh-cmd-panel">
                 <div className="dh-cmd-panel-hdr">
                   <span className="dh-cmd-panel-title">Action Queue</span>
