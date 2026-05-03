@@ -1,6 +1,7 @@
 'use client'
 import { useState, useRef, useEffect, useCallback } from 'react'
 import Link from 'next/link'
+import { MODULE_GLYPHS } from '../../lib/moduleGlyphs'
 
 const DASHBOARD_PIN = 'DH2026'
 
@@ -29,36 +30,29 @@ const SEV_COLORS = { 'CRITICAL': '#ef4444', 'HIGH': '#f59e0b', 'MEDIUM': '#3b82f
 const SEV_BG = { 'CRITICAL': 'rgba(239,68,68,0.1)', 'HIGH': 'rgba(245,158,11,0.1)', 'MEDIUM': 'rgba(59,130,246,0.1)', 'LOW': 'rgba(138,144,153,0.1)' }
 
 const MODULES = [
-  { id: 'disruption',         label: 'Disruption Analysis',       icon: '⚡', cat: 'ops' },
-  { id: 'sla_prediction',     label: 'SLA Breach Prediction',     icon: '🔮', cat: 'ops' },
-  { id: 'invoice',            label: 'Invoice Recovery',          icon: '🧾', cat: 'save' },
-  { id: 'driver_hours',       label: 'Driver Hours Monitor',      icon: '⏱', cat: 'compliance' },
-  { id: 'hazmat',             label: 'Hazmat Checker',            icon: '⚠️', cat: 'compliance' },
-  { id: 'carrier',            label: 'Carrier Scorecard',         icon: '📊', cat: 'ops' },
-  { id: 'fuel',               label: 'Fuel Optimisation',         icon: '⛽', cat: 'save' },
-  { id: 'vehicle_health',     label: 'Vehicle Health',            icon: '🔧', cat: 'ops' },
-  { id: 'driver_retention',   label: 'Driver Retention',          icon: '👤', cat: 'ops' },
-  { id: 'carbon',             label: 'Carbon & ESG',              icon: '🌱', cat: 'growth' },
-  { id: 'tender',             label: 'Tender Intelligence',       icon: '🏆', cat: 'growth' },
-  { id: 'regulation',         label: 'Regulation Monitor',        icon: '📜', cat: 'compliance' },
-  { id: 'consolidation',      label: 'Load Consolidation',        icon: '📦', cat: 'save' },
-  { id: 'forecast',           label: 'Demand Forecast',           icon: '📈', cat: 'ops' },
-  { id: 'benchmarking',       label: 'Rate Benchmarking',         icon: '💹', cat: 'growth' },
-  { id: 'insurance',          label: 'Claims Intelligence',       icon: '🛡', cat: 'compliance' },
-  { id: 'cargo_theft',        label: 'Cargo Theft Prevention',    icon: '🔒', cat: 'compliance' },
-  { id: 'ghost_freight',      label: 'Ghost Freight Detection',   icon: '👻', cat: 'compliance' },
-  { id: 'subcontractor',      label: 'Subcontractor Trust',       icon: '🤝', cat: 'ops' },
-  { id: 'cash_flow',          label: 'Cash Flow Forecast',        icon: '💰', cat: 'growth' },
-  { id: 'churn_prediction',   label: 'Client Churn Prediction',   icon: '📉', cat: 'growth' },
-  { id: 'workforce_pipeline', label: 'Workforce Pipeline',        icon: '👥', cat: 'ops' },
+  { id: 'disruption',         label: 'Disruption Analysis',       glyph: 'zap' },
+  { id: 'sla_prediction',     label: 'SLA Breach Prediction',     glyph: 'target' },
+  { id: 'invoice',            label: 'Invoice Recovery',          glyph: 'receipt' },
+  { id: 'driver_hours',       label: 'Driver Hours Monitor',      glyph: 'clock' },
+  { id: 'hazmat',             label: 'Hazmat Checker',            glyph: 'alertTriangle' },
+  { id: 'carrier',            label: 'Carrier Scorecard',         glyph: 'barChart' },
+  { id: 'fuel',               label: 'Fuel Optimisation',         glyph: 'droplet' },
+  { id: 'vehicle_health',     label: 'Vehicle Health',            glyph: 'wrench' },
+  { id: 'driver_retention',   label: 'Driver Retention',          glyph: 'userCheck' },
+  { id: 'carbon',             label: 'Carbon & ESG',              glyph: 'leaf' },
+  { id: 'tender',             label: 'Tender Intelligence',       glyph: 'trophy' },
+  { id: 'regulation',         label: 'Regulation Monitor',        glyph: 'book' },
+  { id: 'consolidation',      label: 'Load Consolidation',        glyph: 'package' },
+  { id: 'forecast',           label: 'Demand Forecast',           glyph: 'trendingUp' },
+  { id: 'benchmarking',       label: 'Rate Benchmarking',         glyph: 'lineChart' },
+  { id: 'insurance',          label: 'Claims Intelligence',       glyph: 'shield' },
+  { id: 'cargo_theft',        label: 'Cargo Theft Prevention',    glyph: 'lock' },
+  { id: 'ghost_freight',      label: 'Ghost Freight Detection',   glyph: 'ghost' },
+  { id: 'subcontractor',      label: 'Subcontractor Trust',       glyph: 'users' },
+  { id: 'cash_flow',          label: 'Cash Flow Forecast',        glyph: 'pound' },
+  { id: 'churn_prediction',   label: 'Client Churn Prediction',   glyph: 'userX' },
+  { id: 'workforce_pipeline', label: 'Workforce Pipeline',        glyph: 'pipeline' },
 ]
-
-const CAT_COLORS = {
-  ops:        { bg: 'rgba(59,130,246,0.08)',  border: 'rgba(59,130,246,0.2)',  text: '#3b82f6' },
-  save:       { bg: 'rgba(245,166,35,0.08)',   border: 'rgba(245,166,35,0.2)',   text: '#f5a623' },
-  compliance: { bg: 'rgba(245,158,11,0.08)',  border: 'rgba(245,158,11,0.2)', text: '#f59e0b' },
-  growth:     { bg: 'rgba(168,85,247,0.08)',  border: 'rgba(168,85,247,0.2)', text: '#a855f7' },
-}
 
 const WEBHOOK_SYSTEMS = {
 
@@ -2053,6 +2047,21 @@ export default function DashboardPage() {
         .dh-toggle-btn { flex:1; padding:7px 10px; border-radius:8px; font-family:'DM Mono',monospace; font-size:9px; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; cursor:pointer; text-align:center; border:1px solid transparent; transition:all 0.15s; background:none; }
         .dh-toggle-btn.on { background:rgba(245,166,35,0.1); border-color:rgba(245,166,35,0.25); color:#f5a623; }
         .dh-toggle-btn.off { color:rgba(255,255,255,0.24); }
+        .dh-module-card { position:relative; text-align:left; padding:14px 14px 12px; border-radius:7px; border:1px solid rgba(255,255,255,0.06); background:#0f1826; cursor:pointer; transition:border-color .12s ease,background .12s ease; display:grid; grid-template-columns:18px 1fr; grid-column-gap:10px; grid-row-gap:4px; color:#e8eaed; font-family:inherit; }
+        .dh-module-card:hover:not(:disabled) { border-color:rgba(245,166,35,0.35); background:#131e30; }
+        .dh-module-card:disabled { cursor:default; opacity:0.55; }
+        .dh-module-glyph { grid-row:1/span 2; grid-column:1; color:rgba(255,255,255,0.55); display:inline-flex; align-items:center; justify-content:center; margin-top:1px; }
+        .dh-module-card:hover .dh-module-glyph { color:#f5a623; }
+        .dh-module-label { grid-row:1; grid-column:2; font-size:13px; font-weight:500; color:#e8eaed; line-height:1.2; }
+        .dh-module-status { grid-row:2; grid-column:2; font-family:'DM Mono',monospace; font-size:10px; letter-spacing:0.04em; color:rgba(255,255,255,0.32); text-transform:none; }
+        .dh-module-card.running { border-color:rgba(245,166,35,0.35); }
+        .dh-module-card.running .dh-module-status { color:#f5a623; }
+        .dh-module-card.has-issue { border-color:rgba(239,68,68,0.35); background:rgba(239,68,68,0.04); }
+        .dh-module-card.has-issue .dh-module-glyph { color:#ef4444; }
+        .dh-module-card.has-issue .dh-module-status { color:#ef4444; }
+        .dh-module-card.clear .dh-module-glyph { color:#30d158; }
+        .dh-module-card.clear .dh-module-status { color:rgba(48,209,88,0.7); }
+        .dh-module-dot { position:absolute; top:8px; right:9px; width:7px; height:7px; border-radius:50%; background:#ef4444; box-shadow:0 0 6px rgba(239,68,68,0.6); }
         .dh-inc { background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.07); border-radius:10px; padding:11px 13px; margin-bottom:7px; display:flex; align-items:flex-start; gap:10px; font-family:'DM Sans',sans-serif; }
         .dh-inc-dot { width:8px; height:8px; border-radius:50%; margin-top:4px; flex-shrink:0; }
         .dh-inc-ref { font-family:'DM Mono',monospace; font-size:9px; color:rgba(255,255,255,0.24); margin-bottom:2px; }
@@ -2460,7 +2469,6 @@ export default function DashboardPage() {
               </div>
               <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(190px,1fr))', gap:8, marginBottom:20 }}>
                 {MODULES.map(m => {
-                  const c = CAT_COLORS[m.cat]
                   const isRunning = moduleRunning === m.id
                   const lastRun = latestRuns[m.id]
                   const hasIssue = lastRun?.has_issues
@@ -2473,24 +2481,16 @@ export default function DashboardPage() {
                     if (hrs < 24) return `${hrs}h ago`
                     return `${Math.floor(hrs/24)}d ago`
                   })() : null
-                  // Border and bg override if issues found
-                  const borderColor = hasIssue ? 'rgba(239,68,68,0.4)' : isClear ? 'rgba(245,166,35,0.25)' : c.border
-                  const bgColor = hasIssue ? 'rgba(239,68,68,0.06)' : isClear ? 'rgba(245,166,35,0.04)' : c.bg
+                  const stateCls = isRunning ? ' running' : hasIssue ? ' has-issue' : isClear ? ' clear' : ''
                   return (
                     <button key={m.id} onClick={() => runModule(m.id)} disabled={!!moduleRunning}
-                      style={{ textAlign:'left', padding:'12px 13px', borderRadius:7, border:`1px solid ${borderColor}`, background:bgColor, cursor:moduleRunning?'default':'pointer', transition:'all 0.15s', opacity:moduleRunning&&moduleRunning!==m.id?0.4:1, position:'relative' }}>
-                      {hasIssue && <div style={{ position:'absolute', top:7, right:9, width:7, height:7, borderRadius:'50%', background:'#ef4444' }} />}
-                      {isClear && <div style={{ position:'absolute', top:7, right:9, width:7, height:7, borderRadius:'50%', background:'#f5a623' }} />}
-                      <div style={{ display:'flex', alignItems:'center', gap:7, marginBottom:4 }}>
-                        <span style={{ fontSize:15 }}>{m.icon}</span>
-                        <span style={{ fontSize:13, fontWeight:500, color:'#e8eaed', lineHeight:1.3 }}>{m.label}</span>
-                      </div>
-                      <div style={{ fontSize:11, fontFamily:'monospace', letterSpacing:'0.04em', color: isRunning?'#f5a623':hasIssue?'#ef4444':isClear?'#f5a623':c.text }}>
-                        {isRunning ? '● RUNNING...' : hasIssue ? '● ACTION REQUIRED' : isClear ? `✓ CLEAR · ${ranAgo}` : m.cat.toUpperCase()}
-                      </div>
-                      {hasIssue && lastRun.financial_impact > 0 && (
-                        <div style={{ fontSize:11, color:'#ef4444', fontFamily:'monospace', marginTop:3 }}>£{Number(lastRun.financial_impact).toLocaleString()}</div>
-                      )}
+                      className={`dh-module-card${stateCls}`}>
+                      {hasIssue && <span className="dh-module-dot" />}
+                      <span className="dh-module-glyph" dangerouslySetInnerHTML={{__html:`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${MODULE_GLYPHS[m.glyph]||''}</svg>`}} />
+                      <span className="dh-module-label">{m.label}</span>
+                      <span className="dh-module-status">
+                        {isRunning ? '● RUNNING...' : hasIssue ? `● ACTION REQUIRED${lastRun.financial_impact > 0 ? ` £${Number(lastRun.financial_impact).toLocaleString()}` : ''}` : isClear ? `✓ CLEAR · ${ranAgo}` : 'Click to scan'}
+                      </span>
                     </button>
                   )
                 })}
