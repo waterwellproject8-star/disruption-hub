@@ -1311,10 +1311,15 @@ export default function DashboardPage() {
   async function loadInvoices() {
     try {
       const res = await fetch(`/api/invoices?client_id=${ACTIVE_CLIENT_ID}&view=demo`)
-      if (!res.ok) return
+      if (!res.ok) return []
       const data = await res.json()
-      setInvoices(data.invoices || [])
-    } catch {}
+      const list = data.invoices || []
+      setInvoices(list)
+      return list
+    } catch (err) {
+      console.error('[loadInvoices] fetch failed:', err?.message)
+      return []
+    }
   }
 
   async function resetDemo() {
@@ -1591,13 +1596,27 @@ export default function DashboardPage() {
     if (actionId.startsWith('inv-dispute-')) {
       setActionStates(prev => ({ ...prev, [actionId]: 'firing' }))
       try {
+        // Defensive: invoices state may be empty if user reached FIRE
+        // from INTELLIGENCE tab without ever opening INVOICES tab.
+        let liveInvoices = invoices
+        if (!liveInvoices || liveInvoices.length === 0) {
+          try {
+            liveInvoices = await loadInvoices()
+          } catch (e) {
+            console.error('[fire-dispute] re-fetch failed:', e)
+            setActionStates(prev => ({ ...prev, [actionId]: 'idle' }))
+            showDashToast('Could not load invoices. Try again.', 'error')
+            return
+          }
+        }
+
         const carrierFromLabel = actionLabel.match(/Dispute (.+?) — recover/)?.[1]
-        const pending = invoices.filter(inv =>
+        const pending = (liveInvoices || []).filter(inv =>
           inv.carrier === carrierFromLabel && inv.status === 'pending_review'
         )
         if (pending.length === 0) {
-          showDashToast('No pending invoices found for this carrier', 'error')
-          setActionStates(prev => ({ ...prev, [actionId]: 'done' }))
+          showDashToast(`No pending invoices for ${carrierFromLabel || 'this carrier'}`, 'error')
+          setActionStates(prev => ({ ...prev, [actionId]: 'idle' }))
           return
         }
         let sent = 0, failed = 0
@@ -1614,16 +1633,21 @@ export default function DashboardPage() {
             failed++
           }
         }
-        showDashToast(
-          `${sent} dispute${sent === 1 ? '' : 's'} sent${failed > 0 ? ` — ${failed} failed` : ''}`,
-          failed === 0 ? 'success' : 'warning'
-        )
-        loadInvoices()
-        setActionStates(prev => ({ ...prev, [actionId]: 'done' }))
+        await loadInvoices()
+        if (sent > 0 && failed === 0) {
+          setActionStates(prev => ({ ...prev, [actionId]: 'done' }))
+          showDashToast(`${sent} dispute${sent === 1 ? '' : 's'} sent`, 'success')
+        } else if (sent > 0) {
+          setActionStates(prev => ({ ...prev, [actionId]: 'idle' }))
+          showDashToast(`${sent} sent, ${failed} failed. Check INVOICES tab.`, 'warning')
+        } else {
+          setActionStates(prev => ({ ...prev, [actionId]: 'idle' }))
+          showDashToast('Send failed. Try again.', 'error')
+        }
         return
       } catch (err) {
         console.error('[fireAction] inv-dispute batch failed:', err.message)
-        setActionStates(prev => ({ ...prev, [actionId]: 'done' }))
+        setActionStates(prev => ({ ...prev, [actionId]: 'idle' }))
         showDashToast('Dispute send failed — check logs', 'error')
         return
       }
