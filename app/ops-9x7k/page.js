@@ -1905,7 +1905,7 @@ export default function DashboardPage() {
         @keyframes spin{to{transform:rotate(360deg)}}
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { overscroll-behavior: none; }
-        .dh-layout { display: grid; grid-template-columns: 290px 1fr; flex: 1; min-height: 0; }
+        .dh-layout { display: grid; grid-template-columns: 300px 1fr; flex: 1; min-height: 0; }
         .dh-sidebar { border-right: 1px solid rgba(255,255,255,0.06); background: #0d1420; overflow-y: auto; display: flex; flex-direction: column; }
         .dh-main { display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
         .dh-tabs { display: flex; gap: 6px; padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,0.06); background: #080c14; flex-shrink: 0; overflow-x: auto; -webkit-overflow-scrolling: touch; }
@@ -1941,10 +1941,10 @@ export default function DashboardPage() {
         .dh-cmd-scroll::-webkit-scrollbar { width:3px; }
         .dh-cmd-scroll::-webkit-scrollbar-track { background:transparent; }
         .dh-cmd-scroll::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.08); border-radius:2px; }
-        .dh-fleet-stats { display:grid; grid-template-columns:repeat(5,1fr); gap:6px; margin-bottom:10px; }
+        .dh-fleet-stats { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:6px; margin-bottom:10px; }
         .dh-fstat { background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.07); border-radius:10px; padding:10px 8px; text-align:center; }
         .dh-fstat-n { font-size:24px; font-weight:700; letter-spacing:-0.5px; margin-bottom:2px; font-family:'DM Sans',sans-serif; }
-        .dh-fstat-l { font-family:'DM Mono',monospace; font-size:8px; color:rgba(255,255,255,0.24); letter-spacing:0.08em; text-transform:uppercase; }
+        .dh-fstat-l { font-family:'DM Mono',monospace; font-size:8px; color:rgba(255,255,255,0.24); letter-spacing:0.08em; text-transform:uppercase; line-height:1.1; overflow:hidden; word-break:break-word; }
         .dh-vc { background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.07); border-radius:14px; padding:14px 16px; margin-bottom:8px; cursor:pointer; position:relative; overflow:hidden; transition:border-color 0.15s; font-family:'DM Sans',sans-serif; }
         .dh-vc.disrupted { border-color:rgba(255,69,58,0.3); }
         .dh-vc.disrupted::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:#ff453a; opacity:0.8; }
@@ -2098,6 +2098,13 @@ export default function DashboardPage() {
         {/* ── LEFT SIDEBAR ──────────────────────────────────────────────────── */}
         {activeTab!=='approvals'&&<div className="dh-sidebar">
 
+          {/* Tab switcher — vertical rail */}
+          <div style={{ display:'flex', flexDirection:'column', borderBottom:'1px solid rgba(255,255,255,0.05)', background:'#08080c' }}>
+            <button onClick={() => { setActiveTab('approvals'); loadApprovals(); loadFleet(); loadActiveDrivers(); loadWebhookLog() }} style={{ textAlign:'left', padding:'11px 18px', background:activeTab==='approvals'?'rgba(245,166,35,0.06)':'transparent', border:'none', borderLeft:activeTab==='approvals'?'2px solid #f5a623':'2px solid transparent', color:activeTab==='approvals'?'#f5a623':'rgba(255,255,255,0.4)', fontFamily:"'DM Mono',monospace", fontSize:11, letterSpacing:'0.12em', textTransform:'uppercase', cursor:'pointer', transition:'color .12s, border-color .12s, background .12s' }}>COMMAND</button>
+            <button onClick={() => setActiveTab('modules')} style={{ textAlign:'left', padding:'11px 18px', background:activeTab==='modules'?'rgba(245,166,35,0.06)':'transparent', border:'none', borderLeft:activeTab==='modules'?'2px solid #f5a623':'2px solid transparent', color:activeTab==='modules'?'#f5a623':'rgba(255,255,255,0.4)', fontFamily:"'DM Mono',monospace", fontSize:11, letterSpacing:'0.12em', textTransform:'uppercase', cursor:'pointer', transition:'color .12s, border-color .12s, background .12s' }}>INTELLIGENCE</button>
+            <button onClick={() => { setActiveTab('invoices'); loadInvoices() }} style={{ textAlign:'left', padding:'11px 18px', background:activeTab==='invoices'?'rgba(245,166,35,0.06)':'transparent', border:'none', borderLeft:activeTab==='invoices'?'2px solid #f5a623':'2px solid transparent', color:activeTab==='invoices'?'#f5a623':'rgba(255,255,255,0.4)', fontFamily:"'DM Mono',monospace", fontSize:11, letterSpacing:'0.12em', textTransform:'uppercase', cursor:'pointer', transition:'color .12s, border-color .12s, background .12s' }}>INVOICES</button>
+          </div>
+
           <div className="dh-cmd-panel-hdr">
             <span className="dh-cmd-panel-title">Live Fleet</span>
             <span className="dh-cmd-panel-count">{(liveShipments.length > 0 ? liveShipments : ACTIVE_SHIPMENTS).length} vehicles</span>
@@ -2155,25 +2162,13 @@ export default function DashboardPage() {
         {/* ── RIGHT PANEL ───────────────────────────────────────────────────── */}
         <div style={{ display:'flex', flexDirection:'column', background:'#080c14', overflow:'hidden', ...(activeTab==='approvals'?{padding:0,maxWidth:'none',width:'100%'}:{}) }}>
 
-          {/* Tab bar */}
-          <div style={{ padding:'10px 20px', borderBottom:'1px solid rgba(255,255,255,0.05)', background:'#08080c', display:'flex', alignItems:'center', gap:8 }}>
-            <button style={TAB_STYLE(activeTab==='approvals')} onClick={() => { setActiveTab('approvals'); loadApprovals(); loadFleet(); loadActiveDrivers(); loadWebhookLog() }}>
-              COMMAND {pendingApprovals.filter(a=>a.status==='pending').length > 0 ? `(${pendingApprovals.filter(a=>a.status==='pending').length})` : ''}
-            </button>
-            <button style={TAB_STYLE(activeTab==='modules')} onClick={() => setActiveTab('modules')}>INTELLIGENCE</button>
-            <button style={TAB_STYLE(activeTab==='invoices')} onClick={() => { setActiveTab('invoices'); loadInvoices() }}>INVOICES</button>
-            {/* HIDDEN FOR SWIFTFLEET CALL — restore after May 7 partner demo:
-            <button style={TAB_STYLE(activeTab==='agent')} onClick={() => setActiveTab('agent')}>AGENT</button>
-            <button style={TAB_STYLE(activeTab==='scenarios')} onClick={() => setActiveTab('scenarios')}>SCENARIOS</button>
-            <button style={TAB_STYLE(activeTab==='integrations')} onClick={() => { setActiveTab('integrations'); loadWebhookLog(); loadActiveDrivers() }}>SETUP</button>
-            */}
-            <div style={{ marginLeft:'auto', display:'flex', alignItems:'center', gap:8 }}>
-              <div style={{ width:7, height:7, borderRadius:'50%', background: loading ? '#f59e0b' : '#f5a623', animation: loading ? 'pulse 1s infinite' : 'none' }} />
-              <span style={{ fontFamily:'monospace', fontSize:11, color:'#4a5260' }}>{loading ? 'ANALYSING...' : 'AGENT READY'}</span>
-              {messages.length > 0 && (
-                <button onClick={() => { setMessages([]); setResponse(''); setActiveShipment(null); setAgentActions([]); setModuleActions([]); setActionStates({}) }} style={{ fontSize:11, color:'#4a5260', background:'none', border:'1px solid rgba(255,255,255,0.06)', borderRadius:4, padding:'3px 8px', cursor:'pointer', fontFamily:'monospace', marginLeft:4 }}>CLEAR ×</button>
-              )}
-            </div>
+          {/* Status bar */}
+          <div style={{ padding:'8px 20px', borderBottom:'1px solid rgba(255,255,255,0.05)', background:'#08080c', display:'flex', alignItems:'center', justifyContent:'flex-end', gap:8 }}>
+            <div style={{ width:7, height:7, borderRadius:'50%', background: loading ? '#f59e0b' : '#f5a623', animation: loading ? 'pulse 1s infinite' : 'none' }} />
+            <span style={{ fontFamily:'monospace', fontSize:11, color:'#4a5260' }}>{loading ? 'ANALYSING...' : 'AGENT READY'}</span>
+            {messages.length > 0 && (
+              <button onClick={() => { setMessages([]); setResponse(''); setActiveShipment(null); setAgentActions([]); setModuleActions([]); setActionStates({}) }} style={{ fontSize:11, color:'#4a5260', background:'none', border:'1px solid rgba(255,255,255,0.06)', borderRadius:4, padding:'3px 8px', cursor:'pointer', fontFamily:'monospace', marginLeft:4 }}>CLEAR ×</button>
+            )}
           </div>
 
           {/* ── AGENT TAB ──────────────────────────────────────────────────── */}
