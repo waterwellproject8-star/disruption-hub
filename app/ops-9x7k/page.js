@@ -1579,13 +1579,7 @@ export default function DashboardPage() {
       actions.push({ id:'tender-brief', label:`Send tender briefing — ${result.matching_tenders.length} match${result.matching_tenders.length>1?'es':''}`, type:'email', icon:'🏆' })
     }
 
-    return actions.slice(0, 4).map(a => ({
-      ...a,
-      id: 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
-        const r = Math.random() * 16 | 0
-        return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16)
-      })
-    }))
+    return actions.slice(0, 4)
   }
 
   async function fireAction(actionId, actionLabel, actionType, mailto) {
