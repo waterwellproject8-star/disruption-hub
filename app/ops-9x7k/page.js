@@ -1942,9 +1942,9 @@ export default function DashboardPage() {
         .dh-cmd-scroll::-webkit-scrollbar-track { background:transparent; }
         .dh-cmd-scroll::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.08); border-radius:2px; }
         .dh-fleet-stats { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:6px; margin-bottom:10px; }
-        .dh-fstat { background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.07); border-radius:10px; padding:10px 8px; text-align:center; }
+        .dh-fstat { background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.07); border-radius:10px; padding:10px 4px; text-align:center; min-height:52px; display:flex; flex-direction:column; align-items:center; justify-content:center; }
         .dh-fstat-n { font-size:24px; font-weight:700; letter-spacing:-0.5px; margin-bottom:2px; font-family:'DM Sans',sans-serif; }
-        .dh-fstat-l { font-family:'DM Mono',monospace; font-size:8px; color:rgba(255,255,255,0.24); letter-spacing:0.08em; text-transform:uppercase; line-height:1.15; overflow-wrap:break-word; word-break:break-word; white-space:normal; }
+        .dh-fstat-l { font-family:'DM Mono',monospace; font-size:7px; color:rgba(255,255,255,0.24); letter-spacing:0.04em; text-transform:uppercase; line-height:1.2; word-break:normal; overflow-wrap:normal; white-space:normal; hyphens:none; }
         .dh-vc { background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.07); border-radius:14px; padding:14px 16px; margin-bottom:8px; cursor:pointer; position:relative; overflow:hidden; transition:border-color 0.15s; font-family:'DM Sans',sans-serif; }
         .dh-vc.disrupted { border-color:rgba(255,69,58,0.3); }
         .dh-vc.disrupted::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:#ff453a; opacity:0.8; }
