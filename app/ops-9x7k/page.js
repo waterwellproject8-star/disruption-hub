@@ -2358,8 +2358,8 @@ export default function DashboardPage() {
 
               {/* ── DVSA COMPLIANCE SECTION ─────────────────────────────────── */}
               <div style={{ marginBottom:24, padding:16, background:'#0a0e16', border:'1px solid rgba(255,255,255,0.06)', borderRadius:10 }}>
-                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:12 }}>
-                  <div style={{ fontSize:13, color:'#f5a623', fontFamily:'monospace', letterSpacing:'0.1em', fontWeight:700 }}>DVSA FLEET COMPLIANCE</div>
+                <div className="dh-cmd-panel-hdr" style={{ marginBottom:12 }}>
+                  <span className="dh-cmd-panel-title">DVSA Fleet Compliance</span>
                   <button onClick={loadDvsa} style={{ background:'none', border:'none', color:'#4a5260', fontSize:11, cursor:'pointer' }}>↻ Refresh</button>
                 </div>
 
@@ -2443,21 +2443,20 @@ export default function DashboardPage() {
                 )}
               </div>
 
-              <div style={{ fontSize:11, color:'#4a5260', fontFamily:'monospace', marginBottom:6 }}>// INTELLIGENCE MODULES — auto-scan runs at 05:00 daily · click any to run now</div>
-              <div style={{ display:'flex', gap:12, marginBottom:14, flexWrap:'wrap' }}>
-                {Object.values(latestRuns).some(r=>r.has_issues) && (
-                  <div style={{ display:'flex', alignItems:'center', gap:5, fontSize:11, color:'#ef4444', fontFamily:'monospace' }}>
-                    <div style={{ width:6, height:6, borderRadius:'50%', background:'#ef4444' }}/> {Object.values(latestRuns).filter(r=>r.has_issues).length} module{Object.values(latestRuns).filter(r=>r.has_issues).length!==1?'s require':' requires'} attention
-                  </div>
-                )}
-                {Object.values(latestRuns).length > 0 && (
-                  <div style={{ fontSize:11, color:'#4a5260', fontFamily:'monospace' }}>
-                    Last scan: {(() => { const latest = Object.values(latestRuns).sort((a,b)=>new Date(b.ran_at)-new Date(a.ran_at))[0]; if(!latest?.ran_at) return 'never'; const mins = Math.floor((Date.now()-new Date(latest.ran_at))/60000); return mins<60?`${mins}m ago`:mins<1440?`${Math.floor(mins/60)}h ago`:`${Math.floor(mins/1440)}d ago` })()}
-                  </div>
-                )}
-                {Object.values(latestRuns).length === 0 && (
-                  <div style={{ fontSize:11, color:'#4a5260', fontFamily:'monospace' }}>No auto-scans run yet — enable cron or click a module to run manually</div>
-                )}
+              <div className="dh-cmd-panel-hdr" style={{ marginBottom:6 }}>
+                <span className="dh-cmd-panel-title">Intelligence Modules</span>
+                <div style={{ display:'flex', gap:12, alignItems:'center', flexWrap:'wrap' }}>
+                  {Object.values(latestRuns).some(r=>r.has_issues) && (
+                    <div style={{ display:'flex', alignItems:'center', gap:5, fontSize:11, color:'#ef4444', fontFamily:'monospace' }}>
+                      <div style={{ width:6, height:6, borderRadius:'50%', background:'#ef4444' }}/> {Object.values(latestRuns).filter(r=>r.has_issues).length} module{Object.values(latestRuns).filter(r=>r.has_issues).length!==1?'s require':' requires'} attention
+                    </div>
+                  )}
+                  {Object.values(latestRuns).length > 0 && (
+                    <span className="dh-cmd-panel-count">
+                      Last scan: {(() => { const latest = Object.values(latestRuns).sort((a,b)=>new Date(b.ran_at)-new Date(a.ran_at))[0]; if(!latest?.ran_at) return 'never'; const mins = Math.floor((Date.now()-new Date(latest.ran_at))/60000); return mins<60?`${mins}m ago`:mins<1440?`${Math.floor(mins/60)}h ago`:`${Math.floor(mins/1440)}d ago` })()}
+                    </span>
+                  )}
+                </div>
               </div>
               <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(190px,1fr))', gap:8, marginBottom:20 }}>
                 {MODULES.map(m => {
@@ -2551,7 +2550,9 @@ export default function DashboardPage() {
             <div style={{ flex:1, overflowY:'auto', padding:'20px' }}>
               {/* Section A — CSV Upload */}
               <div style={{ marginBottom:24 }}>
-                <div style={{ fontSize:11, color:'#4a5260', fontFamily:'monospace', letterSpacing:'0.08em', marginBottom:10 }}>UPLOAD CSV</div>
+                <div className="dh-cmd-panel-hdr">
+                  <span className="dh-cmd-panel-title">Upload CSV</span>
+                </div>
                 <div style={{ padding:20, border:csvDragActive?'2px solid #f5a623':'2px dashed rgba(245,166,35,0.2)', borderRadius:12, textAlign:'center', cursor:'pointer', background:csvDragActive?'rgba(245,166,35,0.08)':'rgba(245,166,35,0.02)', transition:'all 0.15s' }}
                   onClick={() => document.getElementById('csv-upload')?.click()}
                   onDragOver={e => { e.preventDefault(); e.stopPropagation() }}
@@ -2626,7 +2627,9 @@ export default function DashboardPage() {
 
               {/* Section B — Manual Entry */}
               <div style={{ marginBottom:24 }}>
-                <div style={{ fontSize:11, color:'#4a5260', fontFamily:'monospace', letterSpacing:'0.08em', marginBottom:10 }}>MANUAL ENTRY</div>
+                <div className="dh-cmd-panel-hdr">
+                  <span className="dh-cmd-panel-title">Manual Entry</span>
+                </div>
                 <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:8, marginBottom:10 }}>
                   <input value={manualInv.carrier} onChange={e=>setManualInv(p=>({...p,carrier:e.target.value}))} placeholder="Carrier name" style={{ padding:10, background:'#0f1826', border:'1px solid rgba(255,255,255,0.1)', borderRadius:8, color:'#e8eaed', fontSize:13, outline:'none' }} />
                   <input value={manualInv.invoice_ref} onChange={e=>setManualInv(p=>({...p,invoice_ref:e.target.value}))} placeholder="Invoice ref" style={{ padding:10, background:'#0f1826', border:'1px solid rgba(255,255,255,0.1)', borderRadius:8, color:'#e8eaed', fontSize:13, outline:'none', fontFamily:'monospace' }} />
@@ -2683,9 +2686,10 @@ export default function DashboardPage() {
 
               {/* Section C — Invoice List */}
               <div>
-                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10 }}>
-                  <div style={{ fontSize:11, color:'#4a5260', fontFamily:'monospace', letterSpacing:'0.08em' }}>ALL INVOICES ({invoices.length})</div>
-                  <div style={{ display:'flex', gap:8 }}>
+                <div className="dh-cmd-panel-hdr">
+                  <span className="dh-cmd-panel-title">All Invoices</span>
+                  <div style={{ display:'flex', gap:8, alignItems:'center' }}>
+                    <span className="dh-cmd-panel-count">{invoices.length}</span>
                     <button onClick={resetDemo} style={{ background:'none', border:'1px solid rgba(245,166,35,0.2)', borderRadius:4, color:'#f5a623', fontSize:11, cursor:'pointer', padding:'2px 8px' }}>RESET DEMO</button>
                     <button onClick={loadInvoices} style={{ background:'none', border:'none', color:'#4a5260', fontSize:11, cursor:'pointer' }}>↻ Refresh</button>
                   </div>
