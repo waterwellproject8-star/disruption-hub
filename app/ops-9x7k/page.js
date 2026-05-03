@@ -1628,6 +1628,11 @@ export default function DashboardPage() {
         if (sent > 0 && failed === 0) {
           setActionStates(prev => ({ ...prev, [actionId]: 'done' }))
           showDashToast(`${sent} dispute${sent === 1 ? '' : 's'} sent`, 'success')
+          // Refresh the Invoice Recovery module card so the
+          // 'ACTION REQUIRED £X' headline reflects post-dispute totals
+          runModule('invoice').catch(e =>
+            console.error('[fire-dispute] module refresh failed:', e)
+          )
         } else if (sent > 0) {
           setActionStates(prev => ({ ...prev, [actionId]: 'idle' }))
           showDashToast(`${sent} sent, ${failed} failed. Check INVOICES tab.`, 'warning')
