@@ -2098,56 +2098,56 @@ export default function DashboardPage() {
         {/* ── LEFT SIDEBAR ──────────────────────────────────────────────────── */}
         {activeTab!=='approvals'&&<div className="dh-sidebar">
 
-          {/* Metrics */}
-          <div style={{ padding:'14px', borderBottom:'1px solid rgba(255,255,255,0.06)' }}>
-            <div style={{ fontSize:11, fontFamily:'monospace', color:'#4a5260', letterSpacing:'0.08em', marginBottom:8 }}>TODAY — {new Date().toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'}).toUpperCase()}</div>
-            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:6 }}>
-              {(() => {
-                const activeShipments = liveShipments.length
-                const alertsCount = pendingApprovals.filter(a => a.status === 'pending').length
-                const otrRelevant = liveShipments.filter(s => s.status !== 'cancelled')
-                const onTimeCount = otrRelevant.filter(s =>
-                  s.status === 'on-track' || s.status === 'completed' || s.status === 'delayed'
-                ).length
-                const onTimePct = otrRelevant.length === 0
-                  ? '—'
-                  : Math.round((onTimeCount / otrRelevant.length) * 100) + '%'
-                const today = new Date().toDateString()
-                const savedToday = incidents
-                  .filter(i => i.created_at && new Date(i.created_at).toDateString() === today)
-                  .reduce((sum, i) => sum + (Number(i.financial_impact) || 0), 0)
-                const savedFmt = savedToday >= 1000
-                  ? `£${(savedToday / 1000).toFixed(1)}K`
-                  : `£${savedToday}`
-                return [
-                  { l:'Active shipments', v: String(activeShipments) },
-                  { l:'Alerts',           v: String(alertsCount), vc: alertsCount > 0 ? '#ef4444' : undefined },
-                  { l:'Under control',    v: onTimePct },
-                  { l:'Saved today',      v: savedFmt, vc: '#f5a623' },
-                ]
-              })().map(m => (
-                <div key={m.l} style={{ background:'#0f1826', borderRadius:6, padding:'10px 10px' }}>
-                  <div style={{ fontSize:13, color:'#4a5260', marginBottom:3 }}>{m.l}</div>
-                  <div style={{ fontSize:28, fontWeight:700, fontFamily:'monospace', color:m.vc||'#e8eaed' }}>{m.v}</div>
-                </div>
-              ))}
-            </div>
+          <div className="dh-cmd-panel-hdr">
+            <span className="dh-cmd-panel-title">Live Fleet</span>
+            <span className="dh-cmd-panel-count">{(liveShipments.length > 0 ? liveShipments : ACTIVE_SHIPMENTS).length} vehicles</span>
           </div>
 
-          {/* Active Shipments */}
-          <div style={{ padding:'14px', borderBottom:'1px solid rgba(255,255,255,0.06)' }}>
-            <div style={{ fontSize:11, fontFamily:'monospace', color:'#4a5260', letterSpacing:'0.08em', marginBottom:8 }}>ACTIVE SHIPMENTS</div>
-            {(liveShipments.length > 0 ? liveShipments : ACTIVE_SHIPMENTS).map(s => (
-              <div key={s.ref} onClick={() => analyseShipment(s)} style={{ padding:'11px 12px', borderRadius:6, marginBottom:8, cursor:'pointer', border:activeShipment===s.ref?'1px solid #f5a623':'1px solid rgba(255,255,255,0.05)', background:s.status==='disrupted'?'rgba(239,68,68,0.07)':s.status==='delayed'?'rgba(245,158,11,0.05)':'#0f1826', transition:'all 0.15s' }}>
-                <div style={{ display:'flex', justifyContent:'space-between', marginBottom:2 }}>
-                  <span style={{ fontFamily:'monospace', fontSize:13, color:'#e8eaed', fontWeight:500 }}>{s.ref}</span>
-                  <span style={{ fontFamily:'monospace', fontSize:11, color:STATUS_COLORS[s.status], textTransform:'uppercase' }}>{s.status}</span>
-                </div>
-                <div style={{ fontSize:12, color:'#8a9099', marginBottom:2 }}>{s.route}</div>
-                <div style={{ fontSize:12, color:'#4a5260' }}>{s.carrier} · ETA {(()=>{const e=s.eta;if(!e||e==='???')return'???';if(e.includes('T')||e.includes(' ')){try{return new Date(e).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})}catch{return e}}return e})()}</div>
-                {s.alert && <div style={{ marginTop:5, fontSize:11, color:'#f59e0b', background:'rgba(245,158,11,0.08)', padding:'3px 6px', borderRadius:3 }}>⚠ {s.alert}</div>}
+          <div className="dh-cmd-scroll">
+            <div className="dh-fleet-stats">
+              <div className="dh-fstat">
+                <div className="dh-fstat-n" style={{color:'#30d158'}}>{(liveShipments.length>0?liveShipments:ACTIVE_SHIPMENTS).filter(s=>s.status==='on-track').length}</div>
+                <div className="dh-fstat-l">On Track</div>
               </div>
-            ))}
+              <div className="dh-fstat">
+                <div className="dh-fstat-n" style={{color:'#ffd60a'}}>{(liveShipments.length>0?liveShipments:ACTIVE_SHIPMENTS).filter(s=>s.status==='delayed').length}</div>
+                <div className="dh-fstat-l">Delayed</div>
+              </div>
+              <div className="dh-fstat">
+                <div className="dh-fstat-n" style={{color:'#f5a623'}}>{(liveShipments.length>0?liveShipments:ACTIVE_SHIPMENTS).filter(s=>s.status==='at_risk').length}</div>
+                <div className="dh-fstat-l">At Risk</div>
+              </div>
+              <div className="dh-fstat">
+                <div className="dh-fstat-n" style={{color:'#ff453a'}}>{(liveShipments.length>0?liveShipments:ACTIVE_SHIPMENTS).filter(s=>s.status==='disrupted').length}</div>
+                <div className="dh-fstat-l">Disrupted</div>
+              </div>
+              <div className="dh-fstat">
+                <div className="dh-fstat-n" style={{color:'#8a9099'}}>{(liveShipments.length>0?liveShipments:ACTIVE_SHIPMENTS).filter(s=>s.status==='not_completed').length}</div>
+                <div className="dh-fstat-l">Not Completed</div>
+              </div>
+            </div>
+
+            {(liveShipments.length>0?liveShipments:ACTIVE_SHIPMENTS).map(s=>{
+              const isDisrupted = s.status==='disrupted'
+              const isDelayed = s.status==='delayed'
+              const isOnTrack = s.status==='on-track'
+              return (
+                <div key={s.ref} className={`dh-vc${isDisrupted?' disrupted':isDelayed?' delayed':''}`} onClick={()=>analyseShipment(s)}>
+                  <div className="dh-vc-row">
+                    <span className="dh-vc-reg">{s.ref}</span>
+                    <span className="dh-vc-badge" style={{color:STATUS_COLORS[s.status],background:`${STATUS_COLORS[s.status]}18`}}>{s.status.toUpperCase().replace('-',' ')}</span>
+                  </div>
+                  <div className="dh-vc-route">{s.route}</div>
+                  <div className="dh-vc-meta">
+                    <span className="dh-vc-eta">ETA {(()=>{const e=s.eta;if(!e||e==='???')return'???';if(e.includes('T')||e.includes(' ')){try{return new Date(e).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})}catch{return e}}return e})()}</span>
+                    {isDisrupted&&<span className="dh-sla-badge" style={{color:'#ff453a',background:'rgba(255,69,58,0.1)'}}>SLA AT RISK</span>}
+                    {isDelayed&&<span className="dh-sla-badge" style={{color:'#ffd60a',background:'rgba(255,214,10,0.1)'}}>SLA TIGHT</span>}
+                    {isOnTrack&&<span className="dh-sla-badge" style={{color:'#30d158',background:'rgba(48,209,88,0.1)'}}>SLA SAFE</span>}
+                  </div>
+                  {s.alert&&<div style={{marginTop:6,fontSize:11,color:isDisrupted?'#ff453a':'#ffd60a',lineHeight:1.4}}>{s.alert}</div>}
+                </div>
+              )
+            })}
           </div>
 
         </div>}
