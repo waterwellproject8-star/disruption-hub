@@ -239,14 +239,14 @@ function PinGate({ onUnlock }) {
     else { setError(true); setPin(''); setTimeout(() => setError(false), 2000) }
   }
   return (
-    <div style={{ minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center', background:'#080c14', fontFamily:'Barlow, sans-serif' }}>
-      <div style={{ width:360, padding:'40px 36px', background:'#0f1826', border:'1px solid rgba(255,255,255,0.08)', borderRadius:12, textAlign:'center' }}>
+    <div style={{ minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center', background:'#08080c', fontFamily:'Barlow, sans-serif' }}>
+      <div style={{ width:360, padding:'40px 36px', background:'#111418', border:'1px solid rgba(255,255,255,0.08)', borderRadius:12, textAlign:'center' }}>
         <div style={{ width:48, height:48, background:'#f5a623', clipPath:'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)', margin:'0 auto 20px' }} />
         <div style={{ fontFamily:'monospace', fontSize:11, color:'#f5a623', letterSpacing:'0.1em', marginBottom:8 }}>DISRUPTIONHUB</div>
         <div style={{ fontSize:15, color:'#e8eaed', marginBottom:6 }}>Operations Dashboard</div>
         <div style={{ fontSize:12, color:'#4a5260', marginBottom:28 }}>Authorised access only</div>
         <input type="password" value={pin} onChange={e => setPin(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSubmit()} placeholder="Enter access code" autoFocus
-          style={{ width:'100%', padding:'12px 14px', background:'#080c14', border: error ? '1px solid #ef4444' : '1px solid rgba(255,255,255,0.12)', borderRadius:6, color:'#e8eaed', fontSize:14, outline:'none', fontFamily:'IBM Plex Mono, monospace', letterSpacing:'0.2em', textAlign:'center', marginBottom:12, boxSizing:'border-box', transition:'border 0.2s' }} />
+          style={{ width:'100%', padding:'12px 14px', background:'#08080c', border: error ? '1px solid #ef4444' : '1px solid rgba(255,255,255,0.12)', borderRadius:6, color:'#e8eaed', fontSize:14, outline:'none', fontFamily:'IBM Plex Mono, monospace', letterSpacing:'0.2em', textAlign:'center', marginBottom:12, boxSizing:'border-box', transition:'border 0.2s' }} />
         {error && <div style={{ fontSize:11, color:'#ef4444', fontFamily:'monospace', marginBottom:10 }}>Invalid access code</div>}
         <button onClick={handleSubmit} style={{ width:'100%', padding:'11px', background:'#f5a623', border:'none', borderRadius:6, color:'#000', fontWeight:600, fontSize:13, cursor:'pointer', fontFamily:'Barlow, sans-serif' }}>Access Dashboard →</button>
         <div style={{ marginTop:20, fontSize:11, color:'#4a5260' }}>Not a client? <a href="/" style={{ color:'#f5a623', textDecoration:'none' }}>View live demo →</a></div>
@@ -407,7 +407,7 @@ function AgentResponse({ text }) {
     <div style={{padding:'4px 0'}}>
       {/* Severity + financial header strip */}
       {(severity || financialLine) && (
-        <div style={{display:'flex',alignItems:'center',gap:10,padding:'10px 14px',background:'#0f1826',borderRadius:8,marginBottom:14,flexWrap:'wrap',border:'1px solid rgba(255,255,255,0.06)'}}>
+        <div style={{display:'flex',alignItems:'center',gap:10,padding:'10px 14px',background:'#111418',borderRadius:8,marginBottom:14,flexWrap:'wrap',border:'1px solid rgba(255,255,255,0.06)'}}>
           {severity && (
             <span style={{background:SEV_BG[severity],color:SEV_COLOR[severity],fontSize:11,fontFamily:'monospace',fontWeight:700,padding:'3px 10px',borderRadius:4,border:`1px solid ${SEV_COLOR[severity]}30`,letterSpacing:'0.05em'}}>{severity}</span>
           )}
@@ -459,7 +459,7 @@ function SectionBlock({ label, children, labelColor = '#4a5260' }) {
 
 function ActionCard({ text, index, urgent }) {
   return (
-    <div style={{ display:'flex', gap:10, marginBottom:6, padding:'8px 10px', background:'#0f1826', borderRadius:5, border: urgent ? '1px solid rgba(239,68,68,0.2)' : '1px solid rgba(255,255,255,0.06)' }}>
+    <div style={{ display:'flex', gap:10, marginBottom:6, padding:'8px 10px', background:'#111418', borderRadius:5, border: urgent ? '1px solid rgba(239,68,68,0.2)' : '1px solid rgba(255,255,255,0.06)' }}>
       <div style={{ width:18, height:18, borderRadius:'50%', background: urgent ? '#ef4444' : '#f5a623', color:'#000', display:'flex', alignItems:'center', justifyContent:'center', fontSize:11, fontWeight:700, flexShrink:0, marginTop:1 }}>{index + 1}</div>
       <div style={{ fontSize:11, color:'#e8eaed', lineHeight:1.6 }}>{text}</div>
     </div>
@@ -510,7 +510,7 @@ function ModuleResult({ result, moduleName }) {
 
         {/* Metrics bar */}
         {(r.severity || financialMetrics.length > 0 || r.all_clear === false) && (
-          <div style={{ display:'flex', gap:8, padding:'12px 14px', background:'#0d1420', borderBottom:'1px solid rgba(255,255,255,0.06)', flexWrap:'wrap' }}>
+          <div style={{ display:'flex', gap:8, padding:'12px 14px', background:'#0a0c0e', borderBottom:'1px solid rgba(255,255,255,0.06)', flexWrap:'wrap' }}>
             {r.severity && <MetricBadge label="SEVERITY" value={r.severity} color={SEV[r.severity] || '#8a9099'} />}
             {r.all_clear === false && <MetricBadge label="STATUS" value="ACTION REQUIRED" color="#ef4444" />}
             {r.all_clear === true && <MetricBadge label="STATUS" value="ALL CLEAR" color="#f5a623" />}
@@ -793,7 +793,7 @@ function ModuleResult({ result, moduleName }) {
         {r.verdict && (
           <SectionBlock label={`VERDICT — ${r.liability_assessment?.replace(/_/g,' ')}`} labelColor={r.liability_assessment==='NO_LIABILITY'?'#f5a623':'#ef4444'}>
             <div style={{ fontSize:12, color:'#e8eaed', lineHeight:1.7, marginBottom:8 }}>{r.verdict}</div>
-            {r.response_letter && <div style={{ fontSize:11, color:'#8a9099', lineHeight:1.6, padding:'8px 10px', background:'#0f1826', borderRadius:5, border:'1px solid rgba(255,255,255,0.06)' }}>{r.response_letter}</div>}
+            {r.response_letter && <div style={{ fontSize:11, color:'#8a9099', lineHeight:1.6, padding:'8px 10px', background:'#111418', borderRadius:5, border:'1px solid rgba(255,255,255,0.06)' }}>{r.response_letter}</div>}
           </SectionBlock>
         )}
 
@@ -1000,7 +1000,7 @@ function ScenarioResult({ result }) {
             v.length === 0
               ? <div style={{ fontSize:12, color:'#4a5260' }}>None</div>
               : v.map((item, i) => (
-                <div key={i} style={{ padding:'8px 10px', background:'#0f1826', borderRadius:5, border:'1px solid rgba(255,255,255,0.06)', marginBottom:6 }}>
+                <div key={i} style={{ padding:'8px 10px', background:'#111418', borderRadius:5, border:'1px solid rgba(255,255,255,0.06)', marginBottom:6 }}>
                   {typeof item === 'object'
                     ? Object.entries(item).map(([ik,iv]) => (
                         <div key={ik} style={{ fontSize:11, color:'#8a9099', marginBottom:2 }}>
@@ -1013,7 +1013,7 @@ function ScenarioResult({ result }) {
                 </div>
               ))
           ) : typeof v === 'object' && v !== null ? (
-            <div style={{ padding:'8px 10px', background:'#0f1826', borderRadius:5, border:'1px solid rgba(255,255,255,0.06)' }}>
+            <div style={{ padding:'8px 10px', background:'#111418', borderRadius:5, border:'1px solid rgba(255,255,255,0.06)' }}>
               {Object.entries(v).map(([ik,iv]) => (
                 <div key={ik} style={{ fontSize:11, color:'#8a9099', marginBottom:2 }}>
                   <span style={{ color:'#e8eaed', fontWeight:500 }}>{ik.replace(/_/g,' ')}: </span>
@@ -1898,7 +1898,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div style={{ height:'100vh', display:'flex', flexDirection:'column', fontFamily:'Barlow, sans-serif', background:'#080c14', color:'#e8eaed', overflow:'hidden' }}>
+    <div style={{ height:'100vh', display:'flex', flexDirection:'column', fontFamily:'Barlow, sans-serif', background:'#08080c', color:'#e8eaed', overflow:'hidden' }}>
       {dashToast && <div style={{position:'fixed',top:16,left:'50%',transform:'translateX(-50%)',padding:'10px 20px',borderRadius:8,background:dashToast.type==='error'?'rgba(239,68,68,0.95)':'rgba(245,166,35,0.95)',color:'#fff',fontSize:13,fontWeight:600,zIndex:9999,boxShadow:'0 4px 12px rgba(0,0,0,0.3)'}}>{dashToast.msg}</div>}
       <style>{`
         @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
@@ -1906,9 +1906,9 @@ export default function DashboardPage() {
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { overscroll-behavior: none; }
         .dh-layout { display: grid; grid-template-columns: 290px 1fr; flex: 1; min-height: 0; }
-        .dh-sidebar { border-right: 1px solid rgba(255,255,255,0.06); background: #0d1420; overflow-y: auto; display: flex; flex-direction: column; }
+        .dh-sidebar { border-right: 1px solid rgba(255,255,255,0.06); background: #0a0c0e; overflow-y: auto; display: flex; flex-direction: column; }
         .dh-main { display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
-        .dh-tabs { display: flex; gap: 6px; padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,0.06); background: #080c14; flex-shrink: 0; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        .dh-tabs { display: flex; gap: 6px; padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,0.06); background: #08080c; flex-shrink: 0; overflow-x: auto; -webkit-overflow-scrolling: touch; }
         .dh-tabs::-webkit-scrollbar { display: none; }
         .dh-nav { display: flex; align-items: center; justify-content: space-between; padding: 12px 24px; border-bottom: 1px solid rgba(255,255,255,0.06); background: rgba(10,12,14,0.98); position: sticky; top: 0; z-index: 100; flex-shrink: 0; }
         .dh-nav-right { display: flex; align-items: center; gap: 16px; }
@@ -1982,8 +1982,8 @@ export default function DashboardPage() {
         .dh-toggle-btn { flex:1; padding:7px 10px; border-radius:8px; font-family:'DM Mono',monospace; font-size:9px; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; cursor:pointer; text-align:center; border:1px solid transparent; transition:all 0.15s; background:none; }
         .dh-toggle-btn.on { background:rgba(245,166,35,0.1); border-color:rgba(245,166,35,0.25); color:#f5a623; }
         .dh-toggle-btn.off { color:rgba(255,255,255,0.24); }
-        .dh-module-card { position:relative; text-align:left; padding:14px 14px 12px; border-radius:7px; border:1px solid rgba(255,255,255,0.06); background:#0f1826; cursor:pointer; transition:border-color .12s ease,background .12s ease; display:grid; grid-template-columns:18px 1fr; grid-column-gap:10px; grid-row-gap:4px; color:#e8eaed; font-family:inherit; }
-        .dh-module-card:hover:not(:disabled) { border-color:rgba(245,166,35,0.35); background:#131e30; }
+        .dh-module-card { position:relative; text-align:left; padding:14px 14px 12px; border-radius:7px; border:1px solid rgba(255,255,255,0.06); background:#111418; cursor:pointer; transition:border-color .12s ease,background .12s ease; display:grid; grid-template-columns:18px 1fr; grid-column-gap:10px; grid-row-gap:4px; color:#e8eaed; font-family:inherit; }
+        .dh-module-card:hover:not(:disabled) { border-color:rgba(245,166,35,0.35); background:#161a1e; }
         .dh-module-card:disabled { cursor:default; opacity:0.55; }
         .dh-module-glyph { grid-row:1/span 2; grid-column:1; color:rgba(255,255,255,0.55); display:inline-flex; align-items:center; justify-content:center; margin-top:1px; }
         .dh-module-card:hover .dh-module-glyph { color:#f5a623; }
@@ -2153,7 +2153,7 @@ export default function DashboardPage() {
         </div>
 
         {/* ── RIGHT PANEL ───────────────────────────────────────────────────── */}
-        <div style={{ display:'flex', flexDirection:'column', background:'#080c14', overflow:'hidden' }}>
+        <div style={{ display:'flex', flexDirection:'column', background:'#08080c', overflow:'hidden' }}>
 
           {/* Tab bar */}
           <div style={{ padding:'10px 20px', borderBottom:'1px solid rgba(255,255,255,0.05)', background:'#08080c', display:'flex', alignItems:'center', gap:8 }}>
@@ -2301,7 +2301,7 @@ export default function DashboardPage() {
             <div style={{ flex:1, overflowY:'auto', padding:'20px' }}>
 
               {/* ── DVSA COMPLIANCE SECTION ─────────────────────────────────── */}
-              <div style={{ marginBottom:24, padding:16, background:'#0a0e16', border:'1px solid rgba(255,255,255,0.06)', borderRadius:10 }}>
+              <div style={{ marginBottom:24, padding:16, background:'#0a0c0e', border:'1px solid rgba(255,255,255,0.06)', borderRadius:10 }}>
                 <div className="dh-cmd-panel-hdr" style={{ marginBottom:12 }}>
                   <span className="dh-cmd-panel-title">DVSA Fleet Compliance</span>
                   <button onClick={loadDvsa} style={{ background:'none', border:'none', color:'#4a5260', fontSize:11, cursor:'pointer' }}>↻ Refresh</button>
@@ -2335,14 +2335,14 @@ export default function DashboardPage() {
 
                 {/* Manual entry */}
                 <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:6, marginBottom:8 }}>
-                  <input value={dvsaManual.vehicle_reg} onChange={e=>setDvsaManual(p=>({...p,vehicle_reg:e.target.value.toUpperCase()}))} placeholder="Vehicle reg" style={{ padding:7, background:'#0f1826', border:'1px solid rgba(255,255,255,0.08)', borderRadius:6, color:'#e8eaed', fontSize:13, outline:'none', fontFamily:'monospace' }} />
-                  <input type="date" value={dvsaManual.mot_expiry} onChange={e=>setDvsaManual(p=>({...p,mot_expiry:e.target.value}))} placeholder="MOT expiry" style={{ padding:7, background:'#0f1826', border:'1px solid rgba(255,255,255,0.08)', borderRadius:6, color:'#e8eaed', fontSize:13, outline:'none' }} />
-                  <input type="date" value={dvsaManual.tax_expiry} onChange={e=>setDvsaManual(p=>({...p,tax_expiry:e.target.value}))} placeholder="Tax expiry" style={{ padding:7, background:'#0f1826', border:'1px solid rgba(255,255,255,0.08)', borderRadius:6, color:'#e8eaed', fontSize:13, outline:'none' }} />
+                  <input value={dvsaManual.vehicle_reg} onChange={e=>setDvsaManual(p=>({...p,vehicle_reg:e.target.value.toUpperCase()}))} placeholder="Vehicle reg" style={{ padding:7, background:'#111418', border:'1px solid rgba(255,255,255,0.08)', borderRadius:6, color:'#e8eaed', fontSize:13, outline:'none', fontFamily:'monospace' }} />
+                  <input type="date" value={dvsaManual.mot_expiry} onChange={e=>setDvsaManual(p=>({...p,mot_expiry:e.target.value}))} placeholder="MOT expiry" style={{ padding:7, background:'#111418', border:'1px solid rgba(255,255,255,0.08)', borderRadius:6, color:'#e8eaed', fontSize:13, outline:'none' }} />
+                  <input type="date" value={dvsaManual.tax_expiry} onChange={e=>setDvsaManual(p=>({...p,tax_expiry:e.target.value}))} placeholder="Tax expiry" style={{ padding:7, background:'#111418', border:'1px solid rgba(255,255,255,0.08)', borderRadius:6, color:'#e8eaed', fontSize:13, outline:'none' }} />
                 </div>
                 <div style={{ display:'flex', gap:6, marginBottom:10 }}>
-                  <input value={dvsaManual.operator_licence} onChange={e=>setDvsaManual(p=>({...p,operator_licence:e.target.value}))} placeholder="O-licence" style={{ flex:1, padding:7, background:'#0f1826', border:'1px solid rgba(255,255,255,0.08)', borderRadius:6, color:'#e8eaed', fontSize:13, outline:'none' }} />
-                  <input type="date" value={dvsaManual.last_inspection_date} onChange={e=>setDvsaManual(p=>({...p,last_inspection_date:e.target.value}))} style={{ flex:1, padding:7, background:'#0f1826', border:'1px solid rgba(255,255,255,0.08)', borderRadius:6, color:'#e8eaed', fontSize:13, outline:'none' }} />
-                  <select value={dvsaManual.last_inspection_result} onChange={e=>setDvsaManual(p=>({...p,last_inspection_result:e.target.value}))} style={{ flex:1, padding:7, background:'#0f1826', border:'1px solid rgba(255,255,255,0.08)', borderRadius:6, color:'#e8eaed', fontSize:13, outline:'none' }}>
+                  <input value={dvsaManual.operator_licence} onChange={e=>setDvsaManual(p=>({...p,operator_licence:e.target.value}))} placeholder="O-licence" style={{ flex:1, padding:7, background:'#111418', border:'1px solid rgba(255,255,255,0.08)', borderRadius:6, color:'#e8eaed', fontSize:13, outline:'none' }} />
+                  <input type="date" value={dvsaManual.last_inspection_date} onChange={e=>setDvsaManual(p=>({...p,last_inspection_date:e.target.value}))} style={{ flex:1, padding:7, background:'#111418', border:'1px solid rgba(255,255,255,0.08)', borderRadius:6, color:'#e8eaed', fontSize:13, outline:'none' }} />
+                  <select value={dvsaManual.last_inspection_result} onChange={e=>setDvsaManual(p=>({...p,last_inspection_result:e.target.value}))} style={{ flex:1, padding:7, background:'#111418', border:'1px solid rgba(255,255,255,0.08)', borderRadius:6, color:'#e8eaed', fontSize:13, outline:'none' }}>
                     <option value="">Result...</option>
                     <option value="pass">Pass</option>
                     <option value="fail">Fail</option>
@@ -2432,7 +2432,7 @@ export default function DashboardPage() {
               </div>
 
               {moduleRunning && (
-                <div style={{ display:'flex', alignItems:'center', gap:10, padding:'14px', background:'#0f1826', borderRadius:8, border:'1px solid rgba(245,166,35,0.15)' }}>
+                <div style={{ display:'flex', alignItems:'center', gap:10, padding:'14px', background:'#111418', borderRadius:8, border:'1px solid rgba(245,166,35,0.15)' }}>
                   <div style={{ width:16, height:16, border:'2px solid #f5a623', borderTopColor:'transparent', borderRadius:'50%', animation:'spin 0.8s linear infinite', flexShrink:0 }} />
                   <span style={{ fontFamily:'monospace', fontSize:11, color:'#f5a623' }}>Running {MODULES.find(m=>m.id===moduleRunning)?.label}...</span>
                 </div>
@@ -2440,7 +2440,7 @@ export default function DashboardPage() {
 
               {/* Module action buttons */}
               {moduleActions.length > 0 && !moduleRunning && (
-                <div style={{ marginTop:16, padding:'12px 14px', background:'#0d1420', borderRadius:8, border:'1px solid rgba(245,166,35,0.12)' }}>
+                <div style={{ marginTop:16, padding:'12px 14px', background:'#0a0c0e', borderRadius:8, border:'1px solid rgba(245,166,35,0.12)' }}>
                   <div style={{ fontSize:11, fontFamily:'monospace', color:'#f5a623', letterSpacing:'0.08em', marginBottom:10 }}>SUGGESTED ACTIONS — click to execute</div>
                   <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
                     {moduleActions.map(action => {
@@ -2448,7 +2448,7 @@ export default function DashboardPage() {
                       const isDone = state === 'done'
                       const isFiring = state === 'firing'
                       return (
-                        <div key={action.id} style={{ display:'flex', alignItems:'center', gap:10, padding:'9px 12px', background: isDone ? 'rgba(245,166,35,0.06)' : '#0f1826', borderRadius:6, border: isDone ? '1px solid rgba(245,166,35,0.2)' : '1px solid rgba(255,255,255,0.06)', transition:'all 0.3s' }}>
+                        <div key={action.id} style={{ display:'flex', alignItems:'center', gap:10, padding:'9px 12px', background: isDone ? 'rgba(245,166,35,0.06)' : '#111418', borderRadius:6, border: isDone ? '1px solid rgba(245,166,35,0.2)' : '1px solid rgba(255,255,255,0.06)', transition:'all 0.3s' }}>
                           <span style={{ fontSize:14, flexShrink:0 }}>{action.icon}</span>
                           <div style={{ flex:1, minWidth:0 }}>
                             <div style={{ fontSize:13, color: isDone ? '#f5a623' : '#e8eaed', lineHeight:1.4 }}>{action.label}</div>
@@ -2566,17 +2566,17 @@ export default function DashboardPage() {
                   <span className="dh-cmd-panel-title">Manual Entry</span>
                 </div>
                 <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:8, marginBottom:10 }}>
-                  <input value={manualInv.carrier} onChange={e=>setManualInv(p=>({...p,carrier:e.target.value}))} placeholder="Carrier name" style={{ padding:10, background:'#0f1826', border:'1px solid rgba(255,255,255,0.1)', borderRadius:8, color:'#e8eaed', fontSize:13, outline:'none' }} />
-                  <input value={manualInv.invoice_ref} onChange={e=>setManualInv(p=>({...p,invoice_ref:e.target.value}))} placeholder="Invoice ref" style={{ padding:10, background:'#0f1826', border:'1px solid rgba(255,255,255,0.1)', borderRadius:8, color:'#e8eaed', fontSize:13, outline:'none', fontFamily:'monospace' }} />
-                  <input type="date" value={manualInv.invoice_date} onChange={e=>setManualInv(p=>({...p,invoice_date:e.target.value}))} style={{ padding:10, background:'#0f1826', border:'1px solid rgba(255,255,255,0.1)', borderRadius:8, color:'#e8eaed', fontSize:13, outline:'none' }} />
+                  <input value={manualInv.carrier} onChange={e=>setManualInv(p=>({...p,carrier:e.target.value}))} placeholder="Carrier name" style={{ padding:10, background:'#111418', border:'1px solid rgba(255,255,255,0.1)', borderRadius:8, color:'#e8eaed', fontSize:13, outline:'none' }} />
+                  <input value={manualInv.invoice_ref} onChange={e=>setManualInv(p=>({...p,invoice_ref:e.target.value}))} placeholder="Invoice ref" style={{ padding:10, background:'#111418', border:'1px solid rgba(255,255,255,0.1)', borderRadius:8, color:'#e8eaed', fontSize:13, outline:'none', fontFamily:'monospace' }} />
+                  <input type="date" value={manualInv.invoice_date} onChange={e=>setManualInv(p=>({...p,invoice_date:e.target.value}))} style={{ padding:10, background:'#111418', border:'1px solid rgba(255,255,255,0.1)', borderRadius:8, color:'#e8eaed', fontSize:13, outline:'none' }} />
                 </div>
                 <div style={{ fontSize:11, color:'#4a5260', marginBottom:6 }}>LINE ITEMS</div>
                 {manualInv.line_items.map((li, i) => (
                   <div key={i} style={{ display:'grid', gridTemplateColumns:'1fr 2fr 1fr 1fr auto', gap:6, marginBottom:6 }}>
-                    <input value={li.job_ref} onChange={e=>{const u=[...manualInv.line_items];u[i]={...u[i],job_ref:e.target.value};setManualInv(p=>({...p,line_items:u}))}} placeholder="Job ref" style={{ padding:8, background:'#0f1826', border:'1px solid rgba(255,255,255,0.08)', borderRadius:6, color:'#e8eaed', fontSize:13, outline:'none', fontFamily:'monospace' }} />
-                    <input value={li.description} onChange={e=>{const u=[...manualInv.line_items];u[i]={...u[i],description:e.target.value};setManualInv(p=>({...p,line_items:u}))}} placeholder="Description" style={{ padding:8, background:'#0f1826', border:'1px solid rgba(255,255,255,0.08)', borderRadius:6, color:'#e8eaed', fontSize:13, outline:'none' }} />
-                    <input value={li.charged} onChange={e=>{const u=[...manualInv.line_items];u[i]={...u[i],charged:e.target.value};setManualInv(p=>({...p,line_items:u}))}} placeholder="£ charged" inputMode="decimal" style={{ padding:8, background:'#0f1826', border:'1px solid rgba(255,255,255,0.08)', borderRadius:6, color:'#e8eaed', fontSize:13, outline:'none', fontFamily:'monospace' }} />
-                    <input value={li.agreed_rate} onChange={e=>{const u=[...manualInv.line_items];u[i]={...u[i],agreed_rate:e.target.value};setManualInv(p=>({...p,line_items:u}))}} placeholder="£ agreed" inputMode="decimal" style={{ padding:8, background:'#0f1826', border:'1px solid rgba(255,255,255,0.08)', borderRadius:6, color:'#e8eaed', fontSize:13, outline:'none', fontFamily:'monospace' }} />
+                    <input value={li.job_ref} onChange={e=>{const u=[...manualInv.line_items];u[i]={...u[i],job_ref:e.target.value};setManualInv(p=>({...p,line_items:u}))}} placeholder="Job ref" style={{ padding:8, background:'#111418', border:'1px solid rgba(255,255,255,0.08)', borderRadius:6, color:'#e8eaed', fontSize:13, outline:'none', fontFamily:'monospace' }} />
+                    <input value={li.description} onChange={e=>{const u=[...manualInv.line_items];u[i]={...u[i],description:e.target.value};setManualInv(p=>({...p,line_items:u}))}} placeholder="Description" style={{ padding:8, background:'#111418', border:'1px solid rgba(255,255,255,0.08)', borderRadius:6, color:'#e8eaed', fontSize:13, outline:'none' }} />
+                    <input value={li.charged} onChange={e=>{const u=[...manualInv.line_items];u[i]={...u[i],charged:e.target.value};setManualInv(p=>({...p,line_items:u}))}} placeholder="£ charged" inputMode="decimal" style={{ padding:8, background:'#111418', border:'1px solid rgba(255,255,255,0.08)', borderRadius:6, color:'#e8eaed', fontSize:13, outline:'none', fontFamily:'monospace' }} />
+                    <input value={li.agreed_rate} onChange={e=>{const u=[...manualInv.line_items];u[i]={...u[i],agreed_rate:e.target.value};setManualInv(p=>({...p,line_items:u}))}} placeholder="£ agreed" inputMode="decimal" style={{ padding:8, background:'#111418', border:'1px solid rgba(255,255,255,0.08)', borderRadius:6, color:'#e8eaed', fontSize:13, outline:'none', fontFamily:'monospace' }} />
                     <button onClick={()=>{const u=manualInv.line_items.filter((_,j)=>j!==i);setManualInv(p=>({...p,line_items:u.length?u:[{job_ref:'',description:'',charged:'',agreed_rate:''}]}))}} style={{ padding:'4px 8px', background:'transparent', border:'1px solid rgba(239,68,68,0.2)', borderRadius:4, color:'#ef4444', fontSize:13, cursor:'pointer' }}>✕</button>
                   </div>
                 ))}
@@ -2639,7 +2639,7 @@ export default function DashboardPage() {
                   const renderFullInvoice = (inv) => {
                     const hasOvercharge = (inv.total_overcharge || 0) > 0
                     return (
-                      <div key={inv.id} style={{ padding:'12px 14px', border:`1px solid ${hasOvercharge ? 'rgba(239,68,68,0.2)' : 'rgba(255,255,255,0.06)'}`, borderLeft:`3px solid ${statusColors[inv.status] || '#4a5260'}`, borderRadius:8, background: hasOvercharge ? 'rgba(239,68,68,0.03)' : '#0f1826', marginBottom:8 }}>
+                      <div key={inv.id} style={{ padding:'12px 14px', border:`1px solid ${hasOvercharge ? 'rgba(239,68,68,0.2)' : 'rgba(255,255,255,0.06)'}`, borderLeft:`3px solid ${statusColors[inv.status] || '#4a5260'}`, borderRadius:8, background: hasOvercharge ? 'rgba(239,68,68,0.03)' : '#111418', marginBottom:8 }}>
                         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:4 }}>
                           <div>
                             <span style={{ fontSize:15, color:'#e8eaed', fontWeight:700 }}>{inv.carrier}</span>
@@ -2771,7 +2771,7 @@ export default function DashboardPage() {
                 ))}
               </div>
               {scenarioRunning && (
-                <div style={{ display:'flex', alignItems:'center', gap:10, padding:'14px', background:'#0f1826', borderRadius:8, border:'1px solid rgba(245,166,35,0.15)' }}>
+                <div style={{ display:'flex', alignItems:'center', gap:10, padding:'14px', background:'#111418', borderRadius:8, border:'1px solid rgba(245,166,35,0.15)' }}>
                   <div style={{ width:16, height:16, border:'2px solid #f5a623', borderTopColor:'transparent', borderRadius:'50%', animation:'spin 0.8s linear infinite', flexShrink:0 }} />
                   <span style={{ fontFamily:'monospace', fontSize:13, color:'#f5a623' }}>Analysing scenario...</span>
                 </div>
@@ -3012,7 +3012,7 @@ export default function DashboardPage() {
               {/* ── CANCEL JOB CONFIRM MODAL ── */}
               {cancelConfirm && (
                 <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.75)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:1001 }}>
-                  <div style={{ background:'#0f1826', border:'1px solid rgba(255,255,255,0.12)', borderRadius:12, padding:'24px', maxWidth:420, width:'90%' }}>
+                  <div style={{ background:'#111418', border:'1px solid rgba(255,255,255,0.12)', borderRadius:12, padding:'24px', maxWidth:420, width:'90%' }}>
                     <div style={{ fontFamily:'monospace', fontSize:11, color:'#ef4444', letterSpacing:'0.08em', marginBottom:12 }}>
                       {cancelConfirm.cancel_all ? 'CANCEL ALL JOBS' : `CANCEL JOB — ${cancelConfirm.ref}`}
                     </div>
@@ -3024,14 +3024,14 @@ export default function DashboardPage() {
                     {fleet.filter(v => v.vehicle_reg !== cancelConfirm.vehicle_reg).length > 0 && (
                       <div style={{ marginBottom:12 }}>
                         <div style={{ fontSize:11, color:'#4a5260', fontFamily:'monospace', marginBottom:6 }}>REASSIGN TO ANOTHER DRIVER — optional</div>
-                        <select value={reassignTo} onChange={e => setReassignTo(e.target.value)} style={{ width:'100%', padding:'9px 12px', background:'#080c14', border:'1px solid rgba(255,255,255,0.1)', borderRadius:6, color: reassignTo ? '#e8eaed' : '#4a5260', fontSize:12, outline:'none', fontFamily:'Barlow', cursor:'pointer' }}>
+                        <select value={reassignTo} onChange={e => setReassignTo(e.target.value)} style={{ width:'100%', padding:'9px 12px', background:'#08080c', border:'1px solid rgba(255,255,255,0.1)', borderRadius:6, color: reassignTo ? '#e8eaed' : '#4a5260', fontSize:12, outline:'none', fontFamily:'Barlow', cursor:'pointer' }}>
                           <option value=''>No reassignment — just cancel</option>
                           {fleet.filter(v => v.vehicle_reg !== cancelConfirm.vehicle_reg).map(v => (<option key={v.vehicle_reg} value={v.vehicle_reg}>{v.vehicle_reg}{v.driver_name ? ` — ${v.driver_name}` : ''} ({v.jobs.length} job{v.jobs.length !== 1 ? 's' : ''})</option>))}
                         </select>
                         {reassignTo && <div style={{ fontSize:11, color:'#f5a623', marginTop:5 }}>✓ Job will be pushed to {reassignTo}</div>}
                       </div>
                     )}
-                    <input value={cancelReason} onChange={e => setCancelReason(e.target.value)} placeholder='Reason — optional' style={{ width:'100%', padding:'10px 12px', background:'#080c14', border:'1px solid rgba(255,255,255,0.1)', borderRadius:6, color:'#e8eaed', fontSize:12, outline:'none', marginBottom:14, boxSizing:'border-box', fontFamily:'Barlow' }} />
+                    <input value={cancelReason} onChange={e => setCancelReason(e.target.value)} placeholder='Reason — optional' style={{ width:'100%', padding:'10px 12px', background:'#08080c', border:'1px solid rgba(255,255,255,0.1)', borderRadius:6, color:'#e8eaed', fontSize:12, outline:'none', marginBottom:14, boxSizing:'border-box', fontFamily:'Barlow' }} />
                     <div style={{ display:'flex', gap:8 }}>
                       <button onClick={() => cancelJob(cancelConfirm)} disabled={!!cancellingJob} style={{ flex:1, padding:'10px', background: reassignTo ? '#f5a623' : '#ef4444', border:'none', borderRadius:6, color: reassignTo ? '#000' : '#fff', fontWeight:600, fontSize:12, cursor:'pointer', fontFamily:'monospace' }}>
                         {cancellingJob ? '...' : reassignTo ? `Reassign to ${reassignTo}` : 'Confirm cancel'}
@@ -3045,7 +3045,7 @@ export default function DashboardPage() {
               {/* ── CANCEL ASSESSMENT MODAL ── */}
               {cancelAssessment && (
                 <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.7)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:1000 }}>
-                  <div style={{ background:'#0f1826', border:'1px solid rgba(255,255,255,0.12)', borderRadius:12, padding:'24px', maxWidth:480, width:'90%' }}>
+                  <div style={{ background:'#111418', border:'1px solid rgba(255,255,255,0.12)', borderRadius:12, padding:'24px', maxWidth:480, width:'90%' }}>
                     <div style={{ fontFamily:'monospace', fontSize:11, color: cancelAssessment.risk==='NONE'?'#f5a623':cancelAssessment.risk==='LOW'?'#f59e0b':'#ef4444', letterSpacing:'0.08em', marginBottom:12 }}>CANCEL ASSESSMENT — {cancelAssessment.risk} RISK</div>
                     <div style={{ fontSize:13, color:'#e8eaed', lineHeight:1.7, marginBottom:20 }}>{cancelAssessment.message}</div>
                     {cancelAssessment.type === 'clean_cancel' && (<div style={{ display:'flex', gap:8 }}><button onClick={() => executeCancelAction(cancelAssessment.approvalId,'clean_cancel')} style={{ flex:1, padding:'10px', background:'#ef4444', border:'none', borderRadius:6, color:'#fff', fontWeight:600, fontSize:12, cursor:'pointer', fontFamily:'monospace' }}>CONFIRM CANCEL</button><button onClick={() => setCancelAssessment(null)} style={{ padding:'10px 16px', background:'transparent', border:'1px solid rgba(255,255,255,0.12)', borderRadius:6, color:'#8a9099', fontSize:12, cursor:'pointer', fontFamily:'monospace' }}>KEEP ACTION</button></div>)}
@@ -3073,10 +3073,10 @@ export default function DashboardPage() {
                 <div style={{ gridColumn:'1 / -1', marginBottom:4 }}>
                   <div style={{ fontSize:11, color:'#4a5260', fontFamily:'monospace', letterSpacing:'0.08em', marginBottom:10 }}>// ACTIVE FLEET — DRIVERS CURRENTLY ON SHIFT</div>
                   {activeDriversLoading && (
-                    <div style={{ fontSize:11, color:'#4a5260', padding:'12px 14px', background:'#0f1826', borderRadius:8 }}>Loading active drivers...</div>
+                    <div style={{ fontSize:11, color:'#4a5260', padding:'12px 14px', background:'#111418', borderRadius:8 }}>Loading active drivers...</div>
                   )}
                   {!activeDriversLoading && activeDrivers.length === 0 && (
-                    <div style={{ fontSize:13, color:'#4a5260', padding:'12px 14px', background:'#0f1826', border:'1px solid rgba(255,255,255,0.06)', borderRadius:8 }}>
+                    <div style={{ fontSize:13, color:'#4a5260', padding:'12px 14px', background:'#111418', border:'1px solid rgba(255,255,255,0.06)', borderRadius:8 }}>
                       No drivers currently on shift. Have a driver start their shift in the driver app first.
                     </div>
 
@@ -3087,7 +3087,7 @@ export default function DashboardPage() {
                         const isSelected = selectedTestVehicle?.vehicle_reg === driver.vehicle_reg
                         const cargoColor = driver.cargo_type?.includes('pharma') ? '#a855f7' : driver.cargo_type?.includes('chilled') || driver.cargo_type?.includes('frozen') ? '#3b82f6' : '#4a5260'
                         return (
-                          <div key={i} onClick={() => selectTestVehicle(driver)} style={{ padding:'12px 16px', background: isSelected ? 'rgba(245,166,35,0.06)' : '#0f1826', border: isSelected ? '1px solid rgba(245,166,35,0.35)' : '1px solid rgba(255,255,255,0.08)', borderRadius:9, cursor:'pointer', minWidth:220, flex:'1 1 220px', transition:'all 0.15s' }}>
+                          <div key={i} onClick={() => selectTestVehicle(driver)} style={{ padding:'12px 16px', background: isSelected ? 'rgba(245,166,35,0.06)' : '#111418', border: isSelected ? '1px solid rgba(245,166,35,0.35)' : '1px solid rgba(255,255,255,0.08)', borderRadius:9, cursor:'pointer', minWidth:220, flex:'1 1 220px', transition:'all 0.15s' }}>
                             <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:6 }}>
                               <span style={{ fontSize:13, fontWeight:700, color: isSelected ? '#f5a623' : '#e8eaed', fontFamily:'monospace', letterSpacing:1 }}>{driver.vehicle_reg}</span>
                               {isSelected && <span style={{ fontSize:11, color:'#f5a623', fontFamily:'monospace', letterSpacing:1 }}>✓ SELECTED</span>}
@@ -3188,7 +3188,7 @@ export default function DashboardPage() {
                             style={{
                               padding:'5px 11px', borderRadius:5, fontFamily:'monospace', transition:'all 0.15s', fontSize:13, cursor: isRelevant ? 'pointer' : 'not-allowed',
                               border: isSelected ? `1px solid ${sys.color}80` : isTopPick ? `1px solid ${sys.color}50` : '1px solid rgba(255,255,255,0.07)',
-                              background: isSelected ? `${sys.color}12` : isTopPick ? `${sys.color}08` : '#0f1826',
+                              background: isSelected ? `${sys.color}12` : isTopPick ? `${sys.color}08` : '#111418',
                               color: isSelected ? sys.color : isRelevant ? '#8a9099' : '#2a3040',
                               opacity: isRelevant ? 1 : 0.35,
                               position:'relative'
@@ -3205,7 +3205,7 @@ export default function DashboardPage() {
                   {evtConfig && (
                     <div style={{ marginBottom:14 }}>
                       <div style={{ fontSize:11, fontFamily:'monospace', color:'#4a5260', letterSpacing:'0.08em', marginBottom:8 }}>PAYLOAD — edit fields then fire</div>
-                      <div style={{ background:'#0f1826', border:'1px solid rgba(255,255,255,0.08)', borderRadius:8, overflow:'hidden' }}>
+                      <div style={{ background:'#111418', border:'1px solid rgba(255,255,255,0.08)', borderRadius:8, overflow:'hidden' }}>
                         {Object.entries(currentPayload).map(([key, val], i, arr) => (
                           <div key={key} style={{ display:'flex', alignItems:'center', padding:'8px 12px', borderBottom: i < arr.length-1 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
                             <span style={{ fontSize:11, fontFamily:'monospace', color:'#4a5260', width:160, flexShrink:0 }}>{key.replace(/_/g,' ')}</span>
@@ -3226,7 +3226,7 @@ export default function DashboardPage() {
                   {/* Fire button */}
                   <div style={{ display:'flex', gap:8, marginBottom:14 }}>
                     <button onClick={fireWebhook} disabled={whFiring}
-                      style={{ flex:1, padding:'12px', background: whFiring ? '#0f1826' : sys?.color || '#f5a623', border: whFiring ? `1px solid ${sys?.color||'#f5a623'}40` : 'none', borderRadius:7, color: whFiring ? (sys?.color||'#f5a623') : '#000', fontWeight:700, fontSize:13, cursor: whFiring ? 'default' : 'pointer', fontFamily:'monospace', letterSpacing:'0.04em', transition:'all 0.2s' }}>
+                      style={{ flex:1, padding:'12px', background: whFiring ? '#111418' : sys?.color || '#f5a623', border: whFiring ? `1px solid ${sys?.color||'#f5a623'}40` : 'none', borderRadius:7, color: whFiring ? (sys?.color||'#f5a623') : '#000', fontWeight:700, fontSize:13, cursor: whFiring ? 'default' : 'pointer', fontFamily:'monospace', letterSpacing:'0.04em', transition:'all 0.2s' }}>
                       {whFiring ? (
                         <span style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:8 }}>
                           <span style={{ width:12, height:12, border:'2px solid currentColor', borderTopColor:'transparent', borderRadius:'50%', display:'inline-block', animation:'spin 0.8s linear infinite' }} />
@@ -3300,7 +3300,7 @@ export default function DashboardPage() {
                     const timeStr = entry.created_at ? new Date(entry.created_at).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'}) : ''
                     const dateStr = entry.created_at ? new Date(entry.created_at).toLocaleDateString('en-GB',{day:'numeric',month:'short'}) : ''
                     return (
-                      <div key={entry.id} style={{ padding:'10px 12px', background:'#0f1826', borderRadius:7, border:'1px solid rgba(255,255,255,0.06)', marginBottom:6 }}>
+                      <div key={entry.id} style={{ padding:'10px 12px', background:'#111418', borderRadius:7, border:'1px solid rgba(255,255,255,0.06)', marginBottom:6 }}>
                         <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:5, flexWrap:'wrap' }}>
                           {/* System badge */}
                           <span style={{ fontSize:11, fontFamily:'monospace', color:sysColor, background:`${sysColor}12`, border:`1px solid ${sysColor}25`, padding:'2px 7px', borderRadius:4 }}>
