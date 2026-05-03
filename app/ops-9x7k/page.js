@@ -1063,9 +1063,6 @@ export default function DashboardPage() {
   const [commandRightTab, setCommandRightTab] = useState('incidents') // 'incidents' | 'value'
   const [pendingApprovals, setPendingApprovals] = useState([])
   const [dashToast, setDashToast] = useState(null)
-  const [emailPickerMailto, setEmailPickerMailto] = useState(null)
-  const [emailPickerInvoiceId, setEmailPickerInvoiceId] = useState(null)
-  const [emailPickerSent, setEmailPickerSent] = useState(false)
   const [invoices, setInvoices] = useState([])
   const [csvRows, setCsvRows] = useState(null)
   const [csvDragActive, setCsvDragActive] = useState(false)
@@ -1653,52 +1650,13 @@ export default function DashboardPage() {
       }
     }
 
-    setActionStates(prev => ({ ...prev, [actionId]: 'firing' }))
-    if (mailto) setEmailPickerMailto(mailto)
-    await new Promise(r => setTimeout(r, 1200))
-    setActionStates(prev => ({ ...prev, [actionId]: 'done' }))
-
-    // Add to local approvals list for demo — shows in APPROVALS tab immediately
-    const typeConfig = {
-      call:     { ico: '📞', bg: 'rgba(59,130,246,0.07)',   border: 'rgba(59,130,246,0.2)' },
-      sms:      { ico: '💬', bg: 'rgba(245,158,11,0.07)',   border: 'rgba(245,158,11,0.22)' },
-      email:    { ico: '✉',  bg: 'rgba(245,166,35,0.05)',    border: 'rgba(245,166,35,0.18)' },
-      dispatch: { ico: '🚛', bg: 'rgba(168,85,247,0.06)',   border: 'rgba(168,85,247,0.2)' },
-      notify:   { ico: '📣', bg: 'rgba(245,166,35,0.05)',    border: 'rgba(245,166,35,0.18)' },
-      reroute:  { ico: '🗺', bg: 'rgba(168,85,247,0.06)',   border: 'rgba(168,85,247,0.2)' },
-      book:     { ico: '🔧', bg: 'rgba(59,130,246,0.07)',   border: 'rgba(59,130,246,0.2)' },
-      block:    { ico: '🚨', bg: 'rgba(239,68,68,0.07)',    border: 'rgba(239,68,68,0.2)' },
-      emergency:{ ico: '🚨', bg: 'rgba(239,68,68,0.07)',    border: 'rgba(239,68,68,0.2)' },
-    }
-    const cfg = typeConfig[actionType] || typeConfig.email
-    setLocalApprovals(prev => [{
-      id: actionId,
-      action_label: actionLabel,
-      action_type: actionType,
-      status: 'executed',
-      ico: cfg.ico,
-      bg: cfg.bg,
-      border: cfg.border,
-      executed_at: new Date().toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit'}),
-      financial_value: 0
-    }, ...prev])
-
-    // Write to Supabase approvals via dedicated endpoint
-    try {
-      await fetch('/api/approvals/log', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          id: actionId,
-          client_id: ACTIVE_CLIENT_ID,
-          action_type: actionType,
-          action_label: actionLabel,
-          status: 'executed',
-          approved_by: 'ops_manager',
-          executed_at: new Date().toISOString()
-        })
-      })
-    } catch {}
+    // Non-invoice actions previously fell through a legacy mailto modal
+    // path that flipped state to 'done' without any API call, lying to the
+    // UI. Removed Day 13 Phase D.2. Any future action type that should fire
+    // from this button MUST have its own explicit branch above with a real
+    // API call.
+    console.warn('[fireAction] no handler for actionId:', actionId, 'type:', actionType)
+    showDashToast(`No handler for "${actionLabel}" — manual action required.`, 'error')
   }
 
   async function runScenario(scenarioId) {
@@ -1943,52 +1901,6 @@ export default function DashboardPage() {
   return (
     <div style={{ height:'100vh', display:'flex', flexDirection:'column', fontFamily:'Barlow, sans-serif', background:'#080c14', color:'#e8eaed', overflow:'hidden' }}>
       {dashToast && <div style={{position:'fixed',top:16,left:'50%',transform:'translateX(-50%)',padding:'10px 20px',borderRadius:8,background:dashToast.type==='error'?'rgba(239,68,68,0.95)':'rgba(245,166,35,0.95)',color:'#fff',fontSize:13,fontWeight:600,zIndex:9999,boxShadow:'0 4px 12px rgba(0,0,0,0.3)'}}>{dashToast.msg}</div>}
-      {emailPickerMailto && (() => {
-        const subjectMatch = emailPickerMailto.match(/subject=([^&]*)/)
-        const bodyMatch = emailPickerMailto.match(/body=(.*)$/)
-        const subject = subjectMatch ? decodeURIComponent(subjectMatch[1]) : ''
-        const body = bodyMatch ? decodeURIComponent(bodyMatch[1]) : ''
-        const closeModal = () => { setEmailPickerMailto(null); setEmailPickerInvoiceId(null); setEmailPickerSent(false) }
-        const markSent = () => { setEmailPickerSent(true) }
-        return (
-          <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.8)',zIndex:9998,display:'flex',alignItems:'center',justifyContent:'center',padding:24}} onClick={closeModal}>
-            <div style={{width:'100%',maxWidth:380,background:'#0f1826',borderRadius:14,padding:24,border:'1px solid rgba(245,166,35,0.2)',boxShadow:'0 8px 32px rgba(0,0,0,0.5)'}} onClick={e=>e.stopPropagation()}>
-              {!emailPickerSent ? (<>
-                <div style={{fontSize:16,fontWeight:700,color:'#e8eaed',marginBottom:4}}>Send dispute email</div>
-                <div style={{fontSize:12,color:'#4a5260',marginBottom:18}}>{subject}</div>
-                <button onClick={()=>{window.open(`https://mail.google.com/mail/?view=cm&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`,'_blank');markSent()}}
-                  style={{width:'100%',padding:13,background:'rgba(245,166,35,0.08)',border:'1px solid rgba(245,166,35,0.25)',borderRadius:10,color:'#f5a623',fontSize:14,fontWeight:600,cursor:'pointer',marginBottom:8,textAlign:'left'}}>
-                  📧 Open in Gmail
-                </button>
-                <button onClick={()=>{window.location.href=emailPickerMailto;markSent()}}
-                  style={{width:'100%',padding:13,background:'rgba(245,166,35,0.08)',border:'1px solid rgba(245,166,35,0.25)',borderRadius:10,color:'#f5a623',fontSize:14,fontWeight:600,cursor:'pointer',marginBottom:8,textAlign:'left'}}>
-                  ✉ Open in Apple Mail
-                </button>
-                <button onClick={async()=>{try{await navigator.clipboard.writeText(`Subject: ${subject}\n\n${body}`);showDashToast('Copied to clipboard')}catch{showDashToast('Copy failed','error')};markSent()}}
-                  style={{width:'100%',padding:13,background:'rgba(245,166,35,0.08)',border:'1px solid rgba(245,166,35,0.25)',borderRadius:10,color:'#f5a623',fontSize:14,fontWeight:600,cursor:'pointer',marginBottom:8,textAlign:'left'}}>
-                  📋 Copy to clipboard
-                </button>
-                <button onClick={closeModal} style={{width:'100%',padding:10,background:'transparent',border:'none',color:'#4a5260',fontSize:12,cursor:'pointer',marginTop:4}}>Cancel</button>
-              </>) : (<>
-                <div style={{fontSize:16,fontWeight:700,color:'#e8eaed',marginBottom:6}}>Did you send the email?</div>
-                <div style={{fontSize:12,color:'#8a9099',marginBottom:18}}>Only mark as disputed if you actually sent or saved the email.</div>
-                <button onClick={()=>{
-                  if (emailPickerInvoiceId) fetch('/api/invoices',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:emailPickerInvoiceId,status:'disputed'})}).then(()=>{showDashToast('Invoice marked as disputed');loadInvoices()}).catch(()=>{})
-                  closeModal()
-                }} style={{width:'100%',padding:13,background:'#f5a623',border:'none',borderRadius:10,color:'#000',fontSize:14,fontWeight:700,cursor:'pointer',marginBottom:8}}>
-                  Yes — mark as disputed
-                </button>
-                <button onClick={()=>{showDashToast('Invoice kept as pending');closeModal()}}
-                  style={{width:'100%',padding:13,background:'transparent',border:'1px solid rgba(255,255,255,0.1)',borderRadius:10,color:'#8a9099',fontSize:14,fontWeight:500,cursor:'pointer',marginBottom:8}}>
-                  No — I'll send later
-                </button>
-                <button onClick={()=>{setEmailPickerSent(false)}}
-                  style={{width:'100%',padding:10,background:'transparent',border:'none',color:'#f5a623',fontSize:12,cursor:'pointer'}}>← Back to email options</button>
-              </>)}
-            </div>
-          </div>
-        )
-      })()}
       <style>{`
         @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
         @keyframes spin{to{transform:rotate(360deg)}}
