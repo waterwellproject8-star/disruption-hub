@@ -272,7 +272,7 @@ export async function POST(request) {
           } catch {}
         }
         const affectedNote = affectedCount > 0 ? `\n${affectedCount} delivery${affectedCount > 1 ? 'ies' : 'y'} affected — ops managing consignee notifications.` : ''
-        const msg = `DisruptionHub — Recovery on the way for ${details.vehicle_reg || ''}. ETA logged.\nStand by for engineer ETA confirmation.${affectedNote}`
+        const msg = `DisruptionHub: Recovery is being arranged for ${details.vehicle_reg || ''}.\nStay with the vehicle and stay safe. We'll text the moment we have an ETA.${affectedNote}`
         const result = await sendSMS(driverPhone, msg)
 
         if (details.vehicle_reg) {
@@ -280,7 +280,7 @@ export async function POST(request) {
             await db
               .from('driver_progress')
               .update({
-                alert: `OPS_MSG: Recovery on the way for ${details.vehicle_reg || ''}. ETA logged. Stand by for engineer ETA confirmation.${affectedCount > 0 ? ` ${affectedCount} delivery${affectedCount > 1 ? 'ies' : 'y'} affected — ops managing notifications.` : ''}`,
+                alert: `OPS_MSG: Recovery is being arranged for ${details.vehicle_reg || ''}. Stay with the vehicle and stay safe. We'll text the moment we have an ETA.${affectedCount > 0 ? ` ${affectedCount} delivery${affectedCount > 1 ? 'ies' : 'y'} affected — ops managing notifications.` : ''}`,
                 updated_at: new Date().toISOString()
               })
               .eq('vehicle_reg', details.vehicle_reg.trim())
@@ -475,7 +475,7 @@ export async function POST(request) {
       // No carrier phone — still notify driver
       const resolvedDriverPhone2 = await resolveDriverPhone()
       if (resolvedDriverPhone2) {
-        const driverMsg = `DisruptionHub — Recovery on the way for ${details.vehicle_reg || ''}. ETA logged.\nStand by for engineer ETA confirmation.`
+        const driverMsg = `DisruptionHub: Recovery is being arranged for ${details.vehicle_reg || ''}.\nStay with the vehicle and stay safe. We'll text the moment we have an ETA.`
         const result = await sendSMS(resolvedDriverPhone2, driverMsg)
         await finalise(false, 'no_carrier_phone_driver_notified_only')
         return Response.json({ success: true, action: 'failed', driver_notified: result.success, note: 'No carrier phone — driver notified directly' })

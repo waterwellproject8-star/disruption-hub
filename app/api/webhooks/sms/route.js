@@ -732,7 +732,7 @@ export async function POST(request) {
       // ── DISPATCH ─────────────────────────────────────────────────────────
       if (actionType === 'dispatch') {
         const driverPhone = await resolveDriverPhone()
-        const driverMsg = `DisruptionHub — Recovery on the way for ${details.vehicle_reg || ''}. ETA logged.\nStand by for engineer ETA confirmation.`
+        const driverMsg = `DisruptionHub: Recovery is being arranged for ${details.vehicle_reg || ''}.\nStay with the vehicle and stay safe. We'll text the moment we have an ETA.`
         await writeInstructionToApp(driverMsg)
 
         let consigneeName = details.consignee_name || null
@@ -757,10 +757,10 @@ export async function POST(request) {
             .limit(1)
           if (nextCall?.[0]?.id) callRef = `\nRef: ${nextCall[0].id.slice(0, 8)}`
 
-          await sendSMS(client.contact_phone || from, `DisruptionHub — Recovery dispatched for ${details.vehicle_reg || ''}.\nConsignee at ${consigneeName} needs notifying.\nReply YES to notify consignee, NO to skip.`)
+          await sendSMS(client.contact_phone || from, `DH: Recovery request logged for ${details.vehicle_reg || ''}. Driver notified.\nReady to notify ${consigneeName}?\nReply YES to send SMS, NO to skip.`)
 
           if (!result.success) console.error('[sms-yes] driver SMS failed:', result.error || 'unknown reason', 'to:', driverPhone)
-          return twimlReply(result.success ? `DH: Confirmed. Driver briefed. Calling ${consigneeName} now.` : 'DH: Approved. Call driver directly — SMS failed.')
+          return twimlReply(result.success ? `DH: Recovery request logged. Driver notified. Awaiting your confirmation to notify ${consigneeName}.` : 'DH: Approved. Call driver directly — SMS failed.')
         }
         await finaliseApproval({ success: false, failure_reason: 'no_driver_phone_on_file' })
         return twimlReply('DH: Approved. No driver phone — call them directly.')

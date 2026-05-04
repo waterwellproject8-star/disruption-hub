@@ -143,7 +143,7 @@ function buildOpsSMS({ severity, vehicle_reg, human_description, financialImpact
     preshift:  'clear driver to depart',
   }[detectedType] || 'execute action'
 
-  return `DisruptionHub — ${sev}\n${vehicle_reg || ''}: Breakdown reported at ${areaLine}.${w3wSegment}${penaltyFormatted}${mapSegment}\nReply YES to ${yesAction}, NO to reject, OPEN for dashboard.`
+  return `DisruptionHub — ${sev}\n${vehicle_reg || ''}: Breakdown reported at ${areaLine}.${w3wSegment}${penaltyFormatted}${mapSegment}\nReply YES to ${yesAction}, NO to reject.`
 }
 
 function extractCarrierPhone(systemPrompt) {
@@ -367,7 +367,7 @@ Provide immediate disruption analysis and action plan.`
 
       let smsSent = false
       if (severity === 'HIGH' && contactPhone) {
-        const smsBody = `DisruptionHub — HIGH\n${vehicle_reg || ''}: Running late — ${mins} mins delay reported.\n${vocab.breach_consequence_label}: £${penalty.toLocaleString()} at risk.\n${consigneeName || vocab.delivery_recipient_short} being notified automatically.\nReply OPEN for dashboard.`
+        const smsBody = `DisruptionHub — HIGH\n${vehicle_reg || ''}: Running late — ${mins} mins delay reported.\n${vocab.breach_consequence_label}: £${penalty.toLocaleString()} at risk.\n${consigneeName || vocab.delivery_recipient_short} being notified automatically.`
         const result = await sendSMS(contactPhone, smsBody)
         smsSent = result.success || false
 
@@ -620,7 +620,7 @@ Provide immediate disruption analysis and action plan.`
     if ((force_alert || severity === 'CRITICAL' || severity === 'HIGH') && contactPhone) {
       let smsBody
       if (issue_type === 'medical' || issue_type === 'driver_unwell') {
-        smsBody = `DisruptionHub — CRITICAL\n${vehicle_reg || ''}: Medical emergency. Driver: ${driver_name || 'Unknown'}.${driver_phone ? `\nCall driver: ${driver_phone}.` : ''}${opsLocationStr ? `\nDriver at: ${opsLocationStr}.` : ''}\nReply YES to acknowledge, NO to dismiss, OPEN for dashboard.\nIf driver unresponsive — call 999 immediately.`
+        smsBody = `DisruptionHub — CRITICAL\n${vehicle_reg || ''}: Medical emergency. Driver: ${driver_name || 'Unknown'}.${driver_phone ? `\nCall driver: ${driver_phone}.` : ''}${opsLocationStr ? `\nDriver at: ${opsLocationStr}.` : ''}\nReply YES to acknowledge, NO to dismiss.\nIf driver unresponsive — call 999 immediately.`
       } else if (issue_type === 'goods_refused' || issue_type === 'access_problem' || issue_type === 'damage_found') {
         const reason = (human_description || 'No reason given').substring(0, 60).replace(/\n/g, ' ')
         const consignee = ref || 'consignee'

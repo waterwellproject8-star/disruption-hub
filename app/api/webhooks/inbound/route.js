@@ -127,7 +127,7 @@ function buildActionSMS(eventType, payload, severity, financialImpact, action) {
   else if (actionType === 'call') yesAction = 'place automated call'
   else if (actionType === 'emergency') yesAction = 'confirm emergency dispatch'
 
-  return `DisruptionHub — ${severity}\n${reg}: ${eventLabel}.${money}\nReply YES to ${yesAction}, NO to reject, OPEN for dashboard.`
+  return `DisruptionHub — ${severity}\n${reg}: ${eventLabel}.${money}\nReply YES to ${yesAction}, NO to reject.`
 }
 
 // ── EVENT CATEGORIES FOR CALL ROUTING ────────────────────────────────────────
