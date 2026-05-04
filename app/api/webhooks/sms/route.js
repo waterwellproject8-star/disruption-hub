@@ -760,7 +760,7 @@ export async function POST(request) {
           await sendSMS(client.contact_phone || from, `DH: Recovery request logged for ${details.vehicle_reg || ''}. Driver notified.\nReady to notify ${consigneeName}?\nReply YES to send SMS, NO to skip.`)
 
           if (!result.success) console.error('[sms-yes] driver SMS failed:', result.error || 'unknown reason', 'to:', driverPhone)
-          return twimlReply(result.success ? `DH: Recovery request logged. Driver notified. Awaiting your confirmation to notify ${consigneeName}.` : 'DH: Approved. Call driver directly — SMS failed.')
+          return twimlReply(result.success ? 'DH: Approved.' : 'DH: Approved. Call driver directly — SMS failed.')
         }
         await finaliseApproval({ success: false, failure_reason: 'no_driver_phone_on_file' })
         return twimlReply('DH: Approved. No driver phone — call them directly.')
