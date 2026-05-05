@@ -2659,6 +2659,26 @@ export default function DashboardPage() {
                           <span>{inv.source?.replace(/_/g,' ')}</span>
                           {inv.invoice_date && <span>{inv.invoice_date}</span>}
                         </div>
+                        {inv.evidence_pack?.length > 0 && (
+                          <div style={{ marginTop:8, marginBottom:8 }}>
+                            <div style={{ fontSize:10, fontFamily:'monospace', color:'#4a5260', letterSpacing:'0.06em', marginBottom:6 }}>WHY THIS INVOICE IS FLAGGED</div>
+                            {inv.evidence_pack.map((d, i) => (
+                              <div key={i} style={{ padding:'8px 10px', background:'rgba(239,68,68,0.06)', border:'1px solid rgba(239,68,68,0.15)', borderRadius:6, marginBottom:4 }}>
+                                <div style={{ display:'flex', justifyContent:'space-between', marginBottom:4 }}>
+                                  <span style={{ fontSize:11, color:'#e8eaed', fontFamily:'monospace' }}>{d.job_ref || `Item ${i+1}`}</span>
+                                  <span style={{ fontSize:12, color:'#f5a623', fontFamily:'monospace', fontWeight:700 }}>+£{(d.delta||0).toLocaleString()}</span>
+                                </div>
+                                <div style={{ fontSize:11, color:'#8a9099', marginBottom:3 }}>{d.issue_type?.replace(/_/g,' ').toUpperCase()}</div>
+                                <div style={{ display:'flex', gap:12, fontSize:11, color:'#8a9099', marginBottom:3, fontFamily:'monospace' }}>
+                                  <span>Charged: £{(d.charged||0).toLocaleString()}</span>
+                                  <span>Allowed: £{(d.expected||0).toLocaleString()}</span>
+                                  <span style={{ color:'#f5a623' }}>Excess: £{(d.delta||0).toLocaleString()}</span>
+                                </div>
+                                <div style={{ fontSize:11, color:'#8a9099' }}>{d.evidence}</div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                         <div style={{ display:'flex', gap:6 }}>
                           {inv.status === 'pending_review' && hasOvercharge && (
                             <button
